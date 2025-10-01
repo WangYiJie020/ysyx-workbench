@@ -17,7 +17,7 @@ function init() {
     return
   fi
 
-  echo " git clone -b $2 git@github.com:$1.git $3"
+  #echo " git clone -b $2 git@github.com:$1.git $3"
 
   while [ ! -d $3 ]; do
     git clone -b $2 git@github-scut:$1.git $3
