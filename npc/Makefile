@@ -12,5 +12,6 @@ sim:
 	@echo "Write this Makefile by your self."
 
 	verilator --cc --exe --build -j 0 -Wall $(CPP_SRCS) $(V_SRCS)
+	./obj_dir/Vtop
 
 include ../Makefile
