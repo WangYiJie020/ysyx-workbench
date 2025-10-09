@@ -21,11 +21,17 @@ static void single_cycle() {
     //int b = rand() & 1;
     //dut.a = a;
     //dut.b = b;
-    dut.eval();
+    dut.clk=0;dut.eval();
+    dut.clk=1;dut.eval();
     //printf("a=%d, b=%d, f=%d\r", dut.a, dut.b, dut.f);
-    assert(dut.f == (dut.a ^ dut.b));
+
 }
 
+static void reset(int n) {
+  dut.rst = 1;
+  while (n -- > 0) single_cycle();
+  dut.rst = 0;
+}
 
 int main(int argc, char **argv)
 {
@@ -33,6 +39,7 @@ int main(int argc, char **argv)
   nvboard_bind_all_pins(&dut);
   nvboard_init();
 
+  reset(10);
 
   while(1) {
     nvboard_update();
