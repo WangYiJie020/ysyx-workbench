@@ -17,13 +17,13 @@ static TOP_NAME dut;
 void nvboard_bind_all_pins(TOP_NAME* top);
 
 static void single_cycle() {
-    int a = rand() & 1;
-    int b = rand() & 1;
-    dut.a = a;
-    dut.b = b;
+    //int a = rand() & 1;
+    //int b = rand() & 1;
+    //dut.a = a;
+    //dut.b = b;
     dut.eval();
-    printf("a=%d, b=%d, f=%d\n", a, b, dut.f);
-    assert(dut.f == (a ^ b));
+    printf("a=%d, b=%d, f=%d\n", dut.a, dut.b, dut.f);
+    assert(dut.f == (dut.a ^ dut.b));
 }
 
 
