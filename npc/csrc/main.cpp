@@ -21,7 +21,8 @@ static void single_cycle() {
     //int b = rand() & 1;
     //dut.a = a;
     //dut.b = b;
-    dut.eval();
+    dut.clk=0;dut.eval();
+    dut.clk=1;dut.eval();
     //printf("a=%d, b=%d, f=%d\r", dut.a, dut.b, dut.f);
 
 }
