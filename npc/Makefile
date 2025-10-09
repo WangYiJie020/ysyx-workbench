@@ -42,8 +42,8 @@ all: default
 
 sim: $(BIN)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-#	@$^
-	./obj_dir/$(TOPNAME)
+	@$^
+#	./obj_dir/$(TOPNAME)
 
 clean:
 	rm -rf $(BUILD_DIR)
