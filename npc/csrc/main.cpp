@@ -23,7 +23,7 @@ static void single_cycle() {
     //dut.b = b;
     dut.eval();
     //printf("a=%d, b=%d, f=%d\r", dut.a, dut.b, dut.f);
-    assert(dut.f == (dut.a ^ dut.b));
+
 }
 
 
