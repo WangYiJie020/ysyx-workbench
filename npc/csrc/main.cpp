@@ -6,6 +6,8 @@
 #include "verilated.h"
 #include <verilated_vcd_c.h>
 
+#include <nvboard.h>
+
 int main(int argc, char **argv)
 {
   VerilatedContext *contextp = new VerilatedContext;
