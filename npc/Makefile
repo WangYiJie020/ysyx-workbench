@@ -1,3 +1,5 @@
+INC_PATH ?=
+
 all:
 	@echo "Write this Makefile by your self."
 
@@ -9,6 +11,10 @@ V_SRCS   := $(shell find $(VSRC_DIR) -type f -name "*.v")
 
 # rules for NVBoard
 include $(NVBOARD_HOME)/scripts/nvboard.mk
+
+# rules for verilator
+INCFLAGS = $(addprefix -I, $(INC_PATH))
+CXXFLAGS += $(INCFLAGS)
 
 sim:
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
