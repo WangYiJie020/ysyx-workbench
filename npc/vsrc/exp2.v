@@ -33,10 +33,10 @@ module bcd7seg(
     always @(*) begin
         case (bcd)
             default: seg = 8'b11111111; // off
-            0: seg = 8'b1111_1111;
-            1: seg = 8'b1111_1100;
-            2: seg = 8'b1011_1011;
-            3: seg = 8'b1011_1110;
+            0: seg = 8'b1100_0000;
+            1: seg = 8'b1111_1001;
+            2: seg = 8'b1010_0100;
+            3: seg = 8'b1011_0000;
         endcase
     end
 endmodule

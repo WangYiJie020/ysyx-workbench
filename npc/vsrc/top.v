@@ -2,7 +2,7 @@ module top(
     input clk,
     input rst,
     input [4:0] btn,
-    input [7:0] sw,
+    input [15:0] sw,
     input ps2_clk,
     input ps2_data,
     input uart_rx,
@@ -26,8 +26,8 @@ module top(
 );
 
     exp2 pe (
-        .in(sw),
-        .en(sw[7]),
+        .in(sw[7:0]),
+        .en(sw[8]),
         .seg_hasvalue(seg0),
         .seg_out(seg1)
     );
