@@ -27,7 +27,7 @@ module top(
 
     exp2 pe (
         .in(sw),
-        .en(btn[0]),
+        .en(sw[7]),
         .seg_hasvalue(seg0),
         .seg_out(seg1)
     );
