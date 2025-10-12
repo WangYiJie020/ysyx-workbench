@@ -24,13 +24,19 @@ module top(
     output [7:0] seg6,
     output [7:0] seg7
 );
-exp3 #(4) alu (
-    .op(sw[6:4]),
-    .a(sw[10:7]),
-    .b(sw[3:0]),
-    .out(ledr[3:0]),
-    .overflow(ledr[7]),
-    .zero(ledr[5])
-);
-assign ledr[15:8] = 8'b0;
+
+    wire [7:0] lfsr_out;
+    bcd7seg bslow(
+        .bcd(lfsr_out[3:0]),
+        .seg(seg0)
+    );
+    bcd7seg bshigh(
+        .bcd(lfsr_out[7:4]),
+        .seg(seg1)
+    );
+    exp6 lfsr(
+        .clk(btn[0]),
+        .out(lfsr_out)
+    );
+
 endmodule
