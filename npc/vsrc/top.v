@@ -28,7 +28,8 @@ module top(
     exp2 pe (
         .in(sw[7:0]),
         .en(sw[8]),
-        .seg_hasvalue(seg0),
-        .seg_out(seg1)
+        .has_value(ledr[4]),
+        .seg_out(seg1),
+        .out(ledr[2:0])
     );
 endmodule

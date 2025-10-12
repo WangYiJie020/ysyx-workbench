@@ -56,18 +56,13 @@ endmodule
 module exp2(
     input [7:0] in,
     input en,
-    output [7:0] seg_hasvalue,
+    output has_value,
+    output [2:0] out,
     output [7:0] seg_out
 );
-    wire [2:0] out;
-    wire has_value;
     bcd7seg seg1 (
         .bcd({1'b0, out}),
         .seg(seg_out)
-    );
-    bcd7seg seg2 (
-        .bcd({3'b000, has_value}),
-        .seg(seg_hasvalue)
     );
     priority_enc83 pe (
         .in(in),
