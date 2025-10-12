@@ -4,7 +4,7 @@ INC_PATH ?=
 
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc --trace \
-				-O1 \
+				-O3 \
 			   	--x-assign fast --x-initial fast --noassert
 
 BUILD_DIR = ./build
