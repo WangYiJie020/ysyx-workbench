@@ -24,12 +24,14 @@ module top(
     output [7:0] seg6,
     output [7:0] seg7
 );
-
-    exp2 pe (
-        .in(sw[7:0]),
-        .en(sw[8]),
-        .has_value(ledr[4]),
-        .seg_out(seg0),
-        .out(ledr[2:0])
-    );
+exp3 #(4) alu (
+    .op(sw[6:4]),
+    .a(sw[10:7]),
+    .b(sw[3:0]),
+    .out(ledr[3:0]),
+    .overflow(ledr[7]),
+    .carry(ledr[6]),
+    .zero(ledr[5])
+);
+assign ledr[15:8] = 8'b0;
 endmodule
