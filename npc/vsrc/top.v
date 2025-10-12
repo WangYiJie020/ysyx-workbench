@@ -29,7 +29,7 @@ module top(
         .in(sw[7:0]),
         .en(sw[8]),
         .has_value(ledr[4]),
-        .seg_out(seg1),
+        .seg_out(seg0),
         .out(ledr[2:0])
     );
 endmodule
