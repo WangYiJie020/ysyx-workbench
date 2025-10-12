@@ -25,9 +25,10 @@ module top(
     output [7:0] seg7
 );
 
-    assign seg0=sw;
     exp2 pe (
         .in(sw),
-        .out(ledr[2:0])
+        .en(btn[0]),
+        .seg_hasvalue(seg0),
+        .seg_out(seg1)
     );
 endmodule
