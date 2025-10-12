@@ -53,6 +53,7 @@ module bcd7seg(
     end
 endmodule
 
+// 输入使用拨动开关SW7-SW0。使能端用SW8。输出为LED2-0，输出指示是LED4，数码管输出为Reg0。
 module exp2(
     input [7:0] in,
     input en,
