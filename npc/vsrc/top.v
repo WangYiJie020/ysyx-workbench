@@ -30,7 +30,6 @@ exp3 #(4) alu (
     .b(sw[3:0]),
     .out(ledr[3:0]),
     .overflow(ledr[7]),
-    .carry(ledr[6]),
     .zero(ledr[5])
 );
 assign ledr[15:8] = 8'b0;

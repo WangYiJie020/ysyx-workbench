@@ -5,7 +5,6 @@ module exp3 #(WIDTH=8) (
     input signed [WIDTH-1:0] b,
     output [WIDTH-1:0] out,
     output overflow,
-    output carry,
     output zero
 );
 parameter ADD = 3'b000;
@@ -40,8 +39,6 @@ parameter AEQB = 3'b111;
     assign overflow = (op == ADD) ? ((a[WIDTH-1] == b[WIDTH-1]) && (add_res[WIDTH-1] != a[WIDTH-1])) :
                       (op == SUB) ? ((a[WIDTH-1] != b[WIDTH-1]) && (sub_res[WIDTH-1] != a[WIDTH-1])) :
                       1'b0;
-    assign carry = ((op == ADD) & add_res[WIDTH]) | 
-        ((op == SUB) & sub_res[WIDTH]);
 
     wire [WIDTH*8-1:0] out_table;
     assign out_table={
