@@ -43,7 +43,7 @@ parameter AEQB = 3'b111;
     assign carry = ((op == ADD) & add_res[WIDTH]) | 
         ((op == SUB) & sub_res[WIDTH]);
 
-    wire [WIDTH*8+7:0] out_table;
+    wire [WIDTH*8-1:0] out_table;
     assign out_table={
         add_res[WIDTH-1:0],
         sub_res[WIDTH-1:0],
@@ -51,8 +51,8 @@ parameter AEQB = 3'b111;
         and_res,
         or_res,
         xor_res,
-        {7'b0,is_alessb},
-        {7'b0,is_aeqb}
+        {{WIDTH-1{1'b0}},is_alessb},
+        {{WIDTH-1{1'b0}},is_aeqb}
     };
     assign out = out_table[(7-op)*WIDTH +: WIDTH];
 
