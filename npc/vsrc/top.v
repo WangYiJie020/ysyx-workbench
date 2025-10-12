@@ -24,6 +24,8 @@ module top(
     output [7:0] seg6,
     output [7:0] seg7
 );
+
+    assign seg0=sw;
     exp2 pe (
         .in(sw),
         .out(ledr[2:0])
