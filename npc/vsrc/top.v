@@ -15,8 +15,8 @@ module top(
     output [7:0] VGA_R,
     output [7:0] VGA_G,
     output [7:0] VGA_B,
-    output [7:0] seg0,
-    output [7:0] seg1,
+    output reg [7:0] seg0,
+    output reg [7:0] seg1,
     output [7:0] seg2,
     output [7:0] seg3,
     output [7:0] seg4,
@@ -69,7 +69,8 @@ module top(
         .bcd(ascii_out[3:0]),
         .seg(seg2)
     );
-
-    assign seg0=ps2_ready?seglow:8'hff;
-    assign seg1=ps2_ready?seghigh:8'hff;
+    always@(ps2_ready)begin
+        seg0<=ps2_ready?seglow:8'hff;
+        seg1<=ps2_ready?seghigh:8'hff;
+    end
 endmodule
