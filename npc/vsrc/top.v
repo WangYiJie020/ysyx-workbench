@@ -26,8 +26,18 @@ module top(
 );
 
     wire [7:0] ps2_out;
-    wire notidle,idle;
+    wire idle;
     wire ps2_ready;
+    reg [2:0] delaycnt;
+    reg notidle;
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            delaycnt <= 3'b0;
+        end else begin
+            if (delaycnt == 3'b000) notidle <= (~idle)|ps2_ready;
+            delaycnt <= delaycnt + 3'b001;
+        end
+    end
     ps2test _keyboard(
         .clk(ps2_clk),
         .d(ps2_data),
@@ -35,8 +45,8 @@ module top(
         .ready(ps2_ready),
         .idle(idle)
     );
-assign ledr[0]=idle;
-    assign notidle = (~idle)|ps2_ready;
+    assign ledr[0]=idle;
+    assign ledr[1]=notidle;
     bcd7seg seghigh(
         .bcd(notidle?ps2_out[7:4]:0),
         .seg(seg1)
