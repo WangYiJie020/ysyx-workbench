@@ -70,7 +70,15 @@ module top(
         .bcd(ascii_out[3:0]),
         .seg(seg2)
     );
-    assign seg0=ps2_ready ?seglow:8'hff;
-    assign seg1=ps2_ready?seghigh:8'hff;
+    always@(ps2_ready)begin
+        if(idle)begin
+            seg0<=8'hff;
+            seg1<=8'hff;
+        end
+        else if(ps2_ready)begin
+            seg0<=seglow;
+            seg1<=seghigh;
+        end
+    end
     assign ledr[3]=idle;
 endmodule
