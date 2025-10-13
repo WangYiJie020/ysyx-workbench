@@ -26,7 +26,7 @@ static void single_cycle() {
     dut.clk=0;dut.eval();
 	//std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	if (dut.seg0!=3){
-		printf("seg0=%d\n", dut.seg0);
+		//printf("seg0=%d\n", dut.seg0);
 	}
 	//printf("ps2_clk=%d\n", dut.ps2_clk);
     dut.clk=1;dut.eval();

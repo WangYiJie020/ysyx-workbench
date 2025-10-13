@@ -35,11 +35,11 @@ module top(
         .data(ps2_out),
         .ready(ps2_ready)
     );
-    always@(*)begin
-        if(ps2_ready)$display("ps2_out=%h %h",ps2_out[7:4],ps2_out[3:0]);
+    //always@(*)begin
+        //if(ps2_ready)$display("ps2_out=%h %h",ps2_out[7:4],ps2_out[3:0]);
         //$display("psready=%b",ps2_ready);
         //if(ps2_clk)$display("psclk=%b",ps2_clk);
-    end
+    //end
     assign ledr[0]=idle;
     assign ledr[1]=ps2_ready;
 
