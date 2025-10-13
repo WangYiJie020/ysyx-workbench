@@ -114,5 +114,5 @@ module _my_hdl_sol(
         //if(s!=0) $display("state=%d ns=%d",s,ns);
     end
     assign done=(s==D)&((^out_byte)^bytep);
-    assign idle=(ns==BEG)|(s==INV);
+    assign idle=(s==BEG&&ns==BEG)|(s==INV);
 endmodule
