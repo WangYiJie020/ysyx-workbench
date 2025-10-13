@@ -63,8 +63,9 @@ module top(
         .bcd(ascii_out[3:0]),
         .seg(seg2)
     );
+    reg [31:0] remain_ticks;
     always@(posedge clk or posedge rst)begin
-        reg [31:0] remain_ticks;
+        $display("remain_ticks=%d",remain_ticks);
         if(rst)remain_ticks<=0;
         else if(ps2_ready)begin
             remain_ticks<=32'h0001_ffff;
