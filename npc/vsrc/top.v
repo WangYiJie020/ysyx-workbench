@@ -38,6 +38,7 @@ module top(
     always@(*)begin
         if(ps2_ready)$display("ps2_out=%h %h",ps2_out[7:4],ps2_out[3:0]);
         //$display("psready=%b",ps2_ready);
+        $display("psclk=%b",ps2_clk);
     end
     assign ledr[0]=idle;
     assign ledr[1]=ps2_ready;
