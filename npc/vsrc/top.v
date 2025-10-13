@@ -91,10 +91,12 @@ module top(
                 hit_count <= hit_count + 1;
             //if(ps2_ready)$display("ps2_out=%h %h",ps2_out[7:4],ps2_out[3:0]);
         end
-        else if(remain_ticks>0)remain_ticks<=remain_ticks-1;
-        else begin
+        else if(remain_ticks>0) begin
+            remain_ticks<=remain_ticks-1;
+
             {seg0, seg1} <= 16'hff_ff;
             {seg2, seg3} <= 16'hff_ff;
+
             $display("timeout");
         end
     end
