@@ -23,6 +23,8 @@ static void single_cycle() {
     //dut.b = b;
     dut.clk=0;dut.eval();
     dut.clk=1;dut.eval();
+
+	printf("ps2_clk=%d\r", dut.ps2_clk);
     //printf("a=%d, b=%d, f=%d\r", dut.a, dut.b, dut.f);
 
 }
