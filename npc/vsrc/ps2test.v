@@ -24,7 +24,7 @@ module ps2test(
             else if(~first)ready<=0;
             else begin
                 ready<=done;
-                first<=0;
+                first<=1;
             end
         end else begin
             ready<=done;
