@@ -46,7 +46,10 @@ module top(
     reg [7:0] showdelay_cnt;
     always@(posedge clk or posedge rst or ps2_ready)begin
         if(rst)showdelay_cnt<=0;
-        else if(ps2_ready)showdelay_cnt<=8'd200;
+        else if(ps2_ready)begin
+            showdelay_cnt<=8'd200;
+            $display("ps2_out=%h",ps2_out);
+        end
         else if(showdelay_cnt!=0)showdelay_cnt<=showdelay_cnt-1;
         //$display("showdelay_cnt=%d",showdelay_cnt);
     end
