@@ -68,16 +68,12 @@ module top(
         if(rst)remain_ticks<=0;
         else if(ps2_ready)begin
             remain_ticks<=100;
+            seg0<=seglow;
+            seg1<=seghigh;
             if(ps2_ready)$display("ps2_out=%h %h",ps2_out[7:4],ps2_out[3:0]);
         end
         else if(remain_ticks>0)remain_ticks<=remain_ticks-1;
-    end
-    always@(ps2_ready or clk)begin
-        if(ps2_ready)begin
-            seg0<=seglow;
-            seg1<=seghigh;
-        end
-        else if(remain_ticks==0) begin
+        else begin
             seg0<=8'hff;
             seg1<=8'hff;
         end
