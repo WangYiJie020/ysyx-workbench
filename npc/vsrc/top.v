@@ -27,16 +27,16 @@ module top(
 
     wire [7:0] ps2_out;
     wire notidle,idle;
-
+    wire ps2_ready;
     ps2test _keyboard(
         .clk(ps2_clk),
         .d(ps2_data),
         .data(ps2_out),
-        .ready(),
+        .ready(ps2_ready),
         .idle(idle)
     );
 assign ledr[0]=idle;
-    assign notidle = ~idle;
+    assign notidle = (~idle)|ps2_ready;
     bcd7seg seghigh(
         .bcd(notidle?ps2_out[7:4]:0),
         .seg(seg1)
