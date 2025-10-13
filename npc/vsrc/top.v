@@ -84,7 +84,7 @@ module top(
             $display("reset");
         end
         else if(ps2_ready)begin
-            remain_ticks<=32'h003f_ffff;
+            remain_ticks<=32'h00ff_ffff;
             {seg0, seg1} <= {seglow, seghigh};
             {seg2, seg3} <= {ascii_seglow, ascii_seghigh};
             if(remain_ticks==0)
