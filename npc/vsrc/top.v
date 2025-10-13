@@ -79,9 +79,12 @@ module top(
     reg [31:0] remain_ticks;
     always@(posedge clk or posedge rst)begin
         //$display("remain_ticks=%d",remain_ticks);
-        if(rst)remain_ticks<=0;
+        if(rst)begin
+            remain_ticks<=0;
+            $display("reset");
+        end
         else if(ps2_ready)begin
-            remain_ticks<=32'h007f_ffff;
+            remain_ticks<=32'h003f_ffff;
             {seg0, seg1} <= {seglow, seghigh};
             {seg2, seg3} <= {ascii_seglow, ascii_seghigh};
             if(remain_ticks==0)
@@ -92,6 +95,7 @@ module top(
         else begin
             {seg0, seg1} <= 16'hff_ff;
             {seg2, seg3} <= 16'hff_ff;
+            $display("timeout");
         end
     end
     assign ledr[3]=idle;
