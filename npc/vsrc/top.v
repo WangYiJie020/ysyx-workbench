@@ -36,13 +36,6 @@ module top(
         .ready(ps2_ready),
         .idle(idle)
     );
-    
-    always@(*)begin
-        if(ps2_ready)$display("ps2_out=%h %h",ps2_out[7:4],ps2_out[3:0]);
-        //$display("psready=%b",ps2_ready);
-        //if(ps2_clk)$display("psclk=%b",ps2_clk);
-    end
-    
     assign ledr[0]=clk;
     assign ledr[1]=ps2_clk;
 
@@ -73,7 +66,10 @@ module top(
     reg [7:0] remain_ticks;
     always@(posedge clk or posedge rst)begin
         if(rst)remain_ticks<=0;
-        else if(ps2_ready)remain_ticks<=100;
+        else if(ps2_ready)begin
+            remain_ticks<=100;
+            if(ps2_ready)$display("ps2_out=%h %h",ps2_out[7:4],ps2_out[3:0]);
+        end
         else if(remain_ticks>0)remain_ticks<=remain_ticks-1;
     end
     always@(ps2_ready or clk)begin
