@@ -26,21 +26,20 @@ module top(
 );
 
     wire [7:0] ps2_out;
+    wire ps2_ready;
     ps2test _keyboard(
         .clk(ps2_clk),
         .d(ps2_data),
         .data(ps2_out),
-        .ready(ledr[15])
+        .ready(ps2_ready)
     );
 
     bcd7seg seghigh(
-        .bcd(ps2_out[7:4]),
+        .bcd(ps2_ready?ps2_out[7:4]:0),
         .seg(seg1)
     );
     bcd7seg seglow(
-        .bcd(ps2_out[3:0]),
+        .bcd(ps2_ready?ps2_out[3:0]:0),
         .seg(seg0)
     );
-    assign ledr[1]=clk;
-    assign ledr[0]=ps2_clk;
 endmodule
