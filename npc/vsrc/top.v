@@ -56,6 +56,20 @@ module top(
         .seg(seglow)
     );
 
+    wire [7:0] ascii_out;
+    keyv2ascii _key2ascii(
+        .keyv(ps2_out),
+        .asciiv(ascii_out)
+    );
+    bcd7seg _ascii_high(
+        .bcd(ascii_out[7:4]),
+        .seg(seg3)
+    );
+    bcd7seg _ascii_low(
+        .bcd(ascii_out[3:0]),
+        .seg(seg2)
+    );
+
     assign seg0=ps2_ready?seglow:8'hff;
     assign seg1=ps2_ready?seghigh:8'hff;
 endmodule
