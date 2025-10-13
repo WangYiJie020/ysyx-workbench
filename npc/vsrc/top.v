@@ -63,11 +63,11 @@ module top(
         .bcd(ascii_out[3:0]),
         .seg(seg2)
     );
-    reg [7:0] remain_ticks;
+    reg [31:0] remain_ticks;
     always@(posedge clk or posedge rst)begin
         if(rst)remain_ticks<=0;
         else if(ps2_ready)begin
-            remain_ticks<=100;
+            remain_ticks<=32'h0001_ffff;
             seg0<=seglow;
             seg1<=seghigh;
             if(ps2_ready)$display("ps2_out=%h %h",ps2_out[7:4],ps2_out[3:0]);
