@@ -17,6 +17,8 @@
 static TOP_NAME dut;
 
 void nvboard_bind_all_pins(TOP_NAME* top);
+void nvboard_update();
+void nvboard_init(int vga_clk_cycle);
 
 static void single_cycle() {
     //int a = rand() & 1;
