@@ -23,7 +23,11 @@ module ps2test(
 
     wire sampling = ps2_clk_sync[2] & ~ps2_clk_sync[1];
 
-    assign ready = done & sampling;
+    always @(posedge clk) begin
+        if (sampling) begin
+            ready <= done;
+        end
+    end
     /*
     reg last_psclk;
     reg [31:0] ready_mantain;
