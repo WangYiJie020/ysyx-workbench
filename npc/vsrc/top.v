@@ -70,6 +70,9 @@ module top(
         .bcd(ascii_out[3:0]),
         .seg(seg2)
     );
+    always@(ps2_clk)begin
+        $display("ps2_clk=%b",ps2_clk);
+    end
     always@(ps2_ready)begin
         if(ps2_ready)begin
             seg0<=seglow;
