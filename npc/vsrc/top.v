@@ -70,15 +70,18 @@ module top(
         .bcd(ascii_out[3:0]),
         .seg(seg2)
     );
-    always@(ps2_clk)begin
-        $display("ps2_clk=%b",ps2_clk);
+    reg [7:0] remain_ticks;
+    always@(posedge clk or posedge rst)begin
+        if(rst)remain_ticks<=0;
+        else if(ps2_ready)remain_ticks<=100;
+        else if(remain_ticks>0)remain_ticks<=remain_ticks-1;
     end
     always@(ps2_ready)begin
         if(ps2_ready)begin
             seg0<=seglow;
             seg1<=seghigh;
         end
-        else if(ps2_clk) begin
+        else if(remain_ticks==0) begin
             seg0<=8'hff;
             seg1<=8'hff;
         end
