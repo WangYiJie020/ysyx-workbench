@@ -55,13 +55,14 @@ module top(
         .keyv(ps2_out),
         .asciiv(ascii_out)
     );
+    wire [7:0] ascii_seglow, ascii_seghigh;
     bcd7seg _ascii_high(
         .bcd(ascii_out[7:4]),
-        .seg(seg3)
+        .seg(ascii_seghigh)
     );
     bcd7seg _ascii_low(
         .bcd(ascii_out[3:0]),
-        .seg(seg2)
+        .seg(ascii_seglow)
     );
     reg [31:0] remain_ticks;
     always@(posedge clk or posedge rst)begin
@@ -69,14 +70,14 @@ module top(
         if(rst)remain_ticks<=0;
         else if(ps2_ready)begin
             remain_ticks<=32'h003f_ffff;
-            seg0<=seglow;
-            seg1<=seghigh;
+            {seg0, seg1} <= {seglow, seghigh};
+            {seg2, seg3} <= {ascii_seglow, ascii_seghigh};
             if(ps2_ready)$display("ps2_out=%h %h",ps2_out[7:4],ps2_out[3:0]);
         end
         else if(remain_ticks>0)remain_ticks<=remain_ticks-1;
         else begin
-            seg0<=8'hff;
-            seg1<=8'hff;
+            {seg0, seg1} <= 16'hff_ff;
+            {seg2, seg3} <= 16'hff_ff;
         end
     end
     assign ledr[3]=idle;
