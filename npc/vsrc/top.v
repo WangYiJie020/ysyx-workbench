@@ -88,7 +88,7 @@ module top(
             $display("ps2_ready key %h",ps2_out);
             {seg0, seg1} <= {seglow, seghigh};
             {seg2, seg3} <= {ascii_seglow, ascii_seghigh};
-            if(remain_ticks==0)
+            if(ps2_out==8'hf0)
                 hit_count <= hit_count + 1;
             //if(ps2_ready)$display("ps2_out=%h %h",ps2_out[7:4],ps2_out[3:0]);
         end
