@@ -35,7 +35,7 @@ module top(
         .ready(),
         .idle(idle)
     );
-
+assign ledr[0]=idle;
     assign notidle = ~idle;
     bcd7seg seghigh(
         .bcd(notidle?ps2_out[7:4]:0),
