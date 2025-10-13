@@ -43,7 +43,7 @@ module top(
     end
     
     assign ledr[0]=clk;
-    assign ledr[1]=ps2_ready;
+    assign ledr[1]=ps2_clk;
 
     wire [7:0] seglow, seghigh;
 
