@@ -2,14 +2,16 @@ module ps2test(
     input clk,
     input d,
     output reg [7:0] data,
-    output ready
+    output ready,
+    output idle
 );
     _my_hdl_sol fsm(
         .clk(clk),
         .in(d),
         .reset(1'b0),
         .out_byte(data),
-        .done(ready)
+        .done(ready),
+        .idle(idle)
     );
 endmodule
 
@@ -21,14 +23,15 @@ module _my_hdl_sol(
     input in,
     input reset,    // Synchronous reset
     output reg [7:0] out_byte,
-    output done
+    output done,
+    output idle
 ); //
 
     // Use FSM from Fsm_serial
 
     // New: Datapath to latch input bits.
 
-        parameter BEG=0,B1=1,END=9,D=10,INV=11;
+    parameter BEG=0,B1=1,END=9,D=10,INV=11;
     reg [3:0] s,ns;
     always@(*)begin
         case(s)
@@ -48,7 +51,7 @@ module _my_hdl_sol(
         end
     end
     assign done=(s==D);
-
+    assign idle=(s==BEG);
 endmodule
 
 
