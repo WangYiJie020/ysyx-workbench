@@ -18,6 +18,18 @@ endmodule
 // I had finished it on HDLbits
 // https://hdlbits.01xz.net/wiki/Fsm_serialdata
 
+module parity (
+    input clk,
+    input reset,
+    input in,
+    output reg odd);
+
+    always @(posedge clk)
+        if (reset) odd <= 0;
+        else if (in) odd <= ~odd;
+
+endmodule
+
 module _my_hdl_sol(
     input clk,
     input in,
@@ -25,14 +37,17 @@ module _my_hdl_sol(
     output reg [7:0] out_byte,
     output done,
     output idle
-); //
+);
 
-    // Use FSM from Fsm_serial
+    parameter BEG=0,B1=1,B8=8,BP=9,END=10,D=11,INV=12;
 
-    // New: Datapath to latch input bits.
-
-    parameter BEG=0,B1=1,END=9,D=10,INV=11;
     reg [3:0] s,ns;
+    reg bytep;
+
+    reg ppreset;
+    reg ppout;
+    parity pp(clk,ppreset,in,ppout);
+
     always@(*)begin
         case(s)
             BEG:ns=in?BEG:B1;
@@ -42,16 +57,21 @@ module _my_hdl_sol(
             default:ns=s+1;
         endcase
     end
+    reg [15:0] cnt;
 
     always@(posedge clk)begin
-        if(reset)s<=BEG;
+        if(reset)begin
+            s<=BEG;
+            ppreset<=1;
+        end
         else begin
             s<=ns;
-            if(1<=s&&s<=8)out_byte<={in,out_byte[7:1]};
+            if(B1<=s&&s<=B8)out_byte<={in,out_byte[7:1]};
+            if(s==BEG)ppreset<=1;
+            else ppreset<=0;
+            if(s==BP)bytep<=in;
         end
     end
-    assign done=(s==D);
-    assign idle=(s==BEG);
+    assign done=(s==D)&((^out_byte)^bytep);
+    assign idle=(s==BEG)|(s==INV);
 endmodule
-
-
