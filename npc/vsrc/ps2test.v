@@ -73,7 +73,7 @@ module _my_hdl_sol(
             else ppreset<=0;
             if(s==BP)bytep<=in;
         end
-        if(s!=0) $display("state=%d ns=%d",s,ns);
+        //if(s!=0) $display("state=%d ns=%d",s,ns);
     end
     assign done=(s==D)&((^out_byte)^bytep);
     assign idle=(s==BEG)|(s==INV);
