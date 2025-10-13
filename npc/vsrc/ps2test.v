@@ -27,6 +27,10 @@ module ps2test(
         if (sampling) begin
             ready <= done;
         end
+        else begin
+//              ready <= 0;
+             $display("not sampling ready=%b",ready);
+        end
     end
     /*
     reg last_psclk;
