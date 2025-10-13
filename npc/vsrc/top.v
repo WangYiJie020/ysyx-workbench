@@ -28,7 +28,6 @@ module top(
     wire [7:0] ps2_out;
     wire idle;
     wire ps2_ready;
-    reg notidle;
     ps2test _keyboard(
         .clk(ps2_clk),
         .d(ps2_data),
@@ -38,8 +37,8 @@ module top(
     );
     always@(*)begin
         if(ps2_ready)$display("ps2_out=%h %h",ps2_out[7:4],ps2_out[3:0]);
+        $display("ps2test %d",ps2_ready);
     end
-    assign notidle = ~idle;
     assign ledr[0]=idle;
     assign ledr[1]=ps2_ready;
     bcd7seg seghigh(
