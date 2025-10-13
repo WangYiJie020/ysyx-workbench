@@ -41,12 +41,13 @@ module top(
     end
     assign notidle = ~idle;
     assign ledr[0]=idle;
+    assign ledr[1]=ps2_ready;
     bcd7seg seghigh(
         .bcd(ps2_ready?ps2_out[7:4]:0),
         .seg(seg1)
     );
     bcd7seg seglow(
-        .bcd(notidle?ps2_out[3:0]:0),
+        .bcd(ps2_ready?ps2_out[3:0]:0),
         .seg(seg0)
     );
 endmodule
