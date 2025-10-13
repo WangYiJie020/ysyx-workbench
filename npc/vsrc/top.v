@@ -45,13 +45,17 @@ module top(
     assign ledr[0]=idle;
     assign ledr[1]=ps2_ready;
 
+    wire [7:0] seglow, seghigh;
 
-    bcd7seg seghigh(
-        .bcd(ps2_ready?ps2_out[7:4]:0),
-        .seg(seg1)
+    bcd7seg _high(
+        .bcd(ps2_out[7:4]),
+        .seg(seghigh)
     );
-    bcd7seg seglow(
-        .bcd(ps2_ready?ps2_out[3:0]:0),
-        .seg(seg0)
+    bcd7seg _low(
+        .bcd(ps2_out[3:0]),
+        .seg(seglow)
     );
+
+    assign seg0=ps2_ready?seglow:8'hff;
+    assign seg1=ps2_ready?seghigh:8'hff;
 endmodule
