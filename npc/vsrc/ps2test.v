@@ -28,7 +28,7 @@ module ps2test(
             ready <= done;
         end
         else begin
-//              ready <= 0;
+             ready <= 0;
              $display("not sampling ready=%b",ready);
         end
     end
