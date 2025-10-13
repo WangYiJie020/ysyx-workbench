@@ -42,7 +42,7 @@ module top(
         //if(ps2_clk)$display("psclk=%b",ps2_clk);
     end
     
-    assign ledr[0]=idle;
+    assign ledr[0]=clk;
     assign ledr[1]=ps2_ready;
 
     wire [7:0] seglow, seghigh;

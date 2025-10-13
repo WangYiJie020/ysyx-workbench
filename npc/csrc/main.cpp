@@ -24,7 +24,7 @@ static void single_cycle() {
     //dut.a = a;
     //dut.b = b;
     dut.clk=0;dut.eval();
-	std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	//std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	if (dut.seg0!=3){
 		//printf("seg0=%d\n", dut.seg0);
 	}
