@@ -55,28 +55,54 @@ module top(
         .keyv(ps2_out),
         .asciiv(ascii_out)
     );
+    wire [7:0] ascii_seglow, ascii_seghigh;
     bcd7seg _ascii_high(
         .bcd(ascii_out[7:4]),
-        .seg(seg3)
+        .seg(ascii_seghigh)
     );
     bcd7seg _ascii_low(
         .bcd(ascii_out[3:0]),
-        .seg(seg2)
+        .seg(ascii_seglow)
     );
+
+    reg [7:0] hit_count;
+
+    bcd7seg _hitlow(
+        .bcd(hit_count[3:0]),
+        .seg(seg4)
+    );
+    bcd7seg _hithigh(
+        .bcd(hit_count[7:4]),
+        .seg(seg5)
+    );
+
+    reg is_released,wait_code_after_f0;
     reg [31:0] remain_ticks;
     always@(posedge clk or posedge rst)begin
         //$display("remain_ticks=%d",remain_ticks);
-        if(rst)remain_ticks<=0;
-        else if(ps2_ready)begin
-            remain_ticks<=32'h003f_ffff;
-            seg0<=seglow;
-            seg1<=seghigh;
-            if(ps2_ready)$display("ps2_out=%h %h",ps2_out[7:4],ps2_out[3:0]);
+        if(rst)begin
+            $display("reset");
         end
-        else if(remain_ticks>0)remain_ticks<=remain_ticks-1;
-        else begin
-            seg0<=8'hff;
-            seg1<=8'hff;
+        else if(ps2_ready)begin
+            $display("ps2_ready key %h",ps2_out);
+            {seg0, seg1} <= {seglow, seghigh};
+            {seg2, seg3} <= {ascii_seglow, ascii_seghigh};
+            remain_ticks <= 32'h001f_ffff;
+            if(ps2_out==8'hf0) begin
+                is_released<=1;
+                wait_code_after_f0<=1;
+                hit_count <= hit_count + 1;
+            end else begin
+                if(wait_code_after_f0) wait_code_after_f0<=0;
+                else is_released<=0;
+            end
+        end
+        else if(remain_ticks>0) begin
+            remain_ticks <= remain_ticks - 1;
+            if(remain_ticks==1&&is_released) begin
+                {seg0, seg1} <= 16'hff_ff;
+                {seg2, seg3} <= 16'hff_ff;
+            end
         end
     end
     assign ledr[3]=idle;
