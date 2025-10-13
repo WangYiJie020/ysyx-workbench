@@ -77,6 +77,7 @@ module top(
     );
 
     reg is_unreleased;
+    reg [31:0] remain_ticks;
     always@(posedge clk or posedge rst)begin
         //$display("remain_ticks=%d",remain_ticks);
         if(rst)begin
@@ -86,6 +87,7 @@ module top(
             $display("ps2_ready key %h",ps2_out);
             {seg0, seg1} <= {seglow, seghigh};
             {seg2, seg3} <= {ascii_seglow, ascii_seghigh};
+            remain_ticks <= 32'h001f_ffff;
             if(ps2_out==8'hf0) begin
                 is_unreleased<=0;
                 hit_count <= hit_count + 1;
@@ -93,7 +95,7 @@ module top(
                 is_unreleased<=1;
             end
         end
-        else if(is_unreleased) begin
+        else if(!is_unreleased) begin
             {seg0, seg1} <= 16'hff_ff;
             {seg2, seg3} <= 16'hff_ff;
         end
