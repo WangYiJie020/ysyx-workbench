@@ -5,16 +5,16 @@ module ps2test(
     output reg [7:0] data,
     output ready
 );
-    reg last_ps2_clk;
-    assign last_ps2_clk = ps2_clk;
+    wire done;
     _my_hdl_sol fsm(
-        .clk((last_ps2_clk==ps2_clk)?clk:ps2_clk),
+        .clk(ps2_clk),
         .in(d),
         .reset(1'b0),
         .out_byte(data),
-        .done(ready),
+        .done(done),
         .idle()
     );
+    assign ready = done&ps2_clk;
 endmodule
 
 // I had finished it on HDLbits
