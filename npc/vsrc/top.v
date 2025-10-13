@@ -71,13 +71,13 @@ module top(
         .seg(seg2)
     );
     always@(ps2_ready)begin
-        if(idle)begin
-            seg0<=8'hff;
-            seg1<=8'hff;
-        end
-        else if(ps2_ready)begin
+        if(ps2_ready)begin
             seg0<=seglow;
             seg1<=seghigh;
+        end
+        else begin
+            seg0<=8'hff;
+            seg1<=8'hff;
         end
     end
     assign ledr[3]=idle;
