@@ -32,6 +32,7 @@ static void single_cycle() {
 	//printf("ps2_clk=%d\n", dut.ps2_clk);
     dut.clk=1;dut.eval();
 	nvboard_update();
+	std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	//printf("ps2_clk=%d\n", dut.ps2_clk);
 
     //printf("a=%d, b=%d, f=%d\r", dut.a, dut.b, dut.f);
