@@ -93,11 +93,12 @@ module top(
         end
         else if(remain_ticks>0) begin
             remain_ticks<=remain_ticks-1;
+            if(remain_ticks==1)begin
+                {seg0, seg1} <= 16'hff_ff;
+                {seg2, seg3} <= 16'hff_ff;
 
-            {seg0, seg1} <= 16'hff_ff;
-            {seg2, seg3} <= 16'hff_ff;
-
-            $display("timeout");
+                $display("timeout");
+            end
         end
     end
     assign ledr[3]=idle;
