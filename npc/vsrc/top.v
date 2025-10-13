@@ -64,6 +64,18 @@ module top(
         .bcd(ascii_out[3:0]),
         .seg(ascii_seglow)
     );
+
+    reg [7:0] hit_count;
+
+    bcd7seg _hitlow(
+        .bcd(hit_count[3:0]),
+        .seg(seg4)
+    );
+    bcd7seg _hithigh(
+        .bcd(hit_count[7:4]),
+        .seg(seg5)
+    );
+
     reg [31:0] remain_ticks;
     always@(posedge clk or posedge rst)begin
         //$display("remain_ticks=%d",remain_ticks);
@@ -78,6 +90,7 @@ module top(
         else begin
             {seg0, seg1} <= 16'hff_ff;
             {seg2, seg3} <= 16'hff_ff;
+            hit_count <= hit_count + 1;
         end
     end
     assign ledr[3]=idle;
