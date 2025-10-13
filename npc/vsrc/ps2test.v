@@ -30,6 +30,7 @@ module ps2test(
             ready<=done;
             ready_mantain<=32'h002F_FFFF;
         end
+        $display("ps2_clk=%b d=%b data=%02X ready=%b",ps2_clk,d,data,ready);
     end
 endmodule
 
