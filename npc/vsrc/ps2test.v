@@ -14,7 +14,16 @@ module ps2test(
         .done(done),
         .idle()
     );
-    assign ready=done;
+
+    reg [2:0] ps2_clk_sync;
+
+    always @(posedge clk) begin
+        ps2_clk_sync <=  {ps2_clk_sync[1:0],ps2_clk};
+    end
+
+    wire sampling = ps2_clk_sync[2] & ~ps2_clk_sync[1];
+
+    assign ready = done & sampling;
     /*
     reg last_psclk;
     reg [31:0] ready_mantain;
