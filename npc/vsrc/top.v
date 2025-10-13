@@ -36,14 +36,22 @@ module top(
         .ready(ps2_ready)
     );
     always@(*)begin
-        if(ps2_ready)$display("ps2_out=%h %h",ps2_out[7:4],ps2_out[3:0]);
-        //$display("psready=%b",ps2_ready);
+        //if(ps2_ready)$display("ps2_out=%h %h",ps2_out[7:4],ps2_out[3:0]);
+        $display("psready=%b",ps2_ready);
         //if(ps2_clk)$display("psclk=%b",ps2_clk);
     end
     assign ledr[0]=idle;
     assign ledr[1]=ps2_ready;
+
+    reg [7:0] showdelay_cnt;
+    always@(posedge clk or posedge rst)begin
+        if(rst)showdelay_cnt<=0;
+        else if(ps2_ready)showdelay_cnt<=8'd200;
+        else if(showdelay_cnt!=0)showdelay_cnt<=showdelay_cnt-1;
+    end
+
     bcd7seg seghigh(
-        .bcd(clk?ps2_out[7:4]:0),
+        .bcd((showdelay_cnt!=0)?ps2_out[7:4]:0),
         .seg(seg1)
     );
     bcd7seg seglow(
