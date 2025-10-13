@@ -1,17 +1,19 @@
 module ps2test(
     input clk,
+    input ps2_clk,
     input d,
     output reg [7:0] data,
-    output ready,
-    output idle
+    output ready
 );
+    reg last_ps2_clk;
+    assign last_ps2_clk = ps2_clk;
     _my_hdl_sol fsm(
-        .clk(clk),
+        .clk((last_ps2_clk==ps2_clk)?clk:ps2_clk),
         .in(d),
         .reset(1'b0),
         .out_byte(data),
         .done(ready),
-        .idle(idle)
+        .idle()
     );
 endmodule
 

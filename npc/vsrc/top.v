@@ -29,11 +29,11 @@ module top(
     wire idle;
     wire ps2_ready;
     ps2test _keyboard(
-        .clk(ps2_clk),
+        .clk(clk),
+        .ps2_clk(ps2_clk),
         .d(ps2_data),
         .data(ps2_out),
-        .ready(ps2_ready),
-        .idle(idle)
+        .ready(ps2_ready)
     );
     always@(*)begin
         if(ps2_ready)$display("ps2_out=%h %h",ps2_out[7:4],ps2_out[3:0]);
