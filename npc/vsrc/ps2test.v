@@ -15,7 +15,7 @@ module ps2test(
         .idle()
     );
     reg last_psclk;
-    reg [7:0] ready_mantain;
+    reg [31:0] ready_mantain;
     always@(posedge clk) begin
         last_psclk<=ps2_clk; 
         if(ps2_clk==last_psclk)begin
@@ -23,7 +23,7 @@ module ps2test(
             else ready<=0;
         end else begin
             ready<=done;
-            ready_mantain<=255;
+            ready_mantain<=32'h00FF_FFFF;
         end
     end
 endmodule
