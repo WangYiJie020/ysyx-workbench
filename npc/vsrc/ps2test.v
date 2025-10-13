@@ -14,6 +14,7 @@ module ps2test(
         .done(done),
         .idle()
     );
+    assign ready=done;
     /*
     reg last_psclk;
     reg [31:0] ready_mantain;
