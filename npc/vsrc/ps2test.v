@@ -15,10 +15,16 @@ module ps2test(
         .idle()
     );
     reg last_psclk;
+    reg [7:0] ready_mantain;
     always@(posedge clk) begin
         last_psclk<=ps2_clk; 
-        if(ps2_clk==last_psclk) ready<=0;
-        else ready<=done;
+        if(ps2_clk==last_psclk)begin
+            if(ready_mantain>0)ready_mantain<=ready_mantain-1;
+            else ready<=0;
+        end else begin
+            ready<=done;
+            ready_mantain<=255;
+        end
     end
 endmodule
 

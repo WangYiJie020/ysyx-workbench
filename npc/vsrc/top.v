@@ -43,19 +43,9 @@ module top(
     assign ledr[0]=idle;
     assign ledr[1]=ps2_ready;
 
-    reg [7:0] showdelay_cnt;
-    always@(posedge clk or posedge rst or ps2_ready)begin
-        if(rst)showdelay_cnt<=0;
-        else if(ps2_ready)begin
-            showdelay_cnt<=8'd200;
-            $display("ps2_out=%h",ps2_out);
-        end
-        else if(showdelay_cnt!=0)showdelay_cnt<=showdelay_cnt-1;
-        //$display("showdelay_cnt=%d",showdelay_cnt);
-    end
 
     bcd7seg seghigh(
-        .bcd((showdelay_cnt!=0)?ps2_out[7:4]:0),
+        .bcd(ps2_ready?ps2_out[7:4]:0),
         .seg(seg1)
     );
     bcd7seg seglow(
