@@ -76,7 +76,7 @@ module top(
         .seg(seg5)
     );
 
-    reg is_unreleased;
+    reg is_released;
     reg [31:0] remain_ticks;
     always@(posedge clk or posedge rst)begin
         //$display("remain_ticks=%d",remain_ticks);
@@ -89,15 +89,15 @@ module top(
             {seg2, seg3} <= {ascii_seglow, ascii_seghigh};
             remain_ticks <= 32'h001f_ffff;
             if(ps2_out==8'hf0) begin
-                is_unreleased<=0;
+                is_released<=1;
                 hit_count <= hit_count + 1;
             end else begin
-                is_unreleased<=1;
+                is_released<=0;
             end
         end
         else if(remain_ticks>0) begin
             remain_ticks <= remain_ticks - 1;
-            if(remain_ticks==1&&is_unreleased) begin
+            if(remain_ticks==1&&is_released) begin
                 {seg0, seg1} <= 16'hff_ff;
                 {seg2, seg3} <= 16'hff_ff;
             end
