@@ -69,7 +69,7 @@ module top(
         .bcd(ascii_out[3:0]),
         .seg(seg2)
     );
-    always@(posedge ps2_ready)begin
+    always@(ps2_ready)begin
         seg0<=ps2_ready?seglow:8'hff;
         seg1<=ps2_ready?seghigh:8'hff;
     end
