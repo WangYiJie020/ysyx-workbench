@@ -28,14 +28,14 @@ module top(
     wire [7:0] ps2_out;
     wire idle;
     wire ps2_ready;
-    reg [2:0] delaycnt;
+    reg [3:0] delaycnt;
     reg notidle;
     always @(posedge clk or posedge rst) begin
         if (rst) begin
-            delaycnt <= 3'b0;
+            delaycnt <= 4'b0;
         end else begin
-            if (delaycnt == 3'b000) notidle <= (~idle)|ps2_ready;
-            delaycnt <= delaycnt + 3'b001;
+            if (delaycnt == 4'b0000) notidle <= (~idle)|ps2_ready;
+            delaycnt <= delaycnt + 1;
         end
     end
     ps2test _keyboard(
