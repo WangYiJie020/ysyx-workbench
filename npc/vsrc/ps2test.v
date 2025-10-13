@@ -23,7 +23,7 @@ module ps2test(
             else ready<=0;
         end else begin
             ready<=done;
-            ready_mantain<=32'h004F_FFFF;
+            ready_mantain<=32'h003F_FFFF;
         end
     end
 endmodule
