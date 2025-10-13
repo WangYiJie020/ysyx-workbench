@@ -14,7 +14,12 @@ module ps2test(
         .done(done),
         .idle()
     );
-    assign ready = done&ps2_clk;
+    reg last_psclk;
+    always@(posedge clk) begin
+        last_psclk<=ps2_clk; 
+        if(ps2_clk==last_psclk) ready<=0;
+        else ready<=done;
+    end
 endmodule
 
 // I had finished it on HDLbits
