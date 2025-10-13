@@ -33,7 +33,8 @@ module top(
         .ps2_clk(ps2_clk),
         .d(ps2_data),
         .data(ps2_out),
-        .ready(ps2_ready)
+        .ready(ps2_ready),
+        .idle(idle)
     );
     
     always@(*)begin
@@ -71,4 +72,5 @@ module top(
     );
     assign seg0=ps2_ready ?seglow:8'hff;
     assign seg1=ps2_ready?seghigh:8'hff;
+    assign ledr[3]=idle;
 endmodule

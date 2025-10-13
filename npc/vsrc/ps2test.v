@@ -3,7 +3,8 @@ module ps2test(
     input ps2_clk,
     input d,
     output reg [7:0] data,
-    output ready
+    output ready,
+    output idle
 );
     wire done;
     _my_hdl_sol fsm(
@@ -12,7 +13,7 @@ module ps2test(
         .reset(1'b0),
         .out_byte(data),
         .done(done),
-        .idle()
+        .idle(idle)
     );
 
     reg [2:0] ps2_clk_sync;
