@@ -95,9 +95,12 @@ module top(
                 is_unreleased<=1;
             end
         end
-        else if(!is_unreleased) begin
-            {seg0, seg1} <= 16'hff_ff;
-            {seg2, seg3} <= 16'hff_ff;
+        else if(remain_ticks>0) begin
+            remain_ticks <= remain_ticks - 1;
+            if(remain_ticks==1) begin
+                {seg0, seg1} <= 16'hff_ff;
+                {seg2, seg3} <= 16'hff_ff;
+            end
         end
     end
     assign ledr[3]=idle;
