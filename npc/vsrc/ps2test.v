@@ -27,7 +27,7 @@ module ps2test(
     always @(posedge clk) begin
         if (sampling) begin
             ready <= done;
-            $display("sampling ready=%b done=%b",ready,done);
+            //$display("sampling ready=%b done=%b",ready,done);
         end
         else begin
              ready <= 0;

@@ -84,7 +84,8 @@ module top(
             remain_ticks<=32'h003f_ffff;
             {seg0, seg1} <= {seglow, seghigh};
             {seg2, seg3} <= {ascii_seglow, ascii_seghigh};
-            hit_count <= hit_count + 1;
+            if(remain_ticks==0)
+                hit_count <= hit_count + 1;
             //if(ps2_ready)$display("ps2_out=%h %h",ps2_out[7:4],ps2_out[3:0]);
         end
         else if(remain_ticks>0)remain_ticks<=remain_ticks-1;
