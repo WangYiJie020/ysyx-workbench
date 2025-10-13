@@ -69,6 +69,6 @@ module top(
         .bcd(ascii_out[3:0]),
         .seg(seg2)
     );
-    assign seg0=ps2_ready?seglow:8'hff;
+    assign seg0=clk ?seglow:8'hff;
     assign seg1=ps2_ready?seghigh:8'hff;
 endmodule
