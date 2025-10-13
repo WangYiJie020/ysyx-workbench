@@ -97,7 +97,7 @@ module top(
         end
         else if(remain_ticks>0) begin
             remain_ticks <= remain_ticks - 1;
-            if(remain_ticks==1) begin
+            if(remain_ticks==1&&is_unreleased) begin
                 {seg0, seg1} <= 16'hff_ff;
                 {seg2, seg3} <= 16'hff_ff;
             end
