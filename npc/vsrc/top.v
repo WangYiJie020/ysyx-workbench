@@ -36,6 +36,9 @@ module top(
         .ready(ps2_ready),
         .idle(idle)
     );
+    always@(*)begin
+        if(ps2_ready)$display("ps2_out=%h",ps2_out);
+    end
     assign notidle = !idle;
     assign ledr[0]=idle;
     bcd7seg seghigh(
