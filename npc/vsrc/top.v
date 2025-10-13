@@ -78,7 +78,7 @@ module top(
             seg0<=seglow;
             seg1<=seghigh;
         end
-        else begin
+        else if(ps2_clk) begin
             seg0<=8'hff;
             seg1<=8'hff;
         end
