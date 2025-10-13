@@ -16,11 +16,16 @@ module ps2test(
     );
     reg last_psclk;
     reg [31:0] ready_mantain;
-    always@(posedge clk,negedge ps2_clk) begin
+    reg first;
+    always@(posedge clk) begin
         last_psclk<=ps2_clk; 
         if(ps2_clk==last_psclk)begin
             if(ready_mantain>0)ready_mantain<=ready_mantain-1;
-            else ready<=0;
+            else if(~first)ready<=0;
+            else begin
+                ready<=done;
+                first<=0;
+            end
         end else begin
             ready<=done;
             ready_mantain<=32'h002F_FFFF;
