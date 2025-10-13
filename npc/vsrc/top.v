@@ -68,7 +68,7 @@ module top(
         //$display("remain_ticks=%d",remain_ticks);
         if(rst)remain_ticks<=0;
         else if(ps2_ready)begin
-            remain_ticks<=32'h000f_ffff;
+            remain_ticks<=32'h005f_ffff;
             seg0<=seglow;
             seg1<=seghigh;
             if(ps2_ready)$display("ps2_out=%h %h",ps2_out[7:4],ps2_out[3:0]);
