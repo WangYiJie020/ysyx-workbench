@@ -39,7 +39,7 @@ module top(
     always@(*)begin
         if(ps2_ready)$display("ps2_out=%h",ps2_out);
     end
-    assign notidle = !idle;
+    assign notidle = 1;
     assign ledr[0]=idle;
     bcd7seg seghigh(
         .bcd(notidle?ps2_out[7:4]:0),
