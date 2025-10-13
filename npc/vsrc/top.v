@@ -48,7 +48,7 @@ module top(
         if(rst)showdelay_cnt<=0;
         else if(ps2_ready)showdelay_cnt<=8'd200;
         else if(showdelay_cnt!=0)showdelay_cnt<=showdelay_cnt-1;
-        $display("showdelay_cnt=%d",showdelay_cnt);
+        //$display("showdelay_cnt=%d",showdelay_cnt);
     end
 
     bcd7seg seghigh(
