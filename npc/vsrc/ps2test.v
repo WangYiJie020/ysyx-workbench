@@ -18,12 +18,12 @@ module ps2test(
     reg [31:0] ready_mantain;
     reg first;
     always@(posedge clk) begin
-        last_psclk<=ps2_clk; 
+        last_psclk<=ps2_clk;
         if(ps2_clk==last_psclk)begin
             if(ready_mantain>0)ready_mantain<=ready_mantain-1;
             else if(~first)ready<=0;
             else begin
-                ready<=done;
+                ready<=0;
                 first<=1;
             end
         end else begin
