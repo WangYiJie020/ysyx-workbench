@@ -14,6 +14,7 @@ module ps2test(
         .done(done),
         .idle()
     );
+    /*
     reg last_psclk;
     reg [31:0] ready_mantain;
     reg first;
@@ -31,6 +32,7 @@ module ps2test(
             ready_mantain<=32'h002F_FFFF;
         end
     end
+    */
 endmodule
 
 // I had finished it on HDLbits
