@@ -76,7 +76,7 @@ module top(
         else if(ps2_ready)remain_ticks<=100;
         else if(remain_ticks>0)remain_ticks<=remain_ticks-1;
     end
-    always@(ps2_ready)begin
+    always@(ps2_ready or clk)begin
         if(ps2_ready)begin
             seg0<=seglow;
             seg1<=seghigh;
