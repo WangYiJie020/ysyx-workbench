@@ -76,30 +76,26 @@ module top(
         .seg(seg5)
     );
 
-    reg [31:0] remain_ticks;
+    reg is_unreleased;
     always@(posedge clk or posedge rst)begin
         //$display("remain_ticks=%d",remain_ticks);
         if(rst)begin
-            remain_ticks<=0;
             $display("reset");
         end
         else if(ps2_ready)begin
-            remain_ticks<=32'h002f_ffff;
             $display("ps2_ready key %h",ps2_out);
             {seg0, seg1} <= {seglow, seghigh};
             {seg2, seg3} <= {ascii_seglow, ascii_seghigh};
-            if(ps2_out==8'hf0)
+            if(ps2_out==8'hf0) begin
+                is_unreleased<=0;
                 hit_count <= hit_count + 1;
-            //if(ps2_ready)$display("ps2_out=%h %h",ps2_out[7:4],ps2_out[3:0]);
-        end
-        else if(remain_ticks>0) begin
-            remain_ticks<=remain_ticks-1;
-            if(remain_ticks==1)begin
-                {seg0, seg1} <= 16'hff_ff;
-                {seg2, seg3} <= 16'hff_ff;
-
-                $display("timeout");
+            end else begin
+                is_unreleased<=1;
             end
+        end
+        else if(is_unreleased) begin
+            {seg0, seg1} <= 16'hff_ff;
+            {seg2, seg3} <= 16'hff_ff;
         end
     end
     assign ledr[3]=idle;
