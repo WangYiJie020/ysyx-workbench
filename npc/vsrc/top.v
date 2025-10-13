@@ -41,5 +41,6 @@ module top(
         .bcd(ps2_out[3:0]),
         .seg(seg0)
     );
+    assign ledr[1]=clk;
     assign ledr[0]=ps2_clk;
 endmodule
