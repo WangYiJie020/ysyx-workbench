@@ -35,11 +35,11 @@ module top(
     );
 
     bcd7seg seghigh(
-        .bcd(ps2_out[7:4]),
+        .bcd(ps2_ready?ps2_out[7:4]:0),
         .seg(seg1)
     );
     bcd7seg seglow(
-        .bcd(ps2_out[3:0]),
+        .bcd(ps2_ready?ps2_out[3:0]:0),
         .seg(seg0)
     );
 endmodule
