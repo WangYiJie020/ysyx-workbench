@@ -87,7 +87,7 @@ module top(
             $display("ps2_ready key %h",ps2_out);
             {seg0, seg1} <= {seglow, seghigh};
             {seg2, seg3} <= {ascii_seglow, ascii_seghigh};
-            remain_ticks <= 32'h001f_ffff;
+            remain_ticks <= 32'h000f_ffff;
             if(ps2_out==8'hf0) begin
                 is_released<=1;
                 wait_code_after_f0<=1;
