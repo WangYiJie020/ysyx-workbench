@@ -54,6 +54,7 @@ module top(
     parameter ADD=2'b00,LI=2'b10,BNER0=2'b11;
     parameter OUT=2'b01;
 
+    assign nxt_pc = (op==BNER0 && r[rs2]!=r[0]) ? addr : pc+1;
     assign out = (op==OUT) ? r[rd] : 8'b0;
 
     always @(posedge clk) begin
