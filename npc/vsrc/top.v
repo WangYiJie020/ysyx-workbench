@@ -60,7 +60,7 @@ module top(
             r[1] <= nxt_r[1];
             r[2] <= nxt_r[2];
             r[3] <= nxt_r[3];
-            $display("pc=%d code=%b r0=%d r1=%d r2=%d r3=%d out=%d", pc, code, r[0], r[1], r[2], r[3], res);
+            if(pc!=6) $display("pc=%d code=%b r0=%d r1=%d r2=%d r3=%d out=%d", pc, code, r[0], r[1], r[2], r[3], res);
         end
     end
 
