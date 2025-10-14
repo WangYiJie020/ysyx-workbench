@@ -25,7 +25,7 @@ module top(
     output [7:0] seg7
 );
 initial begin
-    {seg0,seg1,seg2,seg3,seg4,seg5,seg6,seg7}=64'hff_ff_ff_ff_ff_ff;
+    {seg0,seg1,seg2,seg3,seg4,seg5,seg6,seg7}=64'hff_ff_ff_ff_ff_ff_ff_ff;
 end
     wire [7:0] ps2_out;
     wire idle;
