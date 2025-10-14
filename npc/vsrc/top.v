@@ -42,29 +42,35 @@ module top(
     reg [3:0] pc;
     wire [7:0] code = rom[pc];
     wire [3:0] nxt_pc;
-    wire [7:0] res;
-    wire [7:0] nxt_r[4];
-    scpu cpu(
-        .code(code),
-        .pc(pc),
-        .nxt_pc(nxt_pc),
-        .out(res),
-        .rin(r),
-        .rout(nxt_r)
-    );
+
+    wire [1:0] op = code[7:6];
+    wire [1:0] rd = code[5:4];
+    wire [1:0] rs1 = code[3:2];
+    wire [1:0] rs2 = code[1:0];
+    wire [7:0] imm = {4'b0, code[3:0]};
+    wire [3:0] addr = code[5:2];
+    wire [7:0] out;
+
+    parameter ADD=2'b00,LI=2'b10,BNER0=2'b11;
+    parameter OUT=2'b01;
+
+    assign nxt_pc = (op==BNER0 && r[rs2]!=r[0]) ? addr : pc+1;
+    assign out = (op==OUT) ? r[rd] : 8'b0;
+
     always @(posedge clk) begin
         if (rst) pc <= 0;
-        else begin 
+        else begin
+            case (op)
+                ADD: r[rd] <= r[rs1] + r[rs2];
+                LI: r[rd] <= imm;
+                default: ;
+            endcase
             pc <= (pc == 6)?pc:nxt_pc;
-            r[0] <= nxt_r[0];
-            r[1] <= nxt_r[1];
-            r[2] <= nxt_r[2];
-            r[3] <= nxt_r[3];
-            if(pc!=6) $display("pc=%d code=%b r0=%d r1=%d r2=%d r3=%d out=%d", pc, code, r[0], r[1], r[2], r[3], res);
+            if(pc!=6) $display("pc=%d code=%b r0=%d r1=%d r2=%d r3=%d", pc, code, r[0], r[1], r[2], r[3]);
         end
     end
 
-    bcd7seg _low(res[3:0], seg0);
-    bcd7seg _high(res[7:4], seg1);
+    bcd7seg _low(out[3:0], seg0);
+    bcd7seg _high(out[7:4], seg1);
 
 endmodule
