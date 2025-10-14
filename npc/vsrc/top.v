@@ -28,6 +28,7 @@ wire [9:0] h_addr;
 wire [9:0] v_addr;
 wire [23:0] vga_data;
 
+assign VGA_CLK = clk;
 vga_ctrl my_vga_ctrl(
     .pclk(clk),
     .reset(rst),
