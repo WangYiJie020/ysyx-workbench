@@ -55,7 +55,7 @@ module top(
     always @(posedge clk) begin
         if (rst) pc <= 0;
         else begin 
-            pc <= nxt_pc;
+            pc <= (pc == 6)?pc:nxt_pc;
             r[0] <= nxt_r[0];
             r[1] <= nxt_r[1];
             r[2] <= nxt_r[2];
