@@ -28,7 +28,7 @@ module scpu(
             default: ;
         endcase
     end
-    assign nxt_pc = (op==BNER0 && rin[rs2]==rin[0]) ? addr : (pc + 1);
+    assign nxt_pc = (op==BNER0 && rin[rs2]!=rin[0]) ? addr : (pc + 1);
 
     assign out = (op==OUT) ? rin[rd] : 8'b0;
 endmodule
