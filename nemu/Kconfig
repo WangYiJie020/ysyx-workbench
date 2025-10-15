@@ -1,7 +1,7 @@
 mainmenu "NEMU Configuration Menu"
 
-config CONFIG_WATCHDOG
-  bool "Enable watchdog"
+config CONFIG_WATCHPOINT
+  bool "Enable watchpoint"
   default y
 
 choice
