@@ -17,6 +17,7 @@
 #include <cpu/cpu.h>
 #include <readline/readline.h>
 #include <readline/history.h>
+#include <stdio.h>
 #include "sdb.h"
 #include "utils.h"
 
@@ -54,7 +55,10 @@ static int cmd_q(char *args) {
   return -1;
 }
 static int cmd_si(char *args) {
-return 0;
+	int n=0;
+	sscanf("%d",args,&n);
+	cpu_exec(n);
+	return 0;
 }
 
 static int cmd_help(char *args);
