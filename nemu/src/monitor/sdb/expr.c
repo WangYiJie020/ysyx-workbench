@@ -74,7 +74,9 @@ typedef struct token {
   char str[32];
 } Token;
 
-static Token tokens[32] __attribute__((used)) = {};
+#define MAX_TOKEN_NUM 3000
+
+static Token tokens[MAX_TOKEN_NUM] __attribute__((used)) = {};
 static int nr_token __attribute__((used))  = 0;
 
 static bool make_token(char *e) {
@@ -101,8 +103,7 @@ static bool make_token(char *e) {
          * of tokens, some extra actions should be performed.
          */
 
-		// We only support up to 32 tokens now
-		assert(nr_token < 32);
+		assert(nr_token < MAX_TOKEN_NUM);
 
 		tokens[nr_token].type = rules[i].token_type;
 
@@ -224,7 +225,12 @@ word_t eval(int p, int q, bool *success) {
 		  case '-': return val1 - val2;
 		  case '*': return val1 * val2;
 		  case '/': {
-				assert(val2 != 0);
+				//assert(val2 != 0);
+				if(val2 == 0) {
+					*success = false;
+					printf("Error: division by zero\n");
+					return 0;
+				}
 				return val1 / val2;
 		  }
 		  case TK_EQ: return val1 == val2;
