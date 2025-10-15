@@ -62,6 +62,10 @@ static int cmd_si(char *args) {
 	return 0;
 }
 static int cmd_p(char* args) {
+	if(args==NULL){
+		printf("Usage: p EXPR\n");
+		return 0;
+	}
 	bool success;
 	word_t result=expr(args,&success);
 	if(success)printf("0x%08x\n",result);
@@ -70,6 +74,10 @@ static int cmd_p(char* args) {
 }
 
 static int cmd_info(char* args) {
+	if(args==NULL){
+		printf("Usage: info r/w\n");
+		return 0;
+	}
 	if(strcmp(args,"r")==0)isa_reg_display();
 	else if(strcmp(args,"w")==0){
 		info_wp();
