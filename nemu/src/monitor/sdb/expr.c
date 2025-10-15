@@ -104,19 +104,18 @@ static bool make_token(char *e) {
 		// We only support up to 32 tokens now
 		assert(nr_token < 32);
 
+		tokens[nr_token].type = rules[i].token_type;
+
         switch (rules[i].token_type) {
 			case TK_NOTYPE: break;
 			case TK_DEC:{
-				if(rules[i].token_type == TK_DEC) {
-					assert(substr_len < 32);
-					strncpy(tokens[nr_token].str, substr_start, substr_len);
-					tokens[nr_token].str[substr_len] = '\0';
-				}
+				assert(substr_len < 32);
+				strncpy(tokens[nr_token].str, substr_start, substr_len);
+				tokens[nr_token].str[substr_len] = '\0';
 				nr_token++;
 				break;
 			}
 			default:{
-				tokens[nr_token].type = rules[i].token_type;
 				nr_token++;
 				break;
 			}
