@@ -56,7 +56,7 @@ static int cmd_q(char *args) {
 }
 static int cmd_si(char *args) {
 	int n=1;
-	sscanf("%d",args,&n);
+	sscanf(args,"%d",&n);
 	printf("si %d\n",n);
 	cpu_exec(n);
 	return 0;
