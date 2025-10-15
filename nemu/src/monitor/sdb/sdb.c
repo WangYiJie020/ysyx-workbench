@@ -72,16 +72,24 @@ static int cmd_p(char* args) {
 static int cmd_info(char* args) {
 	if(strcmp(args,"r")==0)isa_reg_display();
 	else if(strcmp(args,"w")==0){
-	info_wp();
+		info_wp();
 	}
 	else printf("Unknown info command '%s'\n", args);	
 	return 0;
 }	
 static int cmd_w(char* args) {
+	if(args==NULL){
+		printf("Usage: w EXPR\n");
+		return 0;
+	}
 	add_wp(args);
 	return 0;
 }
 static int cmd_d(char* args) {
+	if(args==NULL){
+		printf("Usage: d N\n");
+		return 0;
+	}
 	int no;
 	sscanf(args,"%d",&no);
 	delete_wp(no);
