@@ -72,11 +72,21 @@ static int cmd_p(char* args) {
 static int cmd_info(char* args) {
 	if(strcmp(args,"r")==0)isa_reg_display();
 	else if(strcmp(args,"w")==0){
-		printf("TODO: list watchpoints\n");
+	info_wp();
 	}
 	else printf("Unknown info command '%s'\n", args);	
 	return 0;
 }	
+static int cmd_w(char* args) {
+	add_wp(args);
+	return 0;
+}
+static int cmd_d(char* args) {
+	int no;
+	sscanf(args,"%d",&no);
+	delete_wp(no);
+	return 0;
+}
 static int cmd_x(char* args) {
 	int n;
 	word_t addr;
@@ -105,6 +115,8 @@ static struct {
   { "info", "Display information about registers or watchpoints", cmd_info },
   { "x", "Examine memory: x N EXPR", cmd_x },
   { "p", "Evaluate expression EXPR", cmd_p },  
+  { "w", "Set a watchpoint for expression EXPR", cmd_w },
+  { "d", "Delete the watchpoint number N", cmd_d },
   /* TODO: Add more commands */
 
 };
