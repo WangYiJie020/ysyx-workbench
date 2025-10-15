@@ -13,6 +13,7 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
+#include "memory/paddr.h"
 #include <isa.h>
 
 /* We use the POSIX regex functions to process regular expressions.
@@ -22,7 +23,18 @@
 
 enum {
 	TK_DEC = 'd',
-  TK_NOTYPE = 256, TK_EQ,
+	TK_HEX = 'h',
+
+	TK_REG = 'r',
+
+	TK_DEREF = 255,
+
+  TK_NOTYPE = 256,
+  TK_EQ,
+  TK_NEQ,
+  TK_AND,
+
+
   /* TODO: Add more token types */
 
 };
@@ -43,7 +55,13 @@ static struct rule {
   {"/", '/'},           // divide
   {"\\(", '('},         // left parenthesis
   {"\\)", ')'},         // right parenthesis
+						
   {"==", TK_EQ},        // equal
+  {"!=", TK_NEQ},      // not equal
+  {"&&", TK_AND},       // and
+
+  {"\\$[a-zA-Z]+[0-9]*", TK_REG}, // register
+  {"0[xX][0-9a-fA-F]+", TK_HEX}, // hexadecimal
 
   {"[0-9]+", TK_DEC},   // decimal
 };
@@ -79,6 +97,21 @@ typedef struct token {
 static Token tokens[MAX_TOKEN_NUM] __attribute__((used)) = {};
 static int nr_token __attribute__((used))  = 0;
 
+bool type_expect_nxt_is_expr(int type) {
+	switch(type) {
+		case '+':
+		case '-':
+		case '*':
+		case '/':
+		case TK_EQ:
+		case TK_NEQ:
+		case TK_AND:
+		case '(':
+			return true;
+		default:
+			return false;
+	}
+}
 static bool make_token(char *e) {
   int position = 0;
   int i;
@@ -93,8 +126,8 @@ static bool make_token(char *e) {
         char *substr_start = e + position;
         int substr_len = pmatch.rm_eo;
 
-        //Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
-        //    i, rules[i].regex, position, substr_len, substr_len, substr_start);
+        Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
+            i, rules[i].regex, position, substr_len, substr_len, substr_start);
 
         position += substr_len;
 
@@ -109,10 +142,20 @@ static bool make_token(char *e) {
 
         switch (rules[i].token_type) {
 			case TK_NOTYPE: break;
+			case TK_REG:
+			case TK_HEX:
 			case TK_DEC:{
 				assert(substr_len < 32);
 				strncpy(tokens[nr_token].str, substr_start, substr_len);
 				tokens[nr_token].str[substr_len] = '\0';
+				nr_token++;
+				break;
+			}
+			case '*': {
+				if(nr_token == 0 
+					|| type_expect_nxt_is_expr(tokens[nr_token - 1].type)) {
+					tokens[nr_token].type = TK_DEREF;
+				}
 				nr_token++;
 				break;
 			}
@@ -155,21 +198,36 @@ bool check_parentheses(int p, int q) {
 
 int op_priority(int op) {
 	switch(op) {
+		case TK_DEREF: return 15;
 		case '+':
-		case '-': return 1;
+		case '-': return 12;
 		case '*':
-		case '/': return 2;
-		case TK_EQ: return 0;
+		case '/': return 13;
+		case TK_AND: return 5;
+		case TK_NEQ: return 9;
+		case TK_EQ: return 9;
 		default: assert(0);
 	}
 }
 bool is_operator(int type) {
-	return type == '+' || type == '-' || type == '*' || type == '/' || type == TK_EQ;
+	switch(type) {
+		case '+':
+		case '-':
+		case '*':
+		case '/':
+		case TK_EQ:
+		case TK_NEQ:
+		case TK_AND:
+		case TK_DEREF:
+			return true;
+		default:
+			return false;
+	}
 }
 int find_main_op(int p, int q) {
 	int main_op = -1;
 	int min_priority = 0x114514;
-	int cnt = 0; // parentheses counter
+	int cnt = 0; // parentheses counter for(int i = p; i <= q; i++) {
 	for(int i = p; i <= q; i++) {
 		if(tokens[i].type == '(') {
 			cnt++;
@@ -204,6 +262,20 @@ word_t eval(int p, int q, bool *success) {
 	if(tokens[p].type == TK_DEC) {
 		return atoi(tokens[p].str);
 	}
+	else if(tokens[p].type == TK_HEX) {
+		unsigned int val;
+		sscanf(tokens[p].str, "%x", &val);
+		return val;
+	}
+	else if(tokens[p].type == TK_REG) {
+		 printf("Evaluating register %s\n", tokens[p].str);
+		 word_t v = isa_reg_str2val(tokens[p].str + 1, success);
+		 if(!(*success)) {
+			 printf("Error: unknown register %s\n", tokens[p].str);
+			 return 0;
+		 }
+		 return v;
+	}
 	else {
 		*success = false;
 		return 0;
@@ -217,8 +289,11 @@ word_t eval(int p, int q, bool *success) {
   }
   else {
 	  int op = find_main_op(p, q);
-	  word_t val1 = eval(p, op - 1, success);
-	  if(!(*success)) return 0;
+	  word_t val1 = 0;
+	  if(tokens[op].type != TK_DEREF){
+		  val1 = eval(p, op - 1, success);
+		  if(!(*success)) return 0;
+	  }
 	  word_t val2 = eval(op + 1, q, success);
 	  if(!(*success)) return 0;
 	  switch(tokens[op].type) {
@@ -235,6 +310,12 @@ word_t eval(int p, int q, bool *success) {
 				return val1 / val2;
 		  }
 		  case TK_EQ: return val1 == val2;
+		  case TK_NEQ: return val1 != val2;
+		  case TK_AND: return val1 && val2;
+		  case TK_DEREF: {
+				return paddr_read(val2, 4);
+				break;
+		  }
   		  default: assert(0);
 	  }
   }
