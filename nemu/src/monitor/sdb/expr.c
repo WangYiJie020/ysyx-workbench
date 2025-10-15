@@ -161,6 +161,9 @@ int op_priority(int op) {
 		default: assert(0);
 	}
 }
+bool is_operator(int type) {
+	return type == '+' || type == '-' || type == '*' || type == '/' || type == TK_EQ;
+}
 int find_main_op(int p, int q) {
 	int main_op = -1;
 	int min_priority = 0x114514;
@@ -173,6 +176,7 @@ int find_main_op(int p, int q) {
 			cnt--;
 		}
 		else if(cnt == 0) { // only consider operators outside parentheses
+			if(!is_operator(tokens[i].type)) continue;
 			printf("considering token %d: type %d(%c)\n", i, tokens[i].type, tokens[i].type);
 			int priority = op_priority(tokens[i].type);
 			if(priority <= min_priority) { // right associative
