@@ -36,7 +36,7 @@ static struct rule {
    * Pay attention to the precedence level of different rules.
    */
 
-  {"[ \\r\\n\\0]+", TK_NOTYPE},    // spaces
+  {"[ \\r\\n]+", TK_NOTYPE},    // spaces
   {"\\+", '+'},         // plus
   {"\\-", '-'},         // minus
   {"\\*", '*'},         // multiply
@@ -127,6 +127,7 @@ static bool make_token(char *e) {
     }
 
     if (i == NR_REGEX) {
+		printf("char(%d)", e[position]);
       printf("no match at position %d\n%s\n%*.s^\n", position, e, position, "");
       return false;
     }
