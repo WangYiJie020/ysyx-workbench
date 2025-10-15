@@ -174,6 +174,7 @@ int find_main_op(int p, int q) {
 			cnt--;
 		}
 		else if(cnt == 0) { // only consider operators outside parentheses
+			printf("considering token %d: type %d(%c)\n", i, tokens[i].type, tokens[i].type);
 			int priority = op_priority(tokens[i].type);
 			if(priority <= min_priority) { // right associative
 				min_priority = priority;
