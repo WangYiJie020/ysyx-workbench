@@ -84,6 +84,7 @@ void free_wp(WP* wp) {
 void add_wp(const char* sexpr) {
 	WP* wp = new_wp();
 	if (wp == NULL) return;
+	assert(sexpr);
 	strncpy(wp->expr, sexpr, sizeof(wp->expr) - 1);
 	wp->expr[sizeof(wp->expr) - 1] = '\0'; // Ensure null-termination
 	bool success;
