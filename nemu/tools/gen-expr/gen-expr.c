@@ -43,7 +43,7 @@ static size_t gen_rand_expr() {
 	switch(choose(4)) {
 		case 0: {
 			int num = choose(1000);
-			return snprintf(buf,MAX_LEN, "%d", num);
+			return snprintf(buf,MAX_LEN, "%du", num);
 			break;
 		}
 		case 1: {

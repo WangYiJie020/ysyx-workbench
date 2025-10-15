@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
 
   // read ./tools/gen-expr/input
 
-  FILE *fp = fopen("./tools/gen-expr/input", "r");
+  FILE *fp = fopen("./tools/gen-expr/input2", "r");
   if (fp == NULL) {
 	perror("Failed to open input file");
 	return 1;
