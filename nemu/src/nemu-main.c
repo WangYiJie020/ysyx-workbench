@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
 	bool success = true;
 	long result = expr(buffer, &success);
 	if (!success) {
-		fprintf(stderr, "Failed to evaluate expression: %s", buffer);
+		//fprintf(stderr, "Failed to evaluate expression: %s", buffer);
 		continue;
 	}
 	if (result != expected) {
