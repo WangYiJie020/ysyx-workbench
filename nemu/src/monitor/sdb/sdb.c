@@ -18,6 +18,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "sdb.h"
+#include "utils.h"
 
 static int is_batch_mode = false;
 
@@ -49,7 +50,8 @@ static int cmd_c(char *args) {
 
 
 static int cmd_q(char *args) {
-  return 0;
+  set_nemu_state(NEMU_QUIT,0,0);
+  return -1;
 }
 
 static int cmd_help(char *args);
