@@ -14,7 +14,10 @@
 #**************************************************************************************/
 
 count:
+	@echo 'total line'
 	find . -name '*.[ch]' -exec grep -v '^[[:space:]]*$$' {} + | wc -l
+	@echo 'diff'
+	git diff --numstat pa0 -- '*.[ch]' | awk '{s+=$$1-$$2}END{print s}'
 
 # Sanity check
 ifeq ($(wildcard $(NEMU_HOME)/src/nemu-main.c),)
