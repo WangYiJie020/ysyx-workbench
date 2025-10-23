@@ -14,7 +14,6 @@
 ***************************************************************************************/
 
 #include <common.h>
-#include "monitor/sdb/sdb.h"
 
 void init_monitor(int, char *[]);
 void am_init_monitor();
@@ -29,10 +28,8 @@ int main(int argc, char *argv[]) {
   init_monitor(argc, argv);
 #endif
 
-
   /* Start engine. */
   engine_start();
-
 
   return is_exit_status_bad();
 }
