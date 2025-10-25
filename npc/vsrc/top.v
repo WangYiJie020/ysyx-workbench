@@ -24,53 +24,129 @@ module top(
     output [7:0] seg6,
     output [7:0] seg7
 );
-    reg [7:0] rom[16];
-    reg [7:0] r[4];
-    initial begin
-        // r[0] = 10 set as loop end condition
-        // r[1] act as i
-        // r[2] act as istep
-        // r[3] act as sum
-        rom[0] = 8'b10_00_1010; // LI r[0], 10
-        rom[1] = 8'b10_01_0000; // LI r[1], 0
-        rom[2] = 8'b10_10_0001; // LI r[2], 1
-        rom[3] = 8'b00_01_01_10; // ADD r[1], r[1], r[2]
-        rom[4] = 8'b00_11_11_01; // ADD r[3], r[3], r[1]
-        rom[5] = 8'b11_0011_01; // JUMP 3 if r[1] != r[0]
-        rom[6] = 8'b01_11_0000; // OUT r[3]
-    end
-    reg [3:0] pc;
-    wire [7:0] code = rom[pc];
-    wire [3:0] nxt_pc;
+wire [9:0] h_addr;
+wire [9:0] v_addr;
+wire [23:0] vga_data;
 
-    wire [1:0] op = code[7:6];
-    wire [1:0] rd = code[5:4];
-    wire [1:0] rs1 = code[3:2];
-    wire [1:0] rs2 = code[1:0];
-    wire [7:0] imm = {4'b0, code[3:0]};
-    wire [3:0] addr = code[5:2];
-    wire [7:0] out;
+assign VGA_CLK = clk;
+vga_ctrl my_vga_ctrl(
+    .pclk(clk),
+    .reset(rst),
+    .vga_data(vga_data),
+    .h_addr(h_addr),
+    .v_addr(v_addr),
+    .hsync(VGA_HSYNC),
+    .vsync(VGA_VSYNC),
+    .valid(VGA_BLANK_N),
+    .vga_r(VGA_R),
+    .vga_g(VGA_G),
+    .vga_b(VGA_B)
+);
 
-    parameter ADD=2'b00,LI=2'b10,BNER0=2'b11;
-    parameter OUT=2'b01;
-
-    assign nxt_pc = (op==BNER0 && r[rs2]!=r[0]) ? addr : pc+1;
-    assign out = (op==OUT) ? r[rd] : 8'b0;
-
-    always @(posedge clk) begin
-        if (rst) pc <= 0;
-        else begin
-            case (op)
-                ADD: r[rd] <= r[rs1] + r[rs2];
-                LI: r[rd] <= imm;
-                default: ;
-            endcase
-            pc <= (pc == 6)?pc:nxt_pc;
-            if(pc!=6) $display("pc=%d code=%b r0=%d r1=%d r2=%d r3=%d", pc, code, r[0], r[1], r[2], r[3]);
-        end
-    end
-
-    bcd7seg _low(out[3:0], seg0);
-    bcd7seg _high(out[7:4], seg1);
+vmem my_vmem(
+    .h_addr(h_addr),
+    .v_addr(v_addr[8:0]),
+    .vga_data(vga_data)
+);
 
 endmodule
+
+module vmem(
+    input [9:0] h_addr,
+    input [8:0] v_addr,
+    output [23:0] vga_data
+);
+
+reg [23:0] vga_mem [524287:0];
+
+initial begin
+    $readmemh("resource/picture.hex", vga_mem);
+end
+
+assign vga_data = vga_mem[{h_addr, v_addr}];
+
+endmodule
+/*Exp7
+
+initial begin
+    {seg0,seg1,seg2,seg3,seg4,seg5,seg6,seg7}=64'hff_ff_ff_ff_ff_ff_ff_ff;
+end
+    wire [7:0] ps2_out;
+    wire idle;
+    wire ps2_ready;
+    ps2test _keyboard(
+        .clk(clk),
+        .ps2_clk(ps2_clk),
+        .d(ps2_data),
+        .data(ps2_out),
+        .ready(ps2_ready),
+        .idle(idle)
+    );
+    assign ledr[0]=clk;
+    assign ledr[1]=ps2_clk;
+
+    wire [7:0] seglow, seghigh;
+
+    bcd7seg _high(
+        .bcd(ps2_out[7:4]),
+        .seg(seghigh)
+    );
+    bcd7seg _low(
+        .bcd(ps2_out[3:0]),
+        .seg(seglow)
+    );
+
+    wire [7:0] ascii_out;
+    keyv2ascii _key2ascii(
+        .keyv(ps2_out),
+        .asciiv(ascii_out)
+    );
+    wire [7:0] ascii_seglow, ascii_seghigh;
+    bcd7seg _ascii_high(
+        .bcd(ascii_out[7:4]),
+        .seg(ascii_seghigh)
+    );
+    bcd7seg _ascii_low(
+        .bcd(ascii_out[3:0]),
+        .seg(ascii_seglow)
+    );
+
+    reg [7:0] hit_count;
+
+    bcd7seg _hitlow(
+        .bcd(hit_count[3:0]),
+        .seg(seg4)
+    );
+    bcd7seg _hithigh(
+        .bcd(hit_count[7:4]),
+        .seg(seg5)
+    );
+
+    reg is_released,wait_code_after_f0;
+    reg [31:0] remain_ticks;
+    always@(posedge clk or posedge rst)begin
+        //$display("remain_ticks=%d",remain_ticks);
+        if(ps2_ready)begin
+            //$display("ps2_ready key %h",ps2_out);
+            {seg0, seg1} <= {seglow, seghigh};
+            {seg2, seg3} <= {ascii_seglow, ascii_seghigh};
+            remain_ticks <= 32'h000f_ffff;
+            if(ps2_out==8'hf0) begin
+                is_released<=1;
+                wait_code_after_f0<=1;
+                hit_count <= hit_count + 1;
+            end else begin
+                if(wait_code_after_f0) wait_code_after_f0<=0;
+                else is_released<=0;
+            end
+        end
+        else if(remain_ticks>0) begin
+            remain_ticks <= remain_ticks - 1;
+            if(remain_ticks==1&&is_released) begin
+                {seg0, seg1} <= 16'hff_ff;
+                {seg2, seg3} <= 16'hff_ff;
+            end
+        end
+    end
+    assign ledr[3]=idle;
+*/
