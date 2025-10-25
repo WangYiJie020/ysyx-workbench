@@ -15,7 +15,6 @@
 
 #include <isa.h>
 #include <memory/paddr.h>
-#include "sdb/sdb.h"
 
 void init_rand();
 void init_log(const char *log_file);
@@ -128,8 +127,6 @@ void init_monitor(int argc, char *argv[]) {
   init_sdb();
 
   IFDEF(CONFIG_ITRACE, init_disasm());
-  
-  init_wp_pool();
 
   /* Display welcome message. */
   welcome();
