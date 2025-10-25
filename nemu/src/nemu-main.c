@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
   init_monitor(argc, argv);
 #endif
 
-  FILE* fp=fopen("~/test_51","r");
+  FILE* fp=fopen("./tools/gen-expr/test_51","r");
   printf("err: %d\n", errno);
   assert(fp!=NULL);
 
