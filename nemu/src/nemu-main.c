@@ -29,6 +29,31 @@ int main(int argc, char *argv[]) {
   init_monitor(argc, argv);
 #endif
 
+  FILE* fp=fopen("~/test_51","r");
+  assert(fp!=NULL);
+
+  char str[114514];
+  char sans[114];
+
+  while(true){
+    if(!fgets(sans,sizeof(sans),fp)) break;
+    if(feof(fp)) break;
+    if(!fgets(str,sizeof(str),fp))break;;
+    uint32_t ans=atoi(sans);
+    bool success=0;
+    uint32_t result=expr(str,&success);
+    if(!success) {
+      printf("FAILED expr %s\n", str);
+      continue;
+    }
+    if(result!=ans){
+      printf("WA: %s\n", str);
+      printf("expected: %u, get: %u\n", ans, result);
+    }
+  }
+
+  fclose(fp);
+  
 
   /* Start engine. */
   engine_start();

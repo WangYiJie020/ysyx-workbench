@@ -268,9 +268,6 @@ word_t eval(int p, int q, bool *success) {
 		return val;
 	}
 	else if(tokens[p].type == TK_REG) {
-		 if(strcmp(tokens[p].str+1,"pc")==0){
-			 return cpu.pc;
-		 }
 		 //printf("Evaluating register %s\n", tokens[p].str);
 		 word_t v = isa_reg_str2val(tokens[p].str + 1, success);
 		 if(!(*success)) {
