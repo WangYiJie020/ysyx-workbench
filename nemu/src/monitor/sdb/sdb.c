@@ -90,6 +90,10 @@ static int cmd_w(char* args) {
 		printf("Usage: w EXPR\n");
 		return 0;
 	}
+	
+#ifndef CONFIG_WATCHPOINT
+ 	 Log("NOTE! wp not work since CONFIG_WATCHPOINT not set");
+#endif
 	add_wp(args);
 	return 0;
 }
