@@ -127,8 +127,6 @@ void check_wp() {
 	while (wp != NULL) {
 		bool success;
 		word_t new_value = expr(wp->expr, &success);
-
-		printf("old %s %u",wp->expr,wp->last_value);
 		if (!success) {
 			printf("Invalid expression '%s'\n", wp->expr);
 			wp = wp->next;
