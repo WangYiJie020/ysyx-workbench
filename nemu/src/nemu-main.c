@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
 #endif
 
   FILE* fp=fopen("./tools/gen-expr/test_51","r");
-  printf("err: %d\n", errno);
+  if(fp==NULL)printf("err: %d\n", errno);
   assert(fp!=NULL);
 
   char str[114514];
