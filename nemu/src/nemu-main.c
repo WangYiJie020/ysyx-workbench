@@ -15,6 +15,7 @@
 
 #include <common.h>
 #include "monitor/sdb/sdb.h"
+#include <errno.h>
 
 void init_monitor(int, char *[]);
 void am_init_monitor();
@@ -30,6 +31,7 @@ int main(int argc, char *argv[]) {
 #endif
 
   FILE* fp=fopen("~/test_51","r");
+  printf("err: %d\n", errno);
   assert(fp!=NULL);
 
   char str[114514];
