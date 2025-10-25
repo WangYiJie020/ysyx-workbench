@@ -92,7 +92,7 @@ static int cmd_w(char* args) {
 	}
 	
 #ifndef CONFIG_WATCHPOINT
- 	 Log("NOTE! wp not work since CONFIG_WATCHPOINT not set");
+ 	 Log("%sWARN! wp not work since CONFIG_WATCHPOINT not set",ANSI_FG_YELLOW);
 #endif
 	add_wp(args);
 	return 0;
