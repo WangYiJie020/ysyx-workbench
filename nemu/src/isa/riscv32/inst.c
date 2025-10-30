@@ -13,8 +13,10 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
+#include "common.h"
 #include "local-include/reg.h"
 #include "macro.h"
+#include <assert.h>
 #include <cpu/cpu.h>
 #include <cpu/ifetch.h>
 #include <cpu/decode.h>
@@ -57,6 +59,8 @@ static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_
   uint32_t i = s->isa.inst;
   int rs1 = BITS(i, 19, 15);
   int rs2 = BITS(i, 24, 20);
+  assert(rs2<32); // 5bit can't >= 32
+				  // hence we can always get src2
   *rd     = BITS(i, 11, 7);
   switch (type) {
     case TYPE_I: src1R(); src2R(); immI(); break;
@@ -70,6 +74,12 @@ static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_
   }
   
       printf("  |decode:| rd %d r1 %d r2 %d imm %X(%d)\n",*rd,rs1,rs2,*imm,*imm);
+}
+
+word_t dynamic_sext(word_t v,int len){
+	v &= (1U << len) - 1;
+	if(v >> (len - 1))v|=~((1U << len) - 1);
+	return v;
 }
 
 static int decode_exec(Decode *s) {
@@ -103,6 +113,9 @@ static int decode_exec(Decode *s) {
 		  Mw(src1 + imm, 4, src2));
 
   INSTPAT("??????? ????? ????? 011 ????? 00100 11", sltiu  , I, R(rd) = (src1<imm)?1:0); 
+  INSTPAT("0100000 ????? ????? 101 ????? 00100 11", srai   , I,
+		  word_t shamt=BITS(s->isa.inst,24,20);
+		  R(rd) = dynamic_sext(src1>>shamt,32-shamt)); 
 
 
   INSTPAT("??????? ????? ????? 000 ????? 00100 11", addi   , I,
