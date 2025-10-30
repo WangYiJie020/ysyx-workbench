@@ -105,7 +105,7 @@ static int decode_exec(Decode *s) {
 
 
   INSTPAT("??????? ????? ????? 000 ????? 00100 11", addi   , I,
-		  printf("addi %d+%d=%d to r%d\n",src1,imm,src1+imm,rd);
+//		  printf("addi %d+%d=%d to r%d\n",src1,imm,src1+imm,rd);
 		  R(rd) = src1 + imm); 
   INSTPAT("0000000 ????? ????? 000 ????? 01100 11", add    , I, 
 		  printf("add %d + %d = %d to r%d\n",src1,src2,src1+src2,rd);
