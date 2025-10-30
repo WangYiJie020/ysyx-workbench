@@ -69,7 +69,7 @@ static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_
     default: panic("unsupported type = %d", type);
   }
   
-      printf("rd %d r1 %d r2 %d imm %X\n",*rd,rs1,rs2,*imm);
+      printf("rd %d r1 %d r2 %d imm %X(%d)\n",*rd,rs1,rs2,*imm,*imm);
 }
 
 static int decode_exec(Decode *s) {
