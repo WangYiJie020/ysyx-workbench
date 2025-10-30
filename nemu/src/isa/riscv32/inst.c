@@ -37,7 +37,7 @@ enum {
 #define immI() do { *imm = SEXT(BITS(i, 31, 20), 12); } while(0)
 #define immU() do { *imm = SEXT(BITS(i, 31, 12), 20) << 12; } while(0)
 #define immS() do { *imm = (SEXT(BITS(i, 31, 25), 7) << 5) | BITS(i, 11, 7); } while(0)
-#define immB() do { *imm = (BITS(i,31,31)<<12)|(BITS(i,7,7)<<11)|(BITS(i,30,25)<<5)|(BITS(i,11,8)<<1);}while(0)
+#define immB() do { *imm = SEXT((BITS(i,31,31)<<12)|(BITS(i,7,7)<<11)|(BITS(i,30,25)<<5)|(BITS(i,11,8)<<1),13);}while(0)
 
 #define immJ() do{*imm=getimmJ(i);}while(0)
 
