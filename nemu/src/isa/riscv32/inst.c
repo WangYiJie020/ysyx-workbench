@@ -77,7 +77,7 @@ static int decode_exec(Decode *s) {
   void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
   char buf[512];
   disassemble(buf,sizeof(buf),s->pc,(uint8_t*)&s->isa.inst,s->snpc-s->pc);
-  printf(" |exec:| %25s \t",buf);
+  printf(" |exec:| %-25s \t",buf);
 
 #define INSTPAT_INST(s) ((s)->isa.inst)
 #define INSTPAT_MATCH(s, name, type, ... /* execute body */ ) { \
