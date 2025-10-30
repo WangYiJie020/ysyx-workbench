@@ -74,6 +74,10 @@ static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_
 
 static int decode_exec(Decode *s) {
   s->dnpc = s->snpc;
+  void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
+  char buf[512];
+  disassemble(buf,sizeof(buf),s->pc,(uint8_t*)&s->isa.inst,s->snpc-s->pc);
+  printf("exec %s\n",buf);
 
 #define INSTPAT_INST(s) ((s)->isa.inst)
 #define INSTPAT_MATCH(s, name, type, ... /* execute body */ ) { \
