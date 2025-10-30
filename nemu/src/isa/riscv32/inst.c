@@ -38,6 +38,9 @@ enum {
 #define immS() do { *imm = (SEXT(BITS(i, 31, 25), 7) << 5) | BITS(i, 11, 7); } while(0)
 
 #define immJ() do{*imm=getimmJ(i);}while(0)
+
+// J-immediate encodes a signed offset in multiples of 2 bytes
+// imm[0]=0
 static int getimmJ(uint32_t i){
 	return SEXT(
 		(BITS(i,31,31)<<19)
@@ -45,7 +48,7 @@ static int getimmJ(uint32_t i){
 		|(BITS(i,20,20)<<10)
 		|BITS(i,30,21),
 		20
-		);
+		)<<1;
 }
 
 static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_t *imm, int type) {
@@ -83,7 +86,6 @@ static int decode_exec(Decode *s) {
   INSTPAT("??????? ????? ????? 000 ????? 01000 11", sb     , S, Mw(src1 + imm, 1, src2));
 
   INSTPAT("??????? ????? ????? 000 ????? 00100 11", addi   , I, R(rd) = src1 + imm); 
-  // J-immediate encodes a signed offset in multiples of 2 bytes
   INSTPAT("??????? ????? ????? ??? ????? 11011 11", jal    , J, R(rd) = s->pc+4; s->dnpc=s->pc+imm*2);
 
   INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, NEMUTRAP(s->pc, R(10))); // R(10) is $a0
