@@ -69,9 +69,7 @@ static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_
     default: panic("unsupported type = %d", type);
   }
   
-  if(type==TYPE_B){
       printf("rd %d r1 %d r2 %d imm %X\n",*rd,rs1,rs2,*imm);
-  }
 }
 
 static int decode_exec(Decode *s) {
