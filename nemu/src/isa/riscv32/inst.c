@@ -162,7 +162,7 @@ static int decode_exec(Decode *s) {
 	INSTPAT_B_IMM("000",beq	,src1==src2);
 	INSTPAT_B_IMM("001",bneq,src1!=src2);
 	INSTPAT_B_IMM("100",blt	,(sword_t)src1<(sword_t)src2);
-	INSTPAT_B_IMM("101",bge	,(sword_t)src1!=(sword_t)src2);
+	INSTPAT_B_IMM("101",bge	,(sword_t)src1>=(sword_t)src2);
 	INSTPAT_B_IMM("110",bltu,src1<src2);
 	INSTPAT_B_IMM("111",bgeu,src1>=src2);
 
