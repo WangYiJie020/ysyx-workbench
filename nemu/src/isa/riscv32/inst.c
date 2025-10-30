@@ -18,6 +18,7 @@
 #include <cpu/cpu.h>
 #include <cpu/ifetch.h>
 #include <cpu/decode.h>
+#include <stdio.h>
 
 #define R(i) gpr(i)
 #define Mr vaddr_read
@@ -49,6 +50,9 @@ static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_
 	case TYPE_J: immJ(); break;
     case TYPE_N: break;
     default: panic("unsupported type = %d", type);
+  }
+  if(type==TYPE_J){
+	  printf("rd %d imm %X\n",*rd,*imm);
   }
 }
 
