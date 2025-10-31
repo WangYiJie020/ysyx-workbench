@@ -21,6 +21,7 @@ char *strcpy(char *dst, const char *src) {
 }
 
 char *strncpy(char *dst, const char *src, size_t n) {
+    return 0;
   panic("Not implemented");
 }
 
