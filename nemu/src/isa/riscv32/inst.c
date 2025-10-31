@@ -164,6 +164,9 @@ static int decode_exec(Decode *s) {
 		  if(src2==0)R(rd)=src1;
 		  else if(src1==((word_t)1<<(WORD_MAXBITLEN-1))&&src2==(~0))R(rd)=0;
 		  else R(rd)=(sword_t)src1%(sword_t)src2;);
+  INSTPAT_R("0000001 ????? ????? 111 ????? 01100 11", remu   ,
+      if(src2==0)R(rd)=src1;
+      else R(rd)=src1%src2;);
 
   INSTPAT_R("0000000 ????? ????? 111 ????? 01100 11", and    , R(rd) = src1 & src2); 
   INSTPAT_R("0000000 ????? ????? 110 ????? 01100 11", or     , R(rd) = src1 | src2); 
