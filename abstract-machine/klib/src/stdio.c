@@ -40,6 +40,7 @@ int sprintf(char *out, const char *fmt, ...) {
                          _putch('-');
                          d=-d;
                      }
+                     panic("s");
                      do{
                          _putch('0'+d%10);
                          d/=10;
