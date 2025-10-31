@@ -21,6 +21,7 @@ char *strcat(char *dst, const char *src) {
 }
 
 int strcmp(const char *s1, const char *s2) {
+    return 0;
     printf("call strcmp %s, %s\n",s1,s2);
     return 0;
     int tmp;
