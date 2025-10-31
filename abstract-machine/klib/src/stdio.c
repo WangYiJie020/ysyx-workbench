@@ -14,7 +14,44 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
 }
 
 int sprintf(char *out, const char *fmt, ...) {
-  panic("Not implemented");
+#define _putch(ch) do{\
+    *out=ch;out++;\
+    cnt++;\
+}while(0)
+
+    int cnt=0;
+    va_list ap;
+    va_start(ap,fmt);
+    while(*fmt){
+        if(*fmt=='%'){
+            fmt++;
+            switch(*fmt){
+                case 's':{
+                     const char* str=va_arg(ap,const char*);
+                     while(*str){
+                         _putch(*str);
+                         str++;
+                     }
+                     break;
+                         }
+                case 'd':{
+                     int d=va_arg(ap,int);
+                     if(d<0){
+                         _putch('-');
+                         d=-d;
+                     }
+                     while(d){
+                         _putch('0'+d%10);
+                         d/=10;
+                     }
+                     break;
+                         }
+            }
+        }
+        else _putch(*fmt);
+    }
+    va_end(ap);
+    return cnt;
 }
 
 int snprintf(char *out, size_t n, const char *fmt, ...) {
