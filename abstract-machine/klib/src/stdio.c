@@ -41,10 +41,17 @@ int sprintf(char *out, const char *fmt, ...) {
                          _putch('-');
                          d=-d;
                      }
+                     char buf[20];
+                     char* end=buf+sizeof(buf);
+                     char* p=end-1;
                      do{
-                         _putch('0'+d%10);
+                         *p='0'+d%10;
                          d/=10;
                      }while(d);
+                     while(p!=end){
+                         _putch(*p);
+                         p++;
+                     }
                      break;
                          }
                 default:                     panic("s");
