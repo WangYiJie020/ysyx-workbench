@@ -28,7 +28,6 @@ int sprintf(char *out, const char *fmt, ...) {
             switch(*fmt){
                 case 's':{
                      const char* str=va_arg(ap,const char*);
-                     panic(str);
                      while(*str){
                          _putch(*str);
                          str++;
@@ -36,6 +35,7 @@ int sprintf(char *out, const char *fmt, ...) {
                      break;
                          }
                 case 'd':{
+                     panic("s");
                      int d=va_arg(ap,int);
                      if(d<0){
                          _putch('-');
