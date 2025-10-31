@@ -92,23 +92,23 @@ word_t d_sext(word_t v,int len){
   if(len==WORD_MAXBITLEN)return v;
   uint32_t spos=len-1; // for len==0 BITS use shift make v[spos]=0
   word_t  mask=(1U << len) - 1U;
-  printf("sign of %08X v[%d]=%d | mask %08X\n",v,len,(int)BITS(v,spos,spos),1U<<len);
+  //printf("sign of %08X v[%d]=%d | mask %08X\n",v,len,(int)BITS(v,spos,spos),1U<<len);
 	if(BITS(v,spos,spos))v|=~mask;
 	return v;
 }
 // Shift right arithmetic with dynamic shamt
 word_t d_sra(word_t v,int shamt){
     word_t res=d_sext(v>>shamt,WORD_MAXBITLEN-shamt);
-    printf("%08X >>> %d = %08X\n",v,shamt,res);
+//    printf("%08X >>> %d = %08X\n",v,shamt,res);
     return res;
 }
 
 static int decode_exec(Decode *s) {
   s->dnpc = s->snpc;
-  void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
-  char buf[512];
-  disassemble(buf,sizeof(buf),s->pc,(uint8_t*)&s->isa.inst,s->snpc-s->pc);
-  printf(" |exec:%08X| %-25s \t",s->isa.inst,buf);
+//  void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
+//  char buf[512];
+//  disassemble(buf,sizeof(buf),s->pc,(uint8_t*)&s->isa.inst,s->snpc-s->pc);
+//  printf(" |exec:%08X| %-25s \t",s->isa.inst,buf);
 
 #define INSTPAT_INST(s) ((s)->isa.inst)
 #define INSTPAT_MATCH(s, name, type, ... /* execute body */ ) { \
