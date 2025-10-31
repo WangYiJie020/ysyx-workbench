@@ -5,7 +5,6 @@
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 
 size_t strlen(const char *s) {
-    return 0;
   panic("Not implemented");
 }
 
@@ -21,7 +20,6 @@ char *strcpy(char *dst, const char *src) {
 }
 
 char *strncpy(char *dst, const char *src, size_t n) {
-    return 0;
   panic("Not implemented");
 }
 
@@ -48,7 +46,6 @@ int strcmp(const char *s1, const char *s2) {
 }
 
 int strncmp(const char *s1, const char *s2, size_t n) {
-    return 0;
   panic("Not implemented");
 }
 
@@ -63,12 +60,10 @@ void *memset(void *s, int c, size_t n) {
 }
 
 void *memmove(void *dst, const void *src, size_t n) {
-    return 0;
   panic("Not implemented");
 }
 
 void *memcpy(void *out, const void *in, size_t n) {
-    return 0;
   panic("Not implemented");
 }
 
