@@ -68,6 +68,7 @@ void *memcpy(void *out, const void *in, size_t n) {
 }
 
 int memcmp(const void *s1, const void *s2, size_t n) {
+    panic("s");
     const char* bs1=(const char*)s1;
     const char* bs2=(const char*)s2;
     const char* es1=bs1+n;
