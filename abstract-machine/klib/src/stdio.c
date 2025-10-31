@@ -46,6 +46,7 @@ int sprintf(char *out, const char *fmt, ...) {
                      char* p=end-1;
                      do{
                          *p='0'+d%10;
+                         p--;
                          d/=10;
                      }while(d);
                      while(p!=end){
