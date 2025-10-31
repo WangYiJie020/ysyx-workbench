@@ -36,6 +36,7 @@ int sprintf(char *out, const char *fmt, ...) {
                          }
                 case 'd':{
                      int d=va_arg(ap,int);
+                     putch('x');
                      if(d<0){
                          _putch('-');
                          d=-d;
