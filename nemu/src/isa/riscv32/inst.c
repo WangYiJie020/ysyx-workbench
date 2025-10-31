@@ -87,8 +87,7 @@ static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_
 
 // sign ext v with dynamic len
 word_t d_sext(word_t v,int len){
-	v &= (1U << len) - 1;
-	if(v >> (len - 1))v|=~((1U << len) - 1);
+	if(BITS(v,len,len))v|=~((1U << len) - 1);
 	return v;
 }
 // Shift right arithmetic with dynamic shamt
