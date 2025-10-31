@@ -93,7 +93,9 @@ word_t d_sext(word_t v,int len){
 }
 // Shift right arithmetic with dynamic shamt
 word_t d_sra(word_t v,int shamt){
-    return d_sext(v>>shamt,WORD_MAXBITLEN-shamt);
+    word_t res=d_sext(v>>shamt,WORD_MAXBITLEN-shamt);
+    printf("%08X >>> %d = %08X\n",v,shamt,res);
+    return res;
 }
 
 static int decode_exec(Decode *s) {
