@@ -82,7 +82,7 @@ static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_
     default: panic("unsupported type = %d", type);
   }
   
-    //  printf("  |decode:| rd %d r1 %d r2 %d imm %X(%d)\n",*rd,rs1,rs2,*imm,*imm);
+  printf("  |decode:| rd %d r1 %d r2 %d imm %X(%d)\n",*rd,rs1,rs2,*imm,*imm);
 }
 
 // sign ext v with dynamic len
@@ -98,11 +98,11 @@ word_t d_sra(word_t v,int shamt){
 
 static int decode_exec(Decode *s) {
   s->dnpc = s->snpc;
-  /*void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
+  void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
   char buf[512];
   disassemble(buf,sizeof(buf),s->pc,(uint8_t*)&s->isa.inst,s->snpc-s->pc);
   printf(" |exec:%08X| %-25s \t",s->isa.inst,buf);
-*/
+
 #define INSTPAT_INST(s) ((s)->isa.inst)
 #define INSTPAT_MATCH(s, name, type, ... /* execute body */ ) { \
   int rd = 0; \
