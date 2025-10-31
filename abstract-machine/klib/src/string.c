@@ -24,6 +24,7 @@ char *strncpy(char *dst, const char *src, size_t n) {
 }
 
 char *strcat(char *dst, const char *src) {
+    panic("s");
     char* pd=dst;
     while(*pd)pd++;
     while(*src){
@@ -50,7 +51,6 @@ int strncmp(const char *s1, const char *s2, size_t n) {
 }
 
 void *memset(void *s, int c, size_t n) {
-    panic("s");
     char* bs=(char*)s;
     char* es=bs+n;
     while(bs!=es){
