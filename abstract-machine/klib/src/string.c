@@ -51,7 +51,6 @@ int strncmp(const char *s1, const char *s2, size_t n) {
 }
 
 void *memset(void *s, int c, size_t n) {
-    panic("s");
     char* bs=(char*)s;
     char* es=bs+n;
     while(bs!=es){
@@ -76,6 +75,8 @@ int memcmp(const void *s1, const void *s2, size_t n) {
     while(bs1!=es1){
         int tmp=(*bs1-*bs2);
         if(tmp)return tmp;
+        bs1++;
+        bs2++;
     }
     return 0;
 }
