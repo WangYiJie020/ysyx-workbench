@@ -43,10 +43,10 @@ int sprintf(char *out, const char *fmt, ...) {
                      }
                      char buf[20];
                      char* end=buf+sizeof(buf);
-                     char* p=end-1;
+                     char* p=end;
                      do{
-                         *p='0'+d%10;
                          p--;
+                         *p='0'+d%10;
                          d/=10;
                      }while(d);
                      while(p!=end){
