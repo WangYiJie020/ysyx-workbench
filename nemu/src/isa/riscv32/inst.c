@@ -89,7 +89,7 @@ static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_
 word_t d_sext(word_t v,int len){
   uint32_t spos=len-1; // for len==0 BITS use shift make v[spos]=0
   word_t  mask=(1U << len) - 1U;
-  printf("sign of %08X v[%d]=%d | mask %08X\n",v,len,(int)BITS(v,spos,spos),mask);
+  printf("sign of %08X v[%d]=%d | mask %08X\n",v,len,(int)BITS(v,spos,spos),1U<<len);
 	if(BITS(v,spos,spos))v|=~mask;
 	return v;
 }
