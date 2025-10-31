@@ -145,7 +145,8 @@ static int decode_exec(Decode *s) {
 
   INSTPAT_S("??????? ????? ????? 000 ????? 01000 11", sb     , 
           if(src1+imm>=0xa00003f8)
-          printf("get sb %c(%d) at %08X\n",src2,src2,src1+imm);
+//          printf("get sb %c(%d) at %08X\n",src2,src2,src1+imm);
+          putchar(src2);
           else
           Mw(src1 + imm, 1, src2));
   INSTPAT_S("??????? ????? ????? 001 ????? 01000 11", sh     , Mw(src1 + imm, 2, src2));
