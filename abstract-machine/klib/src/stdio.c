@@ -35,16 +35,15 @@ int sprintf(char *out, const char *fmt, ...) {
                      break;
                          }
                 case 'd':{
-                     panic("s");
                      int d=va_arg(ap,int);
                      if(d<0){
                          _putch('-');
                          d=-d;
                      }
-                     while(d){
+                     do{
                          _putch('0'+d%10);
                          d/=10;
-                     }
+                     }while(d);
                      break;
                          }
             }
