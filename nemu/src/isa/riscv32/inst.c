@@ -82,27 +82,34 @@ static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_
     default: panic("unsupported type = %d", type);
   }
   
-    //  printf("  |decode:| rd %d r1 %d r2 %d imm %X(%d)\n",*rd,rs1,rs2,*imm,*imm);
+//  printf("  |decode:| rd %d r1 %d r2 %d imm %X(%d)\n",*rd,rs1,rs2,*imm,*imm);
 }
 
 // sign ext v with dynamic len
 word_t d_sext(word_t v,int len){
-	v &= (1U << len) - 1;
-	if(v >> (len - 1))v|=~((1U << len) - 1);
+  // fuck shift >=32 undefined/ only pick low 5b
+  // make 1<<32=1<<0=1
+  if(len==WORD_MAXBITLEN)return v;
+  uint32_t spos=len-1; // for len==0 BITS use shift make v[spos]=0
+  word_t  mask=(1U << len) - 1U;
+  //printf("sign of %08X v[%d]=%d | mask %08X\n",v,len,(int)BITS(v,spos,spos),1U<<len);
+	if(BITS(v,spos,spos))v|=~mask;
 	return v;
 }
 // Shift right arithmetic with dynamic shamt
 word_t d_sra(word_t v,int shamt){
-    return d_sext(v>>shamt,WORD_MAXBITLEN-shamt);
+    word_t res=d_sext(v>>shamt,WORD_MAXBITLEN-shamt);
+//    printf("%08X >>> %d = %08X\n",v,shamt,res);
+    return res;
 }
 
 static int decode_exec(Decode *s) {
   s->dnpc = s->snpc;
-  /*void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
-  char buf[512];
-  disassemble(buf,sizeof(buf),s->pc,(uint8_t*)&s->isa.inst,s->snpc-s->pc);
-  printf(" |exec:%08X| %-25s \t",s->isa.inst,buf);
-*/
+//  void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
+//  char buf[512];
+//  disassemble(buf,sizeof(buf),s->pc,(uint8_t*)&s->isa.inst,s->snpc-s->pc);
+//  printf(" |exec:%08X| %-25s \t",s->isa.inst,buf);
+
 #define INSTPAT_INST(s) ((s)->isa.inst)
 #define INSTPAT_MATCH(s, name, type, ... /* execute body */ ) { \
   int rd = 0; \
@@ -125,6 +132,7 @@ static int decode_exec(Decode *s) {
 		if(cond)s->dnpc=s->pc+imm); 
 
   INSTPAT_I("??????? ????? ????? 100 ????? 00000 11", lbu    , R(rd) = Mr(src1 + imm, 1));
+  INSTPAT_I("??????? ????? ????? 000 ????? 00000 11", lb     , R(rd) = SEXT(Mr(src1 + imm, 1),8));
   INSTPAT_I("??????? ????? ????? 001 ????? 00000 11", lh     , R(rd) = SEXT(Mr(src1 + imm, 2),16));
   INSTPAT_I("??????? ????? ????? 101 ????? 00000 11", lhu    , R(rd) = Mr(src1 + imm, 2));
   INSTPAT_I("??????? ????? ????? 010 ????? 00000 11", lw     , R(rd) = Mr(src1 + imm, 4));
