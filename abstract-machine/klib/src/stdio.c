@@ -15,7 +15,7 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
 
 int sprintf(char *out, const char *fmt, ...) {
 #define _putch(ch) do{\
-    *out=ch;out++;\
+    *out=(ch);out++;\
     cnt++;\
 }while(0)
 
@@ -40,13 +40,13 @@ int sprintf(char *out, const char *fmt, ...) {
                          _putch('-');
                          d=-d;
                      }
-                     panic("s");
                      do{
                          _putch('0'+d%10);
                          d/=10;
                      }while(d);
                      break;
                          }
+                default:                     panic("s");
             }
         }
         else _putch(*fmt);
