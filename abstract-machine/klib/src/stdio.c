@@ -23,7 +23,15 @@ int sprintf(char *out, const char *fmt, ...) {
     va_list ap;
     va_start(ap,fmt);
     while(*fmt){
-        if(*fmt=='%'){
+        if(*fmt=='\\'){
+            fmt++;
+            char o;
+            switch(*fmt){
+                case 'n':o='\n';break;
+            }
+            _putch(o);
+        }
+        else if(*fmt=='%'){
             fmt++;
             switch(*fmt){
                 case 's':{
