@@ -160,6 +160,9 @@ static int decode_exec(Decode *s) {
 		  if(src2==0)R(rd)=-1;
 		  else if(src1==signed_min&&src2==-1)R(rd)=signed_min;
 		  else R(rd)=(sword_t)src1/(sword_t)src2;);
+  INSTPAT_R("0000001 ????? ????? 101 ????? 01100 11", divu   ,
+      if(src2==0)R(rd)=~0;
+      else R(rd)=src1/src2;);
   INSTPAT_R("0000001 ????? ????? 110 ????? 01100 11", rem    ,
 		  if(src2==0)R(rd)=src1;
 		  else if(src1==((word_t)1<<(WORD_MAXBITLEN-1))&&src2==(~0))R(rd)=0;
