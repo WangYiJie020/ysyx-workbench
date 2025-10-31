@@ -49,6 +49,7 @@ int sprintf(char *out, const char *fmt, ...) {
             }
         }
         else _putch(*fmt);
+        fmt++;
     }
     va_end(ap);
     return cnt;
