@@ -87,8 +87,9 @@ static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_
 
 // sign ext v with dynamic len
 word_t d_sext(word_t v,int len){
-    printf("sign of %08X v[%d]=%d\n",v,len,(int)BITS(v,len,len));
-	if(BITS(v,len,len))v|=~((1U << len) - 1);
+  uint32_t spos=len-1; // for len==0 BITS use shift make v[spos]=0
+    printf("sign of %08X v[%d]=%d\n",v,len,(int)BITS(v,spos,spos));
+	if(BITS(v,spos,spos))v|=~((1U << len) - 1);
 	return v;
 }
 // Shift right arithmetic with dynamic shamt
