@@ -24,6 +24,7 @@ int strcmp(const char *s1, const char *s2) {
     int tmp;
     while(*s1&&*s2){
          tmp = (int)*s1-(int)*s2;
+         printf("%c - %c = %d\n",*s1,*s2,tmp);
          if(tmp)return tmp;
          s1++;
          s2++;
