@@ -82,7 +82,8 @@ static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_
     //  printf("  |decode:| rd %d r1 %d r2 %d imm %X(%d)\n",*rd,rs1,rs2,*imm,*imm);
 }
 
-word_t dynamic_sext(word_t v,int len){
+// sign ext v with dynamic len
+word_t d_sext(word_t v,int len){
 	v &= (1U << len) - 1;
 	if(v >> (len - 1))v|=~((1U << len) - 1);
 	return v;
@@ -128,7 +129,7 @@ static int decode_exec(Decode *s) {
   INSTPAT_R("0000000 ????? ????? 011 ????? 01100 11", sltu   , R(rd) = (src1<src2)?1:0); 
 
   word_t shamt=BITS(s->isa.inst,24,20);
-  INSTPAT_I("0100000 ????? ????? 101 ????? 00100 11", srai   , R(rd) = dynamic_sext(src1>>shamt,32-shamt)); 
+  INSTPAT_I("0100000 ????? ????? 101 ????? 00100 11", srai   , R(rd) = d_sext(src1>>shamt,32-shamt)); 
   INSTPAT_I("0000000 ????? ????? 101 ????? 00100 11", srli   , R(rd) = src1 >> shamt);
   INSTPAT_I("0000000 ????? ????? 001 ????? 00100 11", slli   , R(rd) = src1 << shamt);
 
