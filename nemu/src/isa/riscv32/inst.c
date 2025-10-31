@@ -52,7 +52,7 @@ enum {
 
 #define immJ() do{*imm=getimmJ(i);}while(0)
 
-#define TRACE_EXEC
+//#define TRACE_EXEC
 
 // J-immediate encodes a signed offset in multiples of 2 bytes
 // imm[0]=0
