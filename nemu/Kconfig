@@ -159,6 +159,20 @@ config ITRACE_COND
   string "Only trace instructions when the condition is true"
   default "true"
 
+config MTRACE
+  depends on TRACE
+	bool "Enable memory trace"
+	default n
+	
+config MTRACE_BEG
+	depends on MTRACE
+	int "trace memory begin"
+	default 0
+config MTRACE_END
+	depends on MTRACE
+	int "trace memory end"
+	default 4294967295 # 0xffffffff
+
 
 config DIFFTEST
   depends on TARGET_NATIVE_ELF
