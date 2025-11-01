@@ -13,6 +13,12 @@
 # See the Mulan PSL v2 for more details.
 #**************************************************************************************/
 
+count:
+	@echo 'total line'
+	find . -name '*.[ch]' -exec grep -v '^[[:space:]]*$$' {} + | wc -l
+	@echo 'diff'
+	git diff --numstat pa0 -- '*.[ch]' | awk '{s+=$$1-$$2}END{print s}'
+
 # Sanity check
 ifeq ($(wildcard $(NEMU_HOME)/src/nemu-main.c),)
   $(error NEMU_HOME=$(NEMU_HOME) is not a NEMU repo)
@@ -47,6 +53,7 @@ CFLAGS_BUILD += $(call remove_quote,$(CONFIG_CC_OPT))
 CFLAGS_BUILD += $(if $(CONFIG_CC_LTO),-flto,)
 CFLAGS_BUILD += $(if $(CONFIG_CC_DEBUG),-Og -ggdb3,)
 CFLAGS_BUILD += $(if $(CONFIG_CC_ASAN),-fsanitize=address,)
+CFLAGS_BUILD += $(if $(CONFIG_CC_UNDEF_ASN),-fsanitize=undefined,)
 CFLAGS_TRACE += -DITRACE_COND=$(if $(CONFIG_ITRACE_COND),$(call remove_quote,$(CONFIG_ITRACE_COND)),true)
 CFLAGS  += $(CFLAGS_BUILD) $(CFLAGS_TRACE) -D__GUEST_ISA__=$(GUEST_ISA)
 LDFLAGS += $(CFLAGS_BUILD)
