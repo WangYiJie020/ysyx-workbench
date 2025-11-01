@@ -17,10 +17,7 @@
 #include <cpu/cpu.h>
 #include <readline/readline.h>
 #include <readline/history.h>
-#include <stdio.h>
-#include <memory/paddr.h>
 #include "sdb.h"
-#include "utils.h"
 
 static int is_batch_mode = false;
 
@@ -51,76 +48,8 @@ static int cmd_c(char *args) {
 }
 
 
-int is_exit_status_bad(); 
 static int cmd_q(char *args) {
-  if(is_exit_status_bad())return -1;
-  else set_nemu_state(NEMU_QUIT,0,0);
   return -1;
-}
-static int cmd_si(char *args) {
-	int n=1;
-	if(args&&args[0])sscanf(args,"%d",&n);
-	cpu_exec(n);
-	return 0;
-}
-static int cmd_p(char* args) {
-	if(args==NULL){
-		printf("Usage: p EXPR\n");
-		return 0;
-	}
-	bool success;
-	word_t result=expr(args,&success);
-	if(success)printf("0x%08x\n",result);
-	else printf("Invalid expression '%s'\n",args);
-	return 0;
-}
-
-static int cmd_info(char* args) {
-	if(args==NULL){
-		printf("Usage: info r/w\n");
-		return 0;
-	}
-	if(strcmp(args,"r")==0)isa_reg_display();
-	else if(strcmp(args,"w")==0){
-		info_wp();
-	}
-	else printf("Unknown info command '%s'\n", args);	
-	return 0;
-}	
-static int cmd_w(char* args) {
-	if(args==NULL){
-		printf("Usage: w EXPR\n");
-		return 0;
-	}
-	
-#ifndef CONFIG_WATCHPOINT
- 	 Log("%sWARN! wp not work since CONFIG_WATCHPOINT not set",ANSI_FG_YELLOW);
-#endif
-	add_wp(args);
-	return 0;
-}
-static int cmd_d(char* args) {
-	if(args==NULL){
-		printf("Usage: d N\n");
-		return 0;
-	}
-	int no;
-	sscanf(args,"%d",&no);
-	delete_wp(no);
-	return 0;
-}
-static int cmd_x(char* args) {
-	int n;
-	word_t addr;
-	sscanf(args,"%d 0x%x",&n,&addr);
-	for(int i=0;i<n;i++){
-		printf("0x%08x: ",addr+i*4);
-		for(int j=0;j<4;j++){
-			printf("%02x ",paddr_read(addr+i*4+j,1));
-		}
-		printf("\n");
-	}
-	return 0;
 }
 
 static int cmd_help(char *args);
@@ -133,12 +62,7 @@ static struct {
   { "help", "Display information about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
-  { "si", "Step the program for N instructions", cmd_si },
-  { "info", "Display information about registers or watchpoints", cmd_info },
-  { "x", "Examine memory: x N EXPR", cmd_x },
-  { "p", "Evaluate expression EXPR", cmd_p },  
-  { "w", "Set a watchpoint for expression EXPR", cmd_w },
-  { "d", "Delete the watchpoint number N", cmd_d },
+
   /* TODO: Add more commands */
 
 };
