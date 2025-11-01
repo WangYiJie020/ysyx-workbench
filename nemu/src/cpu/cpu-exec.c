@@ -23,6 +23,7 @@
 #include "../monitor/sdb/sdb.h"
 #include "common.h"
 #include "debug.h"
+#include "utils.h"
 
 /* The assembly code of instructions executed is only output to the screen
  * when the number of instructions executed is less than this value.
@@ -97,8 +98,10 @@ void _ringbuf_dump(){
 		if(!pinst->pc)continue;
 
 		dis_asm(rawdasm,sizeof(rawdasm),pinst);
-		expand_tabs(dmpbuf,rawdasm,8);
-		printf("%08X: %-25s",pinst->pc,dmpbuf);
+		expand_tabs(dmpbuf,rawdasm,6);
+		
+		printf(ANSI_FG_WHITE "%08X| %-25s",
+				pinst->pc,dmpbuf);
 		for(int j=0;j<pinst->ilen;j++){
 			if(j)putchar(' ');
 			printf("%02x",pinst->code[j]);
