@@ -166,12 +166,12 @@ config MTRACE
 	
 config MTRACE_BEG
 	depends on MTRACE
-	int "trace memory begin"
+	hex "trace memory begin"
 	default 0
 config MTRACE_END
 	depends on MTRACE
-	int "trace memory end"
-	default 4294967295 # 0xffffffff
+	hex "trace memory end"
+	default 0xffffffff
 
 
 config DIFFTEST
