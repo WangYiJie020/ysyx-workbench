@@ -100,7 +100,7 @@ void _ringbuf_dump(){
 		dis_asm(rawdasm,sizeof(rawdasm),pinst);
 		expand_tabs(dmpbuf,rawdasm,6);
 #define ANSI_FG_GRAY "\033[90m" // light black
-		printf(ANSI_FG_GRAY "%08X: %s%-25s" ANSI_FG_GRAY "(",
+		printf("%08X: %s%-25s" ANSI_FG_GRAY "(",
 				pinst->pc,
 				_rb_mp1(i)==g_iringbuf.idx_end?ANSI_FG_RED:ANSI_NONE,
 				dmpbuf);
