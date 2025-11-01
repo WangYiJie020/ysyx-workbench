@@ -97,8 +97,8 @@ void _ringbuf_dump(){
 		if(!pinst->pc)continue;
 
 		dis_asm(rawdasm,sizeof(rawdasm),pinst);
-		expand_tabs(dmpbuf,rawdasm,4);
-		printf("%08X: %-20s",pinst->pc,dmpbuf);
+		expand_tabs(dmpbuf,rawdasm,8);
+		printf("%08X: %-25s",pinst->pc,dmpbuf);
 		for(int j=0;j<pinst->ilen;j++){
 			if(j)putchar(' ');
 			printf("%02x",pinst->code[j]);
