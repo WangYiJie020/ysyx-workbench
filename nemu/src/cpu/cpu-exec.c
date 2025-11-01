@@ -17,7 +17,11 @@
 #include <cpu/decode.h>
 #include <cpu/difftest.h>
 #include <locale.h>
+#include <stdint.h>
+#include <string.h>
 #include "../monitor/sdb/sdb.h"
+#include "common.h"
+#include "debug.h"
 
 /* The assembly code of instructions executed is only output to the screen
  * when the number of instructions executed is less than this value.
@@ -26,10 +30,52 @@
  */
 #define MAX_INST_TO_PRINT 10
 
+#define IRINGBUF_SIZE 32
+
+// for variant ilen
+#define MAX_INSTBYTE 8
+
+void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
+
 CPU_state cpu = {};
 uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
+
+struct{
+	struct{
+		vaddr_t pc;
+		int ilen;
+		uint8_t inst[MAX_INSTBYTE];
+	}buf[IRINGBUF_SIZE];
+	size_t idx_end;
+}g_iringbuf;
+
+// ringbuf mod plus 1
+#define _rb_mp1(x) (((x)+1)%IRINGBUF_SIZE)
+
+// push pc should nerver be 0
+// 0 pc consider as none inst will be ignore
+void _ringbuf_push(vaddr_t pc,const uint8_t* inst,int ilen){
+	g_iringbuf.buf[g_iringbuf.idx_end].pc=pc;
+	memcpy(g_iringbuf.buf[g_iringbuf.idx_end].inst,inst,ilen);
+	g_iringbuf.buf[g_iringbuf.idx_end].ilen=ilen;
+	g_iringbuf.idx_end=_rb_mp1(g_iringbuf.idx_end);
+}
+void _ringbuf_dump(){
+	char dmpbuf[256];
+	for(size_t i=_rb_mp1(g_iringbuf.idx_end);
+			i!=g_iringbuf.idx_end;
+			i=_rb_mp1(i)){
+		if(!g_iringbuf.buf[i].pc)continue;
+		disassemble(dmpbuf,sizeof(dmpbuf),
+				g_iringbuf.buf[i].pc,
+				g_iringbuf.buf[i].inst,
+				g_iringbuf.buf[i].ilen);
+		printf("%s\n",dmpbuf);
+	}
+}
+
 
 void device_update();
 
@@ -70,7 +116,8 @@ static void exec_once(Decode *s, vaddr_t pc) {
   memset(p, ' ', space_len);
   p += space_len;
 
-  void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
+  _ringbuf_push(MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc),
+		  (uint8_t *)&s->isa.inst, ilen);
   disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
       MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst, ilen);
 #endif
@@ -98,6 +145,7 @@ static void statistic() {
 
 void assert_fail_msg() {
   isa_reg_display();
+  _ringbuf_dump();
   statistic();
 }
 
