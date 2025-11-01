@@ -78,7 +78,7 @@ void _ringbuf_dump(){
 		if(!pinst->pc)continue;
 
 		dis_asm(dmpbuf,sizeof(dmpbuf),pinst);
-		printf("%08X: %-25s",pinst->pc,dmpbuf);
+		printf("%08X: %-30s",pinst->pc,dmpbuf);
 		for(int j=0;j<pinst->ilen;j++){
 			if(j)putchar(' ');
 			printf("%02x",pinst->code[j]);
