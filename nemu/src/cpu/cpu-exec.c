@@ -80,6 +80,9 @@ struct{
 // ringbuf mod plus 1
 #define _rb_mp1(x) (((x)+1)%IRINGBUF_SIZE)
 
+#define ANSI_FG_GRAY "\033[90m" // light black
+
+
 // push pc should nerver be 0
 // 0 pc consider as none inst will be ignore
 void _ringbuf_push(vaddr_t pc,const uint8_t* inst,int ilen){
@@ -99,7 +102,6 @@ void _ringbuf_dump(){
 
 		dis_asm(rawdasm,sizeof(rawdasm),pinst);
 		expand_tabs(dmpbuf,rawdasm,6);
-#define ANSI_FG_GRAY "\033[90m" // light black
 		printf("%08X: %s%-25s" ANSI_FG_GRAY "(",
 				pinst->pc,
 				_rb_mp1(i)==g_iringbuf.idx_end?ANSI_FG_RED:ANSI_NONE,
@@ -180,8 +182,10 @@ static void statistic() {
 }
 
 void assert_fail_msg() {
+#define putsyellow(s)  puts(ANSI_FG_YELLOW s ANSI_NONE);
+  putsyellow("inst buffer");
   _ringbuf_dump();
-  puts("reg info");
+  putsyellow("register info");
   isa_reg_display();
   statistic();
 }
