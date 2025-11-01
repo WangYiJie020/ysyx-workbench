@@ -18,6 +18,7 @@
 #include <cpu/difftest.h>
 #include <locale.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 #include "../monitor/sdb/sdb.h"
 #include "common.h"
@@ -42,12 +43,18 @@ uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
 
+typedef struct{
+	vaddr_t pc;
+	int ilen;
+	uint8_t code[MAX_INSTBYTE];
+}_pc_inst_t;
+
+void dis_asm(char* outbuf,int bufsiz,const _pc_inst_t* inst){
+	disassemble(outbuf,bufsiz,inst->pc,(uint8_t*)inst->code,inst->ilen);
+}	
+
 struct{
-	struct{
-		vaddr_t pc;
-		int ilen;
-		uint8_t inst[MAX_INSTBYTE];
-	}buf[IRINGBUF_SIZE];
+	_pc_inst_t buf[IRINGBUF_SIZE];
 	size_t idx_end;
 }g_iringbuf;
 
@@ -58,7 +65,7 @@ struct{
 // 0 pc consider as none inst will be ignore
 void _ringbuf_push(vaddr_t pc,const uint8_t* inst,int ilen){
 	g_iringbuf.buf[g_iringbuf.idx_end].pc=pc;
-	memcpy(g_iringbuf.buf[g_iringbuf.idx_end].inst,inst,ilen);
+	memcpy(g_iringbuf.buf[g_iringbuf.idx_end].code,inst,ilen);
 	g_iringbuf.buf[g_iringbuf.idx_end].ilen=ilen;
 	g_iringbuf.idx_end=_rb_mp1(g_iringbuf.idx_end);
 }
@@ -67,12 +74,16 @@ void _ringbuf_dump(){
 	for(size_t i=_rb_mp1(g_iringbuf.idx_end);
 			i!=g_iringbuf.idx_end;
 			i=_rb_mp1(i)){
-		if(!g_iringbuf.buf[i].pc)continue;
-		disassemble(dmpbuf,sizeof(dmpbuf),
-				g_iringbuf.buf[i].pc,
-				g_iringbuf.buf[i].inst,
-				g_iringbuf.buf[i].ilen);
-		printf("%s\n",dmpbuf);
+		_pc_inst_t* pinst=&g_iringbuf.buf[i];
+		if(!pinst->pc)continue;
+
+		dis_asm(dmpbuf,sizeof(dmpbuf),pinst);
+		printf("%08X: %-25s",pinst->pc,dmpbuf);
+		for(int j=0;j<pinst->ilen;j++){
+			if(j)putchar(' ');
+			printf("%02x",pinst->code[j]);
+		}
+		puts("");
 	}
 }
 
