@@ -100,13 +100,13 @@ void _ringbuf_dump(){
 		dis_asm(rawdasm,sizeof(rawdasm),pinst);
 		expand_tabs(dmpbuf,rawdasm,6);
 		
-		printf(ANSI_FG_WHITE "%08X| %-25s",
+		printf("%08X| " ANSI_FG_WHITE "%-25s" ANSI_NONE "(",
 				pinst->pc,dmpbuf);
 		for(int j=0;j<pinst->ilen;j++){
 			if(j)putchar(' ');
 			printf("%02x",pinst->code[j]);
 		}
-		puts("");
+		puts(")");
 	}
 }
 
