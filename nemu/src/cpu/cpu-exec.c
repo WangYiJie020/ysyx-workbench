@@ -53,6 +53,24 @@ void dis_asm(char* outbuf,int bufsiz,const _pc_inst_t* inst){
 	disassemble(outbuf,bufsiz,inst->pc,(uint8_t*)inst->code,inst->ilen);
 }	
 
+void expand_tabs(char *out, const char *in, int tabsize) {
+    int col = 0;
+    while (*in) {
+        if (*in == '\t') {
+            int spaces = tabsize - (col % tabsize);
+            for (int i = 0; i < spaces; i++) {
+                *out++ = ' ';
+                col++;
+            }
+        } else {
+            *out++ = *in;
+            col++;
+        }
+        in++;
+    }
+    *out = '\0';
+}
+
 struct{
 	_pc_inst_t buf[IRINGBUF_SIZE];
 	size_t idx_end;
@@ -70,6 +88,7 @@ void _ringbuf_push(vaddr_t pc,const uint8_t* inst,int ilen){
 	g_iringbuf.idx_end=_rb_mp1(g_iringbuf.idx_end);
 }
 void _ringbuf_dump(){
+	char rawdasm[128];
 	char dmpbuf[256];
 	for(size_t i=_rb_mp1(g_iringbuf.idx_end);
 			i!=g_iringbuf.idx_end;
@@ -77,8 +96,9 @@ void _ringbuf_dump(){
 		_pc_inst_t* pinst=&g_iringbuf.buf[i];
 		if(!pinst->pc)continue;
 
-		dis_asm(dmpbuf,sizeof(dmpbuf),pinst);
-		printf("%08X: %30s",pinst->pc,dmpbuf);
+		dis_asm(rawdasm,sizeof(rawdasm),pinst);
+		expand_tabs(dmpbuf,rawdasm,4);
+		printf("%08X: %-20s",pinst->pc,dmpbuf);
 		for(int j=0;j<pinst->ilen;j++){
 			if(j)putchar(' ');
 			printf("%02x",pinst->code[j]);
