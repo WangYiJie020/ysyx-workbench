@@ -65,7 +65,7 @@ static void single_cycle() {
     dut.clk=0;dut.eval();
 //	nvboard_update();
 
-	printf(">>> pc %08X",dut.pc);
+	printf("--> pc %08X",dut.pc);
 
     dut.clk=1;dut.eval();
 	nvboard_update();
