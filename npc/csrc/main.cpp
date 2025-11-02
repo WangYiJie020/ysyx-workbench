@@ -7,6 +7,7 @@
 #include <verilated_vcd_c.h>
 
 #include "Vtop.h"
+#include "Vtop__Dpi.h"
 #include <nvboard.h>
 
 #ifndef TOP_NAME
@@ -25,14 +26,22 @@ word_t mem[256]={
 	0x01400513,
 	0x010000e7,
 	0x00c000e7,
-	0x00c00067,
+	0x00100073, // ebreak
 	0x00a50513,
 	0x00008067
 };
 
+bool is_running=true;
+
+void raise_break(){
+	is_running=false;
+	puts("\n---break signal raise---\n");
+}
+
 uint32_t pmem_read(uint32_t addr){
 	return mem[addr/4];
 }
+
 
 static void single_cycle() {
     dut.clk=0;dut.eval();
@@ -60,12 +69,13 @@ int main(int argc, char **argv)
 
     reset(10);
 
-	int cnt=0;
-    while(1) {
+    while(is_running) {
 		single_cycle();
-		cnt++;
-		if(cnt>20)break;
     }
+
+	dut.final();
+
+	puts("\n--- simulation end ---\n");
 
     return 0;
 }

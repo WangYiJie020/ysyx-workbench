@@ -1,6 +1,8 @@
 parameter int WORD_BITWIDTH=32;
 parameter int REG_ADDRWIDTH=5;
 
+import "DPI-C" function void raise_break ();
+
 localparam TypeN=0,TypeR=1,TypeI=2,TypeS=3,TypeU=4,TypeJ=5,TypeB=6;
 
 module decode_operand(
@@ -9,6 +11,7 @@ module decode_operand(
     output reg [WORD_BITWIDTH-1:0] imm,
     output [REG_ADDRWIDTH-1:0] rd,rs1,rs2
 );
+
     wire [6:0] opcode=inst[6:0];
 
     assign rd=inst[11:7];
@@ -20,6 +23,8 @@ module decode_operand(
     wire [31:0] immI={{21{inst[31]}},inst[30:20]};
 
     always@(*)begin
+        if(inst==32'h00100073)raise_break();
+
         case(itype)
             TypeI:imm=immI;
             TypeJ:imm=immI;
