@@ -22,7 +22,7 @@ module decode_operand(
         case(itype)
             TypeI:imm=immI;
             TypeJ:imm=immI;
-            default:imm=0;
+            default:imm=32'hcdcdcdcd;
         endcase
     end
 
