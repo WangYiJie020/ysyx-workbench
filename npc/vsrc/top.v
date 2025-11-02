@@ -60,7 +60,6 @@ module top(
     wire [2:0] func3t=inst[14:12];
 
     always@(*)begin
-        if(clk)$display("rs1(r%d)=%d rs2(r%d)=%d imm=%d",rs1,src1,rs2,rs2,imm);
 
         wen=0;wdata=0;nxt_pc=pc+4;
         case(opcode)
@@ -84,6 +83,7 @@ module top(
     end
 
     always@(posedge clk,posedge rst)begin
+        $display("rs1(r%d)=%d rs2(r%d)=%d imm=%d",rs1,src1,rs2,rs2,imm);
         if(rst)begin
             pc<=0;
         end else begin
