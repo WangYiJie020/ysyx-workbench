@@ -60,6 +60,8 @@ module top(
     wire [2:0] func3t=inst[14:12];
 
     always@(*)begin
+        $display("rs1(r%d)=%d rs2(r%d)=%d imm=%d",rs1,src1,rs2,rs2,imm);
+
         wen=0;wdata=0;nxt_pc=pc+4;
         case(opcode)
             7'b0010011: begin // ADDI
