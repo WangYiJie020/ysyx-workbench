@@ -35,7 +35,7 @@ bool is_running=true;
 
 void raise_break(){
 	is_running=false;
-	puts("\n---Verilator raise break signal---\n");
+	puts("\n---break signal raise---\n");
 }
 
 uint32_t pmem_read(uint32_t addr){
@@ -75,7 +75,7 @@ int main(int argc, char **argv)
 
 	dut.final();
 
-	puts("\n --- simulation end ---\n");
+	puts("\n--- simulation end ---\n");
 
     return 0;
 }
