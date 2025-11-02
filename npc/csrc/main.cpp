@@ -58,8 +58,12 @@ int main(int argc, char **argv)
 
     reset(10);
 
+	int cnt=0;
     while(1) {
 		single_cycle();
+		printf("pc %08X\n",dut.pc);
+		cnt++;
+		if(cnt>1000)break;
     }
 
     return 0;
