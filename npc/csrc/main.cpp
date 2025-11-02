@@ -39,7 +39,8 @@ static void single_cycle() {
 //	nvboard_update();
 
 	dut.inst=pmem_read(dut.pc);
-	printf("inst %08X",dut.inst);
+	printf(">>> pc %08X",dut.pc);
+	printf("inst %08X\n",dut.inst);
 
     dut.clk=1;dut.eval();
 	nvboard_update();
@@ -61,7 +62,6 @@ int main(int argc, char **argv)
 
 	int cnt=0;
     while(1) {
-		printf("pc %08X\n",dut.pc);
 		single_cycle();
 		cnt++;
 		if(cnt>20)break;
