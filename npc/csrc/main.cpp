@@ -39,6 +39,7 @@ static void single_cycle() {
 //	nvboard_update();
 
 	dut.inst=pmem_read(dut.pc);
+	printf("inst %08X",dut.inst);
 
     dut.clk=1;dut.eval();
 	nvboard_update();
