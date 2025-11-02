@@ -4,7 +4,10 @@
 # trans to
 #  verilator -f myf ...
 
-logfile='./makelinter.log'
+#logfile='./makelinter.log'
+logfile='/dev/null'
+
+verilator_flag='--lint-only -Wall'
 
 echo "call $@" >> $logfile
 
@@ -17,5 +20,5 @@ flag_file="./linter.f"
 find . -name "*.v" -exec realpath {} \; | grep -v $orign_file > $flag_file
 
 shift 2
-verilator -f $flag_file --lint-only $@ 2>> $logfile
-verilator -f $flag_file --lint-only $@
+verilator -f $flag_file $verilator_flag $@ 2>> $logfile
+verilator -f $flag_file $verilator_flag $@

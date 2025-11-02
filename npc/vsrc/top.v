@@ -29,9 +29,10 @@ module top(
 );
 
 
-    wire wen;
+    reg wen;
     wire [3:0] itype;
-    wire [WORD_BITWIDTH-1:0] imm,wdata,src1,src2,nxt_pc;
+    wire [WORD_BITWIDTH-1:0] imm,src1,src2;
+    reg [WORD_BITWIDTH-1:0] wdata,nxt_pc;
     wire [REG_ADDRWIDTH-1:0] rd,rs1,rs2;
 
     RegisterFile #(
@@ -59,12 +60,14 @@ module top(
     wire [2:0] func3t=inst[14:12];
 
     always@(*)begin
-        wen=0;wdata=0;
+
+        wen=0;wdata=0;nxt_pc=pc+4;
         case(opcode)
             7'b0010011: begin // ADDI
                 if(func3t==0)begin
                     wdata=src1+imm;
                     wen=1;
+                    $display("ADDI r%d=r%d+%d",rd,rs1,imm);
                 end
             end
             7'b1100111:begin
@@ -72,6 +75,7 @@ module top(
                     wdata=pc+4;
                     wen=1;
                     nxt_pc=(src1+imm)&~1;
+                    $display("JALR %08X",nxt_pc);
                 end
             end
         default:;
@@ -79,6 +83,7 @@ module top(
     end
 
     always@(posedge clk,posedge rst)begin
+        $display("rs1(r%d)=%d rs2(r%d)=%d imm=%d",rs1,src1,rs2,src2,imm);
         if(rst)begin
             pc<=0;
         end else begin
