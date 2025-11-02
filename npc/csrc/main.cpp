@@ -60,8 +60,8 @@ int main(int argc, char **argv)
 
 	int cnt=0;
     while(1) {
-		single_cycle();
 		printf("pc %08X\n",dut.pc);
+		single_cycle();
 		cnt++;
 		if(cnt>20)break;
     }

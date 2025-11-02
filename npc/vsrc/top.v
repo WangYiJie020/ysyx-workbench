@@ -63,10 +63,10 @@ module top(
         wen=0;wdata=0;nxt_pc=pc+4;
         case(opcode)
             7'b0010011: begin // ADDI
-                $display("ADDI");
                 if(func3t==0)begin
                     wdata=src1+imm;
                     wen=1;
+                    $display("ADDI r%d=r%d(%d)+%d",rd,rs1,src1,imm);
                 end
             end
             7'b1100111:begin
@@ -74,6 +74,7 @@ module top(
                     wdata=pc+4;
                     wen=1;
                     nxt_pc=(src1+imm)&~1;
+                    $display("JALR %08X",nxt_pc);
                 end
             end
         default:;
