@@ -14,7 +14,8 @@ module decode_operand(
     assign rd=inst[11:7];
     assign rs1=inst[19:15];
     assign rs2=inst[24:20];
-    assign itype=(opcode==7'b0010011)?TypeI:TypeN;
+    assign itype=(opcode==7'b0010011)?TypeI:
+        (opcode==7'b1100111)?TypeJ:TypeN;
 
     wire [31:0] immI={{21{inst[31]}},inst[30:20]};
 
