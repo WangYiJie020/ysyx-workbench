@@ -63,7 +63,7 @@ int main(int argc, char **argv)
 		single_cycle();
 		printf("pc %08X\n",dut.pc);
 		cnt++;
-		if(cnt>1000)break;
+		if(cnt>20)break;
     }
 
     return 0;
