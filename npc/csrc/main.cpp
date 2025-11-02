@@ -65,9 +65,7 @@ static void single_cycle() {
     dut.clk=0;dut.eval();
 //	nvboard_update();
 
-	dut.inst=pmem_read(dut.pc);
 	printf(">>> pc %08X",dut.pc);
-	printf("inst %08X\n",dut.inst);
 
     dut.clk=1;dut.eval();
 	nvboard_update();
@@ -81,10 +79,10 @@ static void reset(int n) {
 
 int main(int argc, char **argv)
 {
-	pmem_write(0,0x12345678, 0x3);
-	int res=pmem_read(0);
-	printf("%X",res);
-	return 0;
+//	pmem_write(0,0x12345678, 0x3);
+//	int res=pmem_read(0);
+//	printf("%X",res);
+//	return 0;
 
     nvboard_bind_all_pins(&dut);
     nvboard_init();

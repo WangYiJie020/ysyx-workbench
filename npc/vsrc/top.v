@@ -1,3 +1,7 @@
+import "DPI-C" function int pmem_read(input int raddr);
+import "DPI-C" function void pmem_write(
+  input int waddr, input int wdata, input byte wmask);
+
 module top(
     input clk,
     input rst,
@@ -24,10 +28,10 @@ module top(
     output [7:0] seg6,
     output [7:0] seg7,
 
-    output reg [WORD_BITWIDTH-1:0] pc,
-    input [WORD_BITWIDTH-1:0] inst
+    output reg [WORD_BITWIDTH-1:0] pc
 );
 
+    wire [WORD_BITWIDTH-1:0] inst=pmem_read(pc);
 
     reg wen;
     wire [3:0] itype;
