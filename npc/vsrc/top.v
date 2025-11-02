@@ -67,7 +67,7 @@ module top(
                 if(func3t==0)begin
                     wdata=src1+imm;
                     wen=1;
-                    $display("ADDI r%d=r%d(%d)+%d",rd,rs1,src1,imm);
+                    $display("ADDI r%d=r%d+%d",rd,rs1,imm);
                 end
             end
             7'b1100111:begin
@@ -83,7 +83,7 @@ module top(
     end
 
     always@(posedge clk,posedge rst)begin
-        $display("rs1(r%d)=%d rs2(r%d)=%d imm=%d",rs1,src1,rs2,rs2,imm);
+        $display("rs1(r%d)=%d rs2(r%d)=%d imm=%d",rs1,src1,rs2,src2,imm);
         if(rst)begin
             pc<=0;
         end else begin
