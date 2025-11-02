@@ -61,9 +61,9 @@ module top(
 
     always@(*)begin
         wen=0;wdata=0;
-        $display("opcode %08X",opcode);
         case(opcode)
             7'b0010011: begin // ADDI
+                $display("ADDI");
                 if(func3t==0)begin
                     wdata=src1+imm;
                     wen=1;
