@@ -31,7 +31,7 @@ word_t mem[256]={
 };
 
 uint32_t pmem_read(uint32_t addr){
-	return mem[addr];
+	return mem[addr/4];
 }
 
 static void single_cycle() {
