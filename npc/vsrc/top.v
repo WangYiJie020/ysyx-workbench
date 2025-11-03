@@ -36,6 +36,10 @@ module top(
     output reg [WORD_BITWIDTH-1:0] pc
 );
 
+initial begin
+    pc=INIT_PC;
+end
+
     reg is_halted;
 
     wire [WORD_BITWIDTH-1:0] inst=is_halted?0:pmem_read(pc);
