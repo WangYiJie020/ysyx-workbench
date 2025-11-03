@@ -42,7 +42,6 @@ end
 
     reg is_halted;
 
-    always@(pc)$display("_____%08x",pc);
     wire [WORD_BITWIDTH-1:0] inst=is_halted?INIT_PC:pmem_read(pc);
 
     reg wen;
@@ -154,7 +153,7 @@ end
             default:;
 
         endcase
-
+        $display("pc %08X nxt_pc %08X",pc,nxt_pc);
     end
 
     always@(posedge clk,posedge rst)begin
