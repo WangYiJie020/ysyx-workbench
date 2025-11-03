@@ -48,7 +48,7 @@ extern "C" void raise_break(){
 
 extern "C" int pmem_read(int raddr) {
 	if(!is_running){
-		printf("Warn: read addr %08X when not run",raddr);
+		printf("Warn: read addr %08X when not run\n",raddr);
 		return 0;
 	}
   	// 总是读取地址为`raddr & ~0x3u`的4字节返回
