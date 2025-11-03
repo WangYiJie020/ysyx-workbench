@@ -23,7 +23,7 @@ void nvboard_init(int vga_clk_cycle);
 typedef uint32_t word_t;
 typedef uint32_t addr_t;
 
-word_t mem[8192]={
+word_t mem[300*1024/4]={
   0x00000297,  // auipc t0,0
   0x00028823,  // sb  zero,16(t0)
   0x0102c503,  // lbu a0,16(t0)
