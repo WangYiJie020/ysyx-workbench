@@ -45,6 +45,7 @@ all: default
 sim: $(BIN)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	@echo "Run the simulation"
+	@echo $^
 	@$^
 #	./obj_dir/$(TOPNAME)
 
