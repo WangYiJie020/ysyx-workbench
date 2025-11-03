@@ -149,6 +149,7 @@ int main(int argc, char **argv)
     while(is_running) {
 		single_cycle();
     }
+	dut.final();
 
 	puts("\n--- simulation end ---\n");
 
