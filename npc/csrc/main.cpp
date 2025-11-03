@@ -82,7 +82,7 @@ extern "C" void pmem_write(int waddr, int wdata, char wmask) {
 	// 如`wmask = 0x3`代表只写入最低2个字节, 内存中的其它字节保持不变
 	uint32_t addr=waddr;
   	addr&=~0x3u;
-	printf("  $pmem_write try write %08X mask %d\n",addr,(int)wmask);
+	printf("  $pmem_write try write %08X mask %d data:%08X\n",addr,(int)wmask,wdata);
 	
 	uint8_t* p=(uint8_t*)(&mem[addr>>2]);
 
