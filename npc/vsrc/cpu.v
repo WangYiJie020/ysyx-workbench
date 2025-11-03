@@ -93,7 +93,7 @@ module decode_operand(
             TypeS:imm=immS;
             TypeB:imm=immB;
             TypeU:imm=immU;
-            TypeR:;
+            TypeR: ;
             TypeN:;
             default:begin
                 $display("(decode) UNEXPECTED UNKNOWN inst Type %d",itype);
