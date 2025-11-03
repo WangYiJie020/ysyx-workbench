@@ -159,7 +159,7 @@ end
         if(inst==INST_EBREAK)begin
             is_halted<=1;
             raise_break();
-        end
+        end else begin
 
         $display("--> @pc [%08x:] inst %08X",pc,inst);
         $display("rs1(r%d)=%08X(%d) rs2(r%d)=%08X(%d) imm=%08X(%d)",
@@ -175,9 +175,10 @@ end
 
         if(rst)begin
             pc<=INIT_PC;
-        end else if(inst!=INST_EBREAK) begin
+        end else begin
             pc<=nxt_pc;
         end
+    end
     end
 
 endmodule
