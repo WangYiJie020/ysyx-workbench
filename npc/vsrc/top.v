@@ -150,7 +150,7 @@ module top(
             raise_break();
         end
 
-        $display("pc %08x: inst %08X",pc,inst);
+        $display("--> @pc [%08x:] inst %08X",pc,inst);
         $display("rs1(r%d)=%08X(%d) rs2(r%d)=%08X(%d) imm=%08X(%d)",
             rs1,src1,src1,
             rs2,src2,src2,
