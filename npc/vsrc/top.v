@@ -34,7 +34,9 @@ module top(
     output reg [WORD_BITWIDTH-1:0] pc
 );
 
-    wire [WORD_BITWIDTH-1:0] inst=pmem_read(pc);
+    reg is_halted;
+
+    wire [WORD_BITWIDTH-1:0] inst=is_halted?0:pmem_read(pc);
 
     reg wen;
     wire [3:0] itype;
@@ -99,7 +101,6 @@ module top(
 
 
     assign nxt_pc=is_jalr?(s1pi_addr&~1):(pc+4);
-
     assign wen=(itype!=TypeS)&&(itype!=TypeN);
 
 
@@ -147,6 +148,7 @@ module top(
     always@(posedge clk,posedge rst)begin
         $display("pc %08x: inst %08X",pc,inst);
         if(inst==INST_EBREAK)begin
+            is_halted<=1;
             raise_break();
         end
         $display("rs1(r%d)=%08X(%d) rs2(r%d)=%08X(%d) imm=%08X(%d)",
