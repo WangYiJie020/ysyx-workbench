@@ -116,13 +116,6 @@ static long load_img() {
 
 #define INST_EBREAK 0x00100073
 
-  if(strstr(img_file,"sum.bin")){
-	  pmem_write(0x228+MADDR_BASE, INST_EBREAK, 0x0f);
-  } 
-  if(strstr(img_file,"mem.bin")){
-	  pmem_write(0x1210+MADDR_BASE, INST_EBREAK, 0x0f);
-  } 
-
   return size;
 }
 
