@@ -16,6 +16,7 @@ void putch(char ch) {
 
 void halt(int code) {
 	asm volatile("ebreak");
+	while (1) {} // make sure no return
 }
 
 void _trm_init() {
