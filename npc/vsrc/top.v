@@ -42,6 +42,7 @@ end
 
     reg is_halted;
 
+    always@(pc)$display("_____%08x",pc);
     wire [WORD_BITWIDTH-1:0] inst=is_halted?INIT_PC:pmem_read(pc);
 
     reg wen;
@@ -160,7 +161,6 @@ end
         if(inst==INST_EBREAK)begin
             is_halted<=1;
             raise_break();
-            $finish;
         end else begin
 
         $display("--> @pc [%08x:] inst %08X",pc,inst);
