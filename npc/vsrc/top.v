@@ -93,7 +93,7 @@ module top(
     assign wen=(itype!=TypeS)&&(itype!=TypeN);
 
     always@(*)begin
-        wdata=0;
+        wdata=32'hCDCDCDCD;
         case(itype)
             TypeI:begin
                 if(is_jalr)begin
@@ -103,6 +103,7 @@ module top(
                 end else if(is_load)begin
                 end
             end
+            TypeR:wdata=alu_res;
             TypeU:begin
                 wdata=imm;
             end
