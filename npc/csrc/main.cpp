@@ -21,7 +21,9 @@ typedef uint32_t word_t;
 typedef uint32_t addr_t;
 
 word_t guest_to_host(word_t addr){
-	return addr - MADDR_BASE;
+	word_t res= addr - MADDR_BASE;
+	printf("raw addr %08X after trans: %08X",addr,res);
+	return res;
 }
 
 void nvboard_bind_all_pins(TOP_NAME* top);
