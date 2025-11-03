@@ -43,7 +43,7 @@ bool is_running=true;
 
 extern "C" void raise_break(){
 	is_running=false;
-	puts("\n--- EBREAK signal raise ---\n");
+	puts("\n--- BREAK signal raise ---\n");
 }
 
 extern "C" int pmem_read(int raddr) {
@@ -54,7 +54,7 @@ extern "C" int pmem_read(int raddr) {
   	// 总是读取地址为`raddr & ~0x3u`的4字节返回
 	uint32_t addr=guest_to_host(raddr);
   	addr&=~0x3u;
-	printf("  $pmem_read try read %08X\n",addr);
+//	printf("  $pmem_read try read %08X\n",addr);
 	return mem[addr>>2];
 }
 extern "C" void pmem_write(int waddr, int wdata, char wmask) {
@@ -63,7 +63,7 @@ extern "C" void pmem_write(int waddr, int wdata, char wmask) {
 	// 如`wmask = 0x3`代表只写入最低2个字节, 内存中的其它字节保持不变
 	uint32_t addr=guest_to_host(waddr);
   	addr&=~0x3u;
-	printf("  $pmem_write try write %08X mask %d data:%08X\n",addr,(int)wmask,wdata);
+//	printf("  $pmem_write try write %08X mask %d data:%08X\n",addr,(int)wmask,wdata);
 	
 	uint8_t* p=(uint8_t*)(&mem[addr>>2]);
 

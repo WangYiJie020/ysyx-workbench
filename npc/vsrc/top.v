@@ -115,8 +115,10 @@ end
 
     always@(*)begin
         if(inst==INST_EBREAK)begin
+            $display("-!- [EBREAK] @pc=%08X",pc);
             raise_break();
         end
+
         wdata=32'hCDCDCDCD;
         case(itype)
             TypeI:begin
@@ -154,7 +156,7 @@ end
             default:;
 
         endcase
-        $display("pc %08X nxt_pc %08X",pc,nxt_pc);
+//        $display("pc %08X nxt_pc %08X",pc,nxt_pc);
     end
 
     always@(posedge clk,posedge rst)begin
