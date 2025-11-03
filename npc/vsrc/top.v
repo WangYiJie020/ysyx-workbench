@@ -52,7 +52,8 @@ module top(
         .wdata(wdata),
         .raddr1(rs1),.raddr2(rs2),
         .rdata1(src1),.rdata2(src2),
-        .wen(wen)
+        .wen(wen),
+        .dump_info(inst==INST_EBREAK)
     );
 
     decode_operand dec_opr(
@@ -92,7 +93,6 @@ module top(
     assign wen=(itype!=TypeS)&&(itype!=TypeN);
 
     always@(*)begin
-        
         wdata=0;
         case(itype)
             TypeI:begin
@@ -114,7 +114,9 @@ module top(
 
     always@(posedge clk,posedge rst)begin
         $display("pc %08x: inst %08X",pc,inst);
-        if(inst==INST_EBREAK)raise_break();
+        if(inst==INST_EBREAK)begin
+            raise_break();
+        end
         $display("rs1(r%d)=%08X(%d) rs2(r%d)=%08X(%d) imm=%08X(%d)",
             rs1,src1,src1,
             rs2,src2,src2,
