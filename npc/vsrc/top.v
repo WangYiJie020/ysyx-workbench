@@ -82,7 +82,7 @@ module top(
     alu _alu(
         .is_imm(is_imm),
         .func3t(func3t),.func7t(func7t),
-        .src1(alu_s1),.src2(alu_s1),.res(alu_res)
+        .src1(alu_s1),.src2(alu_s2),.res(alu_res)
     );
 
 
@@ -121,7 +121,6 @@ module top(
         if(is_load)$display("Load");
         if(is_lui)$display("LUI");
 
-        $display("nxt_pc: %08X",nxt_pc);
         if(wen)$display("update r%d <- %08X(%d)",rd,wdata,wdata);
 
         if(rst)begin
