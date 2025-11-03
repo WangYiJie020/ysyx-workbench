@@ -69,7 +69,7 @@ static void single_cycle() {
     dut.clk=0;dut.eval();
 //	nvboard_update();
 
-	if(!dut.rst)printf("@ pc [%08X]:\n",dut.pc);
+//	if(!dut.rst)printf("@ pc [%08X]:\n",dut.pc);
 
     dut.clk=1;dut.eval();
 	nvboard_update();
@@ -84,7 +84,7 @@ static void reset(int n) {
 const char* img_file;
 
 static long load_img() {
-#define Log(...) printf(__VA_ARGS__)
+#define Log(fmt , ...) printf(fmt "\n",##__VA_ARGS__)
 #define Assert(expr,...) do{if(!(expr)){fprintf(stderr,__VA_ARGS__);}}while(0)
 
   if (img_file == NULL) {
