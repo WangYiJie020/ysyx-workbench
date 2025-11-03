@@ -82,19 +82,28 @@ module top(
 
     assign nxt_pc=is_jalr?((src1+imm)&~1):(pc+4);
 
-    always@(*)begin
-        wen=0;wdata=0;
+    assign wen=(itype!=TypeS)&&(itype!=TypeN);
 
-        if(is_jalr)begin
-            wdata=pc+4;
-            wen=1;
-            $display("JALR %08X",nxt_pc);
-        end
-        else if(is_arithmetic)begin
-            wdata=alu_res;
-            wen=1;
-            $display("Write arithemtic result to r%d",rd);
-        end
+    always@(*)begin
+        wdata=0;
+        case(itype)
+            TypeI:begin
+                if(is_jalr)begin
+                    wdata=pc+4;
+                    $display("JALR %08X",nxt_pc);
+                end else if(is_arithmetic)begin
+                    wdata=alu_res;
+                    $display("Write arithemtic result to r%d",rd);
+                end else if(is_load)begin
+                    $display("Load");
+                end
+            end
+            TypeU:begin
+                wdata=imm;
+                $display("U: write %08X to r%d",imm,rd);
+            end
+
+        endcase
 
     end
 
