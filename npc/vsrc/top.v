@@ -42,7 +42,7 @@ end
 
     reg is_halted;
 
-    wire [WORD_BITWIDTH-1:0] inst=is_halted?0:pmem_read(pc);
+    wire [WORD_BITWIDTH-1:0] inst=is_halted?INIT_PC:pmem_read(pc);
 
     reg wen;
     wire [3:0] itype;
