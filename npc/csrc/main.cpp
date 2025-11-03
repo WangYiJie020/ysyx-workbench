@@ -42,7 +42,7 @@ extern "C" int pmem_read(int raddr) {
   	// 总是读取地址为`raddr & ~0x3u`的4字节返回
 	uint32_t addr=raddr;
   	addr&=~0x3u;
-//	printf("  $pmem_read try read %08X\n",addr);
+	printf("  $pmem_read try read %08X\n",addr);
 	return mem[addr>>2];
 }
 extern "C" void pmem_write(int waddr, int wdata, char wmask) {
