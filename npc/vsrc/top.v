@@ -115,8 +115,8 @@ end
 
     always@(*)begin
         if(inst==INST_EBREAK)begin
-            raise_break();
             $display("-!- [EBREAK] @pc=%08X",pc);
+            raise_break();
         end
 
         wdata=32'hCDCDCDCD;

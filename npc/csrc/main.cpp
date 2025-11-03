@@ -43,7 +43,7 @@ bool is_running=true;
 
 extern "C" void raise_break(){
 	is_running=false;
-	puts("\n--- BREAK signal raise ---\n");
+	puts("\n--- raise_break called");
 }
 
 extern "C" int pmem_read(int raddr) {
