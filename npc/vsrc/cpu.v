@@ -96,7 +96,7 @@ module decode_operand(
             TypeR:;
             TypeN:;
             default:begin
-                $display("(decode) UNEXPECTED UNKNOWN inst Type %d",itype);
+                $display("(decode) UNEXPECTED Unknown inst Type %d",itype);
                 imm=32'hBAADF00D;
             end
         endcase
