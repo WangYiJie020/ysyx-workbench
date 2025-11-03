@@ -1,3 +1,4 @@
+import "DPI-C" function void raise_break();
 import "DPI-C" function int pmem_read(input int raddr);
 import "DPI-C" function void pmem_write(
   input int waddr, input int wdata, input byte wmask);
@@ -91,6 +92,7 @@ module top(
     assign wen=(itype!=TypeS)&&(itype!=TypeN);
 
     always@(*)begin
+        
         wdata=0;
         case(itype)
             TypeI:begin
@@ -112,6 +114,7 @@ module top(
 
     always@(posedge clk,posedge rst)begin
         $display("pc %08x: inst %08X",pc,inst);
+        if(inst==INST_EBREAK)raise_break();
         $display("rs1(r%d)=%08X(%d) rs2(r%d)=%08X(%d) imm=%08X(%d)",
             rs1,src1,src1,
             rs2,src2,src2,

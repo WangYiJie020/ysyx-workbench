@@ -5,7 +5,6 @@ parameter int REG_ADDRWIDTH=5;
 
 parameter int INST_EBREAK=32'h00100073;
 
-import "DPI-C" function void raise_break();
 
 localparam TypeN=0,TypeR=1,TypeI=2,TypeS=3,TypeU=4,TypeJ=5,TypeB=6;
 
@@ -85,7 +84,6 @@ module decode_operand(
     wire [31:0] immJ={immI[31:20],inst[19:12],inst[20],inst[30:21],1'b0};
 
     always@(*)begin
-        if(inst==INST_EBREAK)raise_break();
 
         case(itype)
             TypeI:imm=immI;
