@@ -42,10 +42,18 @@ word_t mem[512*1024/4]={
 };
 
 bool is_running=true;
+bool is_good_trap=false;
 
-extern "C" void raise_break(){
+extern "C" void raise_break(int a0){
 	is_running=false;
 	puts("\n--- raise_break called");
+	if(a0==0){
+		puts("HIT GOOD TRAP");
+		is_good_trap=true;
+	}
+	else{
+	   	puts("HIT BAD TRAP");
+	}
 }
 
 extern "C" int pmem_read(int raddr) {
@@ -159,5 +167,5 @@ int main(int argc, char **argv)
 
 	puts("\n--- simulation end ---\n");
 
-    return 0;
+    return is_good_trap?0:1;
 }
