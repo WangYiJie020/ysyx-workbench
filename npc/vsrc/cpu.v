@@ -1,15 +1,56 @@
+`define WORD_RANGE [WORD_BITWIDTH-1:0]
+
 parameter int WORD_BITWIDTH=32;
 parameter int REG_ADDRWIDTH=5;
 
-import "DPI-C" function void raise_break ();
+parameter int INST_EBREAK=32'h00100073;
+
+import "DPI-C" function void raise_break();
 
 localparam TypeN=0,TypeR=1,TypeI=2,TypeS=3,TypeU=4,TypeJ=5,TypeB=6;
 
-module decode_operand(
-    input [WORD_BITWIDTH-1:0] inst,
+module cpu(
+    input `WORD_RANGE pc,
+    output `WORD_RANGE nxt_pc
+);
+endmodule
+
+module itype_decoder(
+    input [6:0] opcode,
     output [3:0] itype,
-    output reg [WORD_BITWIDTH-1:0] imm,
-    output [REG_ADDRWIDTH-1:0] rd,rs1,rs2
+    output is_arithmetic,
+    output is_load,
+    output is_jalr
+);
+// opcode[1:0] should always be 11 for 32bit
+
+wire [4:0] opcu=opcode[6:2];
+
+assign is_arithmetic=(opcu==5'b00100);
+assign is_jalr=(opcu==5'b11001);
+assign is_load=(opcu==5'b00000);
+
+wire isI=is_arithmetic|is_jalr|is_load;
+wire isR=(opcu==5'b01100);
+wire isS=(opcu==5'b01000);
+
+assign itype=
+    isI?TypeI:
+    isR?TypeR:
+    isS?TypeS:
+    TypeN;
+
+endmodule
+
+module decode_operand(
+    input `WORD_RANGE inst,
+    output [3:0] itype,
+    output reg `WORD_RANGE imm,
+    output [REG_ADDRWIDTH-1:0] rd,rs1,rs2,
+
+    output is_arithmetic,
+    output is_load,
+    output is_jalr
 );
 
     wire [6:0] opcode=inst[6:0];
@@ -17,27 +58,53 @@ module decode_operand(
     assign rd=inst[11:7];
     assign rs1=inst[19:15];
     assign rs2=inst[24:20];
-    assign itype=(opcode==7'b0010011)?TypeI:
-        (opcode==7'b1100111)?TypeJ:TypeN;
+
+    itype_decoder _idc(.opcode(opcode),.itype(itype),
+        .is_jalr(is_jalr),
+        .is_arithmetic(is_arithmetic),
+        .is_load(is_load)
+    );
 
     wire [31:0] immI={{21{inst[31]}},inst[30:20]};
+    wire [31:0] immS={immI[31:5],inst[11:8],inst[7]};
+    wire [31:0] immB={immI[31:12],inst[7],immS[10:1],1'b0};
+    wire [31:0] immU={inst[31:12],12'b0};
+    wire [31:0] immJ={immI[31:20],inst[19:12],inst[20],inst[30:21],1'b0};
 
     always@(*)begin
-        if(inst==32'h00100073)raise_break();
+        if(inst==INST_EBREAK)raise_break();
 
         case(itype)
             TypeI:imm=immI;
-            TypeJ:imm=immI;
-            default:imm=32'hcdcdcdcd;
+            TypeJ:imm=immJ;
+            TypeS:imm=immS;
+            TypeB:imm=immB;
+            TypeU:imm=immU;
+            default:imm=32'hBAADF00D;
         endcase
     end
 
 endmodule
 
+parameter int BADCALL_RESVALUE=32'hBAADCA11;
 
-module cpu(
-    input [WORD_BITWIDTH-1:0] pc,
-    output [WORD_BITWIDTH-1:0] nxt_pc
+module alu(
+    input [2:0] func3t,
+    input [6:0] func7t,
+    input `WORD_RANGE src1,src2,
+    output reg `WORD_RANGE res
 );
 
+always@(*)begin
+    case(func3t)
+        3'b000:begin
+            if(func7t==7'b0)res=src1+src2;
+            else res=BADCALL_RESVALUE;
+        end
+        default:res=BADCALL_RESVALUE;
+    endcase
+end
+
 endmodule
+
+
