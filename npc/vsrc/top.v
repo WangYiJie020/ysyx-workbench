@@ -5,6 +5,8 @@ import "DPI-C" function int pmem_read(input int raddr);
 import "DPI-C" function void pmem_write(
   input int waddr, input int wdata, input byte wmask);
 
+parameter int INIT_PC=32'h8000_0000;
+
 module top(
     input clk,
     input rst,
@@ -97,7 +99,12 @@ module top(
     assign s1pi_addr=src1+imm;
     assign s1pi_addr_unalign_part=s1pi_addr[1:0];
 
-    assign safe_maddr=is_load?s1pi_addr:0;
+    // pmem_read is always called
+    // pass pc(a always valid addr)
+    // so
+    // NOTICE!!! mem_read result only meaningful
+    //           when is_load is true
+    assign safe_maddr=is_load?s1pi_addr:pc;
 
 
     assign nxt_pc=is_jalr?(s1pi_addr&~1):(pc+4);
@@ -163,7 +170,7 @@ module top(
         if(wen)$display("update r%d <- %08X(%d)",rd,wdata,wdata);
 
         if(rst)begin
-            pc<=0;
+            pc<=INIT_PC;
         end else begin
             pc<=nxt_pc;
         end
