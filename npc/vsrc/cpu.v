@@ -5,7 +5,6 @@ parameter int REG_ADDRWIDTH=5;
 
 parameter int INST_EBREAK=32'h00100073;
 
-import "DPI-C" function void raise_break();
 
 localparam TypeN=0,TypeR=1,TypeI=2,TypeS=3,TypeU=4,TypeJ=5,TypeB=6;
 
@@ -18,9 +17,13 @@ endmodule
 module itype_decoder(
     input [6:0] opcode,
     output [3:0] itype,
+
     output is_arithmetic,
     output is_load,
-    output is_jalr
+    output is_jalr,
+
+    output is_lui,
+    output is_auipc
 );
 // opcode[1:0] should always be 11 for 32bit
 
@@ -29,15 +32,19 @@ wire [4:0] opcu=opcode[6:2];
 assign is_arithmetic=(opcu==5'b00100);
 assign is_jalr=(opcu==5'b11001);
 assign is_load=(opcu==5'b00000);
+assign is_lui=(opcu==5'b01101);
+assign is_auipc=(opcu==5'b00101);
 
 wire isI=is_arithmetic|is_jalr|is_load;
 wire isR=(opcu==5'b01100);
 wire isS=(opcu==5'b01000);
+wire isU=is_lui|is_auipc;
 
 assign itype=
     isI?TypeI:
     isR?TypeR:
     isS?TypeS:
+    isU?TypeU:
     TypeN;
 
 endmodule
@@ -50,7 +57,10 @@ module decode_operand(
 
     output is_arithmetic,
     output is_load,
-    output is_jalr
+    output is_jalr,
+
+    output is_lui,
+    output is_auipc
 );
 
     wire [6:0] opcode=inst[6:0];
@@ -62,7 +72,9 @@ module decode_operand(
     itype_decoder _idc(.opcode(opcode),.itype(itype),
         .is_jalr(is_jalr),
         .is_arithmetic(is_arithmetic),
-        .is_load(is_load)
+        .is_load(is_load),
+        .is_lui(is_lui),
+        .is_auipc(is_auipc)
     );
 
     wire [31:0] immI={{21{inst[31]}},inst[30:20]};
@@ -72,7 +84,6 @@ module decode_operand(
     wire [31:0] immJ={immI[31:20],inst[19:12],inst[20],inst[30:21],1'b0};
 
     always@(*)begin
-        if(inst==INST_EBREAK)raise_break();
 
         case(itype)
             TypeI:imm=immI;
@@ -80,7 +91,10 @@ module decode_operand(
             TypeS:imm=immS;
             TypeB:imm=immB;
             TypeU:imm=immU;
-            default:imm=32'hBAADF00D;
+            default:begin
+                $display("UNKNOWN Inst Type");
+                imm=32'hBAADF00D;
+            end
         endcase
     end
 
@@ -89,6 +103,7 @@ endmodule
 parameter int BADCALL_RESVALUE=32'hBAADCA11;
 
 module alu(
+    input is_imm, // in imm mode unuse func7t
     input [2:0] func3t,
     input [6:0] func7t,
     input `WORD_RANGE src1,src2,
@@ -98,11 +113,21 @@ module alu(
 always@(*)begin
     case(func3t)
         3'b000:begin
-            if(func7t==7'b0)res=src1+src2;
-            else res=BADCALL_RESVALUE;
+            if(is_imm)res=src1+src2;
+            else begin
+                if(func7t==7'b0)res=src1+src2;
+                else begin
+                    res=BADCALL_RESVALUE;
+                    $display("(alu) UNKNOWN func7t %d",func7t);
+                end
+            end
         end
-        default:res=BADCALL_RESVALUE;
+        default:begin
+            res=BADCALL_RESVALUE;
+            $display("(alu) UNKNOWN func3t %d",func3t);
+        end
     endcase
+    $display("(alu) src1:%08X src2:%08X -> res=%08X",src1,src2,res);
 end
 
 endmodule
