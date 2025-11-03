@@ -79,7 +79,9 @@ module top(
     wire is_imm;
     assign is_imm=(itype==TypeI);
 
-    alu _alu(.func3t(func3t),.func7t(func7t),
+    alu _alu(
+        .is_imm(is_imm),
+        .func3t(func3t),.func7t(func7t),
         .src1(alu_s1),.src2(alu_s1),.res(alu_res)
     );
 
