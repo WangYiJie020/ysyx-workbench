@@ -93,6 +93,7 @@ static long load_img() {
   }
 
 
+
   FILE *fp = fopen(img_file, "rb");
   Assert(fp, "Can not open '%s'", img_file);
 
@@ -106,6 +107,16 @@ static long load_img() {
   assert(ret == 1);
 
   fclose(fp);
+
+#define INST_EBREAK 0x00100073
+
+  if(strstr(img_file,"sum.bin")){
+	  pmem_write(0x228, INST_EBREAK, 0x0f);
+  } 
+  if(strstr(img_file,"mem.bin")){
+	  pmem_write(0x1210, INST_EBREAK, 0x0f);
+  } 
+
   return size;
 }
 
