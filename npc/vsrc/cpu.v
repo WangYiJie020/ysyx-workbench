@@ -111,7 +111,6 @@ module alu(
 );
 
 always@(*)begin
-$display("(alu) src1:%08X src2:%08X",src1,src2);
     case(func3t)
         3'b000:begin
             if(is_imm)res=src1+src2;
@@ -128,6 +127,7 @@ $display("(alu) src1:%08X src2:%08X",src1,src2);
             $display("(alu) UNKNOWN func3t %d",func3t);
         end
     endcase
+    $display("(alu) src1:%08X src2:%08X -> res=%08X",src1,src2,res);
 end
 
 endmodule
