@@ -16,6 +16,8 @@
 
 static TOP_NAME dut;
 
+#define USE_NVBOARD 0
+
 #define MADDR_BASE 0x80000000u
 typedef uint32_t word_t;
 typedef uint32_t addr_t;
@@ -84,7 +86,9 @@ static void single_cycle() {
 //	if(!dut.rst)printf("@ pc [%08X]:\n",dut.pc);
 
     dut.clk=1;dut.eval();
+#if USE_NVBOARD
 	nvboard_update();
+#endif
 }
 
 static void reset(int n) {
@@ -139,8 +143,10 @@ int main(int argc, char **argv)
 
 	load_img();
 
+#if USE_NVBOARD
     nvboard_bind_all_pins(&dut);
     nvboard_init();
+#endif
 
     reset(10);
 
