@@ -42,7 +42,7 @@ end
 
     wire [WORD_BITWIDTH-1:0] inst=pmem_read(pc);
 
-    reg wen;
+    wire wen;
     wire [3:0] itype;
     wire [WORD_BITWIDTH-1:0] imm,src1,src2,alu_s1,alu_s2,alu_res;
     reg [WORD_BITWIDTH-1:0] wdata,nxt_pc;
