@@ -95,6 +95,8 @@ int main(int argc, char **argv)
 
     reset(10);
 
+	puts("\n--- Start ---\n");
+	
     while(is_running) {
 		single_cycle();
     }

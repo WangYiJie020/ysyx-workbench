@@ -87,6 +87,8 @@ module top(
     assign wen=(itype!=TypeS)&&(itype!=TypeN);
 
     always@(*)begin
+        $display("inst %08X",inst);
+        $display("rs1(r%d)=%d rs2(r%d)=%d imm=%08X(%d)",rs1,src1,rs2,src2,imm,imm);
         wdata=0;
         case(itype)
             TypeI:begin
@@ -111,7 +113,6 @@ module top(
     end
 
     always@(posedge clk,posedge rst)begin
-        $display("rs1(r%d)=%d rs2(r%d)=%d imm=%08X(%d)",rs1,src1,rs2,src2,imm,imm);
         if(rst)begin
             pc<=0;
         end else begin
