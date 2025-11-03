@@ -113,7 +113,6 @@ module top(
                 end else if(is_arithmetic)begin
                     wdata=alu_res;
                 end else if(is_load)begin
-                    $display("is_load");
                     case(func3t)
                         // lbu zero ext
                         3'b100: wdata={24'b0,pmem_read(safe_maddr)[
@@ -131,7 +130,6 @@ module top(
             TypeR:wdata=alu_res;
             TypeU:wdata=imm;
             TypeS:begin
-                $display("TypeS");
                 case(func3t)
                     3'b010: pmem_write(s1pi_addr,src2,8'b00001111);
                     3'b000: pmem_write(s1pi_addr,
