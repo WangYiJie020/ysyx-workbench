@@ -106,6 +106,7 @@ endmodule
 parameter int BADCALL_RESVALUE=32'hBAADCA11;
 
 module alu(
+    input en, // now only effect display
     input is_imm, // in imm mode unuse func7t
     input [2:0] func3t,
     input [6:0] func7t,
@@ -121,13 +122,13 @@ always@(*)begin
                 if(func7t==7'b0)res=src1+src2;
                 else begin
                     res=BADCALL_RESVALUE;
-                    $display("(alu) UNKNOWN func7t %d",func7t);
+                    if(en)$display("(alu) UNKNOWN func7t %d",func7t);
                 end
             end
         end
         default:begin
             res=BADCALL_RESVALUE;
-            $display("(alu) UNKNOWN func3t %d",func3t);
+            if(en)$display("(alu) UNKNOWN func3t %d",func3t);
         end
     endcase
 
