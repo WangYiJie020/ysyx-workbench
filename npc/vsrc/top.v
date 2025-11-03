@@ -39,10 +39,8 @@ module top(
 initial begin
     pc=INIT_PC;
 end
-    reg is_halted;
 
-    wire [WORD_BITWIDTH-1:0] inst=is_halted?0:pmem_read(pc);
-
+    wire [WORD_BITWIDTH-1:0] inst=pmem_read(pc);
 
     wire wen;
     wire [3:0] itype;
@@ -116,6 +114,9 @@ end
 
 
     always@(*)begin
+        if(inst==INST_EBREAK)begin
+            raise_break();
+        end
         wdata=32'hCDCDCDCD;
         case(itype)
             TypeI:begin
@@ -158,8 +159,6 @@ end
 
     always@(posedge clk,posedge rst)begin
         if(inst==INST_EBREAK)begin
-            is_halted<=1;
-            raise_break();
         end else begin
 
         $display("--> @pc [%08x:] inst %08X",pc,inst);
