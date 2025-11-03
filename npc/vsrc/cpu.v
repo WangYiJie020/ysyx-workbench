@@ -87,15 +87,15 @@ module decode_operand(
     wire [31:0] immJ={immI[31:20],inst[19:12],inst[20],inst[30:21],1'b0};
 
     always@(*)begin
-
         case(itype)
             TypeI:imm=immI;
             TypeJ:imm=immJ;
             TypeS:imm=immS;
             TypeB:imm=immB;
             TypeU:imm=immU;
+            TypeN:;
             default:begin
-                $display("UNKNOWN Inst Type");
+                $display("(decode) UNEXPECTED UNKNOWN inst Type %d",itype);
                 imm=32'hBAADF00D;
             end
         endcase
