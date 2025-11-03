@@ -134,8 +134,8 @@ int main(int argc, char **argv)
 
 	puts("\n--- simulation end ---\n");
 
-	for(int i=200;i<220;++i){
-		printf("%d: %08X",i,mem[i]);
+	for(int i=200;i<220;i+=4){
+		printf("%d: %08X\n",i,mem[i>>2]);
 	}
 
     return 0;
