@@ -175,7 +175,7 @@ end
 
         if(rst)begin
             pc<=INIT_PC;
-        end else if(~is_halted) begin
+        end else if(inst!=INST_EBREAK) begin
             pc<=nxt_pc;
         end
     end
