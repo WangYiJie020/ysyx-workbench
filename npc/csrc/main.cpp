@@ -23,43 +23,12 @@ void nvboard_init(int vga_clk_cycle);
 typedef uint32_t word_t;
 typedef uint32_t addr_t;
 
-word_t mem[256]={
-
-0x0c800313,
-0x11223237,
-0x34420213,
-0x00400093,
-0x0040a023,
-0x00400113,
-0x00014383,
-0x00730223,
-0x00500113,
-0x00014403,
-0x008302a3,
-0x00600113,
-0x00014483,
-0x00930323,
-0x00700113,
-0x00014503,
-0x00a303a3,
-0x00400093,
-0x0000a583,
-0x00b32023,
-0x05500213,
-0x00a00093,
-0x00408023,
-0x00a00093,
-0x0000c603,
-0x00c30623,
-0xaabbd237,
-0xcdd20213,
-0x00c00093,
-0x0040a023,
-0x00c00093,
-0x0000a683,
-0x00d32423,
-0x00100073,
-
+word_t mem[8192]={
+  0x00000297,  // auipc t0,0
+  0x00028823,  // sb  zero,16(t0)
+  0x0102c503,  // lbu a0,16(t0)
+  0x00100073,  // ebreak (used as nemu_trap)
+  0xdeadbeef,  // some data
 };
 
 bool is_running=true;
@@ -112,12 +81,47 @@ static void reset(int n) {
     dut.rst = 0;
 }
 
+const char* img_file;
+
+static long load_img() {
+#define Log(...) printf(__VA_ARGS__)
+#define Assert(expr,...) do{if(!(expr)){fprintf(stderr,__VA_ARGS__);}}while(0)
+
+  if (img_file == NULL) {
+    Log("No image is given. Use the default build-in image.");
+    return 4096; // built-in image size
+  }
+
+
+  FILE *fp = fopen(img_file, "rb");
+  Assert(fp, "Can not open '%s'", img_file);
+
+  fseek(fp, 0, SEEK_END);
+  long size = ftell(fp);
+
+  Log("The image is %s, size = %ld", img_file, size);
+
+  fseek(fp, 0, SEEK_SET);
+  int ret = fread(mem, size, 1, fp);
+  assert(ret == 1);
+
+  fclose(fp);
+  return size;
+}
+
+
 int main(int argc, char **argv)
 {
 //	pmem_write(0,0x12345678, 0x3);
 //	int res=pmem_read(0);
 //	printf("%X",res);
 //	return 0;
+
+	if(argc==2){
+		printf("Load img %s",argv[1]);
+		img_file=argv[1];
+		load_img();
+	}
 
     nvboard_bind_all_pins(&dut);
     nvboard_init();
