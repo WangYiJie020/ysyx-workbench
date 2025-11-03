@@ -18,9 +18,13 @@ endmodule
 module itype_decoder(
     input [6:0] opcode,
     output [3:0] itype,
+
     output is_arithmetic,
     output is_load,
-    output is_jalr
+    output is_jalr,
+
+    output is_lui,
+    output is_auipc
 );
 // opcode[1:0] should always be 11 for 32bit
 
@@ -29,15 +33,19 @@ wire [4:0] opcu=opcode[6:2];
 assign is_arithmetic=(opcu==5'b00100);
 assign is_jalr=(opcu==5'b11001);
 assign is_load=(opcu==5'b00000);
+assign is_lui=(opcu==5'b01101);
+assign is_auipc=(opcu==5'b00101);
 
 wire isI=is_arithmetic|is_jalr|is_load;
 wire isR=(opcu==5'b01100);
 wire isS=(opcu==5'b01000);
+wire isU=is_lui|is_auipc;
 
 assign itype=
     isI?TypeI:
     isR?TypeR:
     isS?TypeS:
+    isU?TypeU:
     TypeN;
 
 endmodule
@@ -50,7 +58,10 @@ module decode_operand(
 
     output is_arithmetic,
     output is_load,
-    output is_jalr
+    output is_jalr,
+
+    output is_lui,
+    output is_auipc
 );
 
     wire [6:0] opcode=inst[6:0];
@@ -62,7 +73,9 @@ module decode_operand(
     itype_decoder _idc(.opcode(opcode),.itype(itype),
         .is_jalr(is_jalr),
         .is_arithmetic(is_arithmetic),
-        .is_load(is_load)
+        .is_load(is_load),
+        .is_lui(is_lui),
+        .is_auipc(is_auipc)
     );
 
     wire [31:0] immI={{21{inst[31]}},inst[30:20]};
@@ -80,7 +93,10 @@ module decode_operand(
             TypeS:imm=immS;
             TypeB:imm=immB;
             TypeU:imm=immU;
-            default:imm=32'hBAADF00D;
+            default:begin
+                $display("UNKNOWN Inst Type");
+                imm=32'hBAADF00D;
+            end
         endcase
     end
 

@@ -39,9 +39,8 @@ module top(
     reg [WORD_BITWIDTH-1:0] wdata,nxt_pc;
     wire [REG_ADDRWIDTH-1:0] rd,rs1,rs2;
 
-    wire is_arithmetic;
-    wire is_load;
-    wire is_jalr;
+    wire is_arithmetic, is_load, is_jalr;
+    wire is_lui,is_auipc;
 
     RegisterFile #(
         .ADDR_WIDTH(REG_ADDRWIDTH),
@@ -62,9 +61,12 @@ module top(
         .rd(rd),
         .rs1(rs1),
         .rs2(rs2),
+
         .is_jalr(is_jalr),
         .is_arithmetic(is_arithmetic),
-        .is_load(is_load)
+        .is_load(is_load),
+        .is_lui(is_lui),
+        .is_auipc(is_auipc)
     );
 
     wire [6:0] opcode=inst[6:0];
@@ -102,6 +104,7 @@ module top(
                 wdata=imm;
                 $display("U: write %08X to r%d",imm,rd);
             end
+            default:;
 
         endcase
 
