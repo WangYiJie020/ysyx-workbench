@@ -76,15 +76,20 @@ extern "C" void raise_break(){
 
 extern "C" int pmem_read(int raddr) {
   	// 总是读取地址为`raddr & ~0x3u`的4字节返回
-  	raddr&=~0x3u;
-	return mem[raddr>>2];
+	uint32_t addr=raddr;
+  	addr&=~0x3u;
+	printf("  $pmem_read try read %08X",addr);
+	return mem[addr>>2];
 }
 extern "C" void pmem_write(int waddr, int wdata, char wmask) {
 	// 总是往地址为`waddr & ~0x3u`的4字节按写掩码`wmask`写入`wdata`
 	// `wmask`中每比特表示`wdata`中1个字节的掩码,
 	// 如`wmask = 0x3`代表只写入最低2个字节, 内存中的其它字节保持不变
+	uint32_t addr=waddr;
+  	addr&=~0x3u;
+	printf("  $pmem_write try write %08X",addr);
 	
-	uint8_t* p=(uint8_t*)mem;
+	uint8_t* p=(uint8_t*)(&mem[addr>>2]);
 
 	while (wmask) {
 		if(wmask&1){
