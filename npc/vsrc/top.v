@@ -124,6 +124,7 @@ end
                 end else if(is_arithmetic)begin
                     wdata=alu_res;
                 end else if(is_load)begin
+                    $display("load");
                     case(func3t)
                         // lbu zero ext
                         3'b100: wdata={24'b0,pmem_read(safe_maddr)[
@@ -159,6 +160,7 @@ end
         if(inst==INST_EBREAK)begin
             is_halted<=1;
             raise_break();
+            $finish;
         end else begin
 
         $display("--> @pc [%08x:] inst %08X",pc,inst);
