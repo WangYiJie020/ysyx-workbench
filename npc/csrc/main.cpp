@@ -140,7 +140,7 @@ int main(int argc, char **argv)
 	load_img();
 
     nvboard_bind_all_pins(&dut);
-    nvboard_init();
+    //nvboard_init();
 
     reset(10);
 
