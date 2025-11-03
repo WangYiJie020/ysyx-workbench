@@ -92,17 +92,13 @@ module top(
             TypeI:begin
                 if(is_jalr)begin
                     wdata=pc+4;
-                    $display("JALR %08X",nxt_pc);
                 end else if(is_arithmetic)begin
                     wdata=alu_res;
-                    $display("Write arithemtic result to r%d",rd);
                 end else if(is_load)begin
-                    $display("Load");
                 end
             end
             TypeU:begin
                 wdata=imm;
-                $display("U: write %08X to r%d",imm,rd);
             end
             default:;
 
@@ -113,6 +109,10 @@ module top(
     always@(posedge clk,posedge rst)begin
         $display("pc %08x: inst %08X",pc,inst);
         $display("rs1(r%d)=%d rs2(r%d)=%d imm=%08X(%d)",rs1,src1,rs2,src2,imm,imm);
+        if(is_jalr)$display("JALR %08X",nxt_pc);
+        if(is_arithmetic)$display("Write arithemtic result to r%d",rd);
+        if(is_load)$display("Load");
+        if(is_lui)$display("LUI: write %08X to r%d",imm,rd);
         if(rst)begin
             pc<=0;
         end else begin
