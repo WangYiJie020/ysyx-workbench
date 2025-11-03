@@ -1,4 +1,4 @@
-import "DPI-C" function void raise_break();
+import "DPI-C" function void raise_break(input int a0);
 // always read addr & ~0x3u
 import "DPI-C" function int pmem_read(input int raddr);
 // always Write addr & ~0x3u
@@ -44,7 +44,7 @@ end
 
     wire wen;
     wire [3:0] itype;
-    wire [WORD_BITWIDTH-1:0] imm,src1,src2,alu_s1,alu_s2,alu_res;
+    wire [WORD_BITWIDTH-1:0] imm,src1,src2,alu_s1,alu_s2,alu_res,a0;
     reg [WORD_BITWIDTH-1:0] wdata,nxt_pc;
     wire [REG_ADDRWIDTH-1:0] rd,rs1,rs2;
 
@@ -60,6 +60,7 @@ end
         .wdata(wdata),
         .raddr1(rs1),.raddr2(rs2),
         .rdata1(src1),.rdata2(src2),
+        .a0(a0),
         .wen(wen),
         .dump_info(inst==INST_EBREAK)
     );
@@ -117,7 +118,7 @@ end
     always@(*)begin
         if(inst==INST_EBREAK)begin
             $display("--> @[0x%08X]: ebreak",pc);
-            raise_break();
+            raise_break(a0);
         end
 
         wdata=32'hCDCDCDCD;
