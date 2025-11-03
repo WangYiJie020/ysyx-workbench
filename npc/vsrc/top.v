@@ -160,9 +160,8 @@ end
     end
 
     always@(posedge clk,posedge rst)begin
-        if(inst==INST_EBREAK)begin
-        end else begin
 
+    `ifdef TRACE
         $display("--> @pc [%08x:] inst %08X",pc,inst);
         $display("rs1(r%d)=%08X(%d) rs2(r%d)=%08X(%d) imm=%08X(%d)",
             rs1,src1,src1,
@@ -172,6 +171,7 @@ end
         if(is_arithmetic)$display("Write arithemtic result");
         if(is_load)$display("Load");
         if(is_lui)$display("LUI");
+    `endif
 
         if(wen)$display("update r%d <- %08X(%d)",rd,wdata,wdata);
 
@@ -180,7 +180,6 @@ end
         end else begin
             pc<=nxt_pc;
         end
-    end
     end
 
 endmodule
