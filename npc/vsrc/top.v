@@ -127,7 +127,7 @@ end
                 end else if(is_arithmetic)begin
                     wdata=alu_res;
                 end else if(is_load)begin
-                    $display("Load data since inst=%08X",inst);
+                    //$display("Load data since inst=%08X",inst);
                     case(func3t)
                         // lbu zero ext
                         3'b100: wdata={24'b0,pmem_read(safe_maddr)[
@@ -161,7 +161,7 @@ end
 
     always@(posedge clk,posedge rst)begin
 
-    `ifdef TRACE
+    `ifdef DISPLAY_TRACE
         $display("--> @pc [%08x:] inst %08X",pc,inst);
         $display("rs1(r%d)=%08X(%d) rs2(r%d)=%08X(%d) imm=%08X(%d)",
             rs1,src1,src1,
@@ -171,9 +171,10 @@ end
         if(is_arithmetic)$display("Write arithemtic result");
         if(is_load)$display("Load");
         if(is_lui)$display("LUI");
-    `endif
 
         if(wen)$display("update r%d <- %08X(%d)",rd,wdata,wdata);
+    `endif
+
 
         if(rst)begin
             pc<=INIT_PC;

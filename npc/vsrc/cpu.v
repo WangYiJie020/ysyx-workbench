@@ -130,7 +130,10 @@ always@(*)begin
             $display("(alu) UNKNOWN func3t %d",func3t);
         end
     endcase
-    $display("(alu) src1:%08X src2:%08X -> res=%08X",src1,src2,res);
+
+    `ifdef DISPLAY_TRACE
+        $display("(alu) src1:%08X src2:%08X -> res=%08X",src1,src2,res);
+    `endif
 end
 
 endmodule
