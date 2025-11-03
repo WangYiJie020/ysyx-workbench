@@ -48,8 +48,8 @@ extern "C" void raise_break(){
 
 extern "C" int pmem_read(int raddr) {
 	if(!is_running){
-		printf("Warn: read addr %08X when not run\n",raddr);
-		return 0;
+		printf("Warn: read addr %08X when not run, return 0xBAADCA11\n",raddr);
+		return 0xBAADCA11;
 	}
   	// 总是读取地址为`raddr & ~0x3u`的4字节返回
 	uint32_t addr=guest_to_host(raddr);
