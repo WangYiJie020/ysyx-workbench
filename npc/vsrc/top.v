@@ -116,7 +116,7 @@ end
 
     always@(*)begin
         if(inst==INST_EBREAK)begin
-            $display("-!- [EBREAK] @pc=%08X",pc);
+            $display("--> ebreak <-- @pc:[%08X])",pc);
             raise_break();
         end
 
