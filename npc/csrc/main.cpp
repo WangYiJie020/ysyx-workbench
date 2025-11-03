@@ -16,12 +16,12 @@
 
 static TOP_NAME dut;
 
-#define MADDR_BASE 0x80000000
+#define MADDR_BASE 0x80000000u
 typedef uint32_t word_t;
 typedef uint32_t addr_t;
 
 word_t guest_to_host(word_t addr){
-	return addr-MADDR_BASE;
+	return addr - MADDR_BASE;
 }
 
 void nvboard_bind_all_pins(TOP_NAME* top);
