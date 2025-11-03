@@ -36,8 +36,6 @@ cat $dst_S
 
 echo "run ::: riscv64-linux-gnu-gcc -I$src_dir $flags -D_LUT_BIN_PATH=\"$lut_bin_path\" -Wno-trigraphs -c -o $dst $dst_S"
 
-echo '' > $lut_bin_path
-
 src_dir=`dirname $src`
 riscv64-linux-gnu-gcc -I$src_dir $flags -D_LUT_BIN_PATH=\"$lut_bin_path\" -Wno-trigraphs -c -o $dst $dst_S
 
