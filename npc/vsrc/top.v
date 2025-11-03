@@ -131,6 +131,7 @@ module top(
             TypeR:wdata=alu_res;
             TypeU:wdata=imm;
             TypeS:begin
+                $display("TypeS");
                 case(func3t)
                     3'b010: pmem_write(s1pi_addr,src2,8'b00001111);
                     3'b000: pmem_write(s1pi_addr,
