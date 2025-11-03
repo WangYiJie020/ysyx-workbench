@@ -76,6 +76,8 @@ module top(
     // use alu only when TypeR/TypeI
     assign alu_s1=src1;
     assign alu_s2=(itype==TypeR)?src2:imm;
+    wire is_imm;
+    assign is_imm=(itype==TypeI);
 
     alu _alu(.func3t(func3t),.func7t(func7t),
         .src1(alu_s1),.src2(alu_s1),.res(alu_res)
