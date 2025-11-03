@@ -124,7 +124,7 @@ end
                 end else if(is_arithmetic)begin
                     wdata=alu_res;
                 end else if(is_load)begin
-                    $display("load");
+                    $display("Load data since inst=%08X",inst);
                     case(func3t)
                         // lbu zero ext
                         3'b100: wdata={24'b0,pmem_read(safe_maddr)[
