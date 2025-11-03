@@ -35,7 +35,7 @@ bool is_running=true;
 
 extern "C" void raise_break(){
 	is_running=false;
-	puts("\n---break signal raise---\n");
+	puts("\n--- EBREAK signal raise ---\n");
 }
 
 extern "C" int pmem_read(int raddr) {
@@ -118,10 +118,10 @@ int main(int argc, char **argv)
 //	return 0;
 
 	if(argc==2){
-		printf("Load img %s",argv[1]);
 		img_file=argv[1];
-		load_img();
 	}
+
+	load_img();
 
     nvboard_bind_all_pins(&dut);
     nvboard_init();
