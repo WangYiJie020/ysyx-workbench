@@ -110,9 +110,12 @@ module top(
         $display("pc %08x: inst %08X",pc,inst);
         $display("rs1(r%d)=%d rs2(r%d)=%d imm=%08X(%d)",rs1,src1,rs2,src2,imm,imm);
         if(is_jalr)$display("JALR %08X",nxt_pc);
-        if(is_arithmetic)$display("Write arithemtic result to r%d",rd);
+        if(is_arithmetic)$display("Write arithemtic result");
         if(is_load)$display("Load");
-        if(is_lui)$display("LUI: write %08X to r%d",imm,rd);
+        if(is_lui)$display("LUI");
+
+        $display("nxt_pc: %08X wen:%d r%d <- %08X(%d)",nxt_pc,wen,rd,wdata,wdata);
+
         if(rst)begin
             pc<=0;
         end else begin
