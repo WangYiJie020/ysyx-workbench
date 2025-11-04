@@ -20,15 +20,15 @@ cat $dst_S
 echo "state ::: finish make dst_S"
 
 # replace pseudo instructions for load/store
-#sp="[[:space:]]*"
-#sp_require="[[:space:]]+"
-#reg="[[:alnum:]]+"
-#comma="$sp,$sp"
-#symbol="[[:alnum:]\._]+"
-#sed -E -i -e "s/(l[bhw]u?)${sp_require}(${reg})${comma}(${symbol})(${sp}[-+]${sp}${symbol})?${sp}\$/la \2, \3\4; \1 \2, 0(\2);/" \
-#          -e "s/(s[bhw])${sp_require}(${reg})${comma}(${symbol})(${sp}[-+]${sp}${symbol})?${comma}(${reg})${sp}\$/la \5, \3\4; \1 \2, 0(\5);/" $dst_S
-#
-#cat $dst_S
+sp="[[:space:]]*"
+sp_require="[[:space:]]+"
+reg="[[:alnum:]]+"
+comma="$sp,$sp"
+symbol="[[:alnum:]\._]+"
+sed -E -i -e "s/(l[bhw]u?)${sp_require}(${reg})${comma}(${symbol})(${sp}[-+]${sp}${symbol})?${sp}\$/la \2, \3\4; \1 \2, 0(\2);/" \
+          -e "s/(s[bhw])${sp_require}(${reg})${comma}(${symbol})(${sp}[-+]${sp}${symbol})?${comma}(${reg})${sp}\$/la \5, \3\4; \1 \2, 0(\5);/" $dst_S
+
+cat $dst_S
 echo "state ::: finish replace pseudo inst"
 
 #cat $dst_S
