@@ -6,7 +6,6 @@ CC = minirv-gcc
 AS = minirv-gcc
 CXX = minirv-g++
 
-#COMMON_CFLAGS += -march=rv32e_zicsr -mabi=ilp32e  # overwrite
 COMMON_CFLAGS += -march=rv32e_zicsr -mabi=ilp32e  # overwrite
 LDFLAGS       += -melf32lriscv                    # overwrite
 
