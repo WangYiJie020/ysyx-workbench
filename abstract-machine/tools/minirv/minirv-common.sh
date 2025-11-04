@@ -15,6 +15,8 @@ echo "run ::: riscv64-linux-gnu-$cc $flags -S -o $dst_S $src"
   riscv64-linux-gnu-$cc $flags -S -o $dst_S $src
 fi
 
+cat $dst_S
+
 # replace pseudo instructions for load/store
 sp="[[:space:]]*"
 sp_require="[[:space:]]+"
@@ -26,19 +28,20 @@ sed -E -i -e "s/(l[bhw]u?)${sp_require}(${reg})${comma}(${symbol})(${sp}[-+]${sp
 
 echo "state ::: finish replace pseudo inst"
 
+#cat $dst_S
 # insert inst-replace.h to each .h files
 minirv_path=$AM_HOME/tools/minirv
 lut_bin_path=$minirv_path/lut.bin
 sed -i "1i#include \"$minirv_path/inst-replace.h\"" $dst_S
 flock $minirv_path/.lock -c "test -e $lut_bin_path || (cd $minirv_path && gcc gen-lut.c && ./a.out && rm a.out)"
 
-cat $dst_S
 
 echo "run ::: riscv64-linux-gnu-gcc -I$src_dir $flags -D_LUT_BIN_PATH=\"$lut_bin_path\" -Wno-trigraphs -c -o $dst $dst_S"
 
 src_dir=`dirname $src`
 riscv64-linux-gnu-gcc -I$src_dir $flags -D_LUT_BIN_PATH=\"$lut_bin_path\" -Wno-trigraphs -c -o $dst $dst_S
 
+#riscv64-linux-gnu-gcc -I$src_dir $flags -D_LUT_BIN_PATH=\"$lut_bin_path\" -Wno-trigraphs -S -o ~/proced.S $dst_S
 echo "state ::: finish insert inst-replace.h"
 
 # set a non-standard extension flag in e_flags to indicate minirv
