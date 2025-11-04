@@ -38,7 +38,7 @@ lut_bin_path=$minirv_path/lut.bin
 sed -i "1i#include \"$minirv_path/inst-replace.h\"" $dst_S
 flock $minirv_path/.lock -c "test -e $lut_bin_path || (cd $minirv_path && gcc gen-lut.c && ./a.out && rm a.out)"
 
-cat $dst_S
+#cat $dst_S
 
 echo "run ::: riscv64-linux-gnu-gcc -I$src_dir $flags -D_LUT_BIN_PATH=\"$lut_bin_path\" -Wno-trigraphs -c -o $dst $dst_S"
 
