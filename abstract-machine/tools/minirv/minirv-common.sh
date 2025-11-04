@@ -48,7 +48,7 @@ sed -E -i "s/(div|mul)${sp_require}(${reg})${comma}(${reg})${comma}(${reg})/addi
 
 sed -E -i "s/(rem)${sp_require}(${reg})${comma}(${reg})${comma}(${reg})/addi x10,\3,0;addi x11,\4,0;call __modsi3;addi \2,x10,0/" $dst_S
 
-cat $dst_S
+#cat $dst_S
 echo "run ::: riscv64-linux-gnu-gcc -I$src_dir $flags -D_LUT_BIN_PATH=\"$lut_bin_path\" -Wno-trigraphs -c -o $dst $dst_S"
 
 src_dir=`dirname $src`
