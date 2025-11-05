@@ -14,9 +14,8 @@ static const char mainargs[MAINARGS_MAX_LEN] = TOSTRING(MAINARGS_PLACEHOLDER); /
 void putch(char ch) {
 }
 
-void halt(int code) {	
-	asm volatile("mv a0, %0; ebreak" : :"r"(code));
-	while (1) {} // make sure no return
+void halt(int code) {
+  while (1);
 }
 
 void _trm_init() {
