@@ -13,6 +13,7 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
+#include <stdio.h>
 #include <isa.h>
 #include <memory/paddr.h>
 #include <unistd.h>
@@ -126,6 +127,8 @@ void init_monitor(int argc, char *argv[]) {
 
   /* Set random seed. */
   init_rand();
+
+  if(log_file)printf("log file %s\n",log_file);
 
   /* Open the log file. */
   init_log(log_file);
