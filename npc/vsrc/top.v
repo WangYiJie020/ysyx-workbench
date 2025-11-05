@@ -1,3 +1,12 @@
+import "DPI-C" function void raise_break(input int a0);
+// always read addr & ~0x3u
+import "DPI-C" function int pmem_read(input int raddr);
+// always Write addr & ~0x3u
+import "DPI-C" function void pmem_write(
+  input int waddr, input int wdata, input byte wmask);
+
+parameter int INIT_PC=32'h8000_0000;
+
 module top(
     input clk,
     input rst,
@@ -22,55 +31,158 @@ module top(
     output [7:0] seg4,
     output [7:0] seg5,
     output [7:0] seg6,
-    output [7:0] seg7
+    output [7:0] seg7,
+
+    output reg [WORD_BITWIDTH-1:0] pc
 );
-    reg [7:0] rom[16];
-    reg [7:0] r[4];
-    initial begin
-        // r[0] = 10 set as loop end condition
-        // r[1] act as i
-        // r[2] act as istep
-        // r[3] act as sum
-        rom[0] = 8'b10_00_1010; // LI r[0], 10
-        rom[1] = 8'b10_01_0000; // LI r[1], 0
-        rom[2] = 8'b10_10_0001; // LI r[2], 1
-        rom[3] = 8'b00_01_01_10; // ADD r[1], r[1], r[2]
-        rom[4] = 8'b00_11_11_01; // ADD r[3], r[3], r[1]
-        rom[5] = 8'b11_0011_01; // JUMP 3 if r[1] != r[0]
-        rom[6] = 8'b01_11_0000; // OUT r[3]
+
+initial begin
+    pc=INIT_PC;
+end
+
+    wire [WORD_BITWIDTH-1:0] inst=pmem_read(pc);
+
+    wire wen;
+    wire [3:0] itype;
+    wire [WORD_BITWIDTH-1:0] imm,src1,src2,alu_s1,alu_s2,alu_res,a0;
+    reg [WORD_BITWIDTH-1:0] wdata,nxt_pc;
+    wire [REG_ADDRWIDTH-1:0] rd,rs1,rs2;
+
+    wire is_arithmetic, is_load, is_jalr;
+    wire is_lui,is_auipc;
+
+    RegisterFile #(
+        .ADDR_WIDTH(REG_ADDRWIDTH),
+        .DATA_WIDTH(WORD_BITWIDTH)
+    ) regs(
+        .clk(clk),
+        .waddr(rd),
+        .wdata(wdata),
+        .raddr1(rs1),.raddr2(rs2),
+        .rdata1(src1),.rdata2(src2),
+        .a0(a0),
+        .wen(wen),
+        .dump_info(inst==INST_EBREAK)
+    );
+
+    decode_operand dec_opr(
+        .inst(inst),
+        .itype(itype),
+        .imm(imm),
+        .rd(rd),
+        .rs1(rs1),
+        .rs2(rs2),
+
+        .is_jalr(is_jalr),
+        .is_arithmetic(is_arithmetic),
+        .is_load(is_load),
+        .is_lui(is_lui),
+        .is_auipc(is_auipc)
+    );
+
+    wire [6:0] opcode=inst[6:0];
+    wire [2:0] func3t=inst[14:12];
+    wire [6:0] func7t=inst[31:25];
+
+    // use alu only when TypeR/TypeI
+    assign alu_s1=src1;
+    assign alu_s2=(itype==TypeR)?src2:imm;
+    wire is_imm;
+    assign is_imm=(itype==TypeI);
+
+    alu _alu(
+        .en(is_arithmetic),
+        .is_imm(is_imm),
+        .func3t(func3t),.func7t(func7t),
+        .src1(alu_s1),.src2(alu_s2),.res(alu_res)
+    );
+
+    // src1+imm
+    wire `WORD_RANGE s1pi_addr,safe_maddr;
+    wire [1:0] s1pi_addr_unalign_part;
+    assign s1pi_addr=src1+imm;
+    assign s1pi_addr_unalign_part=s1pi_addr[1:0];
+
+    // pmem_read is always called
+    // pass pc(a always valid addr)
+    // so
+    // NOTICE!!! mem_read result only meaningful
+    //           when is_load is true
+    assign safe_maddr=is_load?s1pi_addr:pc;
+
+
+    assign nxt_pc=is_jalr?(s1pi_addr&~1):(pc+4);
+    assign wen=(itype!=TypeS)&&(itype!=TypeN);
+
+
+    always@(*)begin
+        if(inst==INST_EBREAK)begin
+            $display("--> @[0x%08X]: ebreak",pc);
+            raise_break(a0);
+        end
+
+        wdata=32'hCDCDCDCD;
+        case(itype)
+            TypeI:begin
+                if(is_jalr)begin
+                    wdata=pc+4;
+                end else if(is_arithmetic)begin
+                    wdata=alu_res;
+                end else if(is_load)begin
+                    //$display("Load data since inst=%08X",inst);
+                    case(func3t)
+                        // lbu zero ext
+                        3'b100: wdata={24'b0,pmem_read(safe_maddr)[
+                            s1pi_addr_unalign_part*8+:8
+                        ]};
+                        // lw
+                        3'b010: wdata=pmem_read(safe_maddr);
+                        default: begin
+                            wdata=BADCALL_RESVALUE;
+                            $display("(load) UNKNOWN func3t %d",func3t);
+                        end
+                    endcase
+                end
+            end
+            TypeR:wdata=alu_res;
+            TypeU:wdata=imm;
+            TypeS:begin
+                case(func3t)
+                    3'b010: pmem_write(s1pi_addr,src2,8'b00001111);
+                    3'b000: pmem_write(s1pi_addr,
+                        src2<<(s1pi_addr_unalign_part*8),
+                        8'b00000001<<s1pi_addr_unalign_part);
+                    default:$display("(store) UNKNOWN func3t %d",func3t);
+                endcase
+            end
+            default:;
+
+        endcase
+//        $display("pc %08X nxt_pc %08X",pc,nxt_pc);
     end
-    reg [3:0] pc;
-    wire [7:0] code = rom[pc];
-    wire [3:0] nxt_pc;
 
-    wire [1:0] op = code[7:6];
-    wire [1:0] rd = code[5:4];
-    wire [1:0] rs1 = code[3:2];
-    wire [1:0] rs2 = code[1:0];
-    wire [7:0] imm = {4'b0, code[3:0]};
-    wire [3:0] addr = code[5:2];
-    wire [7:0] out;
+    always@(posedge clk,posedge rst)begin
 
-    parameter ADD=2'b00,LI=2'b10,BNER0=2'b11;
-    parameter OUT=2'b01;
+    `ifdef DISPLAY_TRACE
+        $display("--> @pc [%08x:] inst %08X",pc,inst);
+        $display("rs1(r%d)=%08X(%d) rs2(r%d)=%08X(%d) imm=%08X(%d)",
+            rs1,src1,src1,
+            rs2,src2,src2,
+            imm,imm);
+        if(is_jalr)$display("JALR %08X",nxt_pc);
+        if(is_arithmetic)$display("Write arithemtic result");
+        if(is_load)$display("Load");
+        if(is_lui)$display("LUI");
 
-    assign nxt_pc = (op==BNER0 && r[rs2]!=r[0]) ? addr : pc+1;
-    assign out = (op==OUT) ? r[rd] : 8'b0;
+        if(wen)$display("update r%d <- %08X(%d)",rd,wdata,wdata);
+    `endif
 
-    always @(posedge clk) begin
-        if (rst) pc <= 0;
-        else begin
-            case (op)
-                ADD: r[rd] <= r[rs1] + r[rs2];
-                LI: r[rd] <= imm;
-                default: ;
-            endcase
-            pc <= (pc == 6)?pc:nxt_pc;
-            if(pc!=6) $display("pc=%d code=%b r0=%d r1=%d r2=%d r3=%d", pc, code, r[0], r[1], r[2], r[3]);
+
+        if(rst)begin
+            pc<=INIT_PC;
+        end else begin
+            pc<=nxt_pc;
         end
     end
-
-    bcd7seg _low(out[3:0], seg0);
-    bcd7seg _high(out[7:4], seg1);
 
 endmodule
