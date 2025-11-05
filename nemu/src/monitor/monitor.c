@@ -13,8 +13,10 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
+#include <assert.h>
 #include <isa.h>
 #include <memory/paddr.h>
+#include <unistd.h>
 #include "sdb/sdb.h"
 #include "sdb/elf_tool.h"
 
@@ -102,12 +104,35 @@ static int parse_args(int argc, char *argv[]) {
   }
   return 0;
 }
+void change_suffix_to_elf(char *filename, size_t size)
+{
+    char *dot = strrchr(filename, '.');
 
+    if (dot) {
+        assert(dot - filename + 4 < size); 
+		strcpy(dot, ".elf");   
+    } else {
+        assert(strlen(filename) + 4 < size);
+        strcat(filename, ".elf");
+    }
+}
 void init_monitor(int argc, char *argv[]) {
   /* Perform some global initialization. */
 
   /* Parse arguments. */
   parse_args(argc, argv);
+
+
+  if(img_file&&!elf_file){
+	  static char buf[512];
+	  strcpy(buf,img_file);
+	  change_suffix_to_elf(buf, sizeof(buf));
+	  if(access(buf, F_OK) == 0){
+		  Log("find %s set as elf_file",buf);
+		  elf_file=buf;
+	  }
+  }
+
 
   /* Set random seed. */
   init_rand();
