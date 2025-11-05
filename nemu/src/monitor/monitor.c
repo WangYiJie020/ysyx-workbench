@@ -123,16 +123,6 @@ void init_monitor(int argc, char *argv[]) {
   parse_args(argc, argv);
 
 
-  if(img_file&&!elf_file){
-	  static char buf[512];
-	  strcpy(buf,img_file);
-	  change_suffix_to_elf(buf, sizeof(buf));
-	  if(access(buf, F_OK) == 0){
-		  Log("find %s set as elf_file",buf);
-		  elf_file=buf;
-	  }
-  }
-
 
   /* Set random seed. */
   init_rand();
@@ -151,6 +141,16 @@ void init_monitor(int argc, char *argv[]) {
 
   /* Load the image to memory. This will overwrite the built-in image. */
   long img_size = load_img();
+
+  if(img_file&&!elf_file){
+	  static char buf[512];
+	  strcpy(buf,img_file);
+	  change_suffix_to_elf(buf, sizeof(buf));
+	  if(access(buf, F_OK) == 0){
+		  Log("find %s set as elf_file",buf);
+		  elf_file=buf;
+	  }
+  }
 
   if(elf_file)load_elf(elf_file);
 
