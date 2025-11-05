@@ -129,7 +129,7 @@ void init_monitor(int argc, char *argv[]) {
   if(log_file)printf("log file %s\n",log_file);
 
   /* Open the log file. */
-  init_log(log_file);
+  //init_log(log_file);
 
   /* Initialize memory. */
   init_mem();

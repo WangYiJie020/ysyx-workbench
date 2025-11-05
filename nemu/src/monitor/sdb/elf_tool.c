@@ -14,7 +14,7 @@
 
 #define ensure_frd(ptr,cnt) do{\
 	int _fread_result=fread((ptr),sizeof(*ptr),cnt,fp);\
-	Assert(_fread_result==(cnt),"expected %d(siz %d) get %d\n",(int)(cnt),(int)sizeof(*ptr),_fread_result);\
+	Assert(_fread_result==(cnt),"expected %d(siz %d) get %d",(int)(cnt),(int)sizeof(*ptr),_fread_result);\
 }while(0)
 
 void* ensure_malloc(size_t size){
@@ -46,7 +46,7 @@ void load_elf(const char* filename){
 	int elfsize=ftell(fp);
 	fseek(fp, 0, SEEK_SET);
 
-	Log("open elf file %s size %d\n",filename,elfsize);
+	Log("open elf file %s size %d",filename,elfsize);
 
 	ensure_frd_one(e_ident);
 
