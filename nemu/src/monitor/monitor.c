@@ -13,11 +13,9 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
-#include <stdio.h>
 #include <isa.h>
 #include <memory/paddr.h>
 #include <unistd.h>
-#include <assert.h>
 #include "sdb/sdb.h"
 #include "sdb/elf_tool.h"
 
