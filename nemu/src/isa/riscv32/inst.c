@@ -249,17 +249,18 @@ void match_jal(word_t npc,word_t rd){
 }
 void match_jalr(word_t pc,word_t npc,word_t rd,word_t r1){
 	func_sym f;
-	assert(try_match_func(npc, &f)==0);
 	if(rd==REGIDX_ra){
+		assert(try_match_func(npc, &f)==0);
 		printf("jalr %*s call %s\n",callst_cnt,"",f.name);	
 		callst_cnt++;
 	}
 	else if(rd==0&&(r1==REGIDX_ra)){
+		assert(try_match_func(pc, &f)==0);
 		callst_cnt--;
 		printf("jalr %*s ret from %s\n",callst_cnt,"",f.name);
 		Assert(callst_cnt, "ret stmt >= call");
 	}
 	else{
-		printf("______unexpected jalr\n");
+//		printf("______unexpected jalr\n");
 	}
 }
