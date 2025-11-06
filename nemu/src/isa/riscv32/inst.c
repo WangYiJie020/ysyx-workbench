@@ -244,7 +244,7 @@ int callst_cnt=0;
 void match_jal(word_t pc,word_t npc,word_t rd){
 	func_sym f;
 	assert(try_match_func(npc, &f)==0);
-	printf("0x%08X: %*s call %s @0x%08X\n",pc,callst_cnt,"",f.name,npc);	
+	printf("0x%08X:%*scall %s @0x%08X\n",pc,callst_cnt,"",f.name,npc);	
 	callst_cnt++;
 }
 void match_jalr(word_t pc,word_t npc,word_t rd,word_t r1){
@@ -252,14 +252,14 @@ void match_jalr(word_t pc,word_t npc,word_t rd,word_t r1){
 	if(rd==REGIDX_ra){
 		assert(try_match_func(npc, &f)==0);
 		assert(f.addr==npc);
-		printf("0x%08X: %*s call %s @0x%08X\n",pc,callst_cnt,"",f.name,npc);	
+		printf("0x%08X:%*scall %s @0x%08X\n",pc,callst_cnt,"",f.name,npc);	
 		callst_cnt++;
 	}
 	else if(rd==0&&(r1==REGIDX_ra)){
 		assert(try_match_func(pc, &f)==0);
 		Assert(callst_cnt, "ret stmt >= call");
 		callst_cnt--;
-		printf("0x%08X: %*s ret from %s @0x%08X\n",pc,callst_cnt,"",f.name,f.addr);	
+		printf("0x%08X:%*sret from %s @0x%08X\n",pc,callst_cnt,"",f.name,f.addr);	
 	}
 	else{
 //		printf("______unexpected jalr\n");
