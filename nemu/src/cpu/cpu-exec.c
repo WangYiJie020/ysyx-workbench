@@ -125,11 +125,15 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
   if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
 
-  func_sym func;
-  if(try_match_func(_this->pc, &func)==0){
-	  if(func.addr==_this->pc){
-		  printf("enter func %s\n",func.name);
+  func_sym cur_func,nxt_func;
+  if(try_match_func(_this->pc, &cur_func)==0){
+	  try_match_func(_this->dnpc, &nxt_func);
+	  if(cur_func.addr==_this->pc){
+		  printf("enter func %s\n",cur_func.name);
 	  }
+  }
+  else{
+	  Log(ANSI_FMT("WARN: can't find func sym for inst @0x%08X",ANSI_FG_YELLOW),_this->pc);
   }
 #ifdef CONFIG_WATCHPOINT 
   check_wp();
