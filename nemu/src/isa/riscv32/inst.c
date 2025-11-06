@@ -201,19 +201,18 @@ static int decode_exec(Decode *s) {
 
 #define REGIDX_ra 10
 
+  void match_jal(word_t npc,word_t rd);
+  void match_jalr(word_t npc,word_t rd,word_t r1);
   INSTPAT("??????? ????? ????? ??? ????? 11011 11", jal    , J,
 		  R(rd) = s->pc+4; s->dnpc=s->pc+imm;
-		  func_sym func;
-		  if(try_match_func(s->dnpc, &func)==0){
-			printf("call %s",func.name);
-		  }
-		  else{
-			  Log(ANSI_FMT("WARN: can't find func sym for inst @0x%08X",ANSI_FG_YELLOW),s->dnpc);
-		  }
+		  match_jal(s->dnpc, rd);
 		  );
 // setting the least-significant bit of the result to zero (see JALR p47)
   INSTPAT_I("??????? ????? ????? 000 ????? 11001 11", jalr   , 
-		  R(rd) = s->pc+4; s->dnpc=(src1+imm)&(~1));
+		  R(rd) = s->pc+4; s->dnpc=(src1+imm)&(~1);
+		  match_jalr(s->dnpc, rd, BITS(s->isa.inst, 19, 15));
+		  );
+
 
 
 	INSTPAT_B_IMM("000",beq	,src1==src2);
@@ -236,4 +235,15 @@ static int decode_exec(Decode *s) {
 int isa_exec_once(Decode *s) {
   s->isa.inst = inst_fetch(&s->snpc, 4);
   return decode_exec(s);
+}
+
+void match_jal(word_t npc,word_t rd){
+	func_sym f;
+	assert(try_match_func(npc, &f)==0);
+	printf("jal call %s\n",f.name);	
+}
+void match_jalr(word_t npc,word_t rd,word_t r1){
+	func_sym f;
+	assert(try_match_func(npc, &f)==0);
+	printf("jalr call %s\n",f.name);	
 }
