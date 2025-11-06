@@ -202,7 +202,7 @@ static int decode_exec(Decode *s) {
 #define REGIDX_ra 10
 
   void match_jal(word_t npc,word_t rd);
-  void match_jalr(word_t npc,word_t rd,word_t r1);
+  void match_jalr(word_t pc,word_t npc,word_t rd,word_t r1);
   INSTPAT("??????? ????? ????? ??? ????? 11011 11", jal    , J,
 		  R(rd) = s->pc+4; s->dnpc=s->pc+imm;
 		  match_jal(s->dnpc, rd);
@@ -210,7 +210,7 @@ static int decode_exec(Decode *s) {
 // setting the least-significant bit of the result to zero (see JALR p47)
   INSTPAT_I("??????? ????? ????? 000 ????? 11001 11", jalr   , 
 		  R(rd) = s->pc+4; s->dnpc=(src1+imm)&(~1);
-		  match_jalr(s->dnpc, rd, BITS(s->isa.inst, 19, 15));
+		  match_jalr(s->pc,s->dnpc, rd, BITS(s->isa.inst, 19, 15));
 		  );
 
 
@@ -242,8 +242,9 @@ void match_jal(word_t npc,word_t rd){
 	assert(try_match_func(npc, &f)==0);
 	printf("jal call %s\n",f.name);	
 }
-void match_jalr(word_t npc,word_t rd,word_t r1){
+void match_jalr(word_t pc,word_t npc,word_t rd,word_t r1){
 	func_sym f;
 	assert(try_match_func(npc, &f)==0);
-	printf("jalr call %s\n",f.name);	
+	if(rd==REGIDX_ra)	printf("jalr call %s\n",f.name);	
+	if(rd==0&&(r1==REGIDX_ra))printf("jalr ret from %s\n",f.name);
 }
