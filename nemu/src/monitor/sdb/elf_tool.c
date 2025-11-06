@@ -16,6 +16,21 @@
 	int _fread_result=fread((ptr),sizeof(*ptr),cnt,fp);\
 	Assert(_fread_result==(cnt),"expected %d(siz %d) get %d",(int)(cnt),(int)sizeof(*ptr),_fread_result);\
 }while(0)
+static char* symstr_buf=NULL;
+static Elf32_Sym* syms;
+static size_t sym_num;
+
+void free_elf(){
+	if(symstr_buf){
+		free(symstr_buf);
+		symstr_buf=NULL;
+	}
+	if(syms){
+		free(syms);
+		syms=NULL;
+	}
+	sym_num=0;
+}
 
 void* ensure_malloc(size_t size){
 	void* res=malloc(size);
@@ -89,21 +104,21 @@ void load_elf(const char* filename){
 
 	Assert(sh_symtab->sh_entsize==sizeof(Elf32_Sym),"sym table entry size inconsist with 32b sym structure");
 	Assert(sh_symtab->sh_size%sh_symtab->sh_entsize==0,"sym tot size is not multiples of entry size");
-	size_t sym_num=sh_symtab->sh_size/sh_symtab->sh_entsize;
+	sym_num=sh_symtab->sh_size/sh_symtab->sh_entsize;
 	fseek(fp, sh_symtab->sh_offset, SEEK_SET);
 
-	Elf32_Sym* syms=ensure_calloc(sym_num,sizeof(Elf32_Sym));
+	syms=ensure_calloc(sym_num,sizeof(Elf32_Sym));
 	ensure_frd(syms, sym_num);
 
 	Assert(sh_symtab->sh_link<hdr.e_shnum,"sym table linked strtab idx out of tot num");
 	Elf32_Shdr* sh_syms_strtab=&shdr[sh_symtab->sh_link];
 
-	char* symstr_buf=create_strbuf(fp, sh_syms_strtab);
+	symstr_buf=create_strbuf(fp, sh_syms_strtab);
 
-	for(int i=0;i<sym_num;i++){
+	for(size_t i=0;i<sym_num;i++){
 		int type=ELF32_ST_TYPE(syms[i].st_info);
 		if(type!=STT_FUNC)continue;
-		printf("SYM %d: %08X %5d FUNC %s\n",
+		printf("SYM %zu: %08X %5d FUNC %s\n",
 				i,syms[i].st_value,syms[i].st_size, &symstr_buf[syms[i].st_name]);
 	}
 
@@ -112,4 +127,20 @@ void load_elf(const char* filename){
 	free(symstr_buf);
 	free(syms);
 	fclose(fp);
+}
+
+
+int try_match_func(uint32_t inst_addr, func_sym *out){
+	Elf32_Sym* ptr=syms,*end=ptr+sym_num;
+	while (ptr!=end) {
+		int type=ELF32_ST_TYPE(ptr->st_info);
+		if(type!=STT_FUNC)continue;
+		if(ptr->st_value<=inst_addr&&inst_addr<ptr->st_value+ptr->st_size){
+			out->addr=ptr->st_value;
+			out->size=ptr->st_size;
+			out->name=symstr_buf+ptr->st_name;
+			return 0;
+		}
+	}
+	return -1;
 }

@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "../monitor/sdb/sdb.h"
+#include "../monitor/sdb/elf_tool.h"
 #include "common.h"
 #include "debug.h"
 #include "utils.h"
@@ -124,6 +125,12 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
   if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
 
+  func_sym func;
+  if(try_match_func(_this->pc, &func)==0){
+	  if(func.addr==_this->pc){
+		  printf("enter func %s\n",func.name);
+	  }
+  }
 #ifdef CONFIG_WATCHPOINT 
   check_wp();
 #endif
