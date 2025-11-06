@@ -28,7 +28,7 @@ void init_log(const char *log_file) {
     log_fp = fp;
   }
   else{
-	  Log(ANSI_FMT("WARN:",ANSI_FG_YELLOW)" no log_file write_log will not work");
+	  Log(ANSI_FMT("WARN: no log_file set, write_log will not work", ANSI_FG_YELLOW));
   }
   Log("Log is written to %s", log_file ? log_file : "stdout");
 }
