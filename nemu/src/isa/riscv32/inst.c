@@ -201,11 +201,11 @@ static int decode_exec(Decode *s) {
   INSTPAT_R("0000000 ????? ????? 100 ????? 01100 11", xor    , R(rd) = src1 ^ src2); 
 
 
-  void match_jal(word_t npc,word_t rd);
+  void match_jal(word_t pc,word_t npc,word_t rd);
   void match_jalr(word_t pc,word_t npc,word_t rd,word_t r1);
   INSTPAT("??????? ????? ????? ??? ????? 11011 11", jal    , J,
 		  R(rd) = s->pc+4; s->dnpc=s->pc+imm;
-		  match_jal(s->dnpc, rd);
+		  match_jal(s->pc,s->dnpc, rd);
 		  );
 // setting the least-significant bit of the result to zero (see JALR p47)
   INSTPAT_I("??????? ????? ????? 000 ????? 11001 11", jalr   , 
@@ -241,24 +241,25 @@ int isa_exec_once(Decode *s) {
 
 int callst_cnt=0;
 
-void match_jal(word_t npc,word_t rd){
+void match_jal(word_t pc,word_t npc,word_t rd){
 	func_sym f;
 	assert(try_match_func(npc, &f)==0);
-	printf("jal  %*s call %s\n",callst_cnt,"",f.name);	
+	printf("0x%08X: %*s call %s @0x%08X\n",pc,callst_cnt,"",f.name,npc);	
 	callst_cnt++;
 }
 void match_jalr(word_t pc,word_t npc,word_t rd,word_t r1){
 	func_sym f;
 	if(rd==REGIDX_ra){
 		assert(try_match_func(npc, &f)==0);
-		printf("jalr %*s call %s\n",callst_cnt,"",f.name);	
+		assert(f.addr==npc);
+		printf("0x%08X: %*s call %s @0x%08X\n",pc,callst_cnt,"",f.name,npc);	
 		callst_cnt++;
 	}
 	else if(rd==0&&(r1==REGIDX_ra)){
 		assert(try_match_func(pc, &f)==0);
-		callst_cnt--;
-		printf("jalr %*s ret from %s\n",callst_cnt,"",f.name);
 		Assert(callst_cnt, "ret stmt >= call");
+		callst_cnt--;
+		printf("0x%08X: %*s ret from %s @0x%08X\n",pc,callst_cnt,"",f.name,f.addr);	
 	}
 	else{
 //		printf("______unexpected jalr\n");
