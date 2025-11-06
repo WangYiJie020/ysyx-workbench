@@ -140,6 +140,7 @@ int try_match_func(uint32_t inst_addr, func_sym *out){
 			return 0;
 		}
 		ptr++;
+		puts(".");
 	}
 	return -1;
 }
