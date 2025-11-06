@@ -131,6 +131,7 @@ void load_elf(const char* filename){
 int try_match_func(uint32_t inst_addr, func_sym *out){
 	Elf32_Sym* ptr=syms,*end=ptr+sym_num;
 	while (ptr!=end) {
+		puts("foo");
 		int type=ELF32_ST_TYPE(ptr->st_info);
 		if(type!=STT_FUNC)continue;
 		if(ptr->st_value<=inst_addr&&inst_addr<ptr->st_value+ptr->st_size){
@@ -140,7 +141,6 @@ int try_match_func(uint32_t inst_addr, func_sym *out){
 			return 0;
 		}
 		ptr++;
-		puts(".");
 	}
 	return -1;
 }
