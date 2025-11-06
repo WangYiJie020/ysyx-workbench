@@ -124,8 +124,6 @@ void load_elf(const char* filename){
 
 	free(shdr);
 	free(shstr_buf);
-	free(symstr_buf);
-	free(syms);
 	fclose(fp);
 }
 
