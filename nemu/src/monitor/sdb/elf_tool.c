@@ -129,7 +129,8 @@ void load_elf(const char* filename){
 
 
 int try_match_func(uint32_t inst_addr, func_sym *out){
-	Elf32_Sym* ptr=syms,*end=ptr+sym_num;
+	Elf32_Sym* ptr=syms;
+	Elf32_Sym* end=ptr+sym_num;
 	while (ptr!=end) {
 		puts("foo");
 		int type=ELF32_ST_TYPE(ptr->st_info);
