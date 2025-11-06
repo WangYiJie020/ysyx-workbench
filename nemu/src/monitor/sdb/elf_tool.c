@@ -139,6 +139,7 @@ int try_match_func(uint32_t inst_addr, func_sym *out){
 			out->name=symstr_buf+ptr->st_name;
 			return 0;
 		}
+		ptr++;
 	}
 	return -1;
 }
