@@ -14,6 +14,7 @@
 ***************************************************************************************/
 
 #include "common.h"
+#include "debug.h"
 #include "local-include/reg.h"
 #include "macro.h"
 #include <assert.h>
@@ -237,14 +238,25 @@ int isa_exec_once(Decode *s) {
 }
 
 #define REGIDX_ra 1
+
+size_t callst_cnt=0;
+
 void match_jal(word_t npc,word_t rd){
 	func_sym f;
 	assert(try_match_func(npc, &f)==0);
 	printf("jal call %s\n",f.name);	
+	callst_cnt++;
 }
 void match_jalr(word_t pc,word_t npc,word_t rd,word_t r1){
 	func_sym f;
 	assert(try_match_func(npc, &f)==0);
-	if(rd==REGIDX_ra)	printf("jalr call %s\n",f.name);	
-	if(rd==0&&(r1==REGIDX_ra))printf("jalr ret from %s\n",f.name);
+	if(rd==REGIDX_ra){
+		printf("jalr call %s\n",f.name);	
+		callst_cnt++;
+	}
+	if(rd==0&&(r1==REGIDX_ra)){
+		printf("jalr ret from %s\n",f.name);
+		Assert(callst_cnt, "ret stmt >= call");
+		callst_cnt--;
+	}
 }
