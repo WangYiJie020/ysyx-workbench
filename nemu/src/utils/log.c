@@ -28,13 +28,13 @@ void init_log(const char *log_file) {
     log_fp = fp;
   }
   else{
-	  Log(ANSI_FMT("WARN: no log_file set, write_log will not work", ANSI_FG_YELLOW));
+//	  Log(ANSI_FMT("WARN: no log_file set, write_log will not work", ANSI_FG_YELLOW));
   }
   Log("Log is written to %s", log_file ? log_file : "stdout");
 }
 
 bool log_enable() {
   return MUXDEF(CONFIG_TRACE, (g_nr_guest_inst >= CONFIG_TRACE_START) &&
-         (g_nr_guest_inst <= CONFIG_TRACE_END) && (log_fp!=stdout), false);
+         (g_nr_guest_inst <= CONFIG_TRACE_END), false);
 }
 #endif

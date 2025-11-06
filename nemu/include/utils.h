@@ -69,8 +69,9 @@ uint64_t get_time();
 
 #define _Log(...) \
   do { \
+    extern FILE* log_fp; \
     printf(__VA_ARGS__); \
-    log_write(__VA_ARGS__); \
+    if(log_fp!=stdout)log_write(__VA_ARGS__); \
   } while (0)
 
 
