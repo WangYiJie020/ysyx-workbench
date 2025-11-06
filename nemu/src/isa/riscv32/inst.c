@@ -199,7 +199,6 @@ static int decode_exec(Decode *s) {
   INSTPAT_R("0000000 ????? ????? 110 ????? 01100 11", or     , R(rd) = src1 | src2); 
   INSTPAT_R("0000000 ????? ????? 100 ????? 01100 11", xor    , R(rd) = src1 ^ src2); 
 
-#define REGIDX_ra 10
 
   void match_jal(word_t npc,word_t rd);
   void match_jalr(word_t pc,word_t npc,word_t rd,word_t r1);
@@ -237,6 +236,7 @@ int isa_exec_once(Decode *s) {
   return decode_exec(s);
 }
 
+#define REGIDX_ra 1
 void match_jal(word_t npc,word_t rd){
 	func_sym f;
 	assert(try_match_func(npc, &f)==0);
