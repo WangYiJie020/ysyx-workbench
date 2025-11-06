@@ -254,9 +254,12 @@ void match_jalr(word_t pc,word_t npc,word_t rd,word_t r1){
 		printf("jalr %*s call %s\n",callst_cnt,"",f.name);	
 		callst_cnt++;
 	}
-	if(rd==0&&(r1==REGIDX_ra)){
+	else if(rd==0&&(r1==REGIDX_ra)){
 		callst_cnt--;
 		printf("jalr %*s ret from %s\n",callst_cnt,"",f.name);
 		Assert(callst_cnt, "ret stmt >= call");
+	}
+	else{
+		printf("______unexpected jalr\n");
 	}
 }
