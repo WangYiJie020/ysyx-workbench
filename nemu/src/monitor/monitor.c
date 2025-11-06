@@ -17,7 +17,7 @@
 #include <memory/paddr.h>
 #include <unistd.h>
 #include "sdb/sdb.h"
-#include "sdb/elf_tool.h"
+#include "elf_tool.h"
 
 void init_rand();
 void init_log(const char *log_file);

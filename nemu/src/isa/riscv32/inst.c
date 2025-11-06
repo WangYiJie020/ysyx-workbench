@@ -22,9 +22,10 @@
 #include <cpu/decode.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <wchar.h>
 
 #include <limits.h>
+
+#include <elf_tool.h>
 
 // We are in riscv32
 #define signed_min INT_MIN
@@ -198,8 +199,18 @@ static int decode_exec(Decode *s) {
   INSTPAT_R("0000000 ????? ????? 110 ????? 01100 11", or     , R(rd) = src1 | src2); 
   INSTPAT_R("0000000 ????? ????? 100 ????? 01100 11", xor    , R(rd) = src1 ^ src2); 
 
+#define REGIDX_ra 10
+
   INSTPAT("??????? ????? ????? ??? ????? 11011 11", jal    , J,
-		  R(rd) = s->pc+4; s->dnpc=s->pc+imm);
+		  R(rd) = s->pc+4; s->dnpc=s->pc+imm;
+		  func_sym func;
+		  if(try_match_func(s->dnpc, &func)==0){
+			printf("call %s",func.name);
+		  }
+		  else{
+			  Log(ANSI_FMT("WARN: can't find func sym for inst @0x%08X",ANSI_FG_YELLOW),s->dnpc);
+		  }
+		  );
 // setting the least-significant bit of the result to zero (see JALR p47)
   INSTPAT_I("??????? ????? ????? 000 ????? 11001 11", jalr   , 
 		  R(rd) = s->pc+4; s->dnpc=(src1+imm)&(~1));
