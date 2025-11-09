@@ -6,7 +6,8 @@
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 
 int printf(const char *fmt, ...) {
-  panic("Not implemented");
+	putstr(fmt);
+	return 0;
 }
 
 int vsprintf(char *out, const char *fmt, va_list ap) {
@@ -38,14 +39,19 @@ int sprintf(char *out, const char *fmt, ...) {
                      int d=va_arg(ap,int);
                      if(d<0){
                          _putch('-');
-                         d=-d;
+						 // When d=INT_MIN
+						 // -d is overflow
                      }
                      char buf[20];
                      char* end=buf+sizeof(buf);
                      char* p=end;
+					 int tmp;
                      do{
                          p--;
-                         *p='0'+d%10;
+						 tmp=d%10;
+						 // avoid -INT_MIN overflow
+						 if(tmp<0)tmp=-tmp;
+                         *p='0'+tmp;
                          d/=10;
                      }while(d);
                      while(p!=end){
