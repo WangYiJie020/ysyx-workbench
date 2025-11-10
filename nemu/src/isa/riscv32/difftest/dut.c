@@ -26,8 +26,11 @@
 bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
 	for(int i=0;i<sizeof(ref_r->gpr)/sizeof(word_t);i++){
 		if(ref_r->gpr[i]!=cpu.gpr[i]){
-			Log(ANSI_FMT("check reg failed:",ANSI_FG_RED)" gpr[%s] @0x%08X",
-					reg_name(i),pc);
+			Log(ANSI_FMT("reg check failed:",ANSI_FG_RED)
+					" at pc = 0x%08X, expect $%s = %08X but get %08X",
+					pc,
+					reg_name(i),ref_r->gpr[i],cpu.gpr[i]
+			);
 			return false;
 		}
 	}
