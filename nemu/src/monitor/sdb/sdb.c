@@ -53,7 +53,6 @@ static int cmd_c(char *args) {
 
 int is_exit_status_bad(); 
 static int cmd_q(char *args) {
-	puts("foo____ cmd_q");
   if(is_exit_status_bad())return -1;
   else set_nemu_state(NEMU_QUIT,0,0);
   return -1;
