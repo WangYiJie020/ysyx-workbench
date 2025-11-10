@@ -43,7 +43,13 @@ static SDL_Renderer *renderer = NULL;
 static SDL_Texture *texture = NULL;
 static SDL_Window *window = NULL;
 
-static void init_screen() {
+#if defined(__clang__) || defined (__GNUC__)
+# define ATTRIBUTE_NO_SANITIZE_ADDRESS __attribute__((no_sanitize_address))
+#else
+# define ATTRIBUTE_NO_SANITIZE_ADDRESS
+#endif
+
+ATTRIBUTE_NO_SANITIZE_ADDRESS static void init_screen() {
   char title[128];
   sprintf(title, "%s-NEMU", str(__GUEST_ISA__));
   SDL_Init(SDL_INIT_VIDEO);
