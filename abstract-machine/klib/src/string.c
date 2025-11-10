@@ -1,3 +1,4 @@
+#include "am.h"
 #include <klib.h>
 #include <klib-macros.h>
 #include <stdint.h>
@@ -5,7 +6,12 @@
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 
 size_t strlen(const char *s) {
-  panic("Not implemented");
+	size_t n=0;
+	while (*s) {
+		n++;	
+		s++;
+	}
+	return n;
 }
 
 char *strcpy(char *dst, const char *src) {
@@ -65,7 +71,16 @@ void *memmove(void *dst, const void *src, size_t n) {
 }
 
 void *memcpy(void *out, const void *in, size_t n) {
-  panic("Not implemented");
+	const char* ibeg=in;
+	char* obeg=out;
+	const char* iend=ibeg+n;
+
+	while (ibeg!=iend) {
+		*obeg=*ibeg;
+		ibeg++;	
+		obeg++;
+	}
+	return out;
 }
 
 int memcmp(const void *s1, const void *s2, size_t n) {
