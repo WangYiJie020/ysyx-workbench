@@ -15,6 +15,7 @@
 
 #include <common.h>
 #include <device/map.h>
+#include <stdio.h>
 
 #define SCREEN_W (MUXDEF(CONFIG_VGA_SIZE_800x600, 800, 400))
 #define SCREEN_H (MUXDEF(CONFIG_VGA_SIZE_800x600, 600, 300))
@@ -84,6 +85,7 @@ void vga_update_screen() {
 }
 
 void destroy_vga(){
+	printf("foo____");
 	destroy_screen();
 }
 
