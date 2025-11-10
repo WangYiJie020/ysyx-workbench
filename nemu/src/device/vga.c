@@ -40,9 +40,9 @@ static uint32_t *vgactl_port_base = NULL;
 
 static SDL_Renderer *renderer = NULL;
 static SDL_Texture *texture = NULL;
+static SDL_Window *window = NULL;
 
 static void init_screen() {
-  SDL_Window *window = NULL;
   char title[128];
   sprintf(title, "%s-NEMU", str(__GUEST_ISA__));
   SDL_Init(SDL_INIT_VIDEO);
@@ -62,6 +62,13 @@ static inline void update_screen() {
   SDL_RenderCopy(renderer, texture, NULL, NULL);
   SDL_RenderPresent(renderer);
 }
+
+static inline void destroy_screen(){
+	SDL_DestroyTexture(texture);
+	SDL_DestroyRenderer(renderer);
+	SDL_DestroyWindow(window);
+	SDL_Quit();
+}
 #else
 static void init_screen() {}
 
@@ -74,6 +81,10 @@ static inline void update_screen() {
 void vga_update_screen() {
   // TODO: call `update_screen()` when the sync register is non-zero,
   // then zero out the sync register
+}
+
+void destroy_vga(){
+	destroy_screen();
 }
 
 void init_vga() {

@@ -14,12 +14,13 @@
 ***************************************************************************************/
 
 #include <common.h>
-#include <elf_tool.h>
 
 void init_monitor(int, char *[]);
 void am_init_monitor();
 void engine_start();
 int is_exit_status_bad();
+
+void destroy_monitor();
 
 int main(int argc, char *argv[]) {
   /* Initialize the monitor. */
@@ -33,7 +34,7 @@ int main(int argc, char *argv[]) {
   /* Start engine. */
   engine_start();
 
-  free_elf();
+  destroy_monitor();
 
   return is_exit_status_bad();
 }
