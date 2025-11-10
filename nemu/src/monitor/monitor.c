@@ -15,6 +15,7 @@
 
 #include <isa.h>
 #include <memory/paddr.h>
+#include <stdio.h>
 #include <unistd.h>
 #include "sdb/sdb.h"
 #include "elf_tool.h"
@@ -121,7 +122,7 @@ void init_monitor(int argc, char *argv[]) {
   /* Parse arguments. */
   parse_args(argc, argv);
 
-
+	printf("diff_so_file %s\n",diff_so_file);
 
   /* Set random seed. */
   init_rand();
