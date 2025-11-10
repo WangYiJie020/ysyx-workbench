@@ -115,12 +115,16 @@ void load_elf(const char* filename){
 
 	symstr_buf=create_strbuf(fp, sh_syms_strtab);
 
+	size_t func_cnt=0;
 	for(size_t i=0;i<sym_num;i++){
 		int type=ELF32_ST_TYPE(syms[i].st_info);
 		if(type!=STT_FUNC)continue;
-		printf("SYM %zu: %08X %5d FUNC %s\n",
-				i,syms[i].st_value,syms[i].st_size, &symstr_buf[syms[i].st_name]);
+		//printf("SYM %zu: %08X %5d FUNC %s\n",
+		//		i,syms[i].st_value,syms[i].st_size, &symstr_buf[syms[i].st_name]);
+		func_cnt++;
 	}
+
+	Log("Load %zu func sym",func_cnt);
 
 	free(shdr);
 	free(shstr_buf);
@@ -143,5 +147,6 @@ int try_match_func(uint32_t inst_addr, func_sym *out){
 		}
 		ptr++;
 	}
+
 	return -1;
 }
