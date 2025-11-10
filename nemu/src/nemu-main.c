@@ -33,6 +33,7 @@ int main(int argc, char *argv[]) {
 
   /* Start engine. */
   engine_start();
+	printf("foo____main");
 
   destroy_monitor();
 
