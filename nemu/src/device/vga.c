@@ -68,7 +68,6 @@ static inline void destroy_screen(){
 	SDL_DestroyTexture(texture);
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
-	puts("foo____dvga");
 	SDL_Quit();
 }
 #else
