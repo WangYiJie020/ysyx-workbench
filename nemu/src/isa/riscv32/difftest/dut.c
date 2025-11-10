@@ -17,6 +17,7 @@
 #include <cpu/difftest.h>
 #include "../local-include/reg.h"
 #include "common.h"
+#include "debug.h"
 
 /*
  * see nemu/tools/spike-diff/difftest.cc
@@ -24,9 +25,13 @@
  */
 bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
 	for(int i=0;i<sizeof(ref_r->gpr)/sizeof(word_t);i++){
-		if(ref_r->gpr[i]!=cpu.gpr[i])return false;
+		if(ref_r->gpr[i]!=cpu.gpr[i]){
+			Log(ANSI_FMT("check reg failed:",ANSI_FG_RED)" gpr[%s] @0x%08X",
+					reg_name(i),pc);
+			return false;
+		}
 	}
-  return ref_r->pc==pc;
+	return true;
 }
 
 void isa_difftest_attach() {
