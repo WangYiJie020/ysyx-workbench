@@ -85,7 +85,6 @@ void vga_update_screen() {
 }
 
 void destroy_vga(){
-	printf("foo____");
 	destroy_screen();
 }
 

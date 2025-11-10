@@ -174,6 +174,7 @@ void init_monitor(int argc, char *argv[]) {
 }
 
 void destroy_monitor(){
+	printf("foo____");
 	destroy_device();
 	free_elf();
 }
