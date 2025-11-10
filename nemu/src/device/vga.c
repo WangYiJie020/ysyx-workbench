@@ -85,6 +85,7 @@ void vga_update_screen() {
 }
 
 void destroy_vga(){
+	puts("foo____dvga");
 	destroy_screen();
 }
 
