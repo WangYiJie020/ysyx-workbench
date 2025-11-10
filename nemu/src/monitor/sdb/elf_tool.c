@@ -61,7 +61,7 @@ void load_elf(const char* filename){
 	int elfsize=ftell(fp);
 	fseek(fp, 0, SEEK_SET);
 
-	Log("open elf file %s size %d",filename,elfsize);
+	Log("open elf file %s size = %d",filename,elfsize);
 
 	ensure_frd_one(e_ident);
 
