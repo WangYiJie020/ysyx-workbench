@@ -8,5 +8,6 @@
 !.gitignore
 !README.md
 !Kconfig
+!asan_suppress.txt
 include/config
 include/generated

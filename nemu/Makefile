@@ -61,6 +61,8 @@ LDFLAGS += $(CFLAGS_BUILD)
 # Include rules for menuconfig
 include $(NEMU_HOME)/scripts/config.mk
 
+run: export LSAN_OPTIONS=suppressions=asan_suppress.txt
+
 ifdef CONFIG_TARGET_AM
 include $(AM_HOME)/Makefile
 LINKAGE += $(ARCHIVES)
@@ -68,3 +70,4 @@ else
 # Include rules to build NEMU
 include $(NEMU_HOME)/scripts/native.mk
 endif
+

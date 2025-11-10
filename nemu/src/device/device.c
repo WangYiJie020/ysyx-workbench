@@ -87,3 +87,9 @@ void init_device() {
 
   IFNDEF(CONFIG_TARGET_AM, init_alarm());
 }
+
+void destroy_vga();
+void destroy_device(){
+	destroy_vga();
+}
+
