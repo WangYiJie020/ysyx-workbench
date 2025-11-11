@@ -244,7 +244,7 @@ int callst_cnt=0;
 
 static void ftrace_log(const char* hint_str,word_t pc,const char* func_name,word_t func_addr){
 #ifdef CONFIG_FTRACE
-	printf("p`%08X:%8s "ANSI_FMT("f`%08X",ANSI_FG_GRAY)"%*s%s \n",pc,hint_str,func_addr,callst_cnt,"",func_name);
+	printf("0x%08X:%5s "ANSI_FMT("f`%08X",ANSI_FG_GRAY)"%*s%s \n",pc,hint_str,func_addr,callst_cnt,"",func_name);
 #endif
 }
 
@@ -268,7 +268,7 @@ void ftrace_trymatch_jalr(word_t pc,word_t npc,word_t rd,word_t r1){
 		assert(try_match_func(pc, &f)==0);
 		Assert(callst_cnt, "ret stmt should leq call");
 		callst_cnt--;
-		ftrace_log("ret from", pc, f.name, f.addr);
+		ftrace_log("ret", pc, f.name, f.addr);
 	}
 	else{
 //		printf("______unexpected jalr\n");
