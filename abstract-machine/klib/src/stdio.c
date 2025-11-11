@@ -7,6 +7,7 @@
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 
+#define isdigit(c) (('0'<=(c))&&((c)<='9'))
 // return false to end format, also caller cnt will not +1
 typedef bool(*putch_func)(int c,void* exinfo);
 
@@ -18,9 +19,24 @@ static int meta_printf(putch_func f_putch,void* exinfo,const char *fmt, va_list 
 }while(0)
 
     int cnt=0;
+
+	bool flag_zero=false;
+	int width;
+
     while(*fmt){
         if(*fmt=='%'){
             fmt++;
+			if(*fmt=='0'){
+				flag_zero=true;
+				fmt++;
+			}
+			else flag_zero=false;
+
+			if(isdigit(*fmt)){
+				width=atoi(fmt);
+			}
+			else width=0;
+
             switch(*fmt){
                 case 's':{
                      const char* str=va_arg(ap,const char*);
@@ -49,6 +65,12 @@ static int meta_printf(putch_func f_putch,void* exinfo,const char *fmt, va_list 
                          *p='0'+tmp;
                          d/=10;
                      }while(d);
+					 int out_len=end-p;
+					 char width_pad_char=flag_zero?'0':' ';
+					 while(out_len<width){
+						 _putch(width_pad_char);
+						 width--;
+					 }
                      while(p!=end){
                          _putch(*p);
                          p++;
