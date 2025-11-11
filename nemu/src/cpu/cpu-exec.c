@@ -51,6 +51,7 @@ typedef struct{
 	uint8_t code[MAX_INSTBYTE];
 }_pc_inst_t;
 
+#ifdef CONFIG_ITRACE
 void dis_asm(char* outbuf,int bufsiz,const _pc_inst_t* inst){
 	disassemble(outbuf,bufsiz,inst->pc,(uint8_t*)inst->code,inst->ilen);
 }	
@@ -111,7 +112,9 @@ void _ringbuf_dump(){
 		puts(")"ANSI_NONE);
 	}
 }
-
+#else
+void _ringbuf_dump(){}
+#endif
 
 void device_update();
 
