@@ -182,6 +182,10 @@ static int decode_exec(Decode *s) {
   INSTPAT_R("0000001 ????? ????? 001 ????? 01100 11", mulh   ,
          uint64_t ex1=SEXT(src1,32),ex2=SEXT(src2,32);
          R(rd)=(ex1*ex2)>>WORD_MAXBITLEN);
+  INSTPAT_R("0000001 ????? ????? 010 ????? 01100 11", mulhsu ,
+         uint64_t ex1=SEXT(src1,32),ex2=src2;
+         R(rd)=(ex1*ex2)>>WORD_MAXBITLEN);
+
 
 
 
