@@ -98,6 +98,7 @@ static bool put_snum(const print_ctx* ctx,int* cnt,int64_t d){
 	    d/=10;
 	}while(d);
 
+
 	return put_withpad(ctx,cnt, p, end-p);
 }
 static bool put_unum(const print_ctx* ctx,int* cnt,uint64_t u,int base,bool upper){
@@ -137,44 +138,47 @@ static int meta_printf(putch_func f_putch,void* exinfo,const char *fmt, va_list 
 
 	while(*fmt){
 		if(*fmt=='%'){
-		fmt=parse_format(fmt, ap, &ctx->fmt);
-		switch(*fmt){
-			case 'c':{
-				char ch=va_arg(ap,int);
-				_putpadstr(&ch, 1);
-				break;
-					 }
-			case 's':{
-				 const char* str=va_arg(ap,const char*);
-				 _putpadstr(str, strlen(str));
-				break;
-					 }
-			case 'd':{
-				 int d=va_arg(ap,int);
-				 _callwithctx(put_snum, d);
-				break;
-					 }
-			case 'o':
-			case 'u':
-			case 'x':
-			case 'X':{
-				 uint32_t u=va_arg(ap,uint32_t);
-				 int base=(*fmt=='u')?10
-					 :(*fmt=='u')?8
-					 :16;
-				 _callwithctx(put_unum,u,base,*fmt=='X');
-				 break;
-					 }
-						 
-			default:{
-						char buf[100];
-						sprintf(buf, "printf use unimpl format '%c'",*fmt);
-						panic(buf);
-					}
+			fmt=parse_format(fmt, ap, &ctx->fmt);
+			char conversion=ctx->fmt.conversion;
+			switch(conversion){
+				case 'c':{
+					char ch=va_arg(ap,int);
+					_putpadstr(&ch, 1);
+					break;
+						 }
+				case 's':{
+					 const char* str=va_arg(ap,const char*);
+					 _putpadstr(str, strlen(str));
+					break;
+						 }
+				case 'd':{
+					 int d=va_arg(ap,int);
+					 _callwithctx(put_snum, d);
+					break;
+						 }
+				case 'o':
+				case 'u':
+				case 'x':
+				case 'X':{
+					 uint32_t u=va_arg(ap,uint32_t);
+					 int base=(*fmt=='u')?10
+						 :(*fmt=='u')?8
+						 :16;
+					 _callwithctx(put_unum,u,base,conversion=='X');
+					 break;
+						 }
+							 
+				default:{
+							char buf[100];
+							sprintf(buf, "printf use unimpl format '%c'",conversion);
+							panic(buf);
+						}
+			}
 		}
+		else{
+			_putch(*fmt);
+			fmt++;
 		}
-		else _putch(*fmt);
-		fmt++;
 	}
 	return cnt;
 }
