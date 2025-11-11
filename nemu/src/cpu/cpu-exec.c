@@ -81,9 +81,6 @@ struct{
 // ringbuf mod plus 1
 #define _rb_mp1(x) (((x)+1)%IRINGBUF_SIZE)
 
-#define ANSI_FG_GRAY "\033[90m" // light black
-
-
 // push pc should nerver be 0
 // 0 pc consider as none inst will be ignore
 void _ringbuf_push(vaddr_t pc,const uint8_t* inst,int ilen){
