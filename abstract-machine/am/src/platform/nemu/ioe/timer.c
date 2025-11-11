@@ -5,8 +5,8 @@
 static uint64_t _am_start_time;
 
 static uint64_t get_us_time(){
-	uint64_t lo = inl(RTC_ADDR);
 	uint64_t hi = inl(RTC_ADDR+4);
+	uint64_t lo = inl(RTC_ADDR);
 	uint64_t res=(hi<<32)|lo;
 	printf("hi %d lo %d\n",hi,lo);
 	return res;
