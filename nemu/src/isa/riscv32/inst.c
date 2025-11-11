@@ -238,12 +238,11 @@ int isa_exec_once(Decode *s) {
 
 #define REGIDX_ra 1
 
+#ifdef CONFIG_FTRACE
 int callst_cnt=0;
 
 static void ftrace_log(const char* hint_str,word_t pc,const char* func_name,word_t func_addr){
-#ifdef CONFIG_FTRACE
 	printf("0x%08X:%5s "ANSI_FMT("f`%08X",ANSI_FG_GRAY)"%*s%s \n",pc,hint_str,func_addr,callst_cnt,"",func_name);
-#endif
 }
 
 void ftrace_trymatch_jal(word_t pc,word_t npc,word_t rd){
@@ -272,3 +271,7 @@ void ftrace_trymatch_jalr(word_t pc,word_t npc,word_t rd,word_t r1){
 //		printf("______unexpected jalr\n");
 	}
 }
+#else
+void ftrace_trymatch_jal(word_t pc,word_t npc,word_t rd){}
+void ftrace_trymatch_jalr(word_t pc,word_t npc,word_t rd,word_t r1){}
+#endif
