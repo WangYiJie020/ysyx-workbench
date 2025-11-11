@@ -266,6 +266,6 @@ void match_jalr(word_t pc,word_t npc,word_t rd,word_t r1){
 		print_func_trace("ret from", pc, f.name, f.addr);
 	}
 	else{
-//		printf("______unexpected jalr\n");
+		printf("______unexpected jalr\n");
 	}
 }
