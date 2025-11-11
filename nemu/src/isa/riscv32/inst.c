@@ -251,9 +251,10 @@ static void ftrace_log(const char* hint_str,word_t pc,const char* func_name,word
 void ftrace_trymatch_jal(word_t pc,word_t npc,word_t rd){
 	func_sym f;
 	assert(try_match_func(npc, &f)==0);
-	assert(f.addr==npc);
-	ftrace_log("call", pc, f.name, npc);
-	callst_cnt++;
+	if(f.addr==npc){
+		ftrace_log("call", pc, f.name, npc);
+		callst_cnt++;
+	}
 }
 void ftrace_trymatch_jalr(word_t pc,word_t npc,word_t rd,word_t r1){
 	func_sym f;
