@@ -1,13 +1,15 @@
 #include <am.h>
 #include <nemu.h>
 #include <stdint.h>
-
+#include <stdio.h>
 static uint64_t _am_start_time;
 
 static uint64_t get_us_time(){
 	uint64_t lo = inl(RTC_ADDR);
 	uint64_t hi = inl(RTC_ADDR+4);
-	return (hi<<32)|lo;
+	uint64_t res=(hi<<32)|lo;
+	printf("hi %d lo %d\n",hi,lo);
+	return res;
 }
 
 void __am_timer_init() {
