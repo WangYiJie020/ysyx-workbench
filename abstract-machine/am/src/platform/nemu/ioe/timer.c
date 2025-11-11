@@ -7,12 +7,11 @@ static uint64_t _am_start_time;
 static uint64_t get_us_time(){
 	uint64_t lo = inl(RTC_ADDR);
 	uint64_t hi = inl(RTC_ADDR+4);
-	(void)hi;
-	(void)lo;
-	return 0;
+	return (hi<<32)|lo;
 }
 
 void __am_timer_init() {
+	putstr("call __am_timer_init\n");
 	_am_start_time=get_us_time();
 }
 
