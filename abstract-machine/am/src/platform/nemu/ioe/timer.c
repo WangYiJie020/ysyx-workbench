@@ -11,7 +11,6 @@ static uint64_t get_us_time(){
 }
 
 void __am_timer_init() {
-	putstr("call __am_timer_init\n");
 	_am_start_time=get_us_time();
 }
 
