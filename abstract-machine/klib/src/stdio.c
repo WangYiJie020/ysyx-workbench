@@ -34,6 +34,9 @@ static int meta_printf(putch_func f_putch,void* exinfo,const char *fmt, va_list 
 
 			if(isdigit(*fmt)){
 				width=atoi(fmt);
+				while (isdigit(*fmt)) {
+					fmt++;	
+				}
 			}
 			else width=0;
 
