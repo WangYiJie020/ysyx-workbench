@@ -41,6 +41,11 @@ static int meta_printf(putch_func f_putch,void* exinfo,const char *fmt, va_list 
 			else width=0;
 
             switch(*fmt){
+				case 'c':{
+					int ch=va_arg(ap,int);
+					_putch(ch);
+					break;
+						 }
                 case 's':{
                      const char* str=va_arg(ap,const char*);
                      while(*str){
@@ -80,7 +85,11 @@ static int meta_printf(putch_func f_putch,void* exinfo,const char *fmt, va_list 
                      }
                      break;
                          }
-                default: panic("unimpl fmt");
+                default:{
+							char buf[100];
+							sprintf(buf, "printf use unimpl format '%c'",*fmt);
+							panic(buf);
+						}
             }
         }
         else _putch(*fmt);
