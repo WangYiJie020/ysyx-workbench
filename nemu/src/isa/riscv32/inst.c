@@ -28,6 +28,9 @@
 
 #include <elf_tool.h>
 
+static void ftrace_trymatch_jal(word_t pc,word_t npc,word_t rd);
+static void ftrace_trymatch_jalr(word_t pc,word_t npc,word_t rd,word_t r1);
+
 // We are in riscv32
 #define signed_min INT_MIN
 #define WORD_MAXBITLEN 32
@@ -201,16 +204,14 @@ static int decode_exec(Decode *s) {
   INSTPAT_R("0000000 ????? ????? 100 ????? 01100 11", xor    , R(rd) = src1 ^ src2); 
 
 
-  void match_jal(word_t pc,word_t npc,word_t rd);
-  void match_jalr(word_t pc,word_t npc,word_t rd,word_t r1);
   INSTPAT("??????? ????? ????? ??? ????? 11011 11", jal    , J,
 		  R(rd) = s->pc+4; s->dnpc=s->pc+imm;
-		  match_jal(s->pc,s->dnpc, rd);
+		  ftrace_trymatch_jal(s->pc,s->dnpc, rd);
 		  );
 // setting the least-significant bit of the result to zero (see JALR p47)
   INSTPAT_I("??????? ????? ????? 000 ????? 11001 11", jalr   , 
 		  R(rd) = s->pc+4; s->dnpc=(src1+imm)&(~1);
-		  match_jalr(s->pc,s->dnpc, rd, BITS(s->isa.inst, 19, 15));
+		  ftrace_trymatch_jalr(s->pc,s->dnpc, rd, BITS(s->isa.inst, 19, 15));
 		  );
 
 
@@ -241,25 +242,33 @@ int isa_exec_once(Decode *s) {
 
 int callst_cnt=0;
 
-void match_jal(word_t pc,word_t npc,word_t rd){
+static void ftrace_log(const char* hint_str,word_t pc,const char* func_name,word_t func_addr){
+#ifdef CONFIG_FTRACE
+	printf("0x%08X:%5s "ANSI_FMT("f`%08X",ANSI_FG_GRAY)"%*s%s \n",pc,hint_str,func_addr,callst_cnt,"",func_name);
+#endif
+}
+
+void ftrace_trymatch_jal(word_t pc,word_t npc,word_t rd){
 	func_sym f;
 	assert(try_match_func(npc, &f)==0);
-	printf("0x%08X:%*scall %s @0x%08X\n",pc,callst_cnt,"",f.name,npc);	
-	callst_cnt++;
+	if(f.addr==npc){
+		ftrace_log("call", pc, f.name, npc);
+		callst_cnt++;
+	}
 }
-void match_jalr(word_t pc,word_t npc,word_t rd,word_t r1){
+void ftrace_trymatch_jalr(word_t pc,word_t npc,word_t rd,word_t r1){
 	func_sym f;
 	if(rd==REGIDX_ra){
 		assert(try_match_func(npc, &f)==0);
 		assert(f.addr==npc);
-		printf("0x%08X:%*scall %s @0x%08X\n",pc,callst_cnt,"",f.name,npc);	
+		ftrace_log("call", pc, f.name, npc);
 		callst_cnt++;
 	}
 	else if(rd==0&&(r1==REGIDX_ra)){
 		assert(try_match_func(pc, &f)==0);
-		Assert(callst_cnt, "ret stmt >= call");
+		Assert(callst_cnt, "ret stmt should leq call");
 		callst_cnt--;
-		printf("0x%08X:%*sret from %s @0x%08X\n",pc,callst_cnt,"",f.name,f.addr);	
+		ftrace_log("ret", pc, f.name, f.addr);
 	}
 	else{
 //		printf("______unexpected jalr\n");
