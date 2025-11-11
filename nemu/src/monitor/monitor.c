@@ -172,7 +172,9 @@ void init_monitor(int argc, char *argv[]) {
 }
 
 void destroy_monitor(){
+#ifdef CONFIG_DEVICE
 	destroy_device();
+#endif
 	free_elf();
 }
 
