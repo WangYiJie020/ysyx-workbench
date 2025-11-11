@@ -244,7 +244,7 @@ int callst_cnt=0;
 
 static void ftrace_log(const char* hint_str,word_t pc,const char* func_name,word_t func_addr){
 #ifdef CONFIG_FTRACE
-	printf("0x%08X:%-8s "ANSI_FMT("f`%08X",ANSI_FG_GRAY)"%*s%s \n",pc,hint_str,func_addr,callst_cnt,"",hint_str);
+	printf("0x%08X:%-8s "ANSI_FMT("f`%08X",ANSI_FG_GRAY)"%*s%s \n",pc,hint_str,func_addr,callst_cnt,"",func_name);
 #endif
 }
 
