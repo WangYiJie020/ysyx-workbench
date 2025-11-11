@@ -8,7 +8,8 @@ static uint64_t get_us_time(){
 	uint64_t lo = inl(RTC_ADDR);
 	uint64_t hi = inl(RTC_ADDR+4);
 	(void)hi;
-	return lo;
+	(void)lo;
+	return 0;
 }
 
 void __am_timer_init() {
