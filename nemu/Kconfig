@@ -173,6 +173,10 @@ config MTRACE_END
 	hex "trace memory end"
 	default 0xffffffff
 
+config FTRACE
+	depends on TRACE
+	bool "Enable function call/return trace"
+	default n
 
 config DIFFTEST
   depends on TARGET_NATIVE_ELF
