@@ -269,6 +269,6 @@ void ftrace_trymatch_jalr(word_t pc,word_t npc,word_t rd,word_t r1){
 		ftrace_log("ret from", pc, f.name, f.addr);
 	}
 	else{
-//		printf("______unexpected jalr\n");
+		printf("______unexpected jalr\n");
 	}
 }
