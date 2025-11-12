@@ -50,8 +50,9 @@ bool is_good_trap=false;
 
 extern int read_reg(int idx);
 extern "C" int reg_upadted(){
+	puts("reg update");
 	for(int i=0;i<32;i++)
-		printf("%d: %08X\n",i,read_reg(i));
+		printf("%02d: %08X\n",i,read_reg(i));
 	return 0;
 }
 
