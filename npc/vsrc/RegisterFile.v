@@ -14,6 +14,12 @@ module RegisterFile #(ADDR_WIDTH = 1, DATA_WIDTH = 1) (
   assign rdata2=(raddr2!=0)?rf[raddr2]:0;
   assign a0=rf[10];
 
+  function int read_reg(int idx);
+      read_reg=rf[idx];
+  endfunction
+
+  export "DPI-C" function read_reg;
+
   always @(posedge clk) begin
     if (wen) rf[waddr] <= wdata;
     if(dump_info)begin
