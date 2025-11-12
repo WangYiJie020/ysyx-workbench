@@ -30,7 +30,7 @@ void debuger::quit(){
 }
 
 void debuger::dump_mem(vaddr_t addr,vaddr_t end){
-	assert((end-addr)%4!=0);
+	assert((end-addr)%4==0);
 	while (addr!=end) {
 		_print("0x{:08x}: ",addr);	
 		for(int i=0;i<4;i++)
