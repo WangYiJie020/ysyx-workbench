@@ -34,7 +34,6 @@ void __am_gpu_config(AM_GPU_CONFIG_T *cfg) {
 }
 
 void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl) {
-  if (ctl->sync) {
 	uint32_t* row_beg=fb_as_u32;
 	row_beg+=ctl->x*gpu_w+ctl->y;
 	uint32_t* row_end=row_beg+ctl->h*gpu_w;
@@ -44,7 +43,7 @@ void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl) {
 		pix+=ctl->w;
 		row_beg+=gpu_w;
 	}
-
+  if (ctl->sync) {
     outl(SYNC_ADDR, 1);
   }
 }
