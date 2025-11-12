@@ -20,6 +20,8 @@ static TOP_NAME dut;
 
 //#define TRACE_MEM 
 
+#define NGPR 32
+
 #define MADDR_BASE 0x80000000u
 typedef uint32_t word_t;
 typedef uint32_t addr_t;
@@ -47,6 +49,8 @@ word_t mem[512*1024/4]={
 
 bool is_running=true;
 bool is_good_trap=false;
+
+word_t regs[NGPR];
 
 extern int read_reg(int idx);
 extern "C" int reg_upadted(){
@@ -179,7 +183,7 @@ int main(int argc, char **argv)
 	
     while(is_running) {
 		single_cycle();
-	read_reg(0);
+		printf("%d\n",read_reg(5));
     }
 	dut.final();
 
