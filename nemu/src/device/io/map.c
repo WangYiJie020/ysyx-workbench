@@ -66,7 +66,7 @@ void map_write(paddr_t addr, int len, word_t data, IOMap *map) {
   assert(len >= 1 && len <= 8);
   check_bound(map, addr);
   paddr_t offset = addr - map->low;
+  Log("map_write %08X [%s] %08X",addr,map->name,data);
   host_write(map->space + offset, len, data);
   invoke_callback(map->callback, offset, len, true);
-  Log("map_write %08X [%s] %08X",addr,map->name,data);
 }
