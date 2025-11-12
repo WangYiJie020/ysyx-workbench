@@ -54,11 +54,8 @@ void debuger::_init_cmd_table(){
 	return;\
 }while(0)
 
-#define _ParseN(var,base) do{\
-	auto res=from_chars(\
-		toks.front().begin(),\
-		toks.front().end(),\
-		var,base);\
+#define _Parse(s,var,base) do{\
+	auto res=from_chars(s.begin(),s.end(),var,base);\
 	if(res.ec!=errc()){\
 		_ERR("parse "#var" failed: ec = {}", res.ec);\
 	}\
@@ -72,7 +69,7 @@ void debuger::_init_cmd_table(){
 				size_t N;
 				if(toks.empty())N=1;
 				else{
-					_ParseN(N,10);
+					_Parse(toks.front(),N,10);
 				}
 				step(N);
 				),
@@ -84,11 +81,11 @@ void debuger::_init_cmd_table(){
 		_ITEM("x", "Examine memory: x N EXPR",
 				if(ranges::distance(toks)!=2)_ERR("bad usage");
 				size_t N;
-				_ParseN(N,10);
+				_Parse(toks.front(),N,10);
 				auto expr=*next(toks.begin(),1);
 				if(expr.starts_with("0x"))expr=expr.substr(2);
 				paddr_t addr;
-				_ParseN(addr, 16);
+				_Parse(expr,addr, 16);
 				_print("addr {:08x} N {}", addr,N);
 				dump_mem(addr, addr+N);
 				)
