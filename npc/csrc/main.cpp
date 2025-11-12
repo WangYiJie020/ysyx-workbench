@@ -169,7 +169,7 @@ int main(int argc, char **argv)
     reset(10);
 
 	// make dpi work
-	svScope scope=svGetScope();
+	svScope scope=svGetScopeFromName("top");
 	svSetScope(scope);
 
 	puts("\n--- Start ---\n");
