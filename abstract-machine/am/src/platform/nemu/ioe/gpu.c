@@ -38,6 +38,7 @@ void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl) {
 	row_beg+=ctl->x*gpu_w+ctl->y;
 	uint32_t* row_end=row_beg+ctl->h*gpu_w;
 	uint32_t* pix=ctl->pixels;
+	printf("row_beg %08X\n",row_beg);
 	while (row_beg!=row_end) {
 		memcpy(row_beg, pix, ctl->w);
 		pix+=ctl->w;
