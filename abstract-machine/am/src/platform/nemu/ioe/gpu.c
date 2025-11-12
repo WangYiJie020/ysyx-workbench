@@ -35,7 +35,7 @@ void __am_gpu_config(AM_GPU_CONFIG_T *cfg) {
 
 void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl) {
 	uint32_t* row_beg=fb_as_u32;
-	row_beg+=ctl->x*gpu_w+ctl->y;
+	row_beg+=ctl->y*gpu_w+ctl->x;
 	uint32_t* row_end=row_beg+ctl->h*gpu_w;
 	uint32_t* pix=ctl->pixels;
 	printf("row_beg %08X\n",row_beg);
