@@ -18,6 +18,8 @@ static TOP_NAME dut;
 
 #define USE_NVBOARD 0
 
+//#define TRACE_MEM 
+
 #define MADDR_BASE 0x80000000u
 typedef uint32_t word_t;
 typedef uint32_t addr_t;
@@ -25,7 +27,7 @@ typedef uint32_t addr_t;
 word_t guest_to_host(word_t addr){
 	assert(addr>=MADDR_BASE);
 	word_t res= addr - MADDR_BASE;
-	printf("raw addr %08X after trans: %08X\n",addr,res);
+//	printf("raw addr %08X after trans: %08X\n",addr,res);
 	return res;
 }
 
@@ -67,7 +69,9 @@ extern "C" int pmem_read(int raddr) {
   	// 总是读取地址为`raddr & ~0x3u`的4字节返回
 	uint32_t addr=guest_to_host(raddr);
   	addr&=~0x3u;
+#ifdef TRACE_MEM
 	printf("  $pmem_read try read %08X\n",addr);
+#endif
 	return mem[addr>>2];
 }
 extern "C" void pmem_write(int waddr, int wdata, char wmask) {
@@ -76,7 +80,10 @@ extern "C" void pmem_write(int waddr, int wdata, char wmask) {
 	// 如`wmask = 0x3`代表只写入最低2个字节, 内存中的其它字节保持不变
 	uint32_t addr=guest_to_host(waddr);
   	addr&=~0x3u;
+
+#ifdef TRACE_MEM
 	printf("  $pmem_write try write %08X mask %d data:%08X\n",addr,(int)wmask,wdata);
+#endif
 	
 	uint8_t* p=(uint8_t*)(&mem[addr>>2]);
 
@@ -161,6 +168,7 @@ int main(int argc, char **argv)
 
     reset(10);
 
+	// make dpi work
 	svScope scope=svGetScope();
 	svSetScope(scope);
 
