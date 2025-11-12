@@ -226,7 +226,7 @@ int main(int argc, char **argv)
 	puts("\n--- Start ---\n");
 	
 	std::string cmd;
-    while(is_running) {
+    while(is_running&&dbg.is_running()) {
 		std::cout<<"(sdb) ";
 		std::getline(std::cin,cmd);
 		dbg.exec_command(cmd);

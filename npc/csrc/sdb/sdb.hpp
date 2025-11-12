@@ -97,7 +97,7 @@ public:
 	inline void set_run_state(run_state s){
 		_state.state=s;
 	}
-	bool is_running(){
+	inline bool is_running(){
 		return _state.state==run_state::running;
 	}	
 
