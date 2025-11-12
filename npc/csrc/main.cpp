@@ -223,8 +223,10 @@ int main(int argc, char **argv)
 	
 	std::string cmd;
     while(is_running) {
+		std::cout<<"(sdb) ";
 		std::getline(std::cin,cmd);
 		dbg.exec_command(cmd);
+		if(dbg.get_state().state!=sdb::run_state::running)break;
     }
 	dut.final();
 
