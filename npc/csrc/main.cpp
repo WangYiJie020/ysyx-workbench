@@ -176,10 +176,10 @@ int main(int argc, char **argv)
 	
     while(is_running) {
 		single_cycle();
+	read_reg(0);
     }
 	dut.final();
 
-	read_reg(0);
 
 	puts("\n--- simulation end ---\n");
 
