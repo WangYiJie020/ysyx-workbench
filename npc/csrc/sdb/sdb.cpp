@@ -34,6 +34,7 @@ void debuger::dump_mem(vaddr_t addr,vaddr_t end){
 		_print("0x{:08x}: ",addr);	
 		for(int i=0;i<4;i++)
 			_print("{:02x} ", _paddr_read(addr+i));
+		_print("\n");
 		addr+=4;
 	}
 }
