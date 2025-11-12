@@ -34,6 +34,7 @@ void nvboard_update();
 void nvboard_init(int vga_clk_cycle);
 
 
+
 word_t mem[512*1024/4]={
   0x00000297,  // auipc t0,0
   0x00028823,  // sb  zero,16(t0)
@@ -45,6 +46,7 @@ word_t mem[512*1024/4]={
 bool is_running=true;
 bool is_good_trap=false;
 
+extern int read_reg(int idx);
 extern "C" void raise_break(int a0){
 	is_running=false;
 	puts("\n--- raise_break called");
@@ -163,6 +165,7 @@ int main(int argc, char **argv)
 	
     while(is_running) {
 		single_cycle();
+		printf("reg[x5]=%08X\n",read_reg(5));
     }
 	dut.final();
 
