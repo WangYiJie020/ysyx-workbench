@@ -25,8 +25,11 @@ struct std::formatter<std::errc> : std::formatter<std::string> {
 
 void debuger::quit(){
 	_print("call quit");
-	if(!_state.is_bad())
+	if(!_state.is_bad()){
+		_print("set state\n");
 		_state=cpu_state(run_state::quit);
+	}
+	else puts("bas state");
 }
 
 void debuger::dump_mem(vaddr_t addr,vaddr_t end){
