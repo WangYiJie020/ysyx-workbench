@@ -33,7 +33,7 @@ include $(NVBOARD_HOME)/scripts/nvboard.mk
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
 
-CXXFLAGS += -fsanitize=address
+CXXFLAGS += -fsanitize=address -std=c++20
 LDFLAGS += -fsanitize=address
 
 $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)

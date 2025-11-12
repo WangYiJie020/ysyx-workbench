@@ -1,3 +1,6 @@
+#include <array>
+#include <unordered_map>
+
 #include <cstdint>
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,6 +12,8 @@
 #include "Vtop.h"
 #include "Vtop__Dpi.h"
 #include <nvboard.h>
+
+#include "sdb/sdb.hpp"
 
 #ifndef TOP_NAME
 #define TOP_NAME Vtop
@@ -158,6 +163,30 @@ static long load_img() {
   return size;
 }
 
+void cpu_exec_once(){
+	single_cycle();
+}
+uint8_t addr_readbyte(sdb::paddr_t addr){
+	return pmem_read(addr)>>((addr&0x3)*8);
+}
+std::array<std::string_view,32> reg_names = {
+  "$0", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
+  "s0", "s1", "a0", "a1", "a2", "a3", "a4", "a5",
+  "a6", "a7", "s2", "s3", "s4", "s5", "s6", "s7",
+  "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"
+};
+std::optional<sdb::word_t> get_reg(std::string_view name){
+	static std::unordered_map<std::string_view,size_t> m;
+	if(m.empty()){
+		for (size_t i = 0; i < reg_names.size(); ++i) {
+			m.emplace(reg_names[i], i);
+		}
+	}
+	if(m.contains(name)){
+		return regs[m.at(name)];
+	}
+	return std::nullopt;
+}
 
 int main(int argc, char **argv)
 {
@@ -165,6 +194,17 @@ int main(int argc, char **argv)
 //	int res=pmem_read(0);
 //	printf("%X",res);
 //	return 0;
+
+	using std::string;
+	using namespace std::views;
+	using namespace std::ranges;
+
+	sdb::debuger dbg(
+			cpu_exec_once,
+			addr_readbyte,
+			get_reg,
+			std::vector<string>(reg_names.begin(),reg_names.end())
+			);
 
 	if(argc==2){
 		img_file=argv[1];
@@ -181,12 +221,12 @@ int main(int argc, char **argv)
 
 	puts("\n--- Start ---\n");
 	
+	std::string cmd;
     while(is_running) {
-		single_cycle();
-		printf("%d\n",read_reg(5));
+		std::getline(std::cin,cmd);
+		dbg.exec_command(cmd);
     }
 	dut.final();
-
 
 	puts("\n--- simulation end ---\n");
 
