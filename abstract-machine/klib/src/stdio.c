@@ -16,11 +16,20 @@ typedef bool(*putch_func)(int c,void* exinfo);
 const char* FLAG_CHARS="#0- +";
 const char* CONVERSION_CHARS="diouxXeEfFgGaAcspn%";
 
+typedef enum{
+	LM_None,
+	LM_l,
+	LM_ll
+	
+}LengthModifier;
+
 typedef struct{
 	bool zero_pad;
 
 	int width;
 	int precision;
+	
+	LengthModifier len;
 
 	char conversion;
 }format_info;
@@ -45,6 +54,15 @@ const char* parse_format(const char*fmt,va_list ap,format_info* out){
 		uint64_t width;
 		fmt=parse_dec_num(fmt, &width);
 		out->width=width;
+	}
+	out->len=LM_None;
+	if(*fmt=='l'){
+		if(*(fmt+1)=='l'){
+			out->len=LM_ll;
+			fmt++;
+		}
+		else out->len=LM_l;
+		fmt++;
 	}
 	out->conversion=*fmt;
 	fmt++;
@@ -120,6 +138,12 @@ static bool put_unum(const print_ctx* ctx,int* cnt,uint64_t u,int base,bool uppe
 }
 
 
+#define Panic(fmt,...) do{\
+	char buf[100];\
+	sprintf(buf,fmt,__VA_ARGS__);\
+	panic(buf);\
+}while(0)
+
 
 static int meta_printf(putch_func f_putch,void* exinfo,const char *fmt, va_list ap){
 	int cnt=0;
@@ -135,6 +159,14 @@ static int meta_printf(putch_func f_putch,void* exinfo,const char *fmt, va_list 
 
 #define _putpadstr(s,len) _callwithctx(put_withpad,s,len)
 
+#define _load_vlen_var(var,sign) do{\
+	switch (ctx->fmt.len) {\
+		 case LM_None:var=va_arg(ap,sign int);break;\
+		 case LM_l:var=va_arg(ap,sign long);break;\
+		 case LM_ll:var=va_arg(ap,sign long long);break;\
+		 default:Panic("printf unimpl LengthModifier %d",ctx->fmt.len);break;\
+	}\
+}while(0)
 
 	while(*fmt){
 		if(*fmt=='%'){
@@ -152,7 +184,8 @@ static int meta_printf(putch_func f_putch,void* exinfo,const char *fmt, va_list 
 					break;
 						 }
 				case 'd':{
-					 int d=va_arg(ap,int);
+					 int64_t d;
+					_load_vlen_var(d, signed);
 					 _callwithctx(put_snum, d);
 					break;
 						 }
@@ -160,7 +193,8 @@ static int meta_printf(putch_func f_putch,void* exinfo,const char *fmt, va_list 
 				case 'u':
 				case 'x':
 				case 'X':{
-					 uint32_t u=va_arg(ap,uint32_t);
+							 uint64_t u;
+					_load_vlen_var(u, unsigned);
 					 int base=(*fmt=='u')?10
 						 :(*fmt=='u')?8
 						 :16;
@@ -169,9 +203,7 @@ static int meta_printf(putch_func f_putch,void* exinfo,const char *fmt, va_list 
 						 }
 							 
 				default:{
-							char buf[100];
-							sprintf(buf, "printf use unimpl format '%c'",conversion);
-							panic(buf);
+							Panic("printf unimpl conversion '%c'",*fmt);
 						}
 			}
 		}
