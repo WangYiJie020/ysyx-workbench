@@ -179,6 +179,8 @@ int main(int argc, char **argv)
     }
 	dut.final();
 
+	read_reg(0);
+
 	puts("\n--- simulation end ---\n");
 
     return is_good_trap?0:1;
