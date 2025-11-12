@@ -24,6 +24,7 @@ struct std::formatter<std::errc> : std::formatter<std::string> {
 };
 
 void debuger::quit(){
+	_print("call quit");
 	if(!_state.is_bad())
 		_state=cpu_state(run_state::quit);
 }
