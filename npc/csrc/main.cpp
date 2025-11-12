@@ -169,7 +169,7 @@ int main(int argc, char **argv)
     reset(10);
 
 	// make dpi work
-	auto scope=svGetScopeFromName("top");
+	auto scope=svGetScopeFromName("regs");
 	assert(scope!=NULL);
 	svSetScope(scope);
 
