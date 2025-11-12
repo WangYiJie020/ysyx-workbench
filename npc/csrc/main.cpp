@@ -64,17 +64,7 @@ extern "C" int reg_upadted(){
 	return 0;
 }
 
-extern "C" void raise_break(int a0){
-	is_running=false;
-	puts("\n--- raise_break called");
-	if(a0==0){
-		puts("HIT GOOD TRAP");
-		is_good_trap=true;
-	}
-	else{
-	   	puts("HIT BAD TRAP");
-	}
-}
+
 
 extern "C" int pmem_read(int raddr) {
 	if(!is_running){
@@ -186,6 +176,27 @@ std::optional<sdb::word_t> get_reg(std::string_view name){
 	}
 	return std::nullopt;
 }
+sdb::debuger dbg(
+	cpu_exec_once,
+	addr_readbyte,
+	get_reg,
+	std::vector<std::string>(reg_names.begin(),reg_names.end())
+);
+
+extern "C" void raise_break(int a0){
+	is_running=false;
+
+	dbg.set_run_state(sdb::run_state::quit);
+
+	puts("\n--- raise_break called");
+	if(a0==0){
+		puts("HIT GOOD TRAP");
+		is_good_trap=true;
+	}
+	else{
+	   	puts("HIT BAD TRAP");
+	}
+}
 
 int main(int argc, char **argv)
 {
@@ -197,13 +208,6 @@ int main(int argc, char **argv)
 	using std::string;
 	using namespace std::views;
 	using namespace std::ranges;
-
-	sdb::debuger dbg(
-			cpu_exec_once,
-			addr_readbyte,
-			get_reg,
-			std::vector<string>(reg_names.begin(),reg_names.end())
-			);
 
 	if(argc==2){
 		img_file=argv[1];
