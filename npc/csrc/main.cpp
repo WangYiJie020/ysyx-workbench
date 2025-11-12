@@ -161,11 +161,13 @@ int main(int argc, char **argv)
 
     reset(10);
 
+	svScope scope=svGetScope();
+	svSetScope(scope);
+
 	puts("\n--- Start ---\n");
 	
     while(is_running) {
 		single_cycle();
-		printf("reg[x5]=%08X\n",read_reg(5));
     }
 	dut.final();
 
