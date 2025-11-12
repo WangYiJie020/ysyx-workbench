@@ -1,5 +1,5 @@
 #include "sdb.hpp"
-#include <sstream>
+#include <assert.h>
 
 using namespace std;
 using namespace sdb;
@@ -30,6 +30,7 @@ void debuger::quit(){
 }
 
 void debuger::dump_mem(vaddr_t addr,vaddr_t end){
+	assert((end-addr)%4!=0);
 	while (addr!=end) {
 		_print("0x{:08x}: ",addr);	
 		for(int i=0;i<4;i++)
@@ -88,7 +89,7 @@ void debuger::_init_cmd_table(){
 				paddr_t addr;
 				_Parse(expr,addr, 16);
 				_print("addr {:08x} N {}\n", addr,N);
-				dump_mem(addr, addr+N);
+				dump_mem(addr, addr+N*4);
 				)
 
 		};
