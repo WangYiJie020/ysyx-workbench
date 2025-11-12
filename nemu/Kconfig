@@ -178,6 +178,11 @@ config FTRACE
 	bool "Enable function call/return trace"
 	default n
 
+config DTRACE
+	depends on TRACE && DEVICE
+	bool "Enable device read/write trace"
+	default n 
+
 config DIFFTEST
   depends on TARGET_NATIVE_ELF
   bool "Enable differential testing"
