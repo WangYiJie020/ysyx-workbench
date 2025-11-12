@@ -23,7 +23,7 @@ static TOP_NAME dut;
 
 #define USE_NVBOARD 0
 
-//#define TRACE_MEM 
+#define TRACE_MEM 
 
 #define NGPR 32
 
@@ -230,7 +230,6 @@ int main(int argc, char **argv)
 		std::cout<<"(sdb) ";
 		std::getline(std::cin,cmd);
 		dbg.exec_command(cmd);
-		if(dbg.get_state().state!=sdb::run_state::running)break;
     }
 	dut.final();
 
