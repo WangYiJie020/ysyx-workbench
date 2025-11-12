@@ -170,6 +170,7 @@ int main(int argc, char **argv)
 
 	// make dpi work
 	auto scope=svGetScopeFromName("RegisterFile");
+	assert(scope!=NULL);
 	svSetScope(scope);
 
 	puts("\n--- Start ---\n");
