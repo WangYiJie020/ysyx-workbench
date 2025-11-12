@@ -25,7 +25,7 @@ struct std::formatter<std::errc> : std::formatter<std::string> {
 
 void debuger::quit(){
 	if(is_running()||!_state.is_bad()){
-		_state=cpu_state(run_state::quit);
+		_state.state=run_state::quit;
 	}
 }
 
@@ -50,9 +50,20 @@ void debuger::_init_cmd_table(){
 	{.f=[this](_tokens_view_t toks){__VA_ARGS__;},.description=desc}}
 
 #define _ERR(fmt,...) do{\
-	_print("Error: " fmt "\n",__VA_ARGS__);\
+	_print("Error: " fmt "\n",##__VA_ARGS__);\
 	return;\
 }while(0)
+
+#define _ParseN(N,base) do{\
+	auto res=from_chars(\
+		toks.front().begin(),\
+		toks.front().end(),\
+		N,base);\
+	if(res.ec!=errc()){\
+		_ERR("parse N failed: ec = {}", res.ec);\
+	}\
+}while(0)
+
 
 	_cmd_table={
 		_ITEM("c", "Continue the execution of the program", resume()),
@@ -61,20 +72,24 @@ void debuger::_init_cmd_table(){
 				size_t N;
 				if(toks.empty())N=1;
 				else{
-					auto res=from_chars(
-						toks.front().begin(),
-						toks.front().end(),
-						N);
-					if(res.ec!=errc()){
-						_ERR("parse N failed(ec={})", res.ec);
-					}
+					_ParseN(N,10);
 				}
 				step(N);
 				),
 		_ITEM("info", "Display information about registers or watchpoints",
 				auto type=toks.front();
 				if(type=="r")dump_reg();
-				else _ERR("unsupport type '{}'",type);
+				else _ERR("unknown info command '{}'",type);
+				),
+		_ITEM("x", "Examine memory: x N EXPR",
+				if(ranges::distance(toks)!=2)_ERR("bad usage");
+				size_t N;
+				_ParseN(N,10);
+				auto expr=*next(toks.begin(),1);
+				if(expr.starts_with("0x"))expr=expr.substr(2);
+				paddr_t addr;
+				_ParseN(addr, 16);
+				dump_mem(addr, addr+N);
 				)
 
 		};
