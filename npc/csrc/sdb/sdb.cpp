@@ -89,7 +89,7 @@ void debuger::_init_cmd_table(){
 				if(expr.starts_with("0x"))expr=expr.substr(2);
 				paddr_t addr;
 				_ParseN(addr, 16);
-				_print("addr {08x} N {}", addr,N);
+				_print("addr {:08x} N {}", addr,N);
 				dump_mem(addr, addr+N);
 				)
 
