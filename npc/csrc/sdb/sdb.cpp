@@ -54,13 +54,13 @@ void debuger::_init_cmd_table(){
 	return;\
 }while(0)
 
-#define _ParseN(N,base) do{\
+#define _ParseN(var,base) do{\
 	auto res=from_chars(\
 		toks.front().begin(),\
 		toks.front().end(),\
-		N,base);\
+		var,base);\
 	if(res.ec!=errc()){\
-		_ERR("parse N failed: ec = {}", res.ec);\
+		_ERR("parse "#var" failed: ec = {}", res.ec);\
 	}\
 }while(0)
 
