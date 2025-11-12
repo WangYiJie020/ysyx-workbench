@@ -19,9 +19,16 @@ module RegisterFile #(ADDR_WIDTH = 1, DATA_WIDTH = 1) (
   endfunction
 
   export "DPI-C" function read_reg;
+  import "DPI-C" context task reg_upadted();
+
+  always@(rf)begin
+      reg_upadted();
+  end
 
   always @(posedge clk) begin
-    if (wen) rf[waddr] <= wdata;
+      if (wen)begin
+          rf[waddr] <= wdata;
+        end
     if(dump_info)begin
         for(integer i=0;i<2**ADDR_WIDTH;i=i+1)begin
             $display("r%d : %08X %d",i,rf[i],rf[i]);

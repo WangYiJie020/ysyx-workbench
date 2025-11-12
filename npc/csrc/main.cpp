@@ -49,6 +49,12 @@ bool is_running=true;
 bool is_good_trap=false;
 
 extern int read_reg(int idx);
+extern "C" int reg_upadted(){
+	for(int i=0;i<32;i++)
+		printf("%d: %08X\n",i,read_reg(i));
+	return 0;
+}
+
 extern "C" void raise_break(int a0){
 	is_running=false;
 	puts("\n--- raise_break called");
@@ -167,11 +173,6 @@ int main(int argc, char **argv)
 #endif
 
     reset(10);
-
-	// make dpi work
-	auto scope=svGetScopeFromName("top.regs");
-	assert(scope!=NULL);
-	svSetScope(scope);
 
 	puts("\n--- Start ---\n");
 	
