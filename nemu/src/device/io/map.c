@@ -58,7 +58,7 @@ word_t map_read(paddr_t addr, int len, IOMap *map) {
   paddr_t offset = addr - map->low;
   invoke_callback(map->callback, offset, len, false); // prepare data to read
   word_t ret = host_read(map->space + offset, len);
-  Log("map_read  %08X [%s] %08X",addr,map->name,ret);
+  Log("read  %08X [%s] %08X",addr,map->name,ret);
   return ret;
 }
 
@@ -66,7 +66,7 @@ void map_write(paddr_t addr, int len, word_t data, IOMap *map) {
   assert(len >= 1 && len <= 8);
   check_bound(map, addr);
   paddr_t offset = addr - map->low;
-  Log("map_write %08X [%s] %08X",addr,map->name,data);
+  Log("write %08X [%s] %08X",addr,map->name,data);
   host_write(map->space + offset, len, data);
   invoke_callback(map->callback, offset, len, true);
 }
