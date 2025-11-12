@@ -18,7 +18,7 @@ static TOP_NAME dut;
 
 #define USE_NVBOARD 0
 
-#define MADDR_BASE 0x80000000u
+#define MADDR_BASE 0//0x80000000u
 typedef uint32_t word_t;
 typedef uint32_t addr_t;
 
