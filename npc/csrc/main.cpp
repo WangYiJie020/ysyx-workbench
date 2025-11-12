@@ -187,6 +187,7 @@ extern "C" void raise_break(int a0){
 	is_running=false;
 
 	dbg.set_run_state(sdb::run_state::quit);
+	printf("%d\n",dbg.is_running());
 
 	puts("\n--- raise_break called");
 	if(a0==0){
