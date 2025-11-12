@@ -58,13 +58,15 @@ void debuger::_init_cmd_table(){
 		_ITEM("q", "Exit program",quit()),
 		_ITEM("si","Step the program for N instructions" ,
 				size_t N;
-				auto res=from_chars(
-					toks.front().begin(),
-					toks.front().end(),
-					N);
-				if(res.ec==errc()){
-					_ERR("parse N failed(ec={})", res.ec);
-					return;
+				if(toks.empty())N=1;
+				else{
+					auto res=from_chars(
+						toks.front().begin(),
+						toks.front().end(),
+						N);
+					if(res.ec!=errc()){
+						_ERR("parse N failed(ec={})", res.ec);
+					}
 				}
 				step(N);
 				),
