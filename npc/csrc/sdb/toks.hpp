@@ -61,22 +61,24 @@ command_t make_command(
 			constexpr size_t N_args = sizeof...(Args);
             constexpr size_t N_def  = sizeof...(Defaults);
 
-            if (toks.size() > N_args) {
-                throw std::runtime_error("too many arguments");
+			const size_t n_tok = toks.size();
+
+            if (n_tok > N_args) {
+                throw runtime_error("too many arguments");
             }
-            if (toks.size() + N_def < N_args) {
-                throw std::runtime_error("not enough arguments even with defaults");
+            if (n_tok + N_def < N_args) {
+                throw runtime_error("not enough arguments even with defaults");
             }
 
             constexpr size_t I_tokend = N_args - N_def;
 
-            auto fill = [&]<size_t... Is>(index_sequence<Is...>) {
+            [&]<size_t... Is>(index_sequence<Is...>) {
 			   (([&](){
 				 if constexpr (Is >= I_tokend) {
 				 	constexpr size_t def_idx = Is - I_tokend;
 				 	get<Is>(args) = get<def_idx>(defaults);
 				 } else {
-				 	if (Is < toks.size()) {
+				 	if (Is < n_tok) {
 						if(!ok)return;
 						ec = parse(toks[Is], get<Is>(args));
 						ok=(ec==errc());
@@ -84,8 +86,7 @@ command_t make_command(
 				 	throw runtime_error("missing required argument");
 				 }
 			   }()),...);
-           	};
-            fill(index_sequence_for<Args...>{});
+           	}(index_sequence_for<Args...>{});
 
 			if(!ok)return invoke_error(ec);
 
