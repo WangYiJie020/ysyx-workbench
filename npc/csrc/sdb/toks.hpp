@@ -84,6 +84,8 @@ struct command_t{
 				 }
 			}()),...); }(index_sequence_for<Args...>{});
 
+			printf("foo %d\n",ok);
+
 			if(!ok)return invoke_error(ec);
 
 			apply(bind_front(func, obj), args);
