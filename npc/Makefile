@@ -31,12 +31,16 @@ INCHEADERS = $(shell find $(abspath ./csrc) -name "*.h" -or -name "*.hpp")
 # rules for NVBoard
 include $(NVBOARD_HOME)/scripts/nvboard.mk
 
+# rules for capstone
+include tools/disasm.mk
+
 # rules for verilator
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
 
 CXXFLAGS += -fsanitize=address -std=c++20
 LDFLAGS += -fsanitize=address
+
 
 $(BIN): $(VSRCS) $(INCHEADERS) $(CSRCS) $(NVBOARD_ARCHIVE)
 	@rm -rf $(OBJ_DIR)
@@ -59,17 +63,6 @@ clean:
 	rm -rf $(BUILD_DIR)
 
 .PHONY: default all clean run
-
-# sim:
-# 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-# 	@echo "Write this Makefile by your self."
-
-# 	verilator --cc --exe --build --trace -j 0 -Wall\
-# 	 $(addprefix -CFLAGS , $(CXXFLAGS))\
-# 	  	$(CPP_SRCS) $(V_SRCS) \
-# 	 	$(addprefix -LDFLAGS , $(LDFLAGS))
-# 	./obj_dir/Vtop
-
 
 # for PROJ_PATH: yosys-sta makefile get scripts tool from PROJ_PATH, default is pwd, which is not correct here
 mysyn:

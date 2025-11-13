@@ -7,22 +7,57 @@ using namespace std::views;
 using namespace clscmd;
 
 template <typename T>
-struct std::formatter<std::optional<T>> : std::formatter<T> {
-    auto format(const std::optional<T>& opt, auto& ctx) const {
+struct std::formatter<optional<T>> : formatter<T> {
+    auto format(const optional<T>& opt, auto& ctx) const {
         if (opt)
-            return std::formatter<T>::format(*opt, ctx);
+            return formatter<T>::format(*opt, ctx);
         else
-            return std::format_to(ctx.out(), "(nullopt)");
+            return format_to(ctx.out(), "(nullopt)");
     }
 };
 
 template<>
-struct std::formatter<std::errc> : std::formatter<std::string> {
-    auto format(std::errc ec, auto& ctx) const {
-        return std::formatter<std::string>::format(
+struct std::formatter<errc> : formatter<std::string> {
+    auto format(errc ec, auto& ctx) const {
+        return formatter<std::string>::format(
             std::make_error_code(ec).message(), ctx);
     }
 };
+
+static string expand_tabs(std::string_view in, int tabsize) {
+    string out;
+    out.reserve(in.size() * tabsize);
+    int col = 0;
+    for (char c : in) {
+        if (c == '\t') {
+            int spaces = tabsize - (col % tabsize);
+            out.append(spaces, ' ');
+            col += spaces;
+        } else {
+            out.push_back(c);
+            col++;
+        }
+    }
+    return out;
+}
+
+void debuger::_step_one(){
+	if constexpr (_ENABLE_ITRACE){
+		_print("{}\n", _disasm(_state.pc));
+	}
+	_state.pc = _exec();	
+}
+
+uint64_t expr_t::eval()const{
+	// only support 0x... now
+	auto s=raw;
+	assert(s.starts_with("0x"));
+	s=s.substr(2);
+	uint64_t v;
+	auto ec=_impl::parse(s,v,16);
+	if(ec!=errc())cerr<<format("failed to parse {} : {}",s,ec)<<endl;
+	return v;
+}
 
 void debuger::quit(){
 	if(is_running()||!_state.is_bad()){
@@ -30,7 +65,7 @@ void debuger::quit(){
 	}
 }
 
-void debuger::dump_mem(vaddr_t addr,vaddr_t end){
+void debuger::dump_mem(paddr_t addr,paddr_t end){
 	assert((end-addr)%4==0);
 	while (addr!=end) {
 		_print("0x{:08x}: ",addr);	
@@ -47,38 +82,26 @@ void debuger::dump_reg(){
 	}
 }
 
+void debuger::cmd_info(string_view s){
+	if(s=="r")dump_reg();
+	else return _error("Unknown info command {}", s);	
+}
+void debuger::cmd_x(size_t N,expr_t e_addr){
+	paddr_t addr=e_addr.eval();
+	_print("call x {} {:08x}", N,addr);
+	cout<<endl;
+	dump_mem(addr, addr+N*4);
+}
 
-#define _ITEM(name,desc,f) {name,command_t(desc,this,&debuger::f)}
+#define _ITEM(name,desc,...) {name,command_t(desc,this,&debuger::__VA_ARGS__)}
 
 void debuger::_init_cmd_table(){
-
 	_cmd_table={
 		_ITEM("c", "Continue the execution of the program", resume),
 		_ITEM("q", "Exit program",quit),
-		/*
-		_ITEM("si","Step the program for N instructions" ,
-				size_t N=toks.empty();
-				if(N||_parse(toks.front(), N))
-					step(N);
-				),
-		_ITEM("info", "Display information about registers or watchpoints",
-				auto type=toks.front();
-				if(type=="r")dump_reg();
-				else _error("unknown info command '{}'",type);
-				),
-		_ITEM("x", "Examine memory: x N EXPR",
-				assert(ranges::distance(toks)==2);
-				size_t N;
-				bool good=true;
-				good&=_parse(toks.front(),N);
-				auto expr=*next(toks.begin());
-				if(expr.starts_with("0x"))expr=expr.substr(2);
-				paddr_t addr;
-				good&=_parse(expr,addr, 16);
-				if(good)dump_mem(addr, addr+N*4);
-				)
-				*/
-
+		_ITEM("si","Step the program for N instructions",step,1),
+		_ITEM("info", "Display information about registers or watchpoints",cmd_info),
+		_ITEM("x", "Examine memory: x N EXPR",cmd_x),
 		};
 }
 

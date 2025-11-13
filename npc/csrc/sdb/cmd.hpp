@@ -7,6 +7,7 @@
 #include <tuple>
 #include <concepts>
 #include <system_error>
+#include <cstdint>
 
 namespace clscmd {
 	using std::string_view;
@@ -18,11 +19,13 @@ namespace clscmd {
 namespace _impl {
 template <typename T>
 concept CanFromChars = std::integral<T> || std::floating_point<T>;
+template <typename T>
+concept CanFromStrView = requires(std::string_view sv) {T{sv};};
 
-auto parse(string_view s,_impl::CanFromChars auto& v){
-	return std::from_chars(s.begin(),s.end(),v).ec;
+auto parse(string_view s,CanFromChars auto& v,int base=10){
+	return std::from_chars(s.begin(),s.end(),v,base).ec;
 }
-inline auto parse(string_view s,string_view& v){
+inline auto parse(string_view s,CanFromStrView auto& v){
 	v=s;
 	return std::errc();
 }
@@ -41,6 +44,13 @@ inline auto make_toks(string_view str){
 	return toks_t(v.begin(),v.end());
 }
 
+struct expr_t{
+	string_view raw;
+	expr_t(){}
+	expr_t(string_view s):raw(s){}
+	uint64_t eval()const;
+};
+
 using invoke_error = std::errc;
 constexpr invoke_error invoke_success=invoke_error();
 
@@ -56,10 +66,11 @@ struct command_t{
 	command_t(
 		string_view desc,
 		Class* obj, Ret(Class::*func)(Args...),
-		std::tuple<Defaults...> defaults = {}
+		Defaults&&... defaults
 	):description(desc){
 		using namespace std;
-		invoke=[obj, func, defaults](toks_t toks) {
+		auto def_args=make_tuple(forward<Defaults>(defaults)...);
+		invoke=[obj, func, def_args](toks_t toks) {
             tuple<decay_t<Args>...> args;
 			constexpr size_t N_args = sizeof...(Args);
             constexpr size_t N_def  = sizeof...(Defaults);
@@ -82,10 +93,13 @@ struct command_t{
 					if(!ok)return;
 					ec = _impl::parse(toks[Is], get<Is>(args));
 					ok=(ec==errc());
+					if(!ok)printf("parse failed arg#%zu(%s) as typeid`%s\n",
+							Is, toks[Is].data(), typeid(decltype(get<Is>(args))).name()
+							);
 				}
 				else{
 					if constexpr (Is >= I_required_end) {
-						get<Is>(args) = get<Is-I_required_end>(defaults);
+						get<Is>(args) = get<Is-I_required_end>(def_args);
 					} else { // should return early when check n_tok+n_def
 						throw std::logic_error("unreachable");
 					}
