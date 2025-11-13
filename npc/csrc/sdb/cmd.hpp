@@ -83,6 +83,9 @@ struct command_t{
 					if(!ok)return;
 					ec = _impl::parse(toks[Is], get<Is>(args));
 					ok=(ec==errc());
+					if(!ok)printf("parse failed arg#%d(%s) to %s\n",
+							Is, toks[Is].data(), typeid(decltype(get<Is>(args))).name()
+							);
 				}
 				else{
 					if constexpr (Is >= I_required_end) {

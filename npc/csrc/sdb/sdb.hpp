@@ -67,14 +67,6 @@ class debuger{
 			<<vformat(fmt,std::make_format_args(args...))
 			<<std::endl;
 	}
-	bool _parse(auto s,auto&v,int base=10){
-		auto [_,ec]=std::from_chars(s.begin(),s.end(),v,base);
-		if(ec!=std::errc()){
-			_error("parse {} failed: {}", typeid(v).name(),ec);
-			return false;
-		}
-		return true;
-	};
 
 	void _init_cmd_table();
 
