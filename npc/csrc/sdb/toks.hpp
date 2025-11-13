@@ -11,29 +11,20 @@ namespace clscmd {
 	using std::string_view;
 	using std::function;
 
-inline static auto make_toks(string_view str){
+	using toks_t = std::vector<string_view>;
+
+namespace _impl {
+template <typename T>
+concept CanFromChars = std::integral<T> || std::floating_point<T>;
+
+inline auto make_toks(string_view str){
 	using namespace std::views;
 	return str | split(' ')
 		| transform([](auto&& rng) {
 				return string_view(rng.begin(), rng.size());
 		});
 }
-
 using rawtoks_view_t = decltype(make_toks("")|std::views::drop(0));
-using toks_t = std::vector<string_view>;
-using invoke_error = std::errc;
-constexpr invoke_error invoke_success=invoke_error();
-
-struct command_t{
-	string_view name;
-	string_view description;
-	function<invoke_error(toks_t)> invoke;
-};
-
-namespace _impl {
-template <typename T>
-concept CanFromChars = std::integral<T> || std::floating_point<T>;
-}
 
 auto parse(string_view s,_impl::CanFromChars auto& v){
 	return std::from_chars(s.begin(),s.end(),v).ec;
@@ -43,18 +34,26 @@ inline auto parse(string_view s,string_view& v){
 	return std::errc();
 }
 
-template <typename Class, typename Ret, typename... Args,typename... Defaults>
-command_t make_command(
-	string_view name,
-	string_view description,
-   	Class* obj, Ret(Class::*func)(Args...),
-	std::tuple<Defaults...> defaults = {}
-) {
-	using namespace std;
-    return command_t{
-        .name=name,
-		.description=description,
-		.invoke=[obj, func, defaults](toks_t toks) {
+}
+
+using invoke_error = std::errc;
+constexpr invoke_error invoke_success=invoke_error();
+
+struct command_t{
+	string_view description;
+	function<invoke_error(toks_t)> invoke;
+	command_t():description(),invoke(){
+	}
+
+	template <typename Class, typename Ret, typename... Args,typename... Defaults>
+	command_t(
+		string_view _description,
+		Class* obj, Ret(Class::*func)(Args...),
+		std::tuple<Defaults...> defaults = {}
+	){
+		using namespace std;
+		description=_description,
+		invoke=[obj, func, defaults](toks_t toks) {
 			bool ok;
 			errc ec;
             tuple<decay_t<Args>...> args;
@@ -80,7 +79,7 @@ command_t make_command(
 				 } else {
 				 	if (Is < n_tok) {
 						if(!ok)return;
-						ec = parse(toks[Is], get<Is>(args));
+						ec = _impl::parse(toks[Is], get<Is>(args));
 						ok=(ec==errc());
 					}
 				 	throw runtime_error("missing required argument");
@@ -93,8 +92,11 @@ command_t make_command(
             std::apply([&](auto&&... unpacked){
                 (obj->*func)(unpacked...);
             }, args);
-			return invoke_error();
-        }
-    };
-}
+			return invoke_success;
+        };
+	}
+
+};
+using command_table=std::unordered_map<string_view, command_t>;
+
 }
