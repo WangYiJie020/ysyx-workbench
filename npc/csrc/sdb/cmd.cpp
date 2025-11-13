@@ -1,4 +1,4 @@
-#include "toks.hpp"
+#include "cmd.hpp"
 using namespace clscmd;
 invoke_error clscmd::exec(const command_table& table,string_view cmdline){
 	auto toks=make_rawtoks(cmdline);

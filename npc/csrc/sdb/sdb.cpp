@@ -1,6 +1,5 @@
 #include "sdb.hpp"
 #include <assert.h>
-#include "toks.hpp"
 
 using namespace std;
 using namespace sdb;

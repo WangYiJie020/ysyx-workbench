@@ -8,7 +8,7 @@
 #include <vector>
 #include <optional>
 
-#include "toks.hpp"
+#include "cmd.hpp"
 
 namespace sdb {
 
