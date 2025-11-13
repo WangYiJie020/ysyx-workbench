@@ -96,6 +96,7 @@ void debuger::exec_command(string_view cmdline){
 		return _error("Unknown command '{}'\n",cmd_name);
 	auto cmd=it->second;
 	auto args=vtoks|drop(1);
+	_print("invoke {}", cmd_name);
 	auto _=cmd.invoke(clscmd::toks_t(args.begin(),args.end()));
 }
 
