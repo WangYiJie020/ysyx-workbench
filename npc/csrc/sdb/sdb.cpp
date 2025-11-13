@@ -54,7 +54,7 @@ uint64_t expr_t::eval()const{
 	assert(s.starts_with("0x"));
 	s=s.substr(2);
 	uint64_t v;
-	auto ec=_impl::parse(s,v);
+	auto ec=_impl::parse(s,v,16);
 	if(ec!=errc())cerr<<format("failed to parse {} : {}",s,ec)<<endl;
 	return v;
 }
