@@ -24,6 +24,17 @@ struct std::formatter<std::errc> : std::formatter<std::string> {
     }
 };
 
+uint64_t expr_t::eval()const{
+	// only support 0x... now
+	auto s=raw;
+	assert(s.starts_with("0x"));
+	s=s.substr(2);
+	uint64_t v;
+	auto ec=_impl::parse(s,v);
+	if(ec!=errc())std::cerr<<format("failed to parse {} : {}",s,ec)<<endl;
+	return v;
+}
+
 void debuger::quit(){
 	if(is_running()||!_state.is_bad()){
 		_state.state=run_state::quit;
@@ -51,7 +62,8 @@ void debuger::cmd_info(string_view s){
 	if(s=="r")dump_reg();
 	else return _error("Unknown info command {}", s);	
 }
-void debuger::cmd_x(size_t N,paddr_t addr){
+void debuger::cmd_x(size_t N,expr_t e_addr){
+	paddr_t addr=e_addr.eval();
 	dump_mem(addr, addr+N*4);
 }
 

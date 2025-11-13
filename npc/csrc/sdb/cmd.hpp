@@ -7,6 +7,7 @@
 #include <tuple>
 #include <concepts>
 #include <system_error>
+#include <cstdint>
 
 namespace clscmd {
 	using std::string_view;
@@ -18,11 +19,13 @@ namespace clscmd {
 namespace _impl {
 template <typename T>
 concept CanFromChars = std::integral<T> || std::floating_point<T>;
+template <typename T>
+concept CanFromStrView = requires(std::string_view sv) {T{sv};};
 
-auto parse(string_view s,_impl::CanFromChars auto& v){
+auto parse(string_view s,CanFromChars auto& v){
 	return std::from_chars(s.begin(),s.end(),v).ec;
 }
-inline auto parse(string_view s,string_view& v){
+inline auto parse(string_view s,CanFromStrView auto& v){
 	v=s;
 	return std::errc();
 }
@@ -40,6 +43,13 @@ inline auto make_toks(string_view str){
 	auto v=make_rawtoks(str);
 	return toks_t(v.begin(),v.end());
 }
+
+struct expr_t{
+	string_view raw;
+	expr_t(){}
+	expr_t(string_view s):raw(s){}
+	uint64_t eval()const;
+};
 
 using invoke_error = std::errc;
 constexpr invoke_error invoke_success=invoke_error();

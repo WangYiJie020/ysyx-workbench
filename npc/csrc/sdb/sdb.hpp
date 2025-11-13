@@ -71,7 +71,7 @@ class debuger{
 	void _init_cmd_table();
 
 	void cmd_info(std::string_view);
-	void cmd_x(size_t N,paddr_t addr);
+	void cmd_x(size_t N,clscmd::expr_t addr);
 
 public:
 
