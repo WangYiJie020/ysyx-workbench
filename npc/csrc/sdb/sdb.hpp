@@ -18,9 +18,11 @@ namespace sdb {
 	using vaddr_t = word_t;
 	using paddr_t = word_t;
 
-using cpu_executor=std::function<void()>;
+// should return pc after exec
+using cpu_executor=std::function<paddr_t()>;
 using addr_reader=std::function<uint8_t(paddr_t)>;
 using reg_reader=std::function<std::optional<word_t>(std::string_view)>;
+using inst_disasmsembler=std::function<std::string(uint64_t pc)>;
 
 enum class run_state{
 	running,
@@ -32,12 +34,12 @@ enum class run_state{
 
 struct cpu_state{
 	run_state state;
-	vaddr_t halt_pc;
+	vaddr_t pc;
 	uint32_t halt_ret;
 
-	cpu_state():state(run_state::running),halt_pc(0),halt_ret(0){}
+	cpu_state():state(run_state::running),pc(0),halt_ret(0){}
 	cpu_state(run_state s,vaddr_t pc=0,uint32_t ret=0):
-		state(s),halt_pc(pc),halt_ret(ret){}
+		state(s),pc(pc),halt_ret(ret){}
 
 	inline bool is_bad()const{
 		bool good=
@@ -52,8 +54,11 @@ class debuger{
 
 	addr_reader _paddr_read;
 	reg_reader _reg_read;
+
+	inst_disasmsembler _disasm;
 	
 	std::vector<std::string> _reg_names;
+
 	using fmt_str=std::string_view;
 
 	clscmd::command_table _cmd_table;
@@ -70,13 +75,18 @@ class debuger{
 
 	void _init_cmd_table();
 
+	void _step_one();
+
 	void cmd_info(std::string_view);
 	void cmd_x(size_t N,clscmd::expr_t addr);
 
 public:
 
-	debuger(cpu_executor e,addr_reader mr,reg_reader rr,auto&& reg_names):
-		_exec(e),_paddr_read(mr),_reg_read(rr),_reg_names(reg_names){
+	debuger(
+			cpu_executor e,addr_reader mr,reg_reader rr,auto&& reg_names,
+			inst_disasmsembler d=inst_disasmsembler()
+			):
+		_exec(e),_paddr_read(mr),_reg_read(rr),_disasm(d),_reg_names(reg_names){
 			_init_cmd_table();
 		}
 
@@ -98,7 +108,7 @@ public:
 	void quit();
 	inline void step(size_t n=1)
 	{
-		for(size_t i=0;i<n&&is_running();i++)_exec();
+		for(size_t i=0;i<n&&is_running();i++)_step_one();
 	}
 	void dump_mem(vaddr_t addr,vaddr_t end);
 	void dump_reg();
