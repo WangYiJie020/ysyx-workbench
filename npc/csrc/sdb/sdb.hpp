@@ -4,7 +4,6 @@
 #include <functional>
 #include <format>
 #include <iostream>
-#include <ranges>
 #include <vector>
 #include <optional>
 
@@ -15,7 +14,7 @@ namespace sdb {
 	using word_t=uint32_t;
 	using sword_t=int32_t;
 
-	using vaddr_t = word_t;
+	// phiysical addr
 	using paddr_t = word_t;
 
 // should return pc after exec
@@ -34,11 +33,11 @@ enum class run_state{
 
 struct cpu_state{
 	run_state state;
-	vaddr_t pc;
+	paddr_t pc;
 	uint32_t halt_ret;
 
 	cpu_state():state(run_state::running),pc(0),halt_ret(0){}
-	cpu_state(run_state s,vaddr_t pc=0,uint32_t ret=0):
+	cpu_state(run_state s,paddr_t pc=0,uint32_t ret=0):
 		state(s),pc(pc),halt_ret(ret){}
 
 	inline bool is_bad()const{
@@ -56,6 +55,7 @@ class debuger{
 	reg_reader _reg_read;
 
 	inst_disasmsembler _disasm;
+	constexpr static bool _ENABLE_ITRACE=false;
 	
 	std::vector<std::string> _reg_names;
 
@@ -83,10 +83,12 @@ class debuger{
 public:
 
 	debuger(
+			paddr_t init_pc,
 			cpu_executor e,addr_reader mr,reg_reader rr,auto&& reg_names,
 			inst_disasmsembler d=inst_disasmsembler()
 			):
 		_exec(e),_paddr_read(mr),_reg_read(rr),_disasm(d),_reg_names(reg_names){
+			_state.pc=init_pc;
 			_init_cmd_table();
 		}
 
@@ -110,7 +112,7 @@ public:
 	{
 		for(size_t i=0;i<n&&is_running();i++)_step_one();
 	}
-	void dump_mem(vaddr_t addr,vaddr_t end);
+	void dump_mem(paddr_t addr,paddr_t end);
 	void dump_reg();
 
 	void exec_command(std::string_view cmdline);

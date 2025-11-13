@@ -28,6 +28,8 @@ static TOP_NAME dut;
 #define NGPR 32
 
 #define MADDR_BASE 0x80000000u
+#define INITIAL_PC MADDR_BASE
+
 typedef uint32_t word_t;
 typedef uint32_t addr_t;
 
@@ -152,8 +154,9 @@ static long load_img() {
   return size;
 }
 
-void cpu_exec_once(){
+sdb::paddr_t cpu_exec_once(){
 	single_cycle();
+	return dut.pc;
 }
 uint8_t addr_readbyte(sdb::paddr_t addr){
 	return pmem_read(addr)>>((addr&0x3)*8);
@@ -176,11 +179,16 @@ std::optional<sdb::word_t> get_reg(std::string_view name){
 	}
 	return std::nullopt;
 }
+std::string disasm(sdb::paddr_t pc){
+	return "";
+}
 sdb::debuger dbg(
+	INITIAL_PC,	
 	cpu_exec_once,
 	addr_readbyte,
 	get_reg,
-	std::vector<std::string>(reg_names.begin(),reg_names.end())
+	std::vector<std::string>(reg_names.begin(),reg_names.end()),
+	disasm
 );
 
 extern "C" void raise_break(int a0){

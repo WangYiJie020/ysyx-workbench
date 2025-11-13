@@ -7,22 +7,46 @@ using namespace std::views;
 using namespace clscmd;
 
 template <typename T>
-struct std::formatter<std::optional<T>> : std::formatter<T> {
-    auto format(const std::optional<T>& opt, auto& ctx) const {
+struct std::formatter<optional<T>> : formatter<T> {
+    auto format(const optional<T>& opt, auto& ctx) const {
         if (opt)
-            return std::formatter<T>::format(*opt, ctx);
+            return formatter<T>::format(*opt, ctx);
         else
-            return std::format_to(ctx.out(), "(nullopt)");
+            return format_to(ctx.out(), "(nullopt)");
     }
 };
 
 template<>
-struct std::formatter<std::errc> : std::formatter<std::string> {
-    auto format(std::errc ec, auto& ctx) const {
-        return std::formatter<std::string>::format(
+struct std::formatter<errc> : formatter<std::string> {
+    auto format(errc ec, auto& ctx) const {
+        return formatter<std::string>::format(
             std::make_error_code(ec).message(), ctx);
     }
 };
+
+static string expand_tabs(std::string_view in, int tabsize) {
+    string out;
+    out.reserve(in.size() * tabsize);
+    int col = 0;
+    for (char c : in) {
+        if (c == '\t') {
+            int spaces = tabsize - (col % tabsize);
+            out.append(spaces, ' ');
+            col += spaces;
+        } else {
+            out.push_back(c);
+            col++;
+        }
+    }
+    return out;
+}
+
+void debuger::_step_one(){
+	if constexpr (_ENABLE_ITRACE){
+		_print("{}\n", _disasm(_state.pc));
+	}
+	_state.pc = _exec();	
+}
 
 uint64_t expr_t::eval()const{
 	// only support 0x... now
@@ -30,8 +54,8 @@ uint64_t expr_t::eval()const{
 	assert(s.starts_with("0x"));
 	s=s.substr(2);
 	uint64_t v;
-	auto ec=_impl::parse(s,v,16);
-	if(ec!=errc())std::cerr<<format("failed to parse {} : {}",s,ec)<<endl;
+	auto ec=_impl::parse(s,v);
+	if(ec!=errc())cerr<<format("failed to parse {} : {}",s,ec)<<endl;
 	return v;
 }
 
@@ -41,7 +65,7 @@ void debuger::quit(){
 	}
 }
 
-void debuger::dump_mem(vaddr_t addr,vaddr_t end){
+void debuger::dump_mem(paddr_t addr,paddr_t end){
 	assert((end-addr)%4==0);
 	while (addr!=end) {
 		_print("0x{:08x}: ",addr);	
