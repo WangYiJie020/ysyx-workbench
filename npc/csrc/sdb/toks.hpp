@@ -40,19 +40,15 @@ using invoke_error = std::errc;
 constexpr invoke_error invoke_success=invoke_error();
 
 struct command_t{
-	string_view description;
 	function<invoke_error(toks_t)> invoke;
-	command_t():description(),invoke(){
-	}
+	command_t():invoke(){}
 
 	template <typename Class, typename Ret, typename... Args,typename... Defaults>
 	command_t(
-		string_view _description,
 		Class* obj, Ret(Class::*func)(Args...),
 		std::tuple<Defaults...> defaults = {}
 	){
 		using namespace std;
-		description=_description,
 		invoke=[obj, func, defaults](toks_t toks) {
 			bool ok;
 			errc ec;
@@ -72,7 +68,7 @@ struct command_t{
             constexpr size_t I_tokend = N_args - N_def;
 
             [&]<size_t... Is>(index_sequence<Is...>) {
-			   (([&](){
+			   (([&]{
 				 if constexpr (Is >= I_tokend) {
 				 	constexpr size_t def_idx = Is - I_tokend;
 				 	get<Is>(args) = get<def_idx>(defaults);
@@ -89,9 +85,7 @@ struct command_t{
 
 			if(!ok)return invoke_error(ec);
 
-            std::apply([&](auto&&... unpacked){
-                (obj->*func)(unpacked...);
-            }, args);
+			apply(bind_front(func, obj), args);
 			return invoke_success;
         };
 	}

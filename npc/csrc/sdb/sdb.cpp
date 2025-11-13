@@ -54,7 +54,7 @@ void debuger::_init_cmd_table(){
 	{.handler=[this](_tokens_view_t toks){__VA_ARGS__;},.description=desc}}
 	using namespace clscmd;
 	_cmd_table={
-		{"c",command_t("Continue the execution of the program", this, &debuger::resume)}
+		{"c",command_t(this, &debuger::resume)}
 	};
 /*
 	_cmd_table={
