@@ -65,6 +65,7 @@ void debuger::cmd_info(string_view s){
 void debuger::cmd_x(size_t N,expr_t e_addr){
 	paddr_t addr=e_addr.eval();
 	_print("call x {} {}", N,addr);
+	cout<<endl;
 	dump_mem(addr, addr+N*4);
 }
 
