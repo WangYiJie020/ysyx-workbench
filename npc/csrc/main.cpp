@@ -216,8 +216,10 @@ extern "C" void raise_break(int a0){
 	}
 }
 
+void init_disasm();
 int main(int argc, char **argv)
 {
+	init_disasm();
 //	pmem_write(0,0x12345678, 0x3);
 //	int res=pmem_read(0);
 //	printf("%X",res);
