@@ -83,7 +83,7 @@ struct command_t{
 					if(!ok)return;
 					ec = _impl::parse(toks[Is], get<Is>(args));
 					ok=(ec==errc());
-					if(!ok)printf("parse failed arg#%u(%s) as typeid`%s\n",
+					if(!ok)printf("parse failed arg#%zu(%s) as typeid`%s\n",
 							Is, toks[Is].data(), typeid(decltype(get<Is>(args))).name()
 							);
 				}
