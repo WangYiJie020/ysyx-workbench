@@ -67,7 +67,7 @@ struct command_t{
                 throw runtime_error("not enough arguments even with defaults");
             }
 
-			bool ok;
+			bool ok=true;
 			errc ec;
 
             [&]<size_t... Is>(index_sequence<Is...>) { (([&]{
