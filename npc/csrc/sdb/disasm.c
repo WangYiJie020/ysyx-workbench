@@ -2,10 +2,22 @@
 #include <dlfcn.h>
 #include <assert.h>
 
-static size_t (*cs_disasm_dl)(csh handle, const uint8_t *code, size_t code_size, uint64_t address, size_t count, cs_insn **insn);
-static void (*cs_free_dl)(cs_insn *insn, size_t count);
+#define _gv(n) n##_dl
+#define _gt(n) n##_func_t
+
+#define _def(st,ret,n,...) \
+	typedef ret(*_gt(n))(__VA_ARGS__);\
+	st _gt(n) _gv(n) = NULL;
+
+#define _open(n)\
+	_gv(n)=(_gt(n))dlsym(dl_handle,#n);\
+	assert(_gv(n));
+
+_def(static,size_t, cs_disasm,csh handle, const uint8_t *code, size_t code_size, uint64_t address, size_t count, cs_insn **insn);
+_def(static,void, cs_free,cs_insn *insn, size_t count);
 
 static csh handle;
+
 
 void init_disasm() {
 
@@ -13,17 +25,14 @@ void *dl_handle;
   dl_handle = dlopen("tools/capstone/repo/libcapstone.so.5", RTLD_LAZY);
   assert(dl_handle);
 
-  cs_err (*cs_open_dl)(cs_arch arch, cs_mode mode, csh *handle) = NULL;
-  cs_open_dl = dlsym(dl_handle, "cs_open");
-  assert(cs_open_dl);
+  _def(,cs_err,cs_open,cs_arch arch, cs_mode mode, csh *handle);
+  _open(cs_open);
+  _open(cs_disasm);
+  _open(cs_free);
 
-  cs_disasm_dl = dlsym(dl_handle, "cs_disasm");
-  assert(cs_disasm_dl);
-
-  cs_free_dl = dlsym(dl_handle, "cs_free");
-  assert(cs_free_dl);
-  
   cs_arch arch=CS_ARCH_RISCV;
+  cs_mode mode=CS_MODE_RISCV32;
+
   int ret = cs_open_dl(arch, mode, &handle);
   assert(ret == CS_ERR_OK);
 }
