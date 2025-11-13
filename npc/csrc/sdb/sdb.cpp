@@ -52,7 +52,7 @@ void debuger::_init_cmd_table(){
 #define _ITEM(name,desc,...) {\
 	name,\
 	{.handler=[this](_tokens_view_t toks){__VA_ARGS__;},.description=desc}}
-
+/*
 	_cmd_table={
 		_ITEM("c", "Continue the execution of the program", resume()),
 		_ITEM("q", "Exit program",quit()),
@@ -79,9 +79,11 @@ void debuger::_init_cmd_table(){
 				)
 
 		};
+		*/
 }
 
 void debuger::exec_command(string_view cmdline){
+	/*
 	auto toks=_make_toks(cmdline);
 	if(toks.empty())return;
 	auto cmd_name=string(toks.front());
@@ -97,6 +99,7 @@ void debuger::exec_command(string_view cmdline){
 		return _error("Bad usage of '{}' which require {} arg", cmd_name,cmd.required_argc);
 
 	cmd.handler(args);
+	*/
 }
 
 class foo{

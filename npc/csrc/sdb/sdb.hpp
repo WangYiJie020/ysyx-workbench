@@ -8,6 +8,8 @@
 #include <vector>
 #include <optional>
 
+#include "toks.hpp"
+
 namespace sdb {
 
 	using word_t=uint32_t;
@@ -44,18 +46,6 @@ struct cpu_state{
 		return !good;
 	}
 };
-
-inline static auto _make_toks(std::string_view str){
-	using namespace std::views;
-	using std::string_view;
-	return str
-		| split(' ')
-		| transform([](auto&& rng) {
-				return string_view(rng.begin(), rng.size());
-		});
-}
-
-
 class debuger{
 	cpu_executor _exec;
 	cpu_state _state;
@@ -64,21 +54,9 @@ class debuger{
 	reg_reader _reg_read;
 	
 	std::vector<std::string> _reg_names;
-
-	using _tokens_view_t = decltype(
-			_make_toks("")|std::views::drop(0)
-			);
-
 	using fmt_str=std::string_view;
 
-	using cmd_func=std::function<void(_tokens_view_t)>;
-	struct _command_t{
-		cmd_func handler;
-		size_t required_argc;
-		std::string_view description;
-	};
-
-	std::unordered_map<std::string, _command_t> _cmd_table;
+	std::unordered_map<std::string, clscmd::command_t> _cmd_table;
 
 	inline void _print(fmt_str fmt, auto&&... args){
 		std::cout<<vformat(fmt,std::make_format_args(args...));
@@ -97,6 +75,10 @@ class debuger{
 	};
 
 	void _init_cmd_table();
+
+	void cmd_si(size_t N);
+	void cmd_info(std::string_view);
+	void cmd_x(size_t N,paddr_t addr);
 
 public:
 

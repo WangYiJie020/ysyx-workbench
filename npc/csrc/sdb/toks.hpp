@@ -43,34 +43,53 @@ inline auto parse(string_view s,string_view& v){
 	return std::errc();
 }
 
-template <typename Class, typename Ret, typename... Args>
+template <typename Class, typename Ret, typename... Args,typename... Defaults>
 command_t make_command(
 	string_view name,
 	string_view description,
-   	Class* obj, Ret(Class::*func)(Args...)
+   	Class* obj, Ret(Class::*func)(Args...),
+	std::tuple<Defaults...> defaults = {}
 ) {
 	using namespace std;
     return command_t{
         .name=name,
 		.description=description,
-		.invoke=[obj, func](toks_t toks) {
-            if (toks.size() != sizeof...(Args)) {
-				// caller shold ensure toks num
-                throw runtime_error("argument count mismatch");
-            }
+		.invoke=[obj, func, defaults](toks_t toks) {
 			bool ok;
 			errc ec;
             tuple<decay_t<Args>...> args;
-            [&]<size_t...Is>(index_sequence<Is...>) {
-                (([&] {
-                    if (!ok) return;
-                    ec = parse(toks[Is], std::get<Is>(args));
-					ok = (ec==errc());
-                }()), ...);
-            }(index_sequence_for<Args...>{});
-			if(!ok)return ec;
+			constexpr size_t N_args = sizeof...(Args);
+            constexpr size_t N_def  = sizeof...(Defaults);
 
-            apply([&](auto&&... unpacked) {
+            if (toks.size() > N_args) {
+                throw std::runtime_error("too many arguments");
+            }
+            if (toks.size() + N_def < N_args) {
+                throw std::runtime_error("not enough arguments even with defaults");
+            }
+
+            constexpr size_t I_tokend = N_args - N_def;
+
+            auto fill = [&]<size_t... Is>(index_sequence<Is...>) {
+			   (([&](){
+				 if constexpr (Is >= I_tokend) {
+				 	constexpr size_t def_idx = Is - I_tokend;
+				 	get<Is>(args) = get<def_idx>(defaults);
+				 } else {
+				 	if (Is < toks.size()) {
+						if(!ok)return;
+						ec = parse(toks[Is], get<Is>(args));
+						ok=(ec==errc());
+					}
+				 	throw runtime_error("missing required argument");
+				 }
+			   }()),...);
+           	};
+            fill(index_sequence_for<Args...>{});
+
+			if(!ok)return invoke_error(ec);
+
+            std::apply([&](auto&&... unpacked){
                 (obj->*func)(unpacked...);
             }, args);
 			return invoke_error();
