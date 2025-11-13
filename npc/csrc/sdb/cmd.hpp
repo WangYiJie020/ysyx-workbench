@@ -22,8 +22,8 @@ concept CanFromChars = std::integral<T> || std::floating_point<T>;
 template <typename T>
 concept CanFromStrView = requires(std::string_view sv) {T{sv};};
 
-auto parse(string_view s,CanFromChars auto& v){
-	return std::from_chars(s.begin(),s.end(),v).ec;
+auto parse(string_view s,CanFromChars auto& v,int base=10){
+	return std::from_chars(s.begin(),s.end(),v,base).ec;
 }
 inline auto parse(string_view s,CanFromStrView auto& v){
 	v=s;
