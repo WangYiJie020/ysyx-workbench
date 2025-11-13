@@ -1,5 +1,6 @@
 #include "sdb.hpp"
 #include <assert.h>
+#include "toks.hpp"
 
 using namespace std;
 using namespace sdb;
@@ -46,50 +47,35 @@ void debuger::dump_reg(){
 	}
 }
 
+
 void debuger::_init_cmd_table(){
 #define _ITEM(name,desc,...) {\
 	name,\
-	{.f=[this](_tokens_view_t toks){__VA_ARGS__;},.description=desc}}
-
-#define _ERR(fmt,...) do{\
-	_print("Error: " fmt "\n",##__VA_ARGS__);\
-	return;\
-}while(0)
-
-#define _Parse(s,var,base) do{\
-	auto res=from_chars(s.begin(),s.end(),var,base);\
-	if(res.ec!=errc()){\
-		_ERR("parse "#var" failed: ec = {}", res.ec);\
-	}\
-}while(0)
-
+	{.handler=[this](_tokens_view_t toks){__VA_ARGS__;},.description=desc}}
 
 	_cmd_table={
 		_ITEM("c", "Continue the execution of the program", resume()),
 		_ITEM("q", "Exit program",quit()),
 		_ITEM("si","Step the program for N instructions" ,
-				size_t N;
-				if(toks.empty())N=1;
-				else{
-					_Parse(toks.front(),N,10);
-				}
-				step(N);
+				size_t N=toks.empty();
+				if(N||_parse(toks.front(), N))
+					step(N);
 				),
 		_ITEM("info", "Display information about registers or watchpoints",
 				auto type=toks.front();
 				if(type=="r")dump_reg();
-				else _ERR("unknown info command '{}'",type);
+				else _error("unknown info command '{}'",type);
 				),
 		_ITEM("x", "Examine memory: x N EXPR",
-				if(ranges::distance(toks)!=2)_ERR("bad usage");
+				assert(ranges::distance(toks)==2);
 				size_t N;
-				_Parse(toks.front(),N,10);
-				auto expr=*next(toks.begin(),1);
+				bool good=true;
+				good&=_parse(toks.front(),N);
+				auto expr=*next(toks.begin());
 				if(expr.starts_with("0x"))expr=expr.substr(2);
 				paddr_t addr;
-				_Parse(expr,addr, 16);
-				_print("addr {:08x} N {}\n", addr,N);
-				dump_mem(addr, addr+N*4);
+				good&=_parse(expr,addr, 16);
+				if(good)dump_mem(addr, addr+N*4);
 				)
 
 		};
@@ -98,11 +84,28 @@ void debuger::_init_cmd_table(){
 void debuger::exec_command(string_view cmdline){
 	auto toks=_make_toks(cmdline);
 	if(toks.empty())return;
-	auto cmd=string(toks.front());
-	auto it=_cmd_table.find(cmd);
-	if(it==_cmd_table.end()){
-		_print("Unknown command '{}'\n",cmd);
-		return;
+	auto cmd_name=string(toks.front());
+	auto it=_cmd_table.find(cmd_name);
+
+	if(it==_cmd_table.end())
+		return _error("Unknown command '{}'\n",cmd_name);
+
+	auto args=toks|drop(1);
+	auto cmd=it->second;
+
+	if(ranges::distance(toks)!=cmd.required_argc)
+		return _error("Bad usage of '{}' which require {} arg", cmd_name,cmd.required_argc);
+
+	cmd.handler(args);
+}
+
+class foo{
+	public:
+	void bar(int x){
 	}
-	it->second.f(toks|drop(1));
+};
+
+void make_cmd(){
+	foo a;
+	clscmd::make_command("x","foo", &a, &foo::bar);
 }

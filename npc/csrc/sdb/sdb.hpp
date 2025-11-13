@@ -69,17 +69,32 @@ class debuger{
 			_make_toks("")|std::views::drop(0)
 			);
 
+	using fmt_str=std::string_view;
+
 	using cmd_func=std::function<void(_tokens_view_t)>;
 	struct _command_t{
-		cmd_func f;
+		cmd_func handler;
+		size_t required_argc;
 		std::string_view description;
 	};
 
 	std::unordered_map<std::string, _command_t> _cmd_table;
 
-	inline void _print(const std::string_view fmt, auto&&... args){
+	inline void _print(fmt_str fmt, auto&&... args){
 		std::cout<<vformat(fmt,std::make_format_args(args...));
 	}
+	inline void _error(fmt_str fmt, auto&&... args){
+		std::cerr<<"Error: ";
+		_print(fmt, args...);
+	}
+	bool _parse(auto s,auto&v,int base=10){
+		auto [_,ec]=std::from_chars(s.begin(),s.end(),v,base);
+		if(ec!=std::errc()){
+			_error("parse {} failed: {}", typeid(v).name(),ec);
+			return false;
+		}
+		return true;
+	};
 
 	void _init_cmd_table();
 
