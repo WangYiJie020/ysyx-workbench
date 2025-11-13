@@ -8,6 +8,8 @@
 #include <vector>
 #include <optional>
 
+#include "cmd.hpp"
+
 namespace sdb {
 
 	using word_t=uint32_t;
@@ -44,18 +46,6 @@ struct cpu_state{
 		return !good;
 	}
 };
-
-inline static auto _make_toks(std::string_view str){
-	using namespace std::views;
-	using std::string_view;
-	return str
-		| split(' ')
-		| transform([](auto&& rng) {
-				return string_view(rng.begin(), rng.size());
-		});
-}
-
-
 class debuger{
 	cpu_executor _exec;
 	cpu_state _state;
@@ -64,24 +54,33 @@ class debuger{
 	reg_reader _reg_read;
 	
 	std::vector<std::string> _reg_names;
+	using fmt_str=std::string_view;
 
-	using _tokens_view_t = decltype(
-			_make_toks("")|std::views::drop(0)
-			);
+	clscmd::command_table _cmd_table;
 
-	using cmd_func=std::function<void(_tokens_view_t)>;
-	struct _command_t{
-		cmd_func f;
-		std::string_view description;
-	};
-
-	std::unordered_map<std::string, _command_t> _cmd_table;
-
-	inline void _print(const std::string_view fmt, auto&&... args){
+	inline void _print(fmt_str fmt, auto&&... args){
 		std::cout<<vformat(fmt,std::make_format_args(args...));
 	}
+	inline void _error(fmt_str fmt, auto&&... args){
+		std::cerr
+			<<"Error: "
+			<<vformat(fmt,std::make_format_args(args...))
+			<<std::endl;
+	}
+	bool _parse(auto s,auto&v,int base=10){
+		auto [_,ec]=std::from_chars(s.begin(),s.end(),v,base);
+		if(ec!=std::errc()){
+			_error("parse {} failed: {}", typeid(v).name(),ec);
+			return false;
+		}
+		return true;
+	};
 
 	void _init_cmd_table();
+
+	void cmd_si(size_t N);
+	void cmd_info(std::string_view);
+	void cmd_x(size_t N,paddr_t addr);
 
 public:
 
