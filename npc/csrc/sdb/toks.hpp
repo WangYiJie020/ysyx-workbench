@@ -5,6 +5,7 @@
 #include <vector>
 #include <charconv>
 #include <tuple>
+#include <concepts>
 
 namespace clscmd {
 	using std::string_view;
@@ -12,8 +13,7 @@ namespace clscmd {
 
 inline static auto make_toks(string_view str){
 	using namespace std::views;
-	return str
-		| split(' ')
+	return str | split(' ')
 		| transform([](auto&& rng) {
 				return string_view(rng.begin(), rng.size());
 		});
@@ -28,12 +28,25 @@ struct command_t{
 	function<void(toks_t)> invoke;
 };
 
-inline void _parse(string_view s,int& v){
-	std::from_chars(s.begin(),s.end(),v);
+namespace _impl {
+template <typename T>
+concept CanFromChars = std::integral<T> || std::floating_point<T>;
+}
+
+void parse(string_view s,_impl::CanFromChars auto& v){
+	auto [_,ec]=std::from_chars(s.begin(),s.end(),v);
+}
+inline void parse(string_view s,string_view& v){
+	
+	v=s;
 }
 
 template <typename Class, typename Ret, typename... Args>
-command_t make_command(string_view name,string_view description, Class* obj, Ret(Class::*func)(Args...)) {
+command_t make_command(
+	string_view name,
+	string_view description,
+   	Class* obj, Ret(Class::*func)(Args...)
+) {
 	using namespace std;
     return command_t{
         .name=name,
@@ -46,7 +59,7 @@ command_t make_command(string_view name,string_view description, Class* obj, Ret
 
             tuple<decay_t<Args>...> args;
             auto fill_args = [&]<size_t...Is>(index_sequence<Is...>) {
-                ((_parse(toks[Is], get<Is>(args))), ...);
+                ((parse(toks[Is], get<Is>(args))), ...);
             };
             fill_args(index_sequence_for<Args...>{});
 
