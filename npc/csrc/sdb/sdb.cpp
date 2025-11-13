@@ -47,32 +47,23 @@ void debuger::dump_reg(){
 	}
 }
 
+void debuger::cmd_info(string_view s){
+	if(s=="r")dump_reg();
+	else return _error("Unknown info command {}", s);	
+}
+void debuger::cmd_x(size_t N,paddr_t addr){
+	dump_mem(addr, addr+N*4);
+}
+
 #define _ITEM(name,desc,...) {name,command_t(desc,this,&debuger::__VA_ARGS__)}
 
 void debuger::_init_cmd_table(){
-
-	tuple<int> a={1};
-
 	_cmd_table={
 		_ITEM("c", "Continue the execution of the program", resume),
 		_ITEM("q", "Exit program",quit),
 		_ITEM("si","Step the program for N instructions",step,1),
-		/*
-		_ITEM("info", "Display information about registers or watchpoints",
-				),
-		_ITEM("x", "Examine memory: x N EXPR",
-				assert(ranges::distance(toks)==2);
-				size_t N;
-				bool good=true;
-				good&=_parse(toks.front(),N);
-				auto expr=*next(toks.begin());
-				if(expr.starts_with("0x"))expr=expr.substr(2);
-				paddr_t addr;
-				good&=_parse(expr,addr, 16);
-				if(good)dump_mem(addr, addr+N*4);
-				)
-				*/
-
+		_ITEM("info", "Display information about registers or watchpoints",cmd_info),
+		_ITEM("x", "Examine memory: x N EXPR",cmd_x),
 		};
 }
 
