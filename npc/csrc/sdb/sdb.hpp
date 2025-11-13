@@ -55,7 +55,7 @@ class debuger{
 	reg_reader _reg_read;
 
 	inst_disasmsembler _disasm;
-	constexpr static bool _ENABLE_ITRACE=false;
+	constexpr static bool _ENABLE_ITRACE=true;
 	
 	std::vector<std::string> _reg_names;
 

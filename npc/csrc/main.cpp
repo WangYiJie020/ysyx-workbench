@@ -179,8 +179,17 @@ std::optional<sdb::word_t> get_reg(std::string_view name){
 	}
 	return std::nullopt;
 }
+
+word_t fetch_inst(sdb::paddr_t pc){
+		return pmem_read(pc);
+}
+
 std::string disasm(sdb::paddr_t pc){
-	return "";
+	void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
+	char buf[256];
+	word_t inst=fetch_inst(pc);
+	disassemble(buf,sizeof(buf),pc,(uint8_t*)&inst,sizeof(inst));
+	return buf;
 }
 sdb::debuger dbg(
 	INITIAL_PC,	
