@@ -21,11 +21,12 @@ inline static auto make_toks(string_view str){
 
 using rawtoks_view_t = decltype(make_toks("")|std::views::drop(0));
 using toks_t = std::vector<string_view>;
+using invoke_error = std::error_code;
 
 struct command_t{
 	string_view name;
 	string_view description;
-	function<void(toks_t)> invoke;
+	function<invoke_error(toks_t)> invoke;
 };
 
 namespace _impl {
@@ -33,13 +34,10 @@ template <typename T>
 concept CanFromChars = std::integral<T> || std::floating_point<T>;
 }
 
-void parse(string_view s,_impl::CanFromChars auto& v){
-	auto [_,ec]=std::from_chars(s.begin(),s.end(),v);
+auto parse(string_view s,_impl::CanFromChars auto& v){
+	return std::from_chars(s.begin(),s.end(),v).second;
 }
-inline void parse(string_view s,string_view& v){
-	
-	v=s;
-}
+inline void parse(string_view s,string_view& v){v=s;}
 
 template <typename Class, typename Ret, typename... Args>
 command_t make_command(
