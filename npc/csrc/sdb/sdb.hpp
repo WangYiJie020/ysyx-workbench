@@ -62,8 +62,10 @@ class debuger{
 		std::cout<<vformat(fmt,std::make_format_args(args...));
 	}
 	inline void _error(fmt_str fmt, auto&&... args){
-		std::cerr<<"Error: ";
-		_print(fmt, args...);
+		std::cerr
+			<<"Error: "
+			<<vformat(fmt,std::make_format_args(args...))
+			<<std::endl;
 	}
 	bool _parse(auto s,auto&v,int base=10){
 		auto [_,ec]=std::from_chars(s.begin(),s.end(),v,base);
@@ -76,7 +78,6 @@ class debuger{
 
 	void _init_cmd_table();
 
-	void cmd_si(size_t N);
 	void cmd_info(std::string_view);
 	void cmd_x(size_t N,paddr_t addr);
 

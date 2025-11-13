@@ -47,24 +47,18 @@ void debuger::dump_reg(){
 	}
 }
 
-
-#define _ITEM(name,desc,f) {name,command_t(desc,this,&debuger::f)}
+#define _ITEM(name,desc,...) {name,command_t(desc,this,&debuger::__VA_ARGS__)}
 
 void debuger::_init_cmd_table(){
+
+	tuple<int> a={1};
 
 	_cmd_table={
 		_ITEM("c", "Continue the execution of the program", resume),
 		_ITEM("q", "Exit program",quit),
+		_ITEM("si","Step the program for N instructions",step,1),
 		/*
-		_ITEM("si","Step the program for N instructions" ,
-				size_t N=toks.empty();
-				if(N||_parse(toks.front(), N))
-					step(N);
-				),
 		_ITEM("info", "Display information about registers or watchpoints",
-				auto type=toks.front();
-				if(type=="r")dump_reg();
-				else _error("unknown info command '{}'",type);
 				),
 		_ITEM("x", "Examine memory: x N EXPR",
 				assert(ranges::distance(toks)==2);
@@ -85,6 +79,6 @@ void debuger::_init_cmd_table(){
 void debuger::exec_command(string_view cmdline){
 	auto ec=exec(_cmd_table,cmdline);
 	if(ec!=invoke_success){
-		_error("exec failed: {}", ec);
+		_error("{}", ec);
 	}
 }

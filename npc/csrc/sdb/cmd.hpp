@@ -56,10 +56,11 @@ struct command_t{
 	command_t(
 		string_view desc,
 		Class* obj, Ret(Class::*func)(Args...),
-		std::tuple<Defaults...> defaults = {}
+		Defaults&&... defaults
 	):description(desc){
 		using namespace std;
-		invoke=[obj, func, defaults](toks_t toks) {
+		auto def_args=make_tuple(forward<Defaults>(defaults)...);
+		invoke=[obj, func, def_args](toks_t toks) {
             tuple<decay_t<Args>...> args;
 			constexpr size_t N_args = sizeof...(Args);
             constexpr size_t N_def  = sizeof...(Defaults);
@@ -85,7 +86,7 @@ struct command_t{
 				}
 				else{
 					if constexpr (Is >= I_required_end) {
-						get<Is>(args) = get<Is-I_required_end>(defaults);
+						get<Is>(args) = get<Is-I_required_end>(def_args);
 					} else { // should return early when check n_tok+n_def
 						throw std::logic_error("unreachable");
 					}
