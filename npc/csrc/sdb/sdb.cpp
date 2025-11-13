@@ -87,23 +87,16 @@ void debuger::_init_cmd_table(){
 }
 
 void debuger::exec_command(string_view cmdline){
-	/*
-	auto toks=_make_toks(cmdline);
-	if(toks.empty())return;
-	auto cmd_name=string(toks.front());
+	auto vtoks=clscmd::make_rawtoks(cmdline);
+	if(vtoks.empty())return;
+	auto cmd_name=string(vtoks.front());
 	auto it=_cmd_table.find(cmd_name);
 
 	if(it==_cmd_table.end())
 		return _error("Unknown command '{}'\n",cmd_name);
-
-	auto args=toks|drop(1);
 	auto cmd=it->second;
-
-	if(ranges::distance(toks)!=cmd.required_argc)
-		return _error("Bad usage of '{}' which require {} arg", cmd_name,cmd.required_argc);
-
-	cmd.handler(args);
-	*/
+	auto args=vtoks|drop(1);
+	auto _=cmd.invoke(clscmd::toks_t(args.begin(),args.end()));
 }
 
 class foo{

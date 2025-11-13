@@ -17,15 +17,6 @@ namespace _impl {
 template <typename T>
 concept CanFromChars = std::integral<T> || std::floating_point<T>;
 
-inline auto make_toks(string_view str){
-	using namespace std::views;
-	return str | split(' ')
-		| transform([](auto&& rng) {
-				return string_view(rng.begin(), rng.size());
-		});
-}
-using rawtoks_view_t = decltype(make_toks("")|std::views::drop(0));
-
 auto parse(string_view s,_impl::CanFromChars auto& v){
 	return std::from_chars(s.begin(),s.end(),v).ec;
 }
@@ -34,6 +25,18 @@ inline auto parse(string_view s,string_view& v){
 	return std::errc();
 }
 
+}
+
+inline auto make_rawtoks(string_view str){
+	using namespace std::views;
+	return str | split(' ')
+		| transform([](auto&& rng) {
+				return string_view(rng.begin(), rng.size());
+		});
+}
+inline auto make_toks(string_view str){
+	auto v=make_rawtoks(str);
+	return toks_t(v.begin(),v.end());
 }
 
 using invoke_error = std::errc;
@@ -50,11 +53,10 @@ struct command_t{
 	){
 		using namespace std;
 		invoke=[obj, func, defaults](toks_t toks) {
-			bool ok;
-			errc ec;
             tuple<decay_t<Args>...> args;
 			constexpr size_t N_args = sizeof...(Args);
             constexpr size_t N_def  = sizeof...(Defaults);
+            constexpr size_t I_tokend = N_args - N_def;
 
 			const size_t n_tok = toks.size();
 
@@ -65,23 +67,22 @@ struct command_t{
                 throw runtime_error("not enough arguments even with defaults");
             }
 
-            constexpr size_t I_tokend = N_args - N_def;
+			bool ok;
+			errc ec;
 
-            [&]<size_t... Is>(index_sequence<Is...>) {
-			   (([&]{
+            [&]<size_t... Is>(index_sequence<Is...>) { (([&]{
 				 if constexpr (Is >= I_tokend) {
-				 	constexpr size_t def_idx = Is - I_tokend;
-				 	get<Is>(args) = get<def_idx>(defaults);
+				 	get<Is>(args) = get<Is-I_tokend>(defaults);
 				 } else {
 				 	if (Is < n_tok) {
-						if(!ok)return;
+					    if(!ok)return;
 						ec = _impl::parse(toks[Is], get<Is>(args));
 						ok=(ec==errc());
+					} else {
+				   		throw runtime_error("missing required argument");
 					}
-				 	throw runtime_error("missing required argument");
 				 }
-			   }()),...);
-           	}(index_sequence_for<Args...>{});
+			}()),...); }(index_sequence_for<Args...>{});
 
 			if(!ok)return invoke_error(ec);
 
