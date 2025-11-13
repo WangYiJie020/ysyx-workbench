@@ -83,10 +83,8 @@ struct command_t{
 					if(!ok)return;
 					ec = _impl::parse(toks[Is], get<Is>(args));
 					ok=(ec==errc());
-					if(!ok)printf("parse failed arg#%d(%s) to %s\n",
-							Is, toks[Is].data(), typeid(
-								decay_t<decltype(get<Is>(args))>
-								).name()
+					if(!ok)printf("parse failed arg#%d(%s) as typeid`%s\n",
+							Is, toks[Is].data(), typeid(decltype(get<Is>(args))).name()
 							);
 				}
 				else{
