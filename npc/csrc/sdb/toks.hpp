@@ -21,7 +21,8 @@ inline static auto make_toks(string_view str){
 
 using rawtoks_view_t = decltype(make_toks("")|std::views::drop(0));
 using toks_t = std::vector<string_view>;
-using invoke_error = std::error_code;
+using invoke_error = std::errc;
+constexpr invoke_error invoke_success=invoke_error();
 
 struct command_t{
 	string_view name;
@@ -35,9 +36,12 @@ concept CanFromChars = std::integral<T> || std::floating_point<T>;
 }
 
 auto parse(string_view s,_impl::CanFromChars auto& v){
-	return std::from_chars(s.begin(),s.end(),v).second;
+	return std::from_chars(s.begin(),s.end(),v).ec;
 }
-inline void parse(string_view s,string_view& v){v=s;}
+inline auto parse(string_view s,string_view& v){
+	v=s;
+	return std::errc();
+}
 
 template <typename Class, typename Ret, typename... Args>
 command_t make_command(
@@ -54,16 +58,22 @@ command_t make_command(
 				// caller shold ensure toks num
                 throw runtime_error("argument count mismatch");
             }
-
+			bool ok;
+			errc ec;
             tuple<decay_t<Args>...> args;
-            auto fill_args = [&]<size_t...Is>(index_sequence<Is...>) {
-                ((parse(toks[Is], get<Is>(args))), ...);
-            };
-            fill_args(index_sequence_for<Args...>{});
+            [&]<size_t...Is>(index_sequence<Is...>) {
+                (([&] {
+                    if (!ok) return;
+                    ec = parse(toks[Is], std::get<Is>(args));
+					ok = (ec==errc());
+                }()), ...);
+            }(index_sequence_for<Args...>{});
+			if(!ok)return ec;
 
             apply([&](auto&&... unpacked) {
                 (obj->*func)(unpacked...);
             }, args);
+			return invoke_error();
         }
     };
 }
