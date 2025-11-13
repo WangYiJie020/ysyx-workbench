@@ -5,6 +5,7 @@
 using namespace std;
 using namespace sdb;
 using namespace std::views;
+using namespace clscmd;
 
 template <typename T>
 struct std::formatter<std::optional<T>> : std::formatter<T> {
@@ -48,18 +49,14 @@ void debuger::dump_reg(){
 }
 
 
+#define _ITEM(name,desc,f) {name,command_t(desc,this,&debuger::f)}
+
 void debuger::_init_cmd_table(){
-#define _ITEM(name,desc,...) {\
-	name,\
-	{.handler=[this](_tokens_view_t toks){__VA_ARGS__;},.description=desc}}
-	using namespace clscmd;
+
 	_cmd_table={
-		{"c",command_t(this, &debuger::resume)}
-	};
-/*
-	_cmd_table={
-		_ITEM("c", "Continue the execution of the program", resume()),
-		_ITEM("q", "Exit program",quit()),
+		_ITEM("c", "Continue the execution of the program", resume),
+		_ITEM("q", "Exit program",quit),
+		/*
 		_ITEM("si","Step the program for N instructions" ,
 				size_t N=toks.empty();
 				if(N||_parse(toks.front(), N))
@@ -81,30 +78,14 @@ void debuger::_init_cmd_table(){
 				good&=_parse(expr,addr, 16);
 				if(good)dump_mem(addr, addr+N*4);
 				)
+				*/
 
 		};
-		*/
 }
 
 void debuger::exec_command(string_view cmdline){
-	auto vtoks=clscmd::make_rawtoks(cmdline);
-	if(vtoks.empty())return;
-	auto cmd_name=string(vtoks.front());
-	auto it=_cmd_table.find(cmd_name);
-
-	if(it==_cmd_table.end())
-		return _error("Unknown command '{}'\n",cmd_name);
-	auto cmd=it->second;
-	auto args=vtoks|drop(1);
-	auto ec=cmd.invoke(clscmd::toks_t(args.begin(),args.end()));
-	_print("invoke {} : {}\n", cmd_name,ec);
-}
-
-class foo{
-	public:
-	void bar(int x){
+	auto ec=exec(_cmd_table,cmdline);
+	if(ec!=invoke_success){
+		_error("exec failed: {}", ec);
 	}
-};
-
-void make_cmd(){
 }

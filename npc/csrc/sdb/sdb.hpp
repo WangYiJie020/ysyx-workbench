@@ -56,7 +56,7 @@ class debuger{
 	std::vector<std::string> _reg_names;
 	using fmt_str=std::string_view;
 
-	std::unordered_map<std::string, clscmd::command_t> _cmd_table;
+	clscmd::command_table _cmd_table;
 
 	inline void _print(fmt_str fmt, auto&&... args){
 		std::cout<<vformat(fmt,std::make_format_args(args...));
