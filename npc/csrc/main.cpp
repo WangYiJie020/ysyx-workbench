@@ -85,6 +85,8 @@ extern "C" int pmem_read(int raddr) {
 	return mem[addr>>2];
 }
 extern "C" int fetch_inst(int pc){
+	// cpu before executing instruction at `pc`
+	if(pc==INITIAL_PC-4)return 0;
 	return mem[guest_to_host(pc)>>2];
 }
 extern "C" void pmem_write(int waddr, int wdata, char wmask) {
