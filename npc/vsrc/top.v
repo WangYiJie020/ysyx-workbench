@@ -11,7 +11,7 @@ import "DPI-C" function int fetch_inst(input int pc);
 `define WORD_RANGE [WORD_BITWIDTH-1:0]
 
 parameter int INIT_PC=32'h8000_0000;
-parameter int PC_BEFORE_START=INIT_PC-4;
+parameter int PC_BEFORE_START=INIT_PC;
 
 
 module top(
