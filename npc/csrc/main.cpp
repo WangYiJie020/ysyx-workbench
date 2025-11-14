@@ -77,7 +77,8 @@ extern "C" int pmem_read(int raddr) {
 	uint32_t addr=guest_to_host(raddr);
   	addr&=~0x3u;
 #ifdef TRACE_MEM
-	printf("  $pmem_read try read %08X\n",addr);
+	if(dut.r_mem)
+		printf("  $pmem_read try read %08X\n",addr);
 #endif
 	return mem[addr>>2];
 }
@@ -86,10 +87,11 @@ extern "C" void pmem_write(int waddr, int wdata, char wmask) {
 	// `wmask`中每比特表示`wdata`中1个字节的掩码,
 	// 如`wmask = 0x3`代表只写入最低2个字节, 内存中的其它字节保持不变
 	uint32_t addr=guest_to_host(waddr);
-  	addr&=~0x3u;
+	addr&=~0x3u;
 
 #ifdef TRACE_MEM
-	printf("  $pmem_write try write %08X mask %d data:%08X\n",addr,(int)wmask,wdata);
+	if(dut.w_mem)
+		printf("  $pmem_write try write %08X mask %d data:%08X\n",addr,(int)wmask,wdata);
 #endif
 	
 	uint8_t* p=(uint8_t*)(&mem[addr>>2]);
