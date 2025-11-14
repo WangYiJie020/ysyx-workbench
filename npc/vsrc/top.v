@@ -122,9 +122,9 @@ end
 
     assign r_mem=is_load;
     assign w_mem=(itype==TypeS);
-    always@(safe_maddr)begin
-        $display("Memory access at addr %08X",safe_maddr);
-    end
+    //always@(safe_maddr)begin
+    //    $display("Memory access at addr %08X",safe_maddr);
+    //end
 
     always@(inst)begin
         if(inst==INST_EBREAK)begin
