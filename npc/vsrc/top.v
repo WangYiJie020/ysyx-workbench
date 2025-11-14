@@ -173,7 +173,7 @@ end
         $display("pc %08X nxt_pc %08X",pc,nxt_pc);
     end
 
-    //`define DISPLAY_TRACE
+    `define DISPLAY_TRACE
 
     always@(posedge clk,posedge rst)begin
 
