@@ -47,7 +47,7 @@ module top(
 );
 
 initial begin
-    pc=PC_BEFORE_START;
+    pc=INIT_PC;
 end
 
     wire [WORD_BITWIDTH-1:0] inst=fetch_inst(pc);
@@ -127,7 +127,7 @@ end
         $display("Memory access at addr %08X",safe_maddr);
     end
 
-    always@(*)if(clk)begin
+    always@(*)begin
         if(inst==INST_EBREAK)begin
             raise_break(a0);
         end
