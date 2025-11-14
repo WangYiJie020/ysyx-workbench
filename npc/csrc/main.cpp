@@ -69,6 +69,7 @@ extern "C" int reg_upadted(){
 #define MAGIC_MADDR_IGNORE 0xFFFF1145
 
 extern "C" int pmem_read(int raddr) {
+	puts("pmem_read called");
 	if(raddr==MAGIC_MADDR_IGNORE)return 0xBAADF00D;
 
 	if(!is_running){
@@ -88,10 +89,10 @@ extern "C" int fetch_inst(int pc){
 	// cpu before executing instruction at `pc`
 	printf("fetch_inst at pc=%08X\n",pc);
 	if(pc==INITIAL_PC-4)return 0;
-	return 0;
-//	return mem[guest_to_host(pc)>>2];
+	return mem[guest_to_host(pc)>>2];
 }
 extern "C" void pmem_write(int waddr, int wdata, char wmask) {
+	puts("pmem_write called");
 	// 总是往地址为`waddr & ~0x3u`的4字节按写掩码`wmask`写入`wdata`
 	// `wmask`中每比特表示`wdata`中1个字节的掩码,
 	// 如`wmask = 0x3`代表只写入最低2个字节, 内存中的其它字节保持不变
