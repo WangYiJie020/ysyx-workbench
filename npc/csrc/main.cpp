@@ -77,7 +77,7 @@ extern "C" int pmem_read(int raddr) {
 	uint32_t addr=guest_to_host(raddr);
   	addr&=~0x3u;
 #ifdef TRACE_MEM
-	if(dut.r_mem)
+	if(dut.r_mem&&dut.clk)
 		printf("  $pmem_read try read %08X\n",addr);
 #endif
 	return mem[addr>>2];
