@@ -1,6 +1,6 @@
 import "DPI-C" function void raise_break(input int a0);
 // always read addr & ~0x3u
-//import "DPI-C" function int pmem_read(input int raddr);
+import "DPI-C" function int pmem_read(input int raddr);
 // always Write addr & ~0x3u
 import "DPI-C" function void pmem_write(
   input int waddr, input int wdata, input byte wmask);
@@ -114,18 +114,13 @@ end
     // use MAGIC_ADDR_IGNORE to tell pmem_read to ignore
     assign safe_maddr=is_load?s1pi_addr:`MAGIC_ADDR_IGNORE;
     wire`WORD_RANGE mem_data;
-    assign mem_data=0;//pmem_read(safe_maddr);
+    assign mem_data=pmem_read(safe_maddr);
 
     assign nxt_pc=is_jalr?(s1pi_addr&~1):(pc+4);
     assign wen=(itype!=TypeS)&&(itype!=TypeN);
 
     assign r_mem=is_load;
     assign w_mem=(itype==TypeS);
-
-    always@(safe_maddr,mem_data)begin
-        $display("safe_maddr=%08X mem_data=%08X",safe_maddr,mem_data);
-    end
-
 
     always@(inst)begin
         if(inst==INST_EBREAK)begin
@@ -140,7 +135,7 @@ end
                 end else if(is_arithmetic)begin
                     wdata=alu_res;
                 end else if(is_load)begin
-                    $display("Load data since inst=%08X",inst);
+                    // $display("Load data since inst=%08X",inst);
 
                     case(func3t)
                         // lbu zero ext
