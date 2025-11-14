@@ -115,16 +115,15 @@ end
     // so for non-load instructions
     // use MAGIC_ADDR_IGNORE to tell pmem_read to ignore
     assign safe_maddr=is_load?s1pi_addr:`MAGIC_ADDR_IGNORE;
-    wire`WORD_RANGE mem_data;
 
     assign nxt_pc=is_jalr?(s1pi_addr&~1):(pc+4);
     assign wen=(itype!=TypeS)&&(itype!=TypeN);
 
     assign r_mem=is_load;
     assign w_mem=(itype==TypeS);
-    //always@(safe_maddr)begin
-    //    $display("Memory access at addr %08X",safe_maddr);
-    //end
+    always@(safe_maddr)begin
+        $display("Memory access at addr %08X",safe_maddr);
+    end
 
     always@(*)begin
         if(inst==INST_EBREAK)begin
