@@ -8,6 +8,7 @@ import "DPI-C" function void pmem_write(
 import "DPI-C" function int fetch_inst(input int pc);
 
 `define MAGIC_ADDR_IGNORE 32'hFFFF_1145
+`define WORD_RANGE [WORD_BITWIDTH-1:0]
 
 parameter int INIT_PC=32'h8000_0000;
 parameter int PC_BEFORE_START=INIT_PC-4;
@@ -39,7 +40,8 @@ module top(
     output [7:0] seg6,
     output [7:0] seg7,
 
-    output reg [WORD_BITWIDTH-1:0] pc,
+    output reg `WORD_RANGE pc,
+    output reg [WORD_BITWIDTH-1:0] nxt_pc,
     output w_mem,
     output r_mem
 );
@@ -53,7 +55,7 @@ end
     wire wen;
     wire [3:0] itype;
     wire [WORD_BITWIDTH-1:0] imm,src1,src2,alu_s1,alu_s2,alu_res,a0;
-    reg [WORD_BITWIDTH-1:0] wdata,nxt_pc;
+    reg [WORD_BITWIDTH-1:0] wdata;
     wire [REG_ADDRWIDTH-1:0] rd,rs1,rs2;
 
     wire is_arithmetic, is_load, is_jalr;
