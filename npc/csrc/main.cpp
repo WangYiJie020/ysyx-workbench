@@ -83,7 +83,7 @@ extern "C" int pmem_read(int raddr) {
   	addr&=~0x3u;
 #ifdef TRACE_MEM
 	if(dut.r_mem)
-		printf("  $pmem_read try read %08X\n",addr);
+		printf("  $pmem_read %08X\n",addr);
 #endif
 	return mem[addr>>2];
 }
@@ -103,7 +103,7 @@ extern "C" void pmem_write(int waddr, int wdata, char wmask) {
 
 #ifdef TRACE_MEM
 	if(dut.w_mem)
-		printf("  $pmem_write try write %08X mask %d data:%08X\n",addr,(int)wmask,wdata);
+		printf("  $pmem_write %08X mask %d data:%08X\n",addr,(int)wmask,wdata);
 #endif
 	
 	uint8_t* p=(uint8_t*)(&mem[addr>>2]);
