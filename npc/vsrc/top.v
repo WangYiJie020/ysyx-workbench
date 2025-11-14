@@ -113,6 +113,8 @@ end
     // so for non-load instructions
     // use MAGIC_ADDR_IGNORE to tell pmem_read to ignore
     assign safe_maddr=is_load?s1pi_addr:`MAGIC_ADDR_IGNORE;
+    wire`WORD_RANGE mem_data;
+    assign mem_data=pmem_read(safe_maddr);
 
     assign nxt_pc=is_jalr?(s1pi_addr&~1):(pc+4);
     assign wen=(itype!=TypeS)&&(itype!=TypeN);
@@ -139,13 +141,14 @@ end
                     wdata=alu_res;
                 end else if(is_load)begin
                     $display("Load data since inst=%08X",inst);
+
                     case(func3t)
                         // lbu zero ext
-                        3'b100: wdata={24'b0,pmem_read(safe_maddr)[
+                        3'b100: wdata={24'b0,mem_data[
                             s1pi_addr_unalign_part*8+:8
                         ]};
                         // lw
-                        3'b010: wdata=pmem_read(safe_maddr);
+                        3'b010: wdata=mem_data;
                         default: begin
                             wdata=BADCALL_RESVALUE;
                             $display("(load) UNKNOWN func3t %d",func3t);
