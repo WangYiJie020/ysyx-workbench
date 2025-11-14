@@ -123,7 +123,7 @@ end
     assign w_mem=(itype==TypeS);
 
     always@(safe_maddr,mem_data)begin
-        $display("safe_maddr=%08X mem_data",safe_maddr,mem_data);
+        $display("safe_maddr=%08X mem_data=%08X",safe_maddr,mem_data);
     end
 
 
