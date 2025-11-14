@@ -29,6 +29,7 @@ static TOP_NAME dut;
 
 #define MADDR_BASE 0x80000000u
 #define INITIAL_PC MADDR_BASE
+#define NOP_INST 0x00000013u // addi x0, x0, 0
 
 typedef uint32_t word_t;
 typedef uint32_t addr_t;
@@ -90,7 +91,7 @@ extern "C" int pmem_read(int raddr) {
 extern "C" int fetch_inst(int pc){
 	// cpu before executing instruction at `pc`
 //	printf("fetch_inst at pc=%08X\n",pc);
-	if(pc==INITIAL_PC-4)return 0xBAADF00D;
+	if(pc==INITIAL_PC-4)return NOP_INST;
 	return mem[guest_to_host(pc)>>2];
 }
 extern "C" void pmem_write(int waddr, int wdata, char wmask) {
