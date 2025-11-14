@@ -90,7 +90,7 @@ extern "C" int pmem_read(int raddr) {
 }
 extern "C" int fetch_inst(int pc){
 	// cpu before executing instruction at `pc`
-//	printf("fetch_inst at pc=%08X\n",pc);
+	printf("fetch_inst at pc=%08X\n",pc);
 	if(pc==INITIAL_PC-4)return NOP_INST;
 	return mem[guest_to_host(pc)>>2];
 }
