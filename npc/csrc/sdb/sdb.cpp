@@ -148,6 +148,10 @@ void debuger::_init_cmd_table(){
 }
 
 void debuger::exec_command(string_view cmdline){
+	if(!is_running()){
+		_print("Program is not running. \n");
+		return;
+	}
 	auto ec=exec(_cmd_table,cmdline);
 	if(ec!=invoke_success){
 		_error("{}", ec);

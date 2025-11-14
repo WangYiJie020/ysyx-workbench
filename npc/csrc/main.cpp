@@ -202,9 +202,6 @@ sdb::debuger dbg(
 extern "C" void raise_break(int a0){
 	is_running=false;
 
-	dbg.set_run_state(sdb::run_state::quit);
-	printf("%d\n",dbg.is_running());
-
 	puts("\n--- raise_break called");
 	if(a0==0){
 		puts("HIT GOOD TRAP");
@@ -244,14 +241,14 @@ int main(int argc, char **argv)
 	puts("\n--- Start ---\n");
 	
 	std::string cmd;
-    while(is_running&&dbg.is_running()) {
+	while(dbg.is_running()) {
 		std::cout<<"(sdb) ";
 		std::getline(std::cin,cmd);
 		dbg.exec_command(cmd);
-    }
+		if(dbg.get_state().state==sdb::run_state::quit) {
+			break;
+		}
+	}
 	dut.final();
-
-	puts("\n--- simulation end ---\n");
-
-    return is_good_trap?0:1;
+	return is_good_trap?0:1;
 }
