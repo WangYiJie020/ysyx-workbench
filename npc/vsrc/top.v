@@ -33,7 +33,9 @@ module top(
     output [7:0] seg6,
     output [7:0] seg7,
 
-    output reg [WORD_BITWIDTH-1:0] pc
+    output reg [WORD_BITWIDTH-1:0] pc,
+    output w_mem,
+    output r_mem
 );
 
 initial begin
@@ -113,6 +115,9 @@ end
 
     assign nxt_pc=is_jalr?(s1pi_addr&~1):(pc+4);
     assign wen=(itype!=TypeS)&&(itype!=TypeN);
+
+    assign r_mem=is_load;
+    assign w_mem=(itype==TypeS);
 
 
     always@(*)begin
