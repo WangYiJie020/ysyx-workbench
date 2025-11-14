@@ -53,9 +53,9 @@ void debuger::_dump_iringbuf(){
 				distance(begin(_iringbuf),it),
 				inst.pc);
 		if(it==last)_print(ANSI_FG_YELLOW);
-		_print("{:25} " ANSI_FG_GRAY "(",inst.pc,_disasm(inst));
+		_print("{:25} " ANSI_FG_GRAY "(",_disasm(inst));
 		for(int j=0;j<inst.code.size();j++){
-			if(j)putchar(' ');
+			if(j)_print(" ");
 			_print("{:02X}",inst.code[j]);
 		}
 		_print(")" ANSI_NONE "\n");
