@@ -86,10 +86,12 @@ extern "C" int pmem_read(int raddr) {
 #endif
 	return mem[addr>>2];
 }
+
 extern "C" int fetch_inst(int pc){
 	if(pc==INITIAL_PC-4)return NOP_INST;
 	return mem[guest_to_host(pc)>>2];
 }
+
 extern "C" void pmem_write(int waddr, int wdata, char wmask) {
 	//printf("pmem_write called %08X\n",waddr);
 	// 总是往地址为`waddr & ~0x3u`的4字节按写掩码`wmask`写入`wdata`
