@@ -187,8 +187,10 @@ std::optional<sdb::word_t> get_reg(std::string_view name){
 	return std::nullopt;
 }
 
-word_t sdb_inst_fetcher(sdb::paddr_t pc){
-		return fetch_inst(pc);
+sdb::vlen_inst_code sdb_inst_fetcher(sdb::paddr_t pc){
+		word_t raw = fetch_inst(pc);
+		uint8_t* p = (uint8_t*)&raw;
+		return sdb::vlen_inst_code(p, p + 4);
 }
 
 std::string disasm(sdb::disasmable_inst inst){
@@ -228,6 +230,8 @@ void init_disasm();
 int main(int argc, char **argv)
 {
 	init_disasm();
+
+	dbg.set_inst_fetcher(sdb_inst_fetcher);
 //	pmem_write(0,0x12345678, 0x3);
 //	int res=pmem_read(0);
 //	printf("%X",res);

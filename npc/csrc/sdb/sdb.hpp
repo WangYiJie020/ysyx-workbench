@@ -143,6 +143,10 @@ public:
 			_init_cmd_table();
 		}
 
+	inline void set_inst_fetcher(inst_fetcher f){
+		_fetch_inst=f;
+	}
+
 	const cpu_state& state()const{
 		return _state;
 	}
