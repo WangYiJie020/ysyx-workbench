@@ -45,7 +45,7 @@ module top(
 );
 
 initial begin
-    pc=INIT_PC;
+    pc=PC_BEFORE_START;
 end
 
     wire [WORD_BITWIDTH-1:0] inst=fetch_inst(pc);
