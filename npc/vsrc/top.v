@@ -131,7 +131,7 @@ end
         if(inst==INST_EBREAK)begin
             raise_break(a0);
         end
-        $display("Decode inst %08X @ %08X",inst,pc);
+       // $display("Decode inst %08X @ %08X",inst,pc);
 
         wdata=32'hCDCDCDCD;
         case(itype)
