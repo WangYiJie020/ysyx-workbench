@@ -200,9 +200,12 @@ sdb::debuger dbg(
 );
 
 extern "C" void raise_break(int a0){
+	dbg.state().halt(a0);
+
 	is_running=false;
 
 	puts("\n--- raise_break called");
+
 	if(a0==0){
 		puts("HIT GOOD TRAP");
 		is_good_trap=true;
@@ -241,11 +244,11 @@ int main(int argc, char **argv)
 	puts("\n--- Start ---\n");
 	
 	std::string cmd;
-	while(dbg.is_running()) {
+	while(true){
 		std::cout<<"(sdb) ";
 		std::getline(std::cin,cmd);
 		dbg.exec_command(cmd);
-		if(dbg.get_state().state==sdb::run_state::quit) {
+		if(dbg.state().state==sdb::run_state::quit) {
 			break;
 		}
 	}

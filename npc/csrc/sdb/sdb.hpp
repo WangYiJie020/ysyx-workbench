@@ -60,6 +60,11 @@ struct cpu_state{
 			||(state==run_state::quit);
 		return !good;
 	}
+
+	void halt(uint32_t ret){
+		state=run_state::end;
+		halt_ret=ret;
+	}
 };
 
 	
@@ -138,13 +143,13 @@ public:
 			_init_cmd_table();
 		}
 
-	const cpu_state& get_state()const{
+	const cpu_state& state()const{
+		return _state;
+	}
+	cpu_state& state(){
 		return _state;
 	}
 
-	inline void set_run_state(run_state s){
-		_state.state=s;
-	}
 	inline bool is_running(){
 		return _state.state==run_state::running;
 	}	
