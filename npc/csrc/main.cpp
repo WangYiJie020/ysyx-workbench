@@ -23,7 +23,7 @@ static TOP_NAME dut;
 
 #define USE_NVBOARD 0
 
-//#define TRACE_MEM 
+#define TRACE_MEM 
 
 #define NGPR 32
 
