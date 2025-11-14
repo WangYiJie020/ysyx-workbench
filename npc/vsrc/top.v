@@ -7,6 +7,8 @@ import "DPI-C" function void pmem_write(
 
 import "DPI-C" function int fetch_inst(input int pc);
 
+`define MAGIC_ADDR_IGNORE 32'hFFFF_1145
+
 parameter int INIT_PC=32'h8000_0000;
 
 module top(
@@ -108,11 +110,9 @@ end
     assign s1pi_addr_unalign_part=s1pi_addr[1:0];
 
     // pmem_read is always called
-    // pass pc(a always valid addr)
-    // so
-    // NOTICE!!! mem_read result only meaningful
-    //           when is_load is true
-    assign safe_maddr=is_load?s1pi_addr:pc;
+    // so for non-load instructions
+    // use MAGIC_ADDR_IGNORE to tell pmem_read to ignore
+    assign safe_maddr=is_load?s1pi_addr:`MAGIC_ADDR_IGNORE;
 
 
     assign nxt_pc=is_jalr?(s1pi_addr&~1):(pc+4);

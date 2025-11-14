@@ -66,9 +66,11 @@ extern "C" int reg_upadted(){
 	return 0;
 }
 
-
+#define MAGIC_MADDR_IGNORE 0xFFFF1145
 
 extern "C" int pmem_read(int raddr) {
+	if(raddr==MAGIC_MADDR_IGNORE)return 0xBAADF00D;
+
 	if(!is_running){
 		printf("Warn: read addr %08X when not run, return 0xBAADCA11\n",raddr);
 		return 0xBAADCA11;
