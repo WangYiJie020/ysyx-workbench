@@ -99,6 +99,7 @@ uint64_t expr_t::eval()const{
 
 void debuger::cmd_q(){
 	if(is_running()||!_state.is_bad()){
+		_dump_iringbuf();
 		_state.state=run_state::quit;
 	}
 }
