@@ -122,7 +122,7 @@ end
     assign w_mem=(itype==TypeS);
 
 
-    always@(*)begin
+    always@(inst)begin
         if(inst==INST_EBREAK)begin
             raise_break(a0);
         end
