@@ -23,7 +23,7 @@ static TOP_NAME dut;
 
 #define USE_NVBOARD 0
 
-#define TRACE_MEM 
+//#define TRACE_MEM 
 
 #define NGPR 32
 
@@ -87,7 +87,7 @@ extern "C" int pmem_read(int raddr) {
 }
 extern "C" int fetch_inst(int pc){
 	// cpu before executing instruction at `pc`
-	printf("fetch_inst at pc=%08X\n",pc);
+//	printf("fetch_inst at pc=%08X\n",pc);
 	if(pc==INITIAL_PC-4)return 0;
 	return mem[guest_to_host(pc)>>2];
 }
