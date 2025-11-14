@@ -122,11 +122,11 @@ extern "C" void pmem_write(int waddr, int wdata, char wmask) {
 static void single_cycle() {
 	printf("----- single cycle -----\n");
 	dut.clk=0;dut.eval();
-	printf("clk low eval done\n");
+	printf("** Clock low eval done\n");
 
 //	nvboard_update();
 	dut.clk=1;dut.eval();
-	printf("clk high eval done\n");
+	printf("** Clock high eval done\n");
 #if USE_NVBOARD
 	nvboard_update();
 #endif
