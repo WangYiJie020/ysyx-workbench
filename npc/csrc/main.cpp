@@ -88,7 +88,8 @@ extern "C" int fetch_inst(int pc){
 	// cpu before executing instruction at `pc`
 	printf("fetch_inst at pc=%08X\n",pc);
 	if(pc==INITIAL_PC-4)return 0;
-	return mem[guest_to_host(pc)>>2];
+	return 0;
+//	return mem[guest_to_host(pc)>>2];
 }
 extern "C" void pmem_write(int waddr, int wdata, char wmask) {
 	// 总是往地址为`waddr & ~0x3u`的4字节按写掩码`wmask`写入`wdata`
