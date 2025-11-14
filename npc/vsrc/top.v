@@ -123,6 +123,8 @@ end
 
     assign r_mem=is_load;
     assign w_mem=(itype==TypeS);
+
+    reg `WORD_RANGE mem_rdata;
 //    always@(safe_maddr)begin
 //        $display("Memory access at addr %08X",safe_maddr);
 //    end
@@ -142,14 +144,15 @@ end
                     wdata=alu_res;
                 end else if(is_load)begin
                    // $display("Load data since inst=%08X",inst);
+                    mem_rdata=pmem_read(safe_maddr);
 
                     case(func3t)
                         // lbu zero ext
-                        3'b100: wdata={24'b0,safe_maddr[
+                        3'b100: wdata={24'b0,mem_rdata[
                             s1pi_addr_unalign_part*8+:8
                         ]};
                         // lw
-                        3'b010: wdata=0;//pmem_read(safe_maddr);
+                        3'b010: wdata=mem_rdata;
                         default: begin
                             wdata=BADCALL_RESVALUE;
                             $display("(load) UNKNOWN func3t %d",func3t);
