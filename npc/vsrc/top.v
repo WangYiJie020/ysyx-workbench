@@ -114,7 +114,7 @@ end
     // pmem_read is always called
     // so for non-load instructions
     // use MAGIC_ADDR_IGNORE to tell pmem_read to ignore
-    assign safe_maddr=is_load?s1pi_addr:pc;
+    assign safe_maddr=is_load?s1pi_addr:`MAGIC_ADDR_IGNORE;
     wire`WORD_RANGE mem_data;
     assign mem_data=pmem_read(safe_maddr);
 
@@ -137,7 +137,7 @@ end
                 end else if(is_arithmetic)begin
                     wdata=alu_res;
                 end else if(is_load)begin
-                    $display("Load data since inst=%08X",inst);
+                    // $display("Load data since inst=%08X",inst);
 
                     case(func3t)
                         // lbu zero ext
