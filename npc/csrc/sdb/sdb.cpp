@@ -49,8 +49,11 @@ void debuger::_dump_iringbuf(){
 	auto last=prev(end(_iringbuf));
 	for(auto it=_iringbuf.begin();it!=_iringbuf.end();++it){
 		auto inst=*it;
+		_print("[" ANSI_FG_CYAN "{:02}" ANSI_NONE "] {:08X} ",
+				distance(begin(_iringbuf),it),
+				inst.pc);
 		if(it==last)_print(ANSI_FG_YELLOW);
-		_print("{:08X}: {:25} " ANSI_FG_GRAY "(",inst.pc,_disasm(inst));
+		_print("{:25} " ANSI_FG_GRAY "(",inst.pc,_disasm(inst));
 		for(int j=0;j<inst.code.size();j++){
 			if(j)putchar(' ');
 			_print("{:02X}",inst.code[j]);
