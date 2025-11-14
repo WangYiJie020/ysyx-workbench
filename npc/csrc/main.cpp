@@ -187,8 +187,8 @@ std::optional<sdb::word_t> get_reg(std::string_view name){
 	return std::nullopt;
 }
 
-word_t fetch_inst(sdb::paddr_t pc){
-		return pmem_read(pc);
+word_t sdb_inst_fetcher(sdb::paddr_t pc){
+		return fetch_inst(pc);
 }
 
 std::string disasm(sdb::disasmable_inst inst){
