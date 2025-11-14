@@ -204,15 +204,14 @@ extern "C" void raise_break(int a0){
 
 	is_running=false;
 
-	puts("\n--- raise_break called");
-
 	if(a0==0){
-		puts("HIT GOOD TRAP");
+		printf("HIT GOOD TRAP");
 		is_good_trap=true;
 	}
 	else{
-	   	puts("HIT BAD TRAP");
+	  printf("HIT BAD TRAP");
 	}
+	printf("at PC = %08x\n",dut.pc);
 }
 
 void init_disasm();

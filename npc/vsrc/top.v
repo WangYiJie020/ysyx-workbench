@@ -117,7 +117,6 @@ end
 
     always@(*)begin
         if(inst==INST_EBREAK)begin
-            $display("--> @[0x%08X]: ebreak",pc);
             raise_break(a0);
         end
 
