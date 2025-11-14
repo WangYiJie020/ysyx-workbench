@@ -45,7 +45,7 @@ module top(
 );
 
 initial begin
-    pc=INIT_PC;
+    pc=PC_BEFORE_START;
 end
 
     wire [WORD_BITWIDTH-1:0] inst=fetch_inst(pc);
@@ -192,7 +192,7 @@ end
     `endif
 
         if(rst)begin
-            pc<=INIT_PC;
+            pc<=PC_BEFORE_START;
         end else begin
             pc<=nxt_pc;
         end
