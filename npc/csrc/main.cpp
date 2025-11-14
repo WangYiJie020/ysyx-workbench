@@ -255,7 +255,7 @@ int main(int argc, char **argv)
     nvboard_init();
 #endif
 
-    reset(10);
+  //  reset(10);
 
 	puts("\n--- Start ---\n");
 	
