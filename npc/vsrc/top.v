@@ -114,7 +114,7 @@ end
     // use MAGIC_ADDR_IGNORE to tell pmem_read to ignore
     assign safe_maddr=is_load?s1pi_addr:`MAGIC_ADDR_IGNORE;
     wire`WORD_RANGE mem_data;
-    assign mem_data=pmem_read(safe_maddr);
+    assign mem_data=0;//pmem_read(safe_maddr);
 
     assign nxt_pc=is_jalr?(s1pi_addr&~1):(pc+4);
     assign wen=(itype!=TypeS)&&(itype!=TypeN);
