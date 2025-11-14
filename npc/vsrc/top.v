@@ -137,7 +137,7 @@ end
                     //$display("Load data since inst=%08X",inst);
                     case(func3t)
                         // lbu zero ext
-                        3'b100: wdata={24'b0,pmem_read(0)[
+                        3'b100: wdata={24'b0,pmem_read(safe_maddr)[
                             s1pi_addr_unalign_part*8+:8
                         ]};
                         // lw
