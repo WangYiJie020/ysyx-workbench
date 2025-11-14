@@ -127,7 +127,7 @@ end
         $display("Memory access at addr %08X",safe_maddr);
     end
 
-    always@(*)begin
+    always@(*)if(clk)begin
         if(inst==INST_EBREAK)begin
             raise_break(a0);
         end
