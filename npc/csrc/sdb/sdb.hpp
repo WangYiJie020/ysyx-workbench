@@ -60,11 +60,6 @@ struct cpu_state{
 			||(state==run_state::quit);
 		return !good;
 	}
-
-	void halt(uint32_t ret){
-		state=run_state::end;
-		halt_ret=ret;
-	}
 };
 
 	
@@ -143,27 +138,19 @@ public:
 			_init_cmd_table();
 		}
 
-	inline void set_inst_fetcher(inst_fetcher f){
-		_fetch_inst=f;
-	}
-
-	const cpu_state& state()const{
-		return _state;
-	}
-	cpu_state& state(){
+	const cpu_state& get_state()const{
 		return _state;
 	}
 
+	inline void set_run_state(run_state s){
+		_state.state=s;
+	}
 	inline bool is_running(){
 		return _state.state==run_state::running;
 	}	
 
 	inline void cmd_c(){cmd_si(-1);}
 	inline void cmd_si(size_t n=1){
-		if(_state.state==run_state::end||_state.state==run_state::quit){
-			_error("Program has ended. Cannot execuate.");
-			return;
-		}
 		for(;n>0&&is_running();n--)_step_one();
 	}
 
