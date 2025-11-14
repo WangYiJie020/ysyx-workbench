@@ -170,7 +170,7 @@ static long load_img() {
 
 sdb::paddr_t cpu_exec_once(){
 	single_cycle();
-	return dut.pc;
+	return dut.nxt_pc;
 }
 uint8_t addr_readbyte(sdb::paddr_t addr){
 	return pmem_read(addr)>>((addr&0x3)*8);
