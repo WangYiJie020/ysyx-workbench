@@ -34,7 +34,7 @@ typedef uint32_t word_t;
 typedef uint32_t addr_t;
 
 word_t guest_to_host(word_t addr){
-//	printf("raw addr %08X\n",addr);
+	printf("raw addr %08X\n",addr);
 	assert(addr>=MADDR_BASE);
 	word_t res= addr - MADDR_BASE;
 	return res;
