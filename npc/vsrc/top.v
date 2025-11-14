@@ -145,11 +145,11 @@ end
 
                     case(func3t)
                         // lbu zero ext
-                        3'b100: wdata={24'b0,pmem_read(safe_maddr)[
+                        3'b100: wdata={24'b0,safe_maddr[
                             s1pi_addr_unalign_part*8+:8
                         ]};
                         // lw
-                        3'b010: wdata=pmem_read(safe_maddr);
+                        3'b010: wdata=0;//pmem_read(safe_maddr);
                         default: begin
                             wdata=BADCALL_RESVALUE;
                             $display("(load) UNKNOWN func3t %d",func3t);
