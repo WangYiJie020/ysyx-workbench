@@ -120,7 +120,7 @@ end
     assign r_mem=is_load;
     assign w_mem=(itype==TypeS);
 
-    always@(*)begin
+    always@(safe_maddr)begin
         $display("safe_maddr=%08X",safe_maddr);
     end
 
