@@ -1,6 +1,6 @@
 import "DPI-C" function void raise_break(input int a0);
 // always read addr & ~0x3u
-import "DPI-C" function int pmem_read(input int raddr);
+//import "DPI-C" function int pmem_read(input int raddr);
 // always Write addr & ~0x3u
 import "DPI-C" function void pmem_write(
   input int waddr, input int wdata, input byte wmask);
