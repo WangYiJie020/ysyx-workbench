@@ -171,7 +171,7 @@ end
             default:;
 
         endcase
-        $display("pc %08X nxt_pc %08X",pc,nxt_pc);
+        //$display("pc %08X nxt_pc %08X",pc,nxt_pc);
     end
 
 //    `define DISPLAY_TRACE
