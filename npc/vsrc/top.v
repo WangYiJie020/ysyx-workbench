@@ -135,6 +135,7 @@ end
                     wdata=alu_res;
                 end else if(is_load)begin
                     $display("Load data since inst=%08X",inst);
+                    $display(" Load addr %08X",safe_maddr);
                     case(func3t)
                         // lbu zero ext
                         3'b100: wdata={24'b0,pmem_read(safe_maddr)[
