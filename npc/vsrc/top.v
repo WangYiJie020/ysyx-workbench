@@ -10,6 +10,7 @@ import "DPI-C" function int fetch_inst(input int pc);
 `define MAGIC_ADDR_IGNORE 32'hFFFF_1145
 
 parameter int INIT_PC=32'h8000_0000;
+parameter int PC_BEFORE_START=INIT_PC-4;
 
 
 module top(
@@ -44,10 +45,10 @@ module top(
 );
 
 initial begin
-    pc=0;
+    pc=INIT_PC;
 end
 
-    wire [WORD_BITWIDTH-1:0] inst=pc==0?0:fetch_inst(pc);
+    wire [WORD_BITWIDTH-1:0] inst=fetch_inst(pc);
 
     wire wen;
     wire [3:0] itype;
