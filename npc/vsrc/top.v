@@ -44,10 +44,10 @@ module top(
 );
 
 initial begin
-    pc=INIT_PC;
+    pc=0;
 end
 
-    wire [WORD_BITWIDTH-1:0] inst=fetch_inst(pc);
+    wire [WORD_BITWIDTH-1:0] inst=pc==0?0:fetch_inst(pc);
 
     wire wen;
     wire [3:0] itype;
