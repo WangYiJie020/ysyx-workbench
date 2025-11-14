@@ -23,12 +23,13 @@ static TOP_NAME dut;
 
 #define USE_NVBOARD 0
 
-//#define TRACE_MEM 
+#define TRACE_MEM 
 
 #define NGPR 32
 
 #define MADDR_BASE 0x80000000u
 #define INITIAL_PC MADDR_BASE
+#define NOP_INST 0x00000013u // addi x0, x0, 0
 
 typedef uint32_t word_t;
 typedef uint32_t addr_t;
@@ -66,9 +67,12 @@ extern "C" int reg_upadted(){
 	return 0;
 }
 
-
+#define MAGIC_MADDR_IGNORE 0xFFFF1145
 
 extern "C" int pmem_read(int raddr) {
+	//printf("pmem_read called %08X\n",raddr);
+	if(raddr==MAGIC_MADDR_IGNORE)return 0xBAADF00D;
+
 	if(!is_running){
 		printf("Warn: read addr %08X when not run, return 0xBAADCA11\n",raddr);
 		return 0xBAADCA11;
@@ -77,19 +81,28 @@ extern "C" int pmem_read(int raddr) {
 	uint32_t addr=guest_to_host(raddr);
   	addr&=~0x3u;
 #ifdef TRACE_MEM
-	printf("  $pmem_read try read %08X\n",addr);
+	if(dut.r_mem)
+		printf("  $pmem_read %08X\n",raddr);
 #endif
 	return mem[addr>>2];
 }
+
+extern "C" int fetch_inst(int pc){
+	if(pc==INITIAL_PC-4)return NOP_INST;
+	return mem[guest_to_host(pc)>>2];
+}
+
 extern "C" void pmem_write(int waddr, int wdata, char wmask) {
+	//printf("pmem_write called %08X\n",waddr);
 	// 总是往地址为`waddr & ~0x3u`的4字节按写掩码`wmask`写入`wdata`
 	// `wmask`中每比特表示`wdata`中1个字节的掩码,
 	// 如`wmask = 0x3`代表只写入最低2个字节, 内存中的其它字节保持不变
 	uint32_t addr=guest_to_host(waddr);
-  	addr&=~0x3u;
+	addr&=~0x3u;
 
 #ifdef TRACE_MEM
-	printf("  $pmem_write try write %08X mask %d data:%08X\n",addr,(int)wmask,wdata);
+	if(dut.w_mem)
+		printf("  $pmem_write %08X mask %d data:%08X\n",waddr,(int)wmask,wdata);
 #endif
 	
 	uint8_t* p=(uint8_t*)(&mem[addr>>2]);
@@ -105,12 +118,20 @@ extern "C" void pmem_write(int waddr, int wdata, char wmask) {
 }
 
 static void single_cycle() {
-    dut.clk=0;dut.eval();
-//	nvboard_update();
 
-//	if(!dut.rst)printf("@ pc [%08X]:\n",dut.pc);
+#ifdef TRACE_SINGLE_CYCLE
+	printf("----- single cycle -----\n");
+#endif
+	dut.clk=0;dut.eval();
+#ifdef  TRACE_SINGLE_CYCLE
+	printf("** Clock low eval done\n");
+#endif
 
-    dut.clk=1;dut.eval();
+	dut.clk=1;dut.eval();
+
+#ifdef  TRACE_SINGLE_CYCLE
+	printf("** Clock high eval done\n");
+#endif
 #if USE_NVBOARD
 	nvboard_update();
 #endif
@@ -156,7 +177,7 @@ static long load_img() {
 
 sdb::paddr_t cpu_exec_once(){
 	single_cycle();
-	return dut.pc;
+	return dut.nxt_pc;
 }
 uint8_t addr_readbyte(sdb::paddr_t addr){
 	return pmem_read(addr)>>((addr&0x3)*8);
@@ -180,8 +201,10 @@ std::optional<sdb::word_t> get_reg(std::string_view name){
 	return std::nullopt;
 }
 
-word_t fetch_inst(sdb::paddr_t pc){
-		return pmem_read(pc);
+sdb::vlen_inst_code sdb_inst_fetcher(sdb::paddr_t pc){
+		word_t raw = fetch_inst(pc);
+		uint8_t* p = (uint8_t*)&raw;
+		return sdb::vlen_inst_code(p, p + 4);
 }
 
 std::string disasm(sdb::disasmable_inst inst){
@@ -200,25 +223,29 @@ sdb::debuger dbg(
 );
 
 extern "C" void raise_break(int a0){
+	dbg.state().halt(a0);
+
 	is_running=false;
+#define ANSI_FG_RED     "\33[1;31m"
+#define ANSI_FG_GREEN   "\33[1;32m"
+#define ANSI_NONE       "\33[0m"
 
-	dbg.set_run_state(sdb::run_state::quit);
-	printf("%d\n",dbg.is_running());
-
-	puts("\n--- raise_break called");
 	if(a0==0){
-		puts("HIT GOOD TRAP");
+		printf(ANSI_FG_GREEN "HIT GOOD TRAP" ANSI_NONE);
 		is_good_trap=true;
 	}
 	else{
-	   	puts("HIT BAD TRAP");
+		printf(ANSI_FG_RED "HIT BAD TRAP" ANSI_NONE);
 	}
+	printf(" at pc = 0x%08x\n",dut.pc);
 }
 
 void init_disasm();
 int main(int argc, char **argv)
 {
 	init_disasm();
+
+	dbg.set_inst_fetcher(sdb_inst_fetcher);
 //	pmem_write(0,0x12345678, 0x3);
 //	int res=pmem_read(0);
 //	printf("%X",res);
@@ -239,19 +266,19 @@ int main(int argc, char **argv)
     nvboard_init();
 #endif
 
-//    reset(10);
+  reset(10);
 
 	puts("\n--- Start ---\n");
 	
 	std::string cmd;
-    while(is_running&&dbg.is_running()) {
+	while(true){
 		std::cout<<"(sdb) ";
 		std::getline(std::cin,cmd);
 		dbg.exec_command(cmd);
-    }
+		if(dbg.state().state==sdb::run_state::quit) {
+			break;
+		}
+	}
 	dut.final();
-
-	puts("\n--- simulation end ---\n");
-
-    return is_good_trap?0:1;
+	return is_good_trap?0:1;
 }

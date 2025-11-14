@@ -5,7 +5,14 @@ import "DPI-C" function int pmem_read(input int raddr);
 import "DPI-C" function void pmem_write(
   input int waddr, input int wdata, input byte wmask);
 
+import "DPI-C" function int fetch_inst(input int pc);
+
+`define MAGIC_ADDR_IGNORE 32'hFFFF_1145
+`define WORD_RANGE [WORD_BITWIDTH-1:0]
+
 parameter int INIT_PC=32'h8000_0000;
+parameter int PC_BEFORE_START=INIT_PC-4;
+
 
 module top(
     input clk,
@@ -33,19 +40,22 @@ module top(
     output [7:0] seg6,
     output [7:0] seg7,
 
-    output reg [WORD_BITWIDTH-1:0] pc
+    output reg `WORD_RANGE pc,
+    output reg [WORD_BITWIDTH-1:0] nxt_pc,
+    output w_mem,
+    output r_mem
 );
 
 initial begin
-    pc=INIT_PC;
+    pc=PC_BEFORE_START;
 end
 
-    wire [WORD_BITWIDTH-1:0] inst=pmem_read(pc);
+    wire [WORD_BITWIDTH-1:0] inst=fetch_inst(pc);
 
     wire wen;
     wire [3:0] itype;
     wire [WORD_BITWIDTH-1:0] imm,src1,src2,alu_s1,alu_s2,alu_res,a0;
-    reg [WORD_BITWIDTH-1:0] wdata,nxt_pc;
+    reg [WORD_BITWIDTH-1:0] wdata;
     wire [REG_ADDRWIDTH-1:0] rd,rs1,rs2;
 
     wire is_arithmetic, is_load, is_jalr;
@@ -104,22 +114,26 @@ end
     assign s1pi_addr_unalign_part=s1pi_addr[1:0];
 
     // pmem_read is always called
-    // pass pc(a always valid addr)
-    // so
-    // NOTICE!!! mem_read result only meaningful
-    //           when is_load is true
-    assign safe_maddr=is_load?s1pi_addr:pc;
-
+    // so for non-load instructions
+    // use MAGIC_ADDR_IGNORE to tell pmem_read to ignore
+    assign safe_maddr=is_load?s1pi_addr:`MAGIC_ADDR_IGNORE;
 
     assign nxt_pc=is_jalr?(s1pi_addr&~1):(pc+4);
     assign wen=(itype!=TypeS)&&(itype!=TypeN);
 
+    assign r_mem=is_load;
+    assign w_mem=(itype==TypeS);
 
-    always@(*)begin
+    reg `WORD_RANGE mem_rdata;
+//    always@(safe_maddr)begin
+//        $display("Memory access at addr %08X",safe_maddr);
+//    end
+
+    always@(*) begin
         if(inst==INST_EBREAK)begin
-            $display("--> @[0x%08X]: ebreak",pc);
             raise_break(a0);
         end
+       // $display("Decode inst %08X @ %08X",inst,pc);
 
         wdata=32'hCDCDCDCD;
         case(itype)
@@ -129,14 +143,16 @@ end
                 end else if(is_arithmetic)begin
                     wdata=alu_res;
                 end else if(is_load)begin
-                    //$display("Load data since inst=%08X",inst);
+                   // $display("Load data since inst=%08X",inst);
+                    mem_rdata=pmem_read(safe_maddr);
+
                     case(func3t)
                         // lbu zero ext
-                        3'b100: wdata={24'b0,pmem_read(safe_maddr)[
+                        3'b100: wdata={24'b0,mem_rdata[
                             s1pi_addr_unalign_part*8+:8
                         ]};
                         // lw
-                        3'b010: wdata=pmem_read(safe_maddr);
+                        3'b010: wdata=mem_rdata;
                         default: begin
                             wdata=BADCALL_RESVALUE;
                             $display("(load) UNKNOWN func3t %d",func3t);
@@ -158,8 +174,10 @@ end
             default:;
 
         endcase
-//        $display("pc %08X nxt_pc %08X",pc,nxt_pc);
+        //$display("pc %08X nxt_pc %08X",pc,nxt_pc);
     end
+
+//    `define DISPLAY_TRACE
 
     always@(posedge clk,posedge rst)begin
 
@@ -177,9 +195,8 @@ end
         if(wen)$display("update r%d <- %08X(%d)",rd,wdata,wdata);
     `endif
 
-
         if(rst)begin
-            pc<=INIT_PC;
+            pc<=PC_BEFORE_START;
         end else begin
             pc<=nxt_pc;
         end
