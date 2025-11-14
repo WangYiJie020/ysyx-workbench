@@ -156,6 +156,10 @@ public:
 
 	inline void cmd_c(){cmd_si(-1);}
 	inline void cmd_si(size_t n=1){
+		if(_state.state==run_state::end||_state.state==run_state::quit){
+			_error("Program has ended. Cannot execuate.");
+			return;
+		}
 		for(;n>0&&is_running();n--)_step_one();
 	}
 
