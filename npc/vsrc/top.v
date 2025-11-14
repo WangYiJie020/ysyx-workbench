@@ -11,6 +11,7 @@ import "DPI-C" function int fetch_inst(input int pc);
 
 parameter int INIT_PC=32'h8000_0000;
 
+
 module top(
     input clk,
     input rst,
