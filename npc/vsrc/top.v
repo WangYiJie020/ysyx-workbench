@@ -123,15 +123,15 @@ end
 
     assign r_mem=is_load;
     assign w_mem=(itype==TypeS);
-    always@(safe_maddr)begin
-        $display("Memory access at addr %08X",safe_maddr);
-    end
+//    always@(safe_maddr)begin
+//        $display("Memory access at addr %08X",safe_maddr);
+//    end
 
     always@(*) begin
         if(inst==INST_EBREAK)begin
             raise_break(a0);
         end
-        $display("Decode inst %08X @ %08X",inst,pc);
+//        $display("Decode inst %08X @ %08X",inst,pc);
 
         wdata=32'hCDCDCDCD;
         case(itype)
