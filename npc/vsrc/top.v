@@ -131,7 +131,7 @@ end
         if(inst==INST_EBREAK)begin
             raise_break(a0);
         end
-        $display("Decode inst %08X @ %08X",inst,pc);
+//        $display("Decode inst %08X @ %08X",inst,pc);
 
         wdata=32'hCDCDCDCD;
         case(itype)
@@ -149,7 +149,7 @@ end
                             s1pi_addr_unalign_part*8+:8
                         ]};
                         // lw
-                        //3'b010: wdata=pmem_read(safe_maddr);
+                        3'b010: wdata=pmem_read(safe_maddr);
                         default: begin
                             wdata=BADCALL_RESVALUE;
                             $display("(load) UNKNOWN func3t %d",func3t);
