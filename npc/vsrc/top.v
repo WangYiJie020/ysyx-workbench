@@ -120,12 +120,15 @@ end
     assign r_mem=is_load;
     assign w_mem=(itype==TypeS);
 
+    always@(*)begin
+        $display("safe_maddr=%08X",safe_maddr);
+    end
+
 
     always@(inst)begin
         if(inst==INST_EBREAK)begin
             raise_break(a0);
         end
-                    $display(" Load addr %08X",safe_maddr);
 
         wdata=32'hCDCDCDCD;
         case(itype)
@@ -182,7 +185,6 @@ end
 
         if(wen)$display("update r%d <- %08X(%d)",rd,wdata,wdata);
     `endif
-
 
         if(rst)begin
             pc<=INIT_PC;
