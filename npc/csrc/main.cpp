@@ -203,15 +203,18 @@ extern "C" void raise_break(int a0){
 	dbg.state().halt(a0);
 
 	is_running=false;
+#define ANSI_FG_RED     "\33[1;31m"
+#define ANSI_FG_GREEN   "\33[1;32m"
+#define ANSI_NONE       "\33[0m"
 
 	if(a0==0){
-		printf("HIT GOOD TRAP");
+		printf(ANSI_FG_GREEN "HIT GOOD TRAP" ANSI_NONE);
 		is_good_trap=true;
 	}
 	else{
-	  printf("HIT BAD TRAP");
+		printf(ANSI_FG_RED "HIT BAD TRAP" ANSI_NONE);
 	}
-	printf("at PC = %08x\n",dut.pc);
+	printf(" at pc = %08x\n",dut.pc);
 }
 
 void init_disasm();
