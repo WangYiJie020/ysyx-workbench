@@ -214,7 +214,7 @@ extern "C" void raise_break(int a0){
 	else{
 		printf(ANSI_FG_RED "HIT BAD TRAP" ANSI_NONE);
 	}
-	printf(" at pc = %08x\n",dut.pc);
+	printf(" at pc = 0x%08x\n",dut.pc);
 }
 
 void init_disasm();
