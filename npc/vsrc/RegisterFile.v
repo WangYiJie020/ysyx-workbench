@@ -15,11 +15,6 @@ module RegisterFile #(ADDR_WIDTH = 1, DATA_WIDTH = 1) (
   assign rdata2=(raddr2!=0)?rf[raddr2]:0;
   assign a0=rf[10];
 
-  function int read_reg(int idx);
-      read_reg=rf[idx];
-  endfunction
-
-
   always @(posedge clk) begin
       if (wen)begin
           reg_upadted({27'b0,waddr}, wdata);
