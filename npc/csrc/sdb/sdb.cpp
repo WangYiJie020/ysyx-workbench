@@ -29,7 +29,7 @@ struct std::formatter<errc> : formatter<std::string> {
 void debuger::_dump_inst(const disasmable_inst& inst,bool highlight_disasm){
 	_print(ANSI_FG_GRAY "0x{:08X}: {}{:25} " ANSI_FG_GRAY "(",
 			inst.pc,
-			highlight_disasm?ANSI_FG_YELLOW:ANSI_NONE,
+			highlight_disasm?ANSI_FG_CYAN:ANSI_NONE,
 			_disasm(inst));
 	for(int j=0;j<inst.code.size();j++){
 		if(j) _print(" ");
