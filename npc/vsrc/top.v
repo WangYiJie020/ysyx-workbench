@@ -46,10 +46,6 @@ module top(
     output r_mem
 );
 
-initial begin
-    pc=PC_BEFORE_START;
-end
-
     wire [WORD_BITWIDTH-1:0] inst=fetch_inst(pc);
 
     wire wen;
