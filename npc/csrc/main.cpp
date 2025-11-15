@@ -242,7 +242,7 @@ void init_disasm();
 int main(int argc, char **argv)
 {
 	init_disasm();
-	std::fstream f("/home/wuser/ysyx-workbench/am-kernels/kernels/hello/build/hello-riscv32-nemu.bin",std::ios::in|std::ios::binary);
+	std::fstream f("/home/wuser/ysyx-workbench/am-kernels/tests/cpu-tests/build/bubble-sort-minirv-npc.elf",std::ios::in|std::ios::binary);
 	ElfHandler elf_fh(f);
 	elf_fh.dump_func_syms();
 
