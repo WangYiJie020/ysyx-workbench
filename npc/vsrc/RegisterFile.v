@@ -17,14 +17,12 @@ module RegisterFile #(ADDR_WIDTH = 1, DATA_WIDTH = 1) (
 
   always@(*)begin
       if(wen)begin
-          $display("* RegFile: Write r%d <= %08X %d",waddr,wdata,wdata);
+          reg_upadted({27'b0,waddr}, wdata);
       end
   end
 
   always @(posedge clk) begin
       if (wen)begin
-          $display("RegFile: Write r%d <= %08X %d",waddr,wdata,wdata);
-          reg_upadted({27'b0,waddr}, wdata);
           rf[waddr] <= wdata;
         end
     if(dump_info)begin
