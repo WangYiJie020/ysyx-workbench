@@ -20,8 +20,9 @@ struct sdb::_impl::difftest_imp{
 	ref_difftest_regcpy_t ref_regcpy=nullptr;
 	ref_difftest_exec_t ref_exec=nullptr;
 
-	void _meta_load(auto fn, const char* name){
-		fn=(decltype(fn))dlsym(handle, name);
+	template<typename Fn>
+	void _meta_load(Fn& fn, const char* name){
+		fn=(Fn)dlsym(handle, name);
 		if(!fn)
 			throw runtime_error(format("load {} failed: {}", name, dlerror()));
 	}
