@@ -29,7 +29,7 @@ module RegisterFile #(ADDR_WIDTH = 1, DATA_WIDTH = 1) (
   always @(posedge clk) begin
       if (wen)begin
           $display("Write Reg: r%d <= %08X %d",waddr,wdata,wdata);
-          rf[waddr] <= wdata;
+//          rf[waddr] <= wdata;
         end
     if(dump_info)begin
         for(integer i=0;i<2**ADDR_WIDTH;i=i+1)begin
