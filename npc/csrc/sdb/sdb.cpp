@@ -120,9 +120,9 @@ uint64_t expr_t::eval()const{
 }
 
 void debuger::cmd_q(){
-	if(is_running()||!_state.is_bad()){
-		_dump_iringbuf();
-		_state.state=run_state::quit;
+	_state.state=run_state::quit;
+	if(_state.is_bad()){
+		_error("Program exited with bad state. pc = 0x{:08x}", _state.pc);
 	}
 }
 

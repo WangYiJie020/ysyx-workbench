@@ -118,9 +118,9 @@ module alu(
 always@(*)begin
     case(func3t)
         3'b000:begin
-            if(is_imm)res=src1+src2;
+            if(is_imm)res=src1-src2;
             else begin
-                if(func7t==7'b0)res=src1-src2;
+                if(func7t==7'b0)res=src1+src2;
                 else begin
                     res=BADCALL_RESVALUE;
                     if(en)$display("(alu) UNKNOWN func7t %d",func7t);

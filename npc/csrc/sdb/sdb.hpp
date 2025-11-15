@@ -224,6 +224,11 @@ public:
 		for(;n>0&&is_running();n--)_step_one();
 	}
 
+	inline void abort(){
+		_state.abort();
+		_dump_iringbuf();
+	}
+
 	void cmd_q();
 	void cmd_info(std::string_view);
 	void cmd_x(size_t N,expr_t addr);
