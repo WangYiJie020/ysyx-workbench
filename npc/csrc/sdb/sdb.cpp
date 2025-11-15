@@ -103,7 +103,9 @@ void debuger::_step_one(){
 			_trace_handler_f(inst);
 		}
 	}
+	auto oldpc= _state.pc;
 	_state.pc = _exec();	
+	_difftest_step(oldpc, _state.pc);
 }
 
 uint64_t expr_t::eval()const{
