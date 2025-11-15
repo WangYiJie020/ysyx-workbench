@@ -24,6 +24,7 @@ struct sdb::_impl::difftest_imp{
 		fn=(decltype(fn))dlsym(handle, name);
 		if(!fn)
 			throw runtime_error(format("load {} failed: {}", name, dlerror()));
+		printf("Difftest load symbol %s at %p\n",name,(void*)fn);
 	}
 
 
