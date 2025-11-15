@@ -40,9 +40,10 @@ void debuger::_dump_inst(const disasmable_inst& inst,bool highlight_disasm){
 
 void debuger::_dump_iringbuf(){
 	auto last=prev(end(_iringbuf));
+	_print(ANSI_FG_YELLOW "==== recent instructions ====\n" ANSI_NONE);
 	for(auto it=_iringbuf.begin();it!=_iringbuf.end();++it){
 		auto inst=*it;
-		_print("[{}{:02}" ANSI_NONE "] ",
+		_print("[{}-{:02}" ANSI_NONE "] ",
 			it==last?ANSI_FG_RED:ANSI_FG_CYAN,
 				distance(it,end(_iringbuf))-1);
 		_dump_inst(inst,it==last);
