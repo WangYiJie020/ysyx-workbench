@@ -1,26 +1,7 @@
 #include "sdb.hpp"
 #include <assert.h>
 
-#define ANSI_FG_BLACK   "\33[1;30m"
-#define ANSI_FG_RED     "\33[1;31m"
-#define ANSI_FG_GREEN   "\33[1;32m"
-#define ANSI_FG_YELLOW  "\33[1;33m"
-#define ANSI_FG_BLUE    "\33[1;34m"
-#define ANSI_FG_MAGENTA "\33[1;35m"
-#define ANSI_FG_CYAN    "\33[1;36m"
-#define ANSI_FG_WHITE   "\33[1;37m"
-#define ANSI_BG_BLACK   "\33[1;40m"
-#define ANSI_BG_RED     "\33[1;41m"
-#define ANSI_BG_GREEN   "\33[1;42m"
-#define ANSI_BG_YELLOW  "\33[1;43m"
-#define ANSI_BG_BLUE    "\33[1;44m"
-#define ANSI_BG_MAGENTA "\33[1;45m"
-#define ANSI_BG_CYAN    "\33[1;46m"
-#define ANSI_BG_WHITE   "\33[1;47m"
-#define ANSI_NONE       "\33[0m"
-
-#define ANSI_FG_GRAY 		"\033[90m" // light black
-
+#include "ansi_col.h"
 
 using namespace std;
 using namespace sdb;
@@ -45,20 +26,27 @@ struct std::formatter<errc> : formatter<std::string> {
     }
 };
 
+void debuger::_dump_inst(const disasmable_inst& inst,bool highlight_disasm){
+	_print(ANSI_FG_GRAY "0x{:08X}: {}{:25} " ANSI_FG_GRAY "(",
+			inst.pc,
+			highlight_disasm?ANSI_FG_RED:ANSI_NONE,
+			_disasm(inst));
+	for(int j=0;j<inst.code.size();j++){
+		if(j) _print(" ");
+		_print("{:02X}",inst.code[j]);
+	}
+	_print(")" ANSI_NONE "\n");
+}
+
 void debuger::_dump_iringbuf(){
 	auto last=prev(end(_iringbuf));
+	_print(ANSI_FG_YELLOW "==== recent instructions ====\n" ANSI_NONE);
 	for(auto it=_iringbuf.begin();it!=_iringbuf.end();++it){
 		auto inst=*it;
-		_print("[" ANSI_FG_CYAN "{:02}" ANSI_NONE "] {:08X} ",
-				distance(it,end(_iringbuf))-1,
-				inst.pc);
-		if(it==last)_print(ANSI_FG_YELLOW);
-		_print("{:25} " ANSI_FG_GRAY "(",_disasm(inst));
-		for(int j=0;j<inst.code.size();j++){
-			if(j)_print(" ");
-			_print("{:02X}",inst.code[j]);
-		}
-		_print(")" ANSI_NONE "\n");
+		_print("[{}{:02}" ANSI_NONE "] ",
+			it==last?ANSI_FG_RED:ANSI_FG_CYAN,
+				distance(it,end(_iringbuf))-1);
+		_dump_inst(inst,it==last);
 	}
 }
 
@@ -110,7 +98,7 @@ void debuger::_trace_handler_f(const disasmable_inst& inst){
 void debuger::_step_one(){
 	if constexpr (_ENABLE_ITRACE){
 		auto inst=_fetch_dinst(_state.pc);
-//		_print("{:08X}: {}\n",inst.pc,_disasm(inst));
+		_dump_inst(inst);
 		_iringbuf.push(std::move(inst));
 		if constexpr (_ENABLE_FTRACE){
 			_trace_handler_f(inst);
