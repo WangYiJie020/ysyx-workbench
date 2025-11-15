@@ -116,7 +116,7 @@ class debuger{
 	int _func_depth=0;
 
 	constexpr static bool
-	 	_ENABLE_ITRACE=true,
+	 	_ENABLE_ITRACE=0,
 		_ENABLE_FTRACE=true;
 	
 	using fmt_str=std::string_view;
