@@ -1,3 +1,4 @@
+import "DPI-C" function void reg_upadted(input int idx, input int data);
 module RegisterFile #(ADDR_WIDTH = 1, DATA_WIDTH = 1) (
   input clk,
   input [ADDR_WIDTH-1:0] waddr,
@@ -18,12 +19,10 @@ module RegisterFile #(ADDR_WIDTH = 1, DATA_WIDTH = 1) (
       read_reg=rf[idx];
   endfunction
 
-  export "DPI-C" function read_reg;
-  import "DPI-C" context task reg_upadted();
 
   always @(posedge clk) begin
       if (wen)begin
-          reg_upadted();
+          reg_upadted({27'b0,waddr}, wdata);
           rf[waddr] <= wdata;
         end
     if(dump_info)begin

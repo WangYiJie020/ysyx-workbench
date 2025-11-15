@@ -67,12 +67,9 @@ bool is_good_trap=false;
 
 word_t regs[NGPR];
 
-extern int read_reg(int idx);
-extern "C" int reg_upadted(){
-	printf("reg_upadted called\n");
-	for(int i=0;i<32;i++)
-		regs[i]=read_reg(i);
-	return 0;
+extern "C" void reg_upadted(int idx,int val) {
+	// printf("reg_upadted called %d %08X\n",idx,val);
+	regs[idx]=val;
 }
 
 extern "C" int pmem_read(int raddr) {
