@@ -52,9 +52,9 @@ void _impl::_deleter_difftest::operator()(difftest_imp* ptr){
 
 void debuger::load_difftest_ref(string_view so_file,size_t img_size){COND_ENABLE{
 	_imp_difftest=_impl::difftest_imptr(new _impl::difftest_imp());
+	auto& imp=*_imp_difftest;
 	printf("Difftest: Loading ref so from %.*s\n",
 		(int)so_file.size(),so_file.data());
-	auto& imp=*_imp_difftest;
 	imp.load(so_file);
 	imp.ref_init(0);
 	
