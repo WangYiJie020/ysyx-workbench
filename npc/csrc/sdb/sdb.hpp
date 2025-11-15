@@ -24,6 +24,12 @@ namespace sdb {
 		paddr_t pc;
 		vlen_inst_code code;
 	};
+	struct expr_t{
+		std::string_view raw;
+		expr_t(){}
+		expr_t(std::string_view s):raw(s){}
+		uint64_t eval()const;
+	};
 
 
 	// should return pc after exec
@@ -169,7 +175,7 @@ public:
 
 	void cmd_q();
 	void cmd_info(std::string_view);
-	void cmd_x(size_t N,clscmd::expr_t addr);
+	void cmd_x(size_t N,expr_t addr);
 
 	void dump_mem(paddr_t addr,paddr_t end);
 	void dump_reg();
