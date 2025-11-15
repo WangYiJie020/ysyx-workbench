@@ -22,6 +22,7 @@ module RegisterFile #(ADDR_WIDTH = 1, DATA_WIDTH = 1) (
   import "DPI-C" context task reg_upadted();
 
   always@(rf)begin
+      $display("Register File Updated");
       reg_upadted();
   end
 
