@@ -93,7 +93,7 @@ void debuger::_trace_handler_f(const disasmable_inst& inst){
 		"{}{} "
 		ANSI_FG_GRAY "f`{:08X}"
 		ANSI_NONE "{}{}\n",
-		_func_depth,
+		_func_depth-1,
 		inst.pc,
 		type==jump_type::call?ANSI_FG_YELLOW:ANSI_FG_BLUE,
 		hint_str,
