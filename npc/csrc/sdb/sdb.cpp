@@ -91,7 +91,7 @@ void debuger::_trace_handler_f(const disasmable_inst& inst){
 void debuger::_step_one(){
 	if constexpr (_ENABLE_ITRACE){
 		auto inst=_fetch_dinst(_state.pc);
-//		_print("{:08X}: {}\n",inst.pc,_disasm(inst));
+		_print("{:08X}: {}\n",inst.pc,_disasm(inst));
 		_iringbuf.push(std::move(inst));
 		if constexpr (_ENABLE_FTRACE){
 			_trace_handler_f(inst);
