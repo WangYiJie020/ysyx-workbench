@@ -67,7 +67,7 @@ void debuger::_difftest_step(paddr_t pc,paddr_t npc){COND_ENABLE{
 	auto& imp=*_imp_difftest;
 	reg_snapshot_t ref_regs(_reg_snap.size());
 	imp.ref_exec(1);
-	imp.ref_regcpy(ref_regs.data(), DIFFTEST_TO_DUT);
+//	imp.ref_regcpy(ref_regs.data(), DIFFTEST_TO_DUT);
 	for(size_t i=0;i<_reg_snap.size();i++){
 		if(ref_regs[i]!=_reg_snap[i]){
 			_error(

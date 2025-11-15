@@ -29,7 +29,6 @@ static const uint32_t img [] = {
 static void restart() {
   /* Set the initial program counter. */
   cpu.pc = RESET_VECTOR;
-	printf("NEMU restart at pc = " FMT_WORD "\n", cpu.pc);
   /* The zero register is always 0. */
   cpu.gpr[0] = 0;
 }
