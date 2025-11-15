@@ -56,7 +56,7 @@ void debuger::load_difftest_ref(string_view so_file,size_t img_size){COND_ENABLE
 	printf("Difftest: Loading ref so from %.*s\n",
 		(int)so_file.size(),so_file.data());
 	imp.load(so_file);
-//	imp.ref_init(0);
+	imp.ref_init(0);
 	
 	
 }}
