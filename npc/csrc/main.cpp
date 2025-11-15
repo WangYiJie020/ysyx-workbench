@@ -305,7 +305,7 @@ int main(int argc, char **argv)
 		std::cout<<"(sdb) ";
 		std::getline(std::cin,cmd);
 		dbg.exec_command(cmd);
-		if(dbg.state().state==sdb::run_state::quit) {
+		if(dbg.state().is_bad()||dbg.state().quited()){
 			break;
 		}
 	}

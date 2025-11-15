@@ -103,6 +103,9 @@ struct cpu_state{
 	void abort(){
 		state=run_state::abort;
 	}
+	bool quited()const{
+		return state==run_state::quit;
+	}
 };
 
 	
