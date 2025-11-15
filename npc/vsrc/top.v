@@ -46,7 +46,7 @@ module top(
     output r_mem
 );
 
-    wire [WORD_BITWIDTH-1:0] inst=fetch_inst(pc);
+    wire [WORD_BITWIDTH-1:0] inst=rst?0:fetch_inst(pc);
 
     wire wen;
     wire [3:0] itype;
