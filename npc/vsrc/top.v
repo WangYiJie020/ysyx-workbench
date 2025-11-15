@@ -45,7 +45,8 @@ module top(
     output w_mem,
     output r_mem
 );
-    reg `WORD_RANGE inst;
+
+    wire [WORD_BITWIDTH-1:0] inst=fetch_inst(pc);
 
     wire wen;
     wire [3:0] itype;
@@ -192,10 +193,8 @@ module top(
 
         if(rst)begin
             pc<=PC_BEFORE_START;
-            inst<=fetch_inst(PC_BEFORE_START);
         end else begin
             pc<=nxt_pc;
-            inst<=fetch_inst(nxt_pc);
         end
     end
 
