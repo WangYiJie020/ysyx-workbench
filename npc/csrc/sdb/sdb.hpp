@@ -119,8 +119,10 @@ class debuger{
 
 	clscmd::command_table _cmd_table;
 
+	std::ostream_iterator<char> _o_iter{std::cout};
+
 	inline void _print(fmt_str fmt, auto&&... args){
-		std::cout<<vformat(fmt,std::make_format_args(args...));
+		vformat_to(_o_iter,fmt,std::make_format_args(args...));
 	}
 	inline void _error(fmt_str fmt, auto&&... args){
 		std::cerr
@@ -137,6 +139,7 @@ class debuger{
 	void _trace_handler_f(const disasmable_inst& inst);
 	void _step_one();
 
+	void _dump_inst(const disasmable_inst& inst);
 	void _dump_iringbuf();
 
 public:

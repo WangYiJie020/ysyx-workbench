@@ -26,6 +26,15 @@ struct std::formatter<errc> : formatter<std::string> {
     }
 };
 
+void debuger::_dump_inst(const disasmable_inst& inst){
+	_print("{:25} " ANSI_FG_GRAY "(",_disasm(inst));
+	for(int j=0;j<inst.code.size();j++){
+		if(j) _print(" ");
+		_print("{:02X}",inst.code[j]);
+	}
+	_print(")" ANSI_NONE "\n");
+}
+
 void debuger::_dump_iringbuf(){
 	auto last=prev(end(_iringbuf));
 	for(auto it=_iringbuf.begin();it!=_iringbuf.end();++it){
@@ -34,12 +43,7 @@ void debuger::_dump_iringbuf(){
 				distance(it,end(_iringbuf))-1,
 				inst.pc);
 		if(it==last)_print(ANSI_FG_YELLOW);
-		_print("{:25} " ANSI_FG_GRAY "(",_disasm(inst));
-		for(int j=0;j<inst.code.size();j++){
-			if(j)_print(" ");
-			_print("{:02X}",inst.code[j]);
-		}
-		_print(")" ANSI_NONE "\n");
+		_dump_inst(inst);
 	}
 }
 
@@ -91,7 +95,7 @@ void debuger::_trace_handler_f(const disasmable_inst& inst){
 void debuger::_step_one(){
 	if constexpr (_ENABLE_ITRACE){
 		auto inst=_fetch_dinst(_state.pc);
-		_print(ANSI_FG_GRAY"0x{:08X}:" ANSI_NONE" {}\n",inst.pc,_disasm(inst));
+		_dump_inst(inst);
 		_iringbuf.push(std::move(inst));
 		if constexpr (_ENABLE_FTRACE){
 			_trace_handler_f(inst);
