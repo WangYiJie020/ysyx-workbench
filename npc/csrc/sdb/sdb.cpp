@@ -89,10 +89,11 @@ void debuger::_trace_handler_f(const disasmable_inst& inst){
 	auto fname=f?f->name:"(unknown)";
 
 	_print(
-			"0x{:08X}: "
-			"{}{} "
-			ANSI_FG_GRAY "f`{:08X}"
-		 	ANSI_NONE "{}{}\n",
+		"[" ANSI_FG_CYAN "{:02}" ANSI_NONE "] 0x{:08X}: "
+		"{}{} "
+		ANSI_FG_GRAY "f`{:08X}"
+		ANSI_NONE "{}{}\n",
+		_func_depth,
 		inst.pc,
 		type==jump_type::call?ANSI_FG_YELLOW:ANSI_FG_BLUE,
 		hint_str,
