@@ -15,6 +15,12 @@ module RegisterFile #(ADDR_WIDTH = 1, DATA_WIDTH = 1) (
   assign rdata2=(raddr2!=0)?rf[raddr2]:0;
   assign a0=rf[10];
 
+  always@(*)begin
+      if(wen)begin
+          $display("* RegFile: Write r%d <= %08X %d",waddr,wdata,wdata);
+      end
+  end
+
   always @(posedge clk) begin
       if (wen)begin
           $display("RegFile: Write r%d <= %08X %d",waddr,wdata,wdata);
