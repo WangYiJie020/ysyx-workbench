@@ -42,11 +42,21 @@ namespace sdb {
 		ret
 	};
 
-	// should return pc after exec
+	// impl should return npc(pc after exec)
 	using cpu_executor=std::function<paddr_t()>;
-	// user should prepare n bytes continuously in mem corresponding to addr
+	// impl should prepare n bytes continuously in mem corresponding to addr
 	// and return the pointer to the first byte
 	using mem_loader=std::function<uint8_t*(paddr_t addr,size_t n)>;
+	// impl should fill reg_snapshot_t with current register values 
+	//
+	// passed reg_snapshot_t has more size than needed, which is reserved for pc
+	// and future use. 
+	// and those extra items are only set when difftest step, so their values
+	// maybe garbage during normal use.
+	//
+	// !!!**NOTICE**!!!
+	// never resize!
+	// never modify/read items out of register range!
 	using reg_snapshoter=std::function<void(reg_snapshot_t&)>;
 	using inst_fetcher=std::function<vlen_inst_code(paddr_t pc)>;
 	using inst_disasmsembler=std::function<std::string(const disasmable_inst&)>;
@@ -177,7 +187,7 @@ public:
 			return _impl::expand_tabs(d(i),8);
 		};
 		_state.pc=init_pc;
-		_reg_snap.resize(_reg_names.size());
+		_reg_snap.resize(_reg_names.size()+1);
 		_init_cmd_table();
 	}
 

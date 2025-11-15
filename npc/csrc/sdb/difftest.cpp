@@ -1,5 +1,6 @@
 #include "sdb.hpp"
 #include <dlfcn.h>
+#include <assert.h>
 
 using namespace std;
 using namespace sdb;
@@ -51,6 +52,9 @@ void _impl::_deleter_difftest::operator()(difftest_imp* ptr){
 	if(ptr){delete ptr;}
 }
 
+#define assert_reg_num() assert(_reg_snap.size()==_reg_names.size()+1)
+#define push_pc_to_regsnap(_pc_) _reg_snap[ _reg_names.size() ] = _pc_;
+
 void debuger::load_difftest_ref(string_view so_file,size_t img_size){COND_ENABLE{
 	_imp_difftest=_impl::difftest_imptr(new _impl::difftest_imp());
 	auto& imp=*_imp_difftest;
@@ -59,7 +63,9 @@ void debuger::load_difftest_ref(string_view so_file,size_t img_size){COND_ENABLE
 	imp.ref_init(0); // currently unuse port
 
 	imp.ref_memcpy(_INITIAL_PC, _loadmem(_INITIAL_PC,img_size), img_size, DIFFTEST_TO_REF);
-	//imp.ref_regcpy(_reg_snap.data(), DIFFTEST_TO_REF);
+	assert_reg_num();
+	push_pc_to_regsnap(_INITIAL_PC);
+	imp.ref_regcpy(_reg_snap.data(), DIFFTEST_TO_REF);
 	
 }}
 
@@ -67,6 +73,8 @@ void debuger::_difftest_step(paddr_t pc,paddr_t npc){COND_ENABLE{
 	auto& imp=*_imp_difftest;
 	reg_snapshot_t ref_regs(_reg_snap.size());
 	imp.ref_exec(1);
+	assert_reg_num();
+	push_pc_to_regsnap(pc);
 	imp.ref_regcpy(ref_regs.data(), DIFFTEST_TO_DUT);
 	for(size_t i=0;i<_reg_snap.size();i++){
 		if(ref_regs[i]!=_reg_snap[i]){
