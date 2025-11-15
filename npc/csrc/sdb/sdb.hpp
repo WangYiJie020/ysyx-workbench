@@ -7,6 +7,7 @@
 #include <vector>
 #include <deque>
 #include <optional>
+#include <memory>
 
 #include "cmd.hpp"
 #include "elf_tool.hpp"
@@ -50,6 +51,9 @@ namespace sdb {
 	using jump_recognizer=std::function<jump_type(const disasmable_inst&)>;
 
 namespace _impl {
+	struct difftest_impl;
+	using difftest_impl_ptr=std::unique_ptr<difftest_impl>;
+
 	std::string expand_tabs(std::string_view in, int tabsize);
 }
 
@@ -97,6 +101,11 @@ struct inst_ringbuf{
 };
 
 class debuger{
+	constexpr static bool
+	 	_ENABLE_ITRACE=1,
+		_ENABLE_FTRACE=1,
+		_ENABLE_DIFFTEST=1;
+
 	cpu_executor _exec;
 	cpu_state _state;
 
@@ -115,10 +124,8 @@ class debuger{
 	jump_recognizer _recog_jmp;
 	int _func_depth=0;
 
-	constexpr static bool
-	 	_ENABLE_ITRACE=1,
-		_ENABLE_FTRACE=1;
-	
+	_impl::difftest_impl_ptr _imp_difftest;
+
 	using fmt_str=std::string_view;
 
 	clscmd::command_table _cmd_table;
@@ -141,6 +148,7 @@ class debuger{
 
 	void _init_cmd_table();
 	void _trace_handler_f(const disasmable_inst& inst);
+	void _difftest_step(paddr_t pc,paddr_t npc);
 	void _step_one();
 
 	void _dump_inst(const disasmable_inst& inst,bool highlight_disasm=false);
@@ -167,16 +175,15 @@ public:
 		std::fstream fs(filename,std::ios::in|std::ios::binary);
 		_elf.load(fs);
 	}
+
+	void load_difftest_ref(std::string_view so_file);
+
 	void set_jump_recognizer(jump_recognizer r){
 		_recog_jmp=r;
 	}
 
-	const cpu_state& state()const{
-		return _state;
-	}
-	cpu_state& state(){
-		return _state;
-	}
+	inline const cpu_state& state()const{return _state;}
+	inline cpu_state& state(){return _state;}
 
 	inline bool is_running(){
 		return _state.state==run_state::running;
