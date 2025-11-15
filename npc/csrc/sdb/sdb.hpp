@@ -82,7 +82,7 @@ struct cpu_state{
 
 	
 struct inst_ringbuf{
-	constexpr static size_t n_max_records = 32;
+	constexpr static size_t n_max_records = 16;
 	std::deque<disasmable_inst> buf;
 
 	inline void push(disasmable_inst&& inst){
