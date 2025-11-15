@@ -210,7 +210,7 @@ sdb::debuger dbg(
 	cpu_exec_once,
 	addr_readbyte,
 	sdb_shot_regsnap,
-	std::span<std::string_view>(reg_names),
+	reg_names,
 	disasm,sdb_inst_fetcher
 );
 
