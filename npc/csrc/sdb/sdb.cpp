@@ -44,8 +44,7 @@ void debuger::_dump_iringbuf(){
 		auto inst=*it;
 		_print("[" ANSI_FG_CYAN "{:02}" ANSI_NONE "] ",
 				distance(it,end(_iringbuf))-1);
-		if(it==last)_print(ANSI_FG_YELLOW);
-		_dump_inst(inst);
+		_dump_inst(inst,it==last);
 	}
 }
 
