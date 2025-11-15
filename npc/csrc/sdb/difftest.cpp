@@ -73,10 +73,11 @@ void debuger::_difftest_step(paddr_t pc,paddr_t npc){COND_ENABLE{
 	auto& imp=*_imp_difftest;
 	reg_snapshot_t ref_regs(_reg_snap.size());
 	imp.ref_exec(1);
-	printf("ref exec 1 step\n");
 	assert_reg_num();
 	push_pc_to_regsnap(pc);
+	puts("beg ref regcpy");
 	imp.ref_regcpy(ref_regs.data(), DIFFTEST_TO_DUT);
+	puts("end ref regcpy");
 	for(size_t i=0;i<_reg_snap.size();i++){
 		if(ref_regs[i]!=_reg_snap[i]){
 			_error(
