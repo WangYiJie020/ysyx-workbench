@@ -14,6 +14,7 @@
 #include <nvboard.h>
 
 #include "sdb/sdb.hpp"
+#include "sdb/elf_tool.hpp"
 
 #ifndef TOP_NAME
 #define TOP_NAME Vtop
@@ -241,6 +242,9 @@ void init_disasm();
 int main(int argc, char **argv)
 {
 	init_disasm();
+	std::fstream f("/home/wuser/ysyx-workbench/am-kernels/kernels/hello/build/hello-riscv32-nemu.bin",std::ios::in|std::ios::binary);
+	ElfHandler elf_fh(f);
+	elf_fh.dump_func_syms();
 
 //	pmem_write(0,0x12345678, 0x3);
 //	int res=pmem_read(0);
