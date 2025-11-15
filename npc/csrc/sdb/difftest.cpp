@@ -84,7 +84,7 @@ void debuger::_difftest_step(paddr_t pc,paddr_t npc){COND_ENABLE{
 				"Difftest failed at pc = {:#x}, reg {}({}) not match: dut = {:#x}, ref = {:#x}",
 				pc,
 				i,
-				_reg_names[i],
+				i < _reg_names.size() ? _reg_names[i] : "pc",
 				_reg_snap[i],
 				ref_regs[i]
 			);
