@@ -139,7 +139,6 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 }
 
 static void exec_once(Decode *s, vaddr_t pc) {
-	printf("exec_once at pc = %08x\n", pc);
   s->pc = pc;
   s->snpc = pc;
   isa_exec_once(s);
@@ -173,6 +172,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
 
 static void execute(uint64_t n) {
   Decode s;
+	printf("start exec %lu @ pc=" FMT_WORD "\n",n,cpu.pc);
   for (;n > 0; n --) {
     exec_once(&s, cpu.pc);
     g_nr_guest_inst ++;
