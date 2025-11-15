@@ -16,7 +16,7 @@ module RegisterFile #(ADDR_WIDTH = 1, DATA_WIDTH = 1) (
   assign a0=rf[10];
 
   always@(*)begin
-      if(wen)begin
+      if(wen&&waddr!=0)begin
           reg_upadted({27'b0,waddr}, wdata);
       end
   end
