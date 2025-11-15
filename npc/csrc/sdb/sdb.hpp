@@ -192,7 +192,4 @@ public:
 	void exec_command(std::string_view cmdline);
 };
 
-
 }
-
-
