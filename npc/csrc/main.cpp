@@ -36,12 +36,7 @@ static TOP_NAME dut;
 typedef uint32_t word_t;
 typedef uint32_t addr_t;
 
-word_t guest_to_host(word_t addr){
-	//printf("raw addr %08X\n",addr);
-	//assert(addr>=MADDR_BASE);
-	word_t res= addr - MADDR_BASE;
-	return res;
-}
+
 
 void nvboard_bind_all_pins(TOP_NAME* top);
 void nvboard_update();
@@ -56,17 +51,25 @@ word_t mem[512*1024/4]={
   0x00100073,  // ebreak (used as nemu_trap)
   0xdeadbeef,  // some data
 };
+uint8_t* mem_atguest(size_t addr){
+	assert(addr>=MADDR_BASE);
+	return ((uint8_t*)mem)+addr-MADDR_BASE;
+}
+word_t guest_to_host(word_t addr){
+	//printf("raw addr %08X\n",addr);
+	//assert(addr>=MADDR_BASE);
+	word_t res= addr - MADDR_BASE;
+	return res;
+}
 
 bool is_running=true;
 bool is_good_trap=false;
 
 word_t regs[NGPR];
 
-extern int read_reg(int idx);
-extern "C" int reg_upadted(){
-	for(int i=0;i<32;i++)
-		regs[i]=read_reg(i);
-	return 0;
+extern "C" void reg_upadted(int idx,int val) {
+//	printf("reg_upadted called %d %08X\n",idx,val);
+	regs[idx]=val;
 }
 
 extern "C" int pmem_read(int raddr) {
@@ -142,6 +145,7 @@ static void reset(int n) {
 }
 
 const char* img_file;
+static size_t img_size;
 
 static long load_img() {
 #define Log(fmt , ...) printf(fmt "\n",##__VA_ARGS__)
@@ -158,28 +162,26 @@ static long load_img() {
   Assert(fp, "Can not open '%s'", img_file);
 
   fseek(fp, 0, SEEK_END);
-  long size = ftell(fp);
+  img_size = ftell(fp);
 
-  Log("The image is %s, size = %ld", img_file, size);
+  Log("The image is %s, size = %ld", img_file, img_size);
 
   fseek(fp, 0, SEEK_SET);
-  int ret = fread(mem, size, 1, fp);
+  int ret = fread(mem, img_size, 1, fp);
   assert(ret == 1);
 
   fclose(fp);
 
 #define INST_EBREAK 0x00100073
 
-  return size;
+  return img_size;
 }
 
 sdb::paddr_t cpu_exec_once(){
 	single_cycle();
 	return dut.nxt_pc;
 }
-uint8_t addr_readbyte(sdb::paddr_t addr){
-	return pmem_read(addr)>>((addr&0x3)*8);
-}
+
 std::array<std::string_view,32> reg_names = {
   "$0", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
   "s0", "s1", "a0", "a1", "a2", "a3", "a4", "a5",
@@ -198,6 +200,9 @@ sdb::vlen_inst_code sdb_inst_fetcher(sdb::paddr_t pc){
 		uint8_t* p = (uint8_t*)&raw;
 		return sdb::vlen_inst_code(p, p + 4);
 }
+uint8_t* sdb_loadmem(sdb::paddr_t addr, size_t nbyte){
+	return mem_atguest(addr);
+}
 
 std::string disasm(sdb::disasmable_inst inst){
 	void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
@@ -208,7 +213,7 @@ std::string disasm(sdb::disasmable_inst inst){
 sdb::debuger dbg(
 	INITIAL_PC,	
 	cpu_exec_once,
-	addr_readbyte,
+	sdb_loadmem,
 	sdb_shot_regsnap,
 	reg_names,
 	disasm,sdb_inst_fetcher
@@ -283,6 +288,7 @@ int main(int argc, char **argv)
 	}
 
 	dbg.set_jump_recognizer(sdb_jump_recognizer);
+	dbg.load_difftest_ref("../nemu/build/riscv32-nemu-interpreter-so",img_size);
 
 
 #if USE_NVBOARD
@@ -299,7 +305,7 @@ int main(int argc, char **argv)
 		std::cout<<"(sdb) ";
 		std::getline(std::cin,cmd);
 		dbg.exec_command(cmd);
-		if(dbg.state().state==sdb::run_state::quit) {
+		if(dbg.state().quited()){
 			break;
 		}
 	}

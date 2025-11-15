@@ -7,6 +7,7 @@
 #include <vector>
 #include <deque>
 #include <optional>
+#include <memory>
 
 #include "cmd.hpp"
 #include "elf_tool.hpp"
@@ -41,15 +42,33 @@ namespace sdb {
 		ret
 	};
 
-	// should return pc after exec
+	// impl should return npc(pc after exec)
 	using cpu_executor=std::function<paddr_t()>;
-	using addr_reader=std::function<uint8_t(paddr_t)>;
+	// impl should prepare n bytes continuously in mem corresponding to addr
+	// and return the pointer to the first byte
+	using mem_loader=std::function<uint8_t*(paddr_t addr,size_t n)>;
+	// impl should fill reg_snapshot_t with current register values 
+	//
+	// passed reg_snapshot_t has more size than needed, which is reserved for pc
+	// and future use. 
+	// and those extra items are only set when difftest step, so their values
+	// maybe garbage during normal use.
+	//
+	// !!!**NOTICE**!!!
+	// never resize!
+	// never modify/read items out of register range!
 	using reg_snapshoter=std::function<void(reg_snapshot_t&)>;
 	using inst_fetcher=std::function<vlen_inst_code(paddr_t pc)>;
 	using inst_disasmsembler=std::function<std::string(const disasmable_inst&)>;
 	using jump_recognizer=std::function<jump_type(const disasmable_inst&)>;
 
 namespace _impl {
+	struct difftest_imp;
+	struct _deleter_difftest{
+		void operator()(difftest_imp* ptr);
+	};
+	using difftest_imptr=std::unique_ptr<difftest_imp,_deleter_difftest>;
+
 	std::string expand_tabs(std::string_view in, int tabsize);
 }
 
@@ -81,6 +100,12 @@ struct cpu_state{
 		state=run_state::end;
 		halt_ret=ret;
 	}
+	void abort(){
+		state=run_state::abort;
+	}
+	bool quited()const{
+		return state==run_state::quit;
+	}
 };
 
 	
@@ -97,10 +122,18 @@ struct inst_ringbuf{
 };
 
 class debuger{
+	constexpr static bool
+	 	_ENABLE_ITRACE=1,
+		_ENABLE_FTRACE=1,
+		_ENABLE_DIFFTEST=1;
+
 	cpu_executor _exec;
 	cpu_state _state;
 
-	addr_reader _paddr_read;
+	mem_loader _loadmem;
+	inline uint8_t _paddr_read(paddr_t addr){
+		return *_loadmem(addr,1);
+	}
 
 	reg_snapshoter _shot_reg;
 	std::span<std::string_view> _reg_names;
@@ -115,10 +148,10 @@ class debuger{
 	jump_recognizer _recog_jmp;
 	int _func_depth=0;
 
-	constexpr static bool
-	 	_ENABLE_ITRACE=1,
-		_ENABLE_FTRACE=1;
-	
+	const paddr_t _INITIAL_PC;
+
+	_impl::difftest_imptr _imp_difftest;
+
 	using fmt_str=std::string_view;
 
 	clscmd::command_table _cmd_table;
@@ -141,6 +174,7 @@ class debuger{
 
 	void _init_cmd_table();
 	void _trace_handler_f(const disasmable_inst& inst);
+	void _difftest_step(paddr_t pc,paddr_t npc);
 	void _step_one();
 
 	void _dump_inst(const disasmable_inst& inst,bool highlight_disasm=false);
@@ -150,16 +184,16 @@ public:
 
 	debuger(
 			paddr_t init_pc,
-			cpu_executor e,addr_reader mr,reg_snapshoter rss,auto&& reg_names,
+			cpu_executor e,mem_loader ml,reg_snapshoter rss,auto&& reg_names,
 			inst_disasmsembler d=inst_disasmsembler(),
 			inst_fetcher f=inst_fetcher()
-	): _exec(e),_paddr_read(mr),_shot_reg(rss),_fetch_inst(f),
-	_reg_names(reg_names){
+	): _exec(e),_loadmem(ml),_shot_reg(rss),_fetch_inst(f),
+	_reg_names(reg_names),_INITIAL_PC(init_pc){
 		_disasm=[d](const disasmable_inst& i){
 			return _impl::expand_tabs(d(i),8);
 		};
 		_state.pc=init_pc;
-		_reg_snap.resize(_reg_names.size());
+		_reg_snap.resize(_reg_names.size()+1);
 		_init_cmd_table();
 	}
 
@@ -167,16 +201,15 @@ public:
 		std::fstream fs(filename,std::ios::in|std::ios::binary);
 		_elf.load(fs);
 	}
+
+	void load_difftest_ref(std::string_view so_file,size_t img_size);
+
 	void set_jump_recognizer(jump_recognizer r){
 		_recog_jmp=r;
 	}
 
-	const cpu_state& state()const{
-		return _state;
-	}
-	cpu_state& state(){
-		return _state;
-	}
+	inline const cpu_state& state()const{return _state;}
+	inline cpu_state& state(){return _state;}
 
 	inline bool is_running(){
 		return _state.state==run_state::running;
@@ -189,6 +222,11 @@ public:
 			return;
 		}
 		for(;n>0&&is_running();n--)_step_one();
+	}
+
+	inline void abort(){
+		_state.abort();
+		_dump_iringbuf();
 	}
 
 	void cmd_q();

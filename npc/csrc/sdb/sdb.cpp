@@ -19,10 +19,10 @@ struct std::formatter<optional<T>> : formatter<T> {
 };
 
 template<>
-struct std::formatter<errc> : formatter<std::string> {
+struct std::formatter<errc> : formatter<string> {
     auto format(errc ec, auto& ctx) const {
-        return formatter<std::string>::format(
-            std::make_error_code(ec).message(), ctx);
+        return formatter<string>::format(
+            make_error_code(ec).message(), ctx);
     }
 };
 
@@ -38,17 +38,16 @@ void debuger::_dump_inst(const disasmable_inst& inst,bool highlight_disasm){
 	_print(")" ANSI_NONE "\n");
 }
 
-void debuger::_dump_iringbuf(){
-	auto last=prev(end(_iringbuf));
+void debuger::_dump_iringbuf(){if constexpr(_ENABLE_ITRACE){
 	_print(ANSI_FG_YELLOW "==== recent instructions ====\n" ANSI_NONE);
+	auto last=prev(end(_iringbuf));
 	for(auto it=_iringbuf.begin();it!=_iringbuf.end();++it){
-		auto inst=*it;
 		_print("[{}{:02}" ANSI_NONE "] ",
 			it==last?ANSI_FG_RED:ANSI_FG_CYAN,
-				distance(it,end(_iringbuf))-1);
-		_dump_inst(inst,it==last);
+			distance(it,end(_iringbuf))-1);
+		_dump_inst(*it,it==last);
 	}
-}
+}}
 
 string sdb::_impl::expand_tabs(std::string_view in, int tabsize) {
     string out;
@@ -104,7 +103,9 @@ void debuger::_step_one(){
 			_trace_handler_f(inst);
 		}
 	}
+	auto oldpc= _state.pc;
 	_state.pc = _exec();	
+	_difftest_step(oldpc, _state.pc);
 }
 
 uint64_t expr_t::eval()const{
@@ -119,10 +120,11 @@ uint64_t expr_t::eval()const{
 }
 
 void debuger::cmd_q(){
-	if(is_running()||!_state.is_bad()){
-		_dump_iringbuf();
-		_state.state=run_state::quit;
+	if(_state.is_bad()){
+		// cur pc has not executed yet
+		_error("Program exited with bad state. nxt pc = 0x{:08x}", _state.pc);
 	}
+	_state.state=run_state::quit;
 }
 
 void debuger::dump_mem(paddr_t addr,paddr_t end){
@@ -144,7 +146,10 @@ void debuger::dump_reg(){
 }
 
 void debuger::cmd_info(string_view s){
-	if(s=="r")dump_reg();
+	if(s=="r"){
+		_shot_reg(_reg_snap);
+		dump_reg();
+	}
 	else return _error("Unknown info command {}", s);	
 }
 void debuger::cmd_x(size_t N,expr_t e_addr){
@@ -154,9 +159,8 @@ void debuger::cmd_x(size_t N,expr_t e_addr){
 	dump_mem(addr, addr+N*4);
 }
 
-#define _ITEM(name,desc,...) {name,command_t(desc,this,&debuger::__VA_ARGS__)}
-
 void debuger::_init_cmd_table(){
+#define _ITEM(name,desc,...) {name,command_t(desc,this,&debuger::__VA_ARGS__)}
 	_cmd_table={
 		_ITEM("c", "Continue the execution of the program", cmd_c),
 		_ITEM("q", "Exit program",cmd_q),
@@ -172,3 +176,4 @@ void debuger::exec_command(string_view cmdline){
 		_error("{}", ec);
 	}
 }
+

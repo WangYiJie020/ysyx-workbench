@@ -31,10 +31,10 @@ __EXPORT void difftest_memcpy(paddr_t addr, void *buf, size_t n, bool direction)
 
 __EXPORT void difftest_regcpy(void *dut, bool direction) {
 	if (direction == DIFFTEST_TO_REF) {
-		memcpy(&cpu.gpr, dut, DIFFTEST_REG_SIZE);
+		memcpy(&cpu, dut, DIFFTEST_REG_SIZE);
 	}
 	else {
-		memcpy(dut, &cpu.gpr, DIFFTEST_REG_SIZE);
+		memcpy(dut, &cpu, DIFFTEST_REG_SIZE);
 	}
 }
 
