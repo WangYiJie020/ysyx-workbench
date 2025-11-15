@@ -89,7 +89,6 @@ void debuger::_difftest_step(paddr_t pc,paddr_t npc){COND_ENABLE{
 				_reg_snap[i],
 				ref_regs[i]
 			);
-			cmd_q();
 			break;
 		}
 	}
