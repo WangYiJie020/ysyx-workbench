@@ -24,7 +24,6 @@ struct sdb::_impl::difftest_imp{
 		fn=(decltype(fn))dlsym(handle, name);
 		if(!fn)
 			throw runtime_error(format("load {} failed: {}", name, dlerror()));
-		printf("Difftest load symbol %s at %p\n",name,(void*)fn);
 	}
 
 
@@ -56,6 +55,12 @@ void debuger::load_difftest_ref(string_view so_file,size_t img_size){COND_ENABLE
 	auto& imp=*_imp_difftest;
 	imp.load(so_file);
 	printf("Difftest load ref from %s\n",string(so_file).c_str());
+	printf("%p %p %p %p\n",
+		(void*)imp.ref_init,
+		(void*)imp.ref_memcpy,
+		(void*)imp.ref_regcpy,
+		(void*)imp.ref_exec
+	);
 	imp.ref_init(0);
 	
 	
