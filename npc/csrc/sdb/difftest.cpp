@@ -37,7 +37,7 @@ struct sdb::_impl::difftest_imp{
 	void load(string_view so_file){
 		handle=dlopen(so_file.data(), RTLD_LAZY);
 		if(!handle){
-			throw runtime_error(format("difftest dlopen {} failed: {}", so_file, dlerror()));
+			throw runtime_error(format("dlopen {} failed: {}", so_file, dlerror()));
 		}
 		_meta_load(ref_init, "difftest_init");
 		_meta_load(ref_memcpy, "difftest_memcpy");
@@ -56,14 +56,10 @@ void debuger::load_difftest_ref(string_view so_file,size_t img_size){COND_ENABLE
 	auto& imp=*_imp_difftest;
 	imp.load(so_file);
 	printf("Difftest load ref from %s\n",string(so_file).c_str());
-	printf("%p %p %p %p\n",
-		(void*)imp.ref_init,
-		(void*)imp.ref_memcpy,
-		(void*)imp.ref_regcpy,
-		(void*)imp.ref_exec
-	);
-	imp.ref_init(0);
-	
+	imp.ref_init(0); // currently unuse port
+
+	imp.ref_memcpy(_INITIAL_PC, _loadmem(_INITIAL_PC,img_size), img_size, DIFFTEST_TO_REF);
+	imp.ref_regcpy(_reg_snap.data(), DIFFTEST_TO_REF);
 	
 }}
 
