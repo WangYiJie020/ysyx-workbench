@@ -77,9 +77,7 @@ void debuger::_difftest_step(paddr_t pc,paddr_t npc){COND_ENABLE{
 	assert_reg_num();
 	// after ref exec, its pc should be npc
 	push_pc_to_regsnap(npc);
-	puts("beg ref regcpy");
 	imp.ref_regcpy(ref_regs.data(), DIFFTEST_TO_DUT);
-	puts("end ref regcpy");
 	for(size_t i=0;i<_reg_snap.size();i++){
 		if(ref_regs[i]!=_reg_snap[i]){
 			_error(
@@ -90,6 +88,7 @@ void debuger::_difftest_step(paddr_t pc,paddr_t npc){COND_ENABLE{
 				_reg_snap[i],
 				ref_regs[i]
 			);
+			_state.abort();
 			break;
 		}
 	}

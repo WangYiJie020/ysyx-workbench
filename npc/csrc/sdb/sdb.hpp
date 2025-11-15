@@ -100,6 +100,9 @@ struct cpu_state{
 		state=run_state::end;
 		halt_ret=ret;
 	}
+	void abort(){
+		state=run_state::abort;
+	}
 };
 
 	
