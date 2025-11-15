@@ -139,7 +139,7 @@ class debuger{
 	void _trace_handler_f(const disasmable_inst& inst);
 	void _step_one();
 
-	void _dump_inst(const disasmable_inst& inst);
+	void _dump_inst(const disasmable_inst& inst,bool highlight_disasm=false);
 	void _dump_iringbuf();
 
 public:
