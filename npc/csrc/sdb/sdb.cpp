@@ -96,7 +96,7 @@ void debuger::_trace_handler_f(const disasmable_inst& inst){
 			"0x{:08X}: "
 			ANSI_FG_MAGENTA "{} "
 			ANSI_FG_GRAY "f`{:08X}"
-		 	ANSI_NONE "{} {}\n",
+		 	ANSI_NONE "{}{}\n",
 		inst.pc,
 		hint_str,
 		f?f->addr:0,
