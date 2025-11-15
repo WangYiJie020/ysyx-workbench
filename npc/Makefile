@@ -50,7 +50,6 @@ $(BIN): $(VSRCS) $(INCHEADERS) $(CSRCS) $(NVBOARD_ARCHIVE)
 		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
 		--Mdir $(OBJ_DIR) -cc
 	#--exe -o $(abspath $(BIN))
-	$(MAKE) -C $(OBJ_DIR) -f V$(TOPNAME).mk V$(TOPNAME)
 
 all: default
 
