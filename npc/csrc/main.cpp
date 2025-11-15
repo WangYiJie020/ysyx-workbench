@@ -69,6 +69,7 @@ word_t regs[NGPR];
 
 extern int read_reg(int idx);
 extern "C" int reg_upadted(){
+	printf("reg_upadted called\n");
 	for(int i=0;i<32;i++)
 		regs[i]=read_reg(i);
 	return 0;
