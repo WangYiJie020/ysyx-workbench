@@ -111,7 +111,7 @@ class debuger{
 
 	constexpr static bool
 	 	_ENABLE_ITRACE=true,
-		_ENABLE_FTRACE=true;
+		_ENABLE_FTRACE=0;
 	
 	std::vector<std::string> _reg_names;
 
