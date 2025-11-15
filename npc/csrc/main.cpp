@@ -216,7 +216,7 @@ sdb::debuger dbg(
 	addr_readbyte,
 	get_reg,
 	std::vector<std::string>(reg_names.begin(),reg_names.end()),
-	disasm
+	disasm,sdb_inst_fetcher
 );
 
 extern "C" void raise_break(int a0){
@@ -242,7 +242,6 @@ int main(int argc, char **argv)
 {
 	init_disasm();
 
-	dbg.set_inst_fetcher(sdb_inst_fetcher);
 //	pmem_write(0,0x12345678, 0x3);
 //	int res=pmem_read(0);
 //	printf("%X",res);

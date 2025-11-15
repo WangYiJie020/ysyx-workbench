@@ -131,26 +131,14 @@ public:
 	debuger(
 			paddr_t init_pc,
 			cpu_executor e,addr_reader mr,reg_reader rr,auto&& reg_names,
-			inst_disasmsembler d=inst_disasmsembler()
-			):
-		_exec(e),_paddr_read(mr),_reg_read(rr),_reg_names(reg_names){
-
-			_disasm=[d](const disasmable_inst& i){
-				return _impl::expand_tabs(d(i),8);
-			};
-			_fetch_inst=[mr](paddr_t pc){
-				uint8_t out[DEFAULT_INST_LEN];
-				for(size_t i=0;i<DEFAULT_INST_LEN;i++){
-					out[i]=mr(pc+i);
-				}
-				return vlen_inst_code(out,out+DEFAULT_INST_LEN);
-			};
-			_state.pc=init_pc;
-			_init_cmd_table();
-		}
-
-	inline void set_inst_fetcher(inst_fetcher f){
-		_fetch_inst=f;
+			inst_disasmsembler d=inst_disasmsembler(),
+			inst_fetcher f=inst_fetcher()
+			): _exec(e),_paddr_read(mr),_reg_read(rr),_fetch_inst(f),_reg_names(reg_names){
+		_disasm=[d](const disasmable_inst& i){
+			return _impl::expand_tabs(d(i),8);
+		};
+		_state.pc=init_pc;
+		_init_cmd_table();
 	}
 
 	const cpu_state& state()const{
