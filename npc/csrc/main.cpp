@@ -68,7 +68,7 @@ bool is_good_trap=false;
 word_t regs[NGPR];
 
 extern "C" void reg_upadted(int idx,int val) {
-	// printf("reg_upadted called %d %08X\n",idx,val);
+	printf("reg_upadted called %d %08X\n",idx,val);
 	regs[idx]=val;
 }
 
