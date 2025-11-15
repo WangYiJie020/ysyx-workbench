@@ -44,7 +44,9 @@ namespace sdb {
 
 	// should return pc after exec
 	using cpu_executor=std::function<paddr_t()>;
-	using addr_reader=std::function<uint8_t(paddr_t)>;
+	// user should prepare n bytes continuously in mem corresponding to addr
+	// and return the pointer to the first byte
+	using mem_loader=std::function<uint8_t*(paddr_t addr,size_t n)>;
 	using reg_snapshoter=std::function<void(reg_snapshot_t&)>;
 	using inst_fetcher=std::function<vlen_inst_code(paddr_t pc)>;
 	using inst_disasmsembler=std::function<std::string(const disasmable_inst&)>;
@@ -112,7 +114,10 @@ class debuger{
 	cpu_executor _exec;
 	cpu_state _state;
 
-	addr_reader _paddr_read;
+	mem_loader _loadmem;
+	inline uint8_t _paddr_read(paddr_t addr){
+		return *_loadmem(addr,1);
+	}
 
 	reg_snapshoter _shot_reg;
 	std::span<std::string_view> _reg_names;
@@ -126,6 +131,8 @@ class debuger{
 	elf_handler _elf;
 	jump_recognizer _recog_jmp;
 	int _func_depth=0;
+
+	const paddr_t _INITIAL_PC;
 
 	_impl::difftest_imptr _imp_difftest;
 
@@ -161,11 +168,11 @@ public:
 
 	debuger(
 			paddr_t init_pc,
-			cpu_executor e,addr_reader mr,reg_snapshoter rss,auto&& reg_names,
+			cpu_executor e,mem_loader ml,reg_snapshoter rss,auto&& reg_names,
 			inst_disasmsembler d=inst_disasmsembler(),
 			inst_fetcher f=inst_fetcher()
-	): _exec(e),_paddr_read(mr),_shot_reg(rss),_fetch_inst(f),
-	_reg_names(reg_names){
+	): _exec(e),_loadmem(ml),_shot_reg(rss),_fetch_inst(f),
+	_reg_names(reg_names),_INITIAL_PC(init_pc){
 		_disasm=[d](const disasmable_inst& i){
 			return _impl::expand_tabs(d(i),8);
 		};
@@ -179,7 +186,7 @@ public:
 		_elf.load(fs);
 	}
 
-	void load_difftest_ref(std::string_view so_file);
+	void load_difftest_ref(std::string_view so_file,size_t img_size);
 
 	void set_jump_recognizer(jump_recognizer r){
 		_recog_jmp=r;
