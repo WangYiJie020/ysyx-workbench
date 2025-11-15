@@ -120,10 +120,10 @@ uint64_t expr_t::eval()const{
 }
 
 void debuger::cmd_q(){
-	_state.state=run_state::quit;
 	if(_state.is_bad()){
 		_error("Program exited with bad state. pc = 0x{:08x}", _state.pc);
 	}
+	_state.state=run_state::quit;
 }
 
 void debuger::dump_mem(paddr_t addr,paddr_t end){
