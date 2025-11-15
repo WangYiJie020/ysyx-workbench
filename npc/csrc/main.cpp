@@ -192,6 +192,7 @@ std::array<std::string_view,32> reg_names = {
 };
 
 void sdb_shot_regsnap(sdb::reg_snapshot_t& snap){
+	printf("sdb_shot_regsnap called\n");
 	for(size_t i=0;i<NGPR;i++){
 		snap[i]=regs[i];
 	}
