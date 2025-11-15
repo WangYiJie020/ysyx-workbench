@@ -82,7 +82,7 @@ string sdb::_impl::expand_tabs(std::string_view in, int tabsize) {
 void debuger::_trace_handler_f(const disasmable_inst& inst){
 	auto type=_recog_jmp(inst);
 	if(type==jump_type::normal)return;
-	auto hint_str=type==jump_type::call?"call":"ret ";
+	auto hint_str=type==jump_type::call?"call func":"ret from";
 	if(type==jump_type::call)_func_depth++;
 
 	auto f=_elf.get_fun_at(inst.pc);
