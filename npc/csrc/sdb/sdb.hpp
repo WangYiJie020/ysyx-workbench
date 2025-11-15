@@ -51,8 +51,11 @@ namespace sdb {
 	using jump_recognizer=std::function<jump_type(const disasmable_inst&)>;
 
 namespace _impl {
-	struct difftest_impl;
-	using difftest_impl_ptr=std::unique_ptr<difftest_impl>;
+	struct difftest_imp;
+	struct _deleter_difftest{
+		void operator()(difftest_imp* ptr);
+	};
+	using difftest_imptr=std::unique_ptr<difftest_imp,_deleter_difftest>;
 
 	std::string expand_tabs(std::string_view in, int tabsize);
 }
@@ -124,7 +127,7 @@ class debuger{
 	jump_recognizer _recog_jmp;
 	int _func_depth=0;
 
-	_impl::difftest_impl_ptr _imp_difftest;
+	_impl::difftest_imptr _imp_difftest;
 
 	using fmt_str=std::string_view;
 
