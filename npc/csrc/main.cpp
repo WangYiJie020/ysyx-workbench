@@ -88,7 +88,7 @@ extern "C" int pmem_read(int raddr) {
 }
 
 extern "C" int fetch_inst(int pc){
-	if(pc==INITIAL_PC-4)return NOP_INST;
+	if(pc<=INITIAL_PC-4)return NOP_INST;
 	return mem[guest_to_host(pc)>>2];
 }
 
