@@ -84,10 +84,6 @@ void debuger::_trace_handler_f(const disasmable_inst& inst){
 	if(type==jump_type::normal)return;
 	auto hint_str=type==jump_type::call?"call":"ret ";
 	if(type==jump_type::call)_func_depth++;
-	else if(type==jump_type::ret){
-		if(_func_depth>0)_func_depth--;
-		else _error("ret but func depth is 0");
-	}
 
 	auto f=_elf.get_fun_at(inst.pc);
 	auto fname=f?f->name:"(unknown)";
@@ -103,6 +99,11 @@ void debuger::_trace_handler_f(const disasmable_inst& inst){
 		string(_func_depth,' '),
 		fname
 	);
+
+	if(type==jump_type::ret){
+		if(_func_depth>0)_func_depth--;
+		else _error("ret but func depth is 0");
+	}
 }
 
 void debuger::_step_one(){
