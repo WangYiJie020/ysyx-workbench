@@ -30,6 +30,7 @@ static TOP_NAME dut;
 #define MADDR_BASE 0x80000000u
 #define INITIAL_PC MADDR_BASE
 #define NOP_INST 0x00000013u // addi x0, x0, 0
+#define NOP_INST_ADDR (INITIAL_PC-4)
 
 typedef uint32_t word_t;
 typedef uint32_t addr_t;
@@ -67,11 +68,9 @@ extern "C" int reg_upadted(){
 	return 0;
 }
 
-#define MAGIC_MADDR_IGNORE 0xFFFF1145
-
 extern "C" int pmem_read(int raddr) {
 	printf("pmem_read called %08X\n",raddr);
-	if(raddr==MAGIC_MADDR_IGNORE)return 0xBAADF00D;
+	if(raddr==NOP_INST_ADDR)return NOP_INST;
 
 	if(!is_running){
 		printf("Warn: read addr %08X when not run, return 0xBAADCA11\n",raddr);
@@ -81,7 +80,6 @@ extern "C" int pmem_read(int raddr) {
 	uint32_t addr=guest_to_host(raddr);
   	addr&=~0x3u;
 #ifdef TRACE_MEM
-	if(dut.r_mem)
 		printf("  $pmem_read %08X\n",raddr);
 #endif
 	return mem[addr>>2];
@@ -101,7 +99,6 @@ extern "C" void pmem_write(int waddr, int wdata, char wmask) {
 	addr&=~0x3u;
 
 #ifdef TRACE_MEM
-	if(dut.w_mem)
 		printf("  $pmem_write %08X mask %d data:%08X\n",waddr,(int)wmask,wdata);
 #endif
 	
