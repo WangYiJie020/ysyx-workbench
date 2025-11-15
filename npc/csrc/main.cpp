@@ -14,6 +14,7 @@
 #include <nvboard.h>
 
 #include "sdb/sdb.hpp"
+#include "sdb/elf_tool.hpp"
 
 #ifndef TOP_NAME
 #define TOP_NAME Vtop
@@ -216,7 +217,7 @@ sdb::debuger dbg(
 	addr_readbyte,
 	get_reg,
 	std::vector<std::string>(reg_names.begin(),reg_names.end()),
-	disasm
+	disasm,sdb_inst_fetcher
 );
 
 extern "C" void raise_break(int a0){
@@ -241,8 +242,10 @@ void init_disasm();
 int main(int argc, char **argv)
 {
 	init_disasm();
+	std::fstream f("/home/wuser/ysyx-workbench/am-kernels/tests/cpu-tests/build/bubble-sort-minirv-npc.elf",std::ios::in|std::ios::binary);
+	ElfHandler elf_fh(f);
+	elf_fh.dump_func_syms();
 
-	dbg.set_inst_fetcher(sdb_inst_fetcher);
 //	pmem_write(0,0x12345678, 0x3);
 //	int res=pmem_read(0);
 //	printf("%X",res);
