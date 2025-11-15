@@ -243,7 +243,8 @@ int main(int argc, char **argv)
 {
 	init_disasm();
 	std::fstream f("/home/wuser/ysyx-workbench/am-kernels/tests/cpu-tests/build/bubble-sort-minirv-npc.elf",std::ios::in|std::ios::binary);
-	ElfHandler elf_fh(f);
+	elf_handler elf_fh;
+	elf_fh.load(f);
 	elf_fh.dump_func_syms();
 
 //	pmem_write(0,0x12345678, 0x3);
