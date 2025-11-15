@@ -145,7 +145,10 @@ void debuger::dump_reg(){
 }
 
 void debuger::cmd_info(string_view s){
-	if(s=="r")dump_reg();
+	if(s=="r"){
+		_shot_reg(_reg_snap);
+		dump_reg();
+	}
 	else return _error("Unknown info command {}", s);	
 }
 void debuger::cmd_x(size_t N,expr_t e_addr){

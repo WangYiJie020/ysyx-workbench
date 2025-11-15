@@ -72,6 +72,7 @@ void debuger::load_difftest_ref(string_view so_file,size_t img_size){COND_ENABLE
 void debuger::_difftest_step(paddr_t pc,paddr_t npc){COND_ENABLE{
 	auto& imp=*_imp_difftest;
 	reg_snapshot_t ref_regs(_reg_snap.size());
+	_shot_reg(_reg_snap);
 	imp.ref_exec(1);
 	assert_reg_num();
 	// after ref exec, its pc should be npc
