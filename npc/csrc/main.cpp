@@ -77,36 +77,6 @@ extern "C" void reg_upadted(int idx,int val) {
 //	printf("reg_upadted called %d %08X\n",idx,val);
 	regs[idx]=val;
 }
-
-extern "C" int pmem_read(int raddr) {
-	// printf("pmem_read called %08X\n",raddr);
-	if(raddr==NOP_INST_ADDR)return NOP_INST;
-	if(raddr==MMIO_RTC_ADDR||raddr==MMIO_RTC_ADDR+4){
-		static uint64_t time_in_us;
-		if(raddr==MMIO_RTC_ADDR){
-			struct timespec ts;
-			clock_gettime(CLOCK_MONOTONIC_COARSE,&ts);
-			time_in_us=ts.tv_sec*1000000+ts.tv_nsec/1000;
-			return (uint32_t)(time_in_us&0xffffffffu);
-		}
-		else{
-			return time_in_us>>32;
-		}
-	}
-
-	if(!is_running){
-		printf("Warn: read addr %08X when not run, return 0xBAADCA11\n",raddr);
-		return 0xBAADCA11;
-	}
-  	// 总是读取地址为`raddr & ~0x3u`的4字节返回
-	uint32_t addr=guest_to_host(raddr);
-  	addr&=~0x3u;
-#ifdef TRACE_MEM
-		printf("  $pmem_read %08X\n",raddr);
-#endif
-	return mem[addr>>2];
-}
-
 extern "C" int fetch_inst(int pc){
 	if(pc<=INITIAL_PC-4)return NOP_INST;
 	return mem[guest_to_host(pc)>>2];
@@ -211,10 +181,41 @@ sdb::debuger dbg(
 	disasm,sdb_inst_fetcher
 );
 
+extern "C" int pmem_read(int raddr) {
+	// printf("pmem_read called %08X\n",raddr);
+	if(raddr==NOP_INST_ADDR)return NOP_INST;
+	if(raddr==MMIO_RTC_ADDR||raddr==MMIO_RTC_ADDR+4){
+		dbg.difftest_ref_skip();
+		static uint64_t time_in_us;
+		if(raddr==MMIO_RTC_ADDR){
+			struct timespec ts;
+			clock_gettime(CLOCK_MONOTONIC_COARSE,&ts);
+			time_in_us=ts.tv_sec*1000000+ts.tv_nsec/1000;
+			return (uint32_t)(time_in_us&0xffffffffu);
+		}
+		else{
+			return time_in_us>>32;
+		}
+	}
+
+	if(!is_running){
+		printf("Warn: read addr %08X when not run, return 0xBAADCA11\n",raddr);
+		return 0xBAADCA11;
+	}
+  	// 总是读取地址为`raddr & ~0x3u`的4字节返回
+	uint32_t addr=guest_to_host(raddr);
+  	addr&=~0x3u;
+#ifdef TRACE_MEM
+		printf("  $pmem_read %08X\n",raddr);
+#endif
+	return mem[addr>>2];
+}
+
+
 extern "C" void pmem_write(int waddr, int wdata, char wmask) {
 	if(waddr==MMIO_SERIAL_PORT){
-		putchar(wdata&0xff);
 		dbg.difftest_ref_skip();		
+		putchar(wdata&0xff);
 		return;
 	}
 	// printf("pmem_write called %08X\n",waddr);
