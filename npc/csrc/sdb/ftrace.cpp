@@ -1,5 +1,6 @@
 #include "sdb.hpp"
 #include "ansi_col.h"
+#include "elf_tool.hpp"
 
 using namespace std;
 using namespace sdb;

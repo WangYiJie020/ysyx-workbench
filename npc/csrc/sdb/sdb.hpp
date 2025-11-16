@@ -10,7 +10,6 @@
 #include <memory>
 
 #include "cmd.hpp"
-#include "elf_tool.hpp"
 
 namespace sdb {
 
@@ -131,13 +130,12 @@ class debuger{
 		_ENABLE_FTRACE=1,
 		_ENABLE_DIFFTEST=1;
 
+	using fmt_str=std::string_view;
+
 	cpu_executor _exec;
 	cpu_state _state;
 
 	mem_loader _loadmem;
-	inline uint8_t _paddr_read(paddr_t addr){
-		return *_loadmem(addr,1);
-	}
 
 	reg_snapshoter _shot_reg;
 	std::span<std::string_view> _reg_names;
@@ -152,8 +150,6 @@ class debuger{
 
 	_impl::ftrace_imptr _imp_ftrace;
 	_impl::difftest_imptr _imp_difftest;
-
-	using fmt_str=std::string_view;
 
 	clscmd::command_table _cmd_table;
 
