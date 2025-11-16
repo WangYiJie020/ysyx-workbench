@@ -239,6 +239,12 @@ extern "C" void raise_break(int a0){
 	printf(" at pc = 0x%08x\n",dut.pc);
 }
 
+extern "C" void sim_panic(){
+	puts("SIM PANIC!");
+	is_running=false;
+	dbg.abort();
+}
+
 sdb::jump_type sdb_jump_recognizer(const sdb::disasmable_inst& inst){
 	using namespace sdb;
 	word_t instr=*(word_t*)inst.code.data();
