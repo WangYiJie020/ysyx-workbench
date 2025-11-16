@@ -148,7 +148,7 @@ class debuger{
 
 	const paddr_t _INITIAL_PC;
 
-	constexpr static size_t _MAX_INST_DUMP_PERSTEP=10;
+	constexpr static size_t _MAX_INST_DUMP_PERSTEP=-1;
 	bool _enable_dump_inst=true;
 
 	_impl::ftrace_imptr _imp_ftrace;
