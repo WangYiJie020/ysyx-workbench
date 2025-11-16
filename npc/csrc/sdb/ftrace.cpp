@@ -28,6 +28,7 @@ void debuger::set_jump_recognizer(jump_recognizer r){
 }
 
 void debuger::_ftrace_handler(const disasmable_inst& inst){
+	if(!_imp_ftrace)return;
 	auto& imp=*_imp_ftrace;
 	auto type=imp.recog_jmp(inst);
 	if(type==jump_type::normal)return;
