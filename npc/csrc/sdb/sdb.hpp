@@ -148,6 +148,9 @@ class debuger{
 
 	const paddr_t _INITIAL_PC;
 
+	constexpr static size_t _MAX_INST_DUMP_PERSTEP=10;
+	bool _enable_dump_inst=true;
+
 	_impl::ftrace_imptr _imp_ftrace;
 	_impl::difftest_imptr _imp_difftest;
 
@@ -212,6 +215,7 @@ public:
 			_error("Program has ended. Cannot execuate.");
 			return;
 		}
+		_enable_dump_inst=n<=_MAX_INST_DUMP_PERSTEP;
 		for(;n>0&&is_running();n--)_step_one();
 	}
 

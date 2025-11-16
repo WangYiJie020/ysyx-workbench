@@ -68,7 +68,7 @@ string sdb::_impl::expand_tabs(std::string_view in, int tabsize) {
 void debuger::_step_one(){
 	if constexpr (_ENABLE_ITRACE){
 		auto inst=_fetch_dinst(_state.pc);
-		_dump_inst(inst);
+		if(_enable_dump_inst)_dump_inst(inst);
 		_iringbuf.push(std::move(inst));
 		if constexpr (_ENABLE_FTRACE){
 			_ftrace_handler(inst);

@@ -113,7 +113,7 @@ module top(
     // use MAGIC_ADDR_IGNORE to tell pmem_read to ignore
     assign safe_maddr=is_load?s1pi_addr:NOP_INST_ADDR;
 
-    assign nxt_pc=is_jalr?(s1pi_addr&~1):(pc+4);
+    assign nxt_pc=is_jalr?(s1pi_addr&~1):(pc+(itype==TypeJ?imm:4));
     assign wen=(itype!=TypeS)&&(itype!=TypeN);
 
     reg `WORD_RANGE mem_rdata;
@@ -163,7 +163,11 @@ module top(
                     default:$display("(store) UNKNOWN func3t %d",func3t);
                 endcase
             end
-            default:;
+            TypeJ:begin
+                // jal
+                wdata=pc+4;
+            end
+            default:$display("(top) UNKNOWN itype %d",itype);
 
         endcase
         //$display("pc %08X nxt_pc %08X",pc,nxt_pc);
