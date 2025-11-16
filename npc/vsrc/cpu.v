@@ -45,6 +45,7 @@ wire isR=(opcu==5'b01100);
 wire isS=(opcu==5'b01000);
 wire isU=is_lui|is_auipc;
 wire isJ=is_jal;
+wire isB=(opcu==5'b11000);
 
 assign itype=
     is_invalid?TypeN:
@@ -53,6 +54,7 @@ assign itype=
     isS?TypeS:
     isU?TypeU:
     isJ?TypeJ:
+    isB?TypeB:
     TypeN;
 
 endmodule
