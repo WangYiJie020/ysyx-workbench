@@ -163,7 +163,8 @@ module top(
                     default:$display("(store) UNKNOWN func3t %d",func3t);
                 endcase
             end
-            default:;
+            default:$display("(top) UNKNOWN itype %d",itype)
+                ;
 
         endcase
         //$display("pc %08X nxt_pc %08X",pc,nxt_pc);
