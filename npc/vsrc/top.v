@@ -1,4 +1,6 @@
 import "DPI-C" function void raise_break(input int a0);
+import "DPI-C" function void sim_panic();
+
 // always read addr & ~0x3u
 import "DPI-C" function int pmem_read(input int raddr);
 // always Write addr & ~0x3u
@@ -177,6 +179,7 @@ module top(
                         default: begin
                             wdata=BADCALL_RESVALUE;
                             $display("(load) UNKNOWN func3t %d",func3t);
+                            sim_panic();
                         end
                     endcase
                 end
@@ -192,7 +195,10 @@ module top(
                     3'b000: pmem_write(s1pi_addr,
                         src2<<(s1pi_addr_unalign_part*8),
                         8'b00000001<<s1pi_addr_unalign_part); // sb
-                    default:$display("(store) UNKNOWN func3t %d",func3t);
+                    default:begin
+                        $display("(store) UNKNOWN func3t %d",func3t);
+                        sim_panic();
+                    end
                 endcase
             end
             TypeJ:begin
