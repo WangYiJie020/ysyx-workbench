@@ -1,10 +1,21 @@
 #include <am.h>
 
+#define RTC_ADDR 0x10000048
+
+static uint64_t _am_start_time;
+static uint64_t get_us_time(){
+	uint64_t lo = *(volatile uint32_t *)(RTC_ADDR);
+	uint64_t hi = *(volatile uint32_t *)(RTC_ADDR+4);
+	uint64_t res=(hi<<32)|lo;
+	return res;
+}
+
 void __am_timer_init() {
+	_am_start_time = get_us_time();
 }
 
 void __am_timer_uptime(AM_TIMER_UPTIME_T *uptime) {
-  uptime->us = 0;
+  uptime->us = get_us_time() - _am_start_time;
 }
 
 void __am_timer_rtc(AM_TIMER_RTC_T *rtc) {

@@ -36,7 +36,8 @@ static TOP_NAME dut;
 #define NOP_INST 0x00000013u // addi x0, x0, 0
 #define NOP_INST_ADDR (INITIAL_PC-4)
 
-#define MMIO_SERIAL_IO 0x10000000u
+#define MMIO_SERIAL_PORT 0x10000000u
+#define MMIO_RTC_ADDR 0x10000048u
 
 typedef uint32_t word_t;
 typedef uint32_t addr_t;
@@ -80,6 +81,18 @@ extern "C" void reg_upadted(int idx,int val) {
 extern "C" int pmem_read(int raddr) {
 	// printf("pmem_read called %08X\n",raddr);
 	if(raddr==NOP_INST_ADDR)return NOP_INST;
+	if(raddr==MMIO_RTC_ADDR||raddr==MMIO_RTC_ADDR+4){
+		static uint64_t time_in_us;
+		if(raddr==MMIO_RTC_ADDR){
+			struct timespec ts;
+			clock_gettime(CLOCK_MONOTONIC_COARSE,&ts);
+			time_in_us=ts.tv_sec*1000000+ts.tv_nsec/1000;
+			return (uint32_t)(time_in_us&0xffffffffu);
+		}
+		else{
+			return time_in_us>>32;
+		}
+	}
 
 	if(!is_running){
 		printf("Warn: read addr %08X when not run, return 0xBAADCA11\n",raddr);
@@ -199,7 +212,7 @@ sdb::debuger dbg(
 );
 
 extern "C" void pmem_write(int waddr, int wdata, char wmask) {
-	if(waddr==MMIO_SERIAL_IO){
+	if(waddr==MMIO_SERIAL_PORT){
 		putchar(wdata&0xff);
 		dbg.difftest_ref_skip();		
 		return;
