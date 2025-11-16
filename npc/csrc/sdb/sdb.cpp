@@ -65,42 +65,13 @@ string sdb::_impl::expand_tabs(std::string_view in, int tabsize) {
     }
     return out;
 }
-
-void debuger::_trace_handler_f(const disasmable_inst& inst){
-	auto type=_recog_jmp(inst);
-	if(type==jump_type::normal)return;
-	auto hint_str=type==jump_type::call?"call fun":"ret from";
-	if(type==jump_type::call)_func_depth++;
-
-	auto f=_elf.get_fun_at(inst.pc);
-	auto fname=f?f->name:"(unknown)";
-
-	_print(
-			"0x{:08X}: "
-			"{}{} "
-			ANSI_FG_GRAY "f`{:08X}"
-		 	ANSI_NONE "{}{}\n",
-		inst.pc,
-		type==jump_type::call?ANSI_FG_YELLOW:ANSI_FG_BLUE,
-		hint_str,
-		f?f->addr:0,
-		string(_func_depth,' '),
-		fname
-	);
-
-	if(type==jump_type::ret){
-		if(_func_depth>0)_func_depth--;
-		else _error("ret but func depth is 0");
-	}
-}
-
 void debuger::_step_one(){
 	if constexpr (_ENABLE_ITRACE){
 		auto inst=_fetch_dinst(_state.pc);
 		_dump_inst(inst);
 		_iringbuf.push(std::move(inst));
 		if constexpr (_ENABLE_FTRACE){
-			_trace_handler_f(inst);
+			_ftrace_handler(inst);
 		}
 	}
 	auto oldpc= _state.pc;
@@ -130,9 +101,9 @@ void debuger::cmd_q(){
 void debuger::dump_mem(paddr_t addr,paddr_t end){
 	assert((end-addr)%4==0);
 	while (addr!=end) {
-		_print("0x{:08x}: ",addr);	
-		for(int i=0;i<4;i++)
-			_print("{:02x} ", _paddr_read(addr+i));
+		_print(ANSI_FG_GRAY"0x{:08x}: " ANSI_NONE,addr);	
+		auto p=_loadmem(addr,4);
+		for(int i=0;i<4;i++)_print("{:02x} ", p[i]);
 		_print("\n");
 		addr+=4;
 	}

@@ -10,7 +10,6 @@
 #include <memory>
 
 #include "cmd.hpp"
-#include "elf_tool.hpp"
 
 namespace sdb {
 
@@ -63,12 +62,16 @@ namespace sdb {
 	using jump_recognizer=std::function<jump_type(const disasmable_inst&)>;
 
 namespace _impl {
-	struct difftest_imp;
-	struct _deleter_difftest{
-		void operator()(difftest_imp* ptr);
-	};
-	using difftest_imptr=std::unique_ptr<difftest_imp,_deleter_difftest>;
+#define _MAKE_DEF(name) \
+		struct name##_imp; \
+		struct _deleter_##name{\
+			void operator()(name##_imp* ptr);\
+		};\
+		using name##_imptr=std::unique_ptr<name##_imp,_deleter_##name>;\
 
+	_MAKE_DEF(difftest);
+	_MAKE_DEF(ftrace);
+#undef _MAKE_DEF
 	std::string expand_tabs(std::string_view in, int tabsize);
 }
 
@@ -127,13 +130,12 @@ class debuger{
 		_ENABLE_FTRACE=1,
 		_ENABLE_DIFFTEST=1;
 
+	using fmt_str=std::string_view;
+
 	cpu_executor _exec;
 	cpu_state _state;
 
 	mem_loader _loadmem;
-	inline uint8_t _paddr_read(paddr_t addr){
-		return *_loadmem(addr,1);
-	}
 
 	reg_snapshoter _shot_reg;
 	std::span<std::string_view> _reg_names;
@@ -144,15 +146,10 @@ class debuger{
 
 	inst_ringbuf _iringbuf;
 
-	elf_handler _elf;
-	jump_recognizer _recog_jmp;
-	int _func_depth=0;
-
 	const paddr_t _INITIAL_PC;
 
+	_impl::ftrace_imptr _imp_ftrace;
 	_impl::difftest_imptr _imp_difftest;
-
-	using fmt_str=std::string_view;
 
 	clscmd::command_table _cmd_table;
 
@@ -173,7 +170,7 @@ class debuger{
 	}
 
 	void _init_cmd_table();
-	void _trace_handler_f(const disasmable_inst& inst);
+	void _ftrace_handler(const disasmable_inst& inst);
 	void _difftest_step(paddr_t pc,paddr_t npc);
 	void _step_one();
 
@@ -197,16 +194,10 @@ public:
 		_init_cmd_table();
 	}
 
-	void load_elf(const char* filename){
-		std::fstream fs(filename,std::ios::in|std::ios::binary);
-		_elf.load(fs);
-	}
-
+	void load_elf(const char* filename);
 	void load_difftest_ref(std::string_view so_file,size_t img_size);
 
-	void set_jump_recognizer(jump_recognizer r){
-		_recog_jmp=r;
-	}
+	void set_jump_recognizer(jump_recognizer r);
 
 	inline const cpu_state& state()const{return _state;}
 	inline cpu_state& state(){return _state;}
