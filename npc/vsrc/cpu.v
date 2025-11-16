@@ -141,6 +141,10 @@ always@(*)begin
         3'b100:begin
             res=src1^src2;
         end
+        3'b001:begin
+            // slli/sll
+            res=src1<<src2[4:0];
+        end
         3'b101:begin
             // srli/srl
             res=src1>>src2[4:0];
