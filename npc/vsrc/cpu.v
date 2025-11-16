@@ -136,7 +136,7 @@ always@(*)begin
             end
         end
         3'b011:begin
-            if(is_imm)res=(src1<src2)?1:0;
+            res=(src1<src2)?1:0;
         end
         default:begin
             res=BADCALL_RESVALUE;
