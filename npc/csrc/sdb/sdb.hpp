@@ -67,7 +67,7 @@ namespace _impl {
 		struct _deleter_##name{\
 			void operator()(name##_imp* ptr);\
 		};\
-		using name##_imptr=std::unique_ptr<name##_imp,_deleter_##name>
+		using name##_imptr=std::unique_ptr<name##_imp,_deleter_##name>;\
 
 	_MAKE_DEF(difftest);
 	_MAKE_DEF(ftrace);
@@ -170,7 +170,7 @@ class debuger{
 	}
 
 	void _init_cmd_table();
-	void _trace_handler_f(const disasmable_inst& inst);
+	void _ftrace_handler(const disasmable_inst& inst);
 	void _difftest_step(paddr_t pc,paddr_t npc);
 	void _step_one();
 

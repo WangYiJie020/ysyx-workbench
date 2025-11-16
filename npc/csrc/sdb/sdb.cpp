@@ -71,7 +71,7 @@ void debuger::_step_one(){
 		_dump_inst(inst);
 		_iringbuf.push(std::move(inst));
 		if constexpr (_ENABLE_FTRACE){
-			_trace_handler_f(inst);
+			_ftrace_handler(inst);
 		}
 	}
 	auto oldpc= _state.pc;
