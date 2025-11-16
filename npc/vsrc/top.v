@@ -142,7 +142,7 @@ module top(
     end
 
 
-    assign wen=(itype!=TypeS)&&(itype!=TypeN);
+    assign wen=(itype!=TypeS)&&(itype!=TypeN)&&(itype!=TypeB);
 
     reg `WORD_RANGE mem_rdata;
 //    always@(safe_maddr)begin
