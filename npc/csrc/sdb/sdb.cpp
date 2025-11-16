@@ -101,7 +101,7 @@ void debuger::cmd_q(){
 void debuger::dump_mem(paddr_t addr,paddr_t end){
 	assert((end-addr)%4==0);
 	while (addr!=end) {
-		_print("0x{:08x}: ",addr);	
+		_print(ANSI_FG_GRAY"0x{:08x}: " ANSI_NONE,addr);	
 		auto p=_loadmem(addr,4);
 		for(int i=0;i<4;i++)_print("{:02x} ", p[i]);
 		_print("\n");
