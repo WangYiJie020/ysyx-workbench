@@ -14,7 +14,7 @@ static const char mainargs[MAINARGS_MAX_LEN] = TOSTRING(MAINARGS_PLACEHOLDER); /
 #define SERIAL_PORT 0x10000000
 
 void putch(char ch) {
-	*(volatile uint8_t *)(SERIAL_PORT + 0x00) = ch;
+	*(uint8_t *)(SERIAL_PORT + 0x00) = ch;
 }
 
 void halt(int code) {	
