@@ -36,6 +36,8 @@ static TOP_NAME dut;
 #define NOP_INST 0x00000013u // addi x0, x0, 0
 #define NOP_INST_ADDR (INITIAL_PC-4)
 
+#define MMIO_SERIAL_IO 0x10000000u
+
 typedef uint32_t word_t;
 typedef uint32_t addr_t;
 
@@ -47,7 +49,7 @@ void nvboard_init(int vga_clk_cycle);
 
 
 
-word_t mem[512*1024/4]={
+word_t mem[6*1024*1024/4]={
   0x00000297,  // auipc t0,0
   0x00028823,  // sb  zero,16(t0)
   0x0102c503,  // lbu a0,16(t0)
@@ -96,31 +98,6 @@ extern "C" int fetch_inst(int pc){
 	if(pc<=INITIAL_PC-4)return NOP_INST;
 	return mem[guest_to_host(pc)>>2];
 }
-
-extern "C" void pmem_write(int waddr, int wdata, char wmask) {
-	// printf("pmem_write called %08X\n",waddr);
-	// 总是往地址为`waddr & ~0x3u`的4字节按写掩码`wmask`写入`wdata`
-	// `wmask`中每比特表示`wdata`中1个字节的掩码,
-	// 如`wmask = 0x3`代表只写入最低2个字节, 内存中的其它字节保持不变
-	uint32_t addr=guest_to_host(waddr);
-	addr&=~0x3u;
-
-#ifdef TRACE_MEM
-		printf("  $pmem_write %08X mask %d data:%08X\n",waddr,(int)wmask,wdata);
-#endif
-	
-	uint8_t* p=(uint8_t*)(&mem[addr>>2]);
-
-	while (wmask) {
-		if(wmask&1){
-			*p=wdata&0xff;
-		}
-		p++;
-		wmask>>=1;
-		wdata>>=8;
-	}
-}
-
 static void single_cycle() {
 
 #ifdef TRACE_SINGLE_CYCLE
@@ -220,6 +197,36 @@ sdb::debuger dbg(
 	reg_names,
 	disasm,sdb_inst_fetcher
 );
+
+extern "C" void pmem_write(int waddr, int wdata, char wmask) {
+	if(waddr==MMIO_SERIAL_IO){
+		putchar(wdata&0xff);
+		dbg.difftest_ref_skip();		
+		return;
+	}
+	// printf("pmem_write called %08X\n",waddr);
+	// 总是往地址为`waddr & ~0x3u`的4字节按写掩码`wmask`写入`wdata`
+	// `wmask`中每比特表示`wdata`中1个字节的掩码,
+	// 如`wmask = 0x3`代表只写入最低2个字节, 内存中的其它字节保持不变
+	uint32_t addr=guest_to_host(waddr);
+	addr&=~0x3u;
+
+#ifdef TRACE_MEM
+		printf("  $pmem_write %08X mask %d data:%08X\n",waddr,(int)wmask,wdata);
+#endif
+	
+	uint8_t* p=(uint8_t*)(&mem[addr>>2]);
+
+	while (wmask) {
+		if(wmask&1){
+			*p=wdata&0xff;
+		}
+		p++;
+		wmask>>=1;
+		wdata>>=8;
+	}
+}
+
 
 extern "C" void raise_break(int a0){
 	dbg.state().halt(a0);
