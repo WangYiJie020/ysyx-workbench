@@ -11,7 +11,7 @@ BUILD_DIR = ./build
 OBJ_DIR = $(BUILD_DIR)/obj_dir
 BIN = $(BUILD_DIR)/$(TOPNAME)
 
-mainargs?=
+ARGS?=
 
 default: $(BIN)
 
@@ -57,8 +57,8 @@ SIM_IMG ?=
 
 sim: $(BIN)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-	@echo "Run the simulation. mainargs = '$(mainargs)'"
-	@$^ $(mainargs) $(SIM_IMG)
+	@echo "Run the simulation."
+	@$^ $(ARGS) $(SIM_IMG)
 #	./obj_dir/$(TOPNAME)
 
 clean:
