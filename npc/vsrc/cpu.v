@@ -38,10 +38,13 @@ assign is_load=(opcu==5'b00000);
 assign is_lui=(opcu==5'b01101);
 assign is_auipc=(opcu==5'b00101);
 
+wire is_jal=(opcu==5'b11011);
+
 wire isI=is_arithmetic|is_jalr|is_load;
 wire isR=(opcu==5'b01100);
 wire isS=(opcu==5'b01000);
 wire isU=is_lui|is_auipc;
+wire isJ=is_jal;
 
 assign itype=
     is_invalid?TypeN:
@@ -49,6 +52,7 @@ assign itype=
     isR?TypeR:
     isS?TypeS:
     isU?TypeU:
+    isJ?TypeJ:
     TypeN;
 
 endmodule
