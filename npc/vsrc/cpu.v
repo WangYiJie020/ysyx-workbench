@@ -126,6 +126,7 @@ always@(*)begin
             if(is_imm)res=src1+src2;
             else begin
                 if(func7t==7'b0)res=src1+src2;
+                else if(func7t==7'b0100000)res=src1-src2;
                 else begin
                     res=BADCALL_RESVALUE;
                     if(en)$display("(alu) UNKNOWN func7t %d",func7t);
