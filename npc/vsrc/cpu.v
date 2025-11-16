@@ -14,6 +14,7 @@ module cpu(
 );
 endmodule
 
+// only jal is TypeJ
 module itype_decoder(
     input [6:0] opcode,
     output [3:0] itype,
