@@ -185,10 +185,13 @@ module top(
             TypeU:wdata=is_lui?imm:(imm+pc);
             TypeS:begin
                 case(func3t)
-                    3'b010: pmem_write(s1pi_addr,src2,8'b00001111);
+                    3'b010: pmem_write(s1pi_addr,src2,8'b00001111); // sw
+                    3'b001: pmem_write(s1pi_addr,
+                        src2<<(s1pi_addr_unalign_part*8),
+                        8'b00000011<<s1pi_addr_unalign_part); // sh
                     3'b000: pmem_write(s1pi_addr,
                         src2<<(s1pi_addr_unalign_part*8),
-                        8'b00000001<<s1pi_addr_unalign_part);
+                        8'b00000001<<s1pi_addr_unalign_part); // sb
                     default:$display("(store) UNKNOWN func3t %d",func3t);
                 endcase
             end
