@@ -138,6 +138,9 @@ always@(*)begin
         3'b011:begin
             res=(src1<src2)?1:0;
         end
+        3'b100:begin
+            res=src1^src2;
+        end
         default:begin
             res=BADCALL_RESVALUE;
             if(en)$display("(alu) UNKNOWN func3t %d",func3t);
