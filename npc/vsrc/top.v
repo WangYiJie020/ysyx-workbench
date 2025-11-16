@@ -163,7 +163,10 @@ module top(
                     default:$display("(store) UNKNOWN func3t %d",func3t);
                 endcase
             end
-            TypeJ:;// Now only JAL is TypeJ, which is handled in nxt_pc
+            TypeJ:begin
+                // jal
+                wdata=pc+4;
+            end
             default:$display("(top) UNKNOWN itype %d",itype);
 
         endcase
