@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#include <unistd.h>
+#include <getopt.h>
+
 #include <verilated.h>
 #include <verilated_vcd_c.h>
 
@@ -144,8 +147,9 @@ static void reset(int n) {
     dut.rst = 0;
 }
 
-const char* img_file;
+static const char* img_file;
 static size_t img_size;
+static bool batch_mode=false;
 
 static long load_img() {
 #define Log(fmt , ...) printf(fmt "\n",##__VA_ARGS__)
@@ -155,8 +159,6 @@ static long load_img() {
     Log("No image is given. Use the default build-in image.");
     return 4096; // built-in image size
   }
-
-
 
   FILE *fp = fopen(img_file, "rb");
   Assert(fp, "Can not open '%s'", img_file);
@@ -268,19 +270,35 @@ std::string try_find_elf_file(std::string img_file){
 }
 
 void init_disasm();
+
+static void parse_args(int argc, char** argv){
+	const struct option table[] = {
+		{"batch", no_argument, NULL, 'b'},
+		{0, 0, NULL, 0}
+	};
+	int o;
+	while ((o = getopt_long(argc, argv, "b", table, NULL)) != -1) {
+		switch (o) {
+		case 'b': batch_mode = true; break;
+		case 1: img_file = optarg; break;
+		default:
+			printf("Bad option %c\n", o);
+			exit(1);
+		}
+	}
+
+}
+
 int main(int argc, char **argv)
 {
+	parse_args(argc, argv);
 	init_disasm();
 	using std::string;
 	using namespace std::views;
 	using namespace std::ranges;
 
-	if(argc==2){
-		img_file=argv[1];
-	}
-
-
 	load_img();
+
 	string elf_file=try_find_elf_file(img_file?img_file:"");
 	if(!elf_file.empty()){
 		printf("Found ELF file %s\n",elf_file.c_str());
@@ -297,6 +315,11 @@ int main(int argc, char **argv)
 #endif
 
   reset(10);
+
+	if(batch_mode){
+		dbg.cmd_c();
+		return dbg.state().is_bad();
+	}
 
 	puts("\n--- Start ---\n");
 	
