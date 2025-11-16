@@ -45,6 +45,7 @@ wire isR=(opcu==5'b01100);
 wire isS=(opcu==5'b01000);
 wire isU=is_lui|is_auipc;
 wire isJ=is_jal;
+wire isB=(opcu==5'b11000);
 
 assign itype=
     is_invalid?TypeN:
@@ -53,6 +54,7 @@ assign itype=
     isS?TypeS:
     isU?TypeU:
     isJ?TypeJ:
+    isB?TypeB:
     TypeN;
 
 endmodule
@@ -126,11 +128,15 @@ always@(*)begin
             if(is_imm)res=src1+src2;
             else begin
                 if(func7t==7'b0)res=src1+src2;
+                else if(func7t==7'b0100000)res=src1-src2;
                 else begin
                     res=BADCALL_RESVALUE;
                     if(en)$display("(alu) UNKNOWN func7t %d",func7t);
                 end
             end
+        end
+        3'b011:begin
+            if(is_imm)res=(src1<src2)?1:0;
         end
         default:begin
             res=BADCALL_RESVALUE;

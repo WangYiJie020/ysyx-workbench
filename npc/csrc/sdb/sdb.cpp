@@ -35,6 +35,8 @@ void debuger::_dump_inst(const disasmable_inst& inst,bool highlight_disasm){
 		if(j) _print(" ");
 		_print("{:02X}",inst.code[j]);
 	}
+	auto as_u32code=*(uint32_t*)inst.code.data();
+	_print(" `0x{:08X}",as_u32code);
 	_print(")" ANSI_NONE "\n");
 }
 

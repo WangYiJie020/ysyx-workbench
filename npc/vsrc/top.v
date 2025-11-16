@@ -113,14 +113,43 @@ module top(
     // use MAGIC_ADDR_IGNORE to tell pmem_read to ignore
     assign safe_maddr=is_load?s1pi_addr:NOP_INST_ADDR;
 
-    assign nxt_pc=is_jalr?(s1pi_addr&~1):(pc+(itype==TypeJ?imm:4));
-    assign wen=(itype!=TypeS)&&(itype!=TypeN);
+
+    wire branch_eq= (src1==src2);
+    wire branch_slt= ($signed(src1)<$signed(src2));
+    wire branch_ult= (src1<src2);
+
+    wire branch_calc_flag_rev=func3t[0];
+    wire branch_calc_flag_cmp=func3t[2];
+    wire branch_calc_flag_usign=func3t[1];
+
+    wire branch_calc_tmp = branch_calc_flag_cmp ?
+        (branch_calc_flag_usign ? branch_ult : branch_slt) :
+        branch_eq;
+    wire branch_calc_result=branch_calc_flag_rev ? ~branch_calc_tmp : branch_calc_tmp;
+
+
+    // nxt_pc
+    always@(*) begin
+    //assign nxt_pc=is_jalr?(s1pi_addr&~1):(pc+(itype==TypeJ?imm:4));
+        if(is_jalr)nxt_pc=(s1pi_addr&~1);
+        else if(itype==TypeJ)nxt_pc=pc+imm;
+        else if(itype==TypeB)begin
+            if(branch_calc_result) nxt_pc=pc+imm;
+            else nxt_pc=pc+4;
+        end else begin
+            nxt_pc=pc+4;
+        end
+    end
+
+
+    assign wen=(itype!=TypeS)&&(itype!=TypeN)&&(itype!=TypeB);
 
     reg `WORD_RANGE mem_rdata;
 //    always@(safe_maddr)begin
 //        $display("Memory access at addr %08X",safe_maddr);
 //    end
 
+    // wdata
     always@(*) begin
         if(inst==INST_EBREAK)begin
             raise_break(a0);
@@ -167,6 +196,7 @@ module top(
                 // jal
                 wdata=pc+4;
             end
+            TypeB:; // no wirite
             default:$display("(top) UNKNOWN itype %d",itype);
 
         endcase
