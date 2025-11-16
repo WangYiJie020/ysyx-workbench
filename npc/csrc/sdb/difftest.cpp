@@ -79,7 +79,6 @@ void debuger::difftest_ref_skip(){COND_ENABLE{
 void debuger::_difftest_step(paddr_t pc,paddr_t npc){COND_ENABLE{
 	auto& imp=*_imp_difftest;
 	_shot_reg(_reg_snap);
-	imp.ref_exec(1);
 	assert_reg_num();
 	// after ref exec, its pc should be npc
 	push_pc_to_regsnap(npc);
@@ -90,6 +89,7 @@ void debuger::_difftest_step(paddr_t pc,paddr_t npc){COND_ENABLE{
 		return;
 	}
 
+	imp.ref_exec(1);
 	reg_snapshot_t ref_regs(_reg_snap.size());
 	imp.ref_regcpy(ref_regs.data(), DIFFTEST_TO_DUT);
 	for(size_t i=0;i<_reg_snap.size();i++){
