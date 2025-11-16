@@ -174,6 +174,18 @@ module top(
                         3'b100: wdata={24'b0,mem_rdata[
                             s1pi_addr_unalign_part*8+:8
                         ]};
+                        // lb sign ext
+                        3'b000: wdata={{24{mem_rdata[
+                            s1pi_addr_unalign_part*8+7]}},
+                            mem_rdata[s1pi_addr_unalign_part*8+:8]};
+                        // lhu zero ext
+                        3'b101: wdata={16'b0,mem_rdata[
+                            s1pi_addr_unalign_part*8+:16
+                        ]};
+                        // lh sign ext
+                        3'b001: wdata={{16{mem_rdata[
+                            s1pi_addr_unalign_part*8+15]}},
+                            mem_rdata[s1pi_addr_unalign_part*8+:16]};
                         // lw
                         3'b010: wdata=mem_rdata;
                         default: begin
