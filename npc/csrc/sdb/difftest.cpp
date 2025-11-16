@@ -21,6 +21,8 @@ struct sdb::_impl::difftest_imp{
 	ref_difftest_regcpy_t ref_regcpy=nullptr;
 	ref_difftest_exec_t ref_exec=nullptr;
 
+	bool is_skip_ref=false;
+
 	template<typename Fn>
 	void _meta_load(Fn& fn, const char* name){
 		fn=(Fn)dlsym(handle, name);
@@ -69,14 +71,26 @@ void debuger::load_difftest_ref(string_view so_file,size_t img_size){COND_ENABLE
 	
 }}
 
+void debuger::difftest_ref_skip(){COND_ENABLE{
+	auto& imp=*_imp_difftest;
+	imp.is_skip_ref=true;
+}}
+
 void debuger::_difftest_step(paddr_t pc,paddr_t npc){COND_ENABLE{
 	auto& imp=*_imp_difftest;
-	reg_snapshot_t ref_regs(_reg_snap.size());
 	_shot_reg(_reg_snap);
 	imp.ref_exec(1);
 	assert_reg_num();
 	// after ref exec, its pc should be npc
 	push_pc_to_regsnap(npc);
+
+	if(imp.is_skip_ref){
+		imp.ref_regcpy(_reg_snap.data(),DIFFTEST_TO_REF);
+		imp.is_skip_ref=false;
+		return;
+	}
+
+	reg_snapshot_t ref_regs(_reg_snap.size());
 	imp.ref_regcpy(ref_regs.data(), DIFFTEST_TO_DUT);
 	for(size_t i=0;i<_reg_snap.size();i++){
 		if(ref_regs[i]!=_reg_snap[i]){

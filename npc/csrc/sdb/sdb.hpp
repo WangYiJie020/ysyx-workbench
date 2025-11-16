@@ -200,6 +200,8 @@ public:
 	void load_elf(const char* filename);
 	void load_difftest_ref(std::string_view so_file,size_t img_size);
 
+	void difftest_ref_skip();
+
 	void set_jump_recognizer(jump_recognizer r);
 
 	inline const cpu_state& state()const{return _state;}
