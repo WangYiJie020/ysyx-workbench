@@ -124,15 +124,12 @@ module top(
 
     // nxt_pc
     always@(*) begin
-    //assign nxt_pc=is_jalr?(s1pi_addr&~1):(pc+(itype==TypeJ?imm:4));
         if(is_jalr)nxt_pc=(s1pi_addr&~1);
         else if(itype==TypeJ)nxt_pc=pc+imm;
         else if(itype==TypeB)begin
             if(take_branch) nxt_pc=pc+imm;
             else nxt_pc=pc+4;
-        end else begin
-            nxt_pc=pc+4;
-        end
+        end else nxt_pc=pc+4;
     end
 
 
