@@ -126,9 +126,9 @@ struct inst_ringbuf{
 
 class debuger{
 	constexpr static bool
-	 	_ENABLE_ITRACE=0,
+	 	_ENABLE_ITRACE=1,
 		_ENABLE_FTRACE=0,
-		_ENABLE_DIFFTEST=0;
+		_ENABLE_DIFFTEST=1;
 
 	using fmt_str=std::string_view;
 
