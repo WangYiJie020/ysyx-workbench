@@ -14,6 +14,25 @@ module cpu(
 );
 endmodule
 
+module branch_jmp_judger(
+    input `WORD_RANGE src1,src2,
+    input [2:0] func3t,
+    output take_branch
+);
+    wire cond_eq= (src1==src2);
+    wire cond_slt= ($signed(src1)<$signed(src2));
+    wire cond_ult= (src1<src2);
+
+    wire flag_rev=func3t[0];
+    wire flag_usign=func3t[1];
+    wire flag_cmp=func3t[2];
+
+    wire cond_calc_tmp = flag_cmp ?
+        (flag_usign ? cond_ult : cond_slt) : cond_eq;
+    assign take_branch=flag_rev ^ cond_calc_tmp;
+endmodule
+
+// only jal is TypeJ
 module itype_decoder(
     input [6:0] opcode,
     output [3:0] itype,
@@ -37,10 +56,14 @@ assign is_load=(opcu==5'b00000);
 assign is_lui=(opcu==5'b01101);
 assign is_auipc=(opcu==5'b00101);
 
+wire is_jal=(opcu==5'b11011);
+
 wire isI=is_arithmetic|is_jalr|is_load;
 wire isR=(opcu==5'b01100);
 wire isS=(opcu==5'b01000);
 wire isU=is_lui|is_auipc;
+wire isJ=is_jal;
+wire isB=(opcu==5'b11000);
 
 assign itype=
     is_invalid?TypeN:
@@ -48,6 +71,8 @@ assign itype=
     isR?TypeR:
     isS?TypeS:
     isU?TypeU:
+    isJ?TypeJ:
+    isB?TypeB:
     TypeN;
 
 endmodule
@@ -121,11 +146,36 @@ always@(*)begin
             if(is_imm)res=src1+src2;
             else begin
                 if(func7t==7'b0)res=src1+src2;
+                else if(func7t==7'b0100000)res=src1-src2;
                 else begin
                     res=BADCALL_RESVALUE;
                     if(en)$display("(alu) UNKNOWN func7t %d",func7t);
                 end
             end
+        end
+        3'b011:begin // sltu/sltui
+            res=(src1<src2)?1:0;
+        end
+        3'b010:begin // slt/slti
+            res=($signed(src1)<$signed(src2))?1:0;
+        end
+        3'b100:begin
+            res=src1^src2;
+        end
+        3'b001:begin
+            // slli/sll
+            res=src1<<src2[4:0];
+        end
+        3'b101:begin
+            // srai/sra
+            if(func7t==7'b0100000)res=$signed(src1)>>>src2[4:0];
+            else res=src1>>src2[4:0]; // srli/srl
+        end
+        3'b110:begin
+            res=src1|src2;
+        end
+        3'b111:begin
+            res=src1&src2;
         end
         default:begin
             res=BADCALL_RESVALUE;

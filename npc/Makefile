@@ -3,13 +3,15 @@ NXDC_FILES = constr/top.nxdc
 INC_PATH ?=
 
 VERILATOR = verilator
-VERILATOR_CFLAGS += -MMD --build -cc --trace \
+VERILATOR_CFLAGS += -MMD --build -cc \
 				-O3 \
 			   	--x-assign fast --x-initial fast --noassert
 
 BUILD_DIR = ./build
 OBJ_DIR = $(BUILD_DIR)/obj_dir
 BIN = $(BUILD_DIR)/$(TOPNAME)
+
+ARGS?=
 
 default: $(BIN)
 
@@ -26,17 +28,26 @@ VSRCS = $(shell find $(abspath ./vsrc) -name "*.v")
 CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 CSRCS += $(SRC_AUTO_BIND)
 
+INCHEADERS = $(shell find $(abspath ./csrc) -name "*.h" -or -name "*.hpp")
+
 # rules for NVBoard
 include $(NVBOARD_HOME)/scripts/nvboard.mk
+
+# rules for capstone
+include tools/disasm.mk
 
 # rules for verilator
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
 
-$(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
+CXXFLAGS += -fsanitize=address -std=c++20
+LDFLAGS += -fsanitize=address
+
+
+$(BIN): $(VSRCS) $(INCHEADERS) $(CSRCS) $(NVBOARD_ARCHIVE)
 	@rm -rf $(OBJ_DIR)
 	$(VERILATOR) $(VERILATOR_CFLAGS) \
-		--top-module $(TOPNAME) $^ \
+		--top-module $(TOPNAME) $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE) \
 		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
 		--Mdir $(OBJ_DIR) --exe -o $(abspath $(BIN))
 
@@ -46,25 +57,14 @@ SIM_IMG ?=
 
 sim: $(BIN)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-	@echo "Run the simulation"
-	@$^ $(SIM_IMG)
+	@echo "Run the simulation."
+	@$^ $(ARGS) $(SIM_IMG)
 #	./obj_dir/$(TOPNAME)
 
 clean:
 	rm -rf $(BUILD_DIR)
 
 .PHONY: default all clean run
-
-# sim:
-# 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-# 	@echo "Write this Makefile by your self."
-
-# 	verilator --cc --exe --build --trace -j 0 -Wall\
-# 	 $(addprefix -CFLAGS , $(CXXFLAGS))\
-# 	  	$(CPP_SRCS) $(V_SRCS) \
-# 	 	$(addprefix -LDFLAGS , $(LDFLAGS))
-# 	./obj_dir/Vtop
-
 
 # for PROJ_PATH: yosys-sta makefile get scripts tool from PROJ_PATH, default is pwd, which is not correct here
 mysyn:
