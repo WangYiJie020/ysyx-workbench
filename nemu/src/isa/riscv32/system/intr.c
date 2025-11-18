@@ -15,10 +15,13 @@
 
 #include <isa.h>
 
+word_t g_csr_mtvec;
+
 word_t isa_raise_intr(word_t NO, vaddr_t epc) {
   /* TODO: Trigger an interrupt/exception with ``NO''.
    * Then return the address of the interrupt/exception vector.
    */
+	printf("intr %d at epc=%08X mtvec=%08X\n",(int)NO,(uint32_t)epc,(uint32_t)g_csr_mtvec);
 
   return 0;
 }

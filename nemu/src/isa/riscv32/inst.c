@@ -112,6 +112,14 @@ word_t d_sra(word_t v,int shamt){
     return res;
 }
 
+
+#define CSR_MTVEC 0x305
+#define CSR_MCAUSE 0x342
+#define CSR_MEPC 0x341
+#define CSR_MSTATUS 0x300
+
+static word_t _handel_csr_rw(word_t csr,word_t src1,bool is_write);
+
 static int decode_exec(Decode *s) {
   s->dnpc = s->snpc;
 #ifdef TRACE_EXEC  
@@ -220,8 +228,12 @@ static int decode_exec(Decode *s) {
 		  R(rd) = s->pc+4; s->dnpc=(src1+imm)&(~1);
 		  ftrace_trymatch_jalr(s->pc,s->dnpc, rd, BITS(s->isa.inst, 19, 15));
 		  );
-
-
+  INSTPAT_I("??????? ????? ????? 001 ????? 11100 11", csrrw  , 
+			if(rd!=0){
+				R(rd)=_handel_csr_rw(imm,src1,false);
+			}
+			_handel_csr_rw(imm,src1,true);
+			);
 
 	INSTPAT_B_IMM("000",beq	,src1==src2);
 	INSTPAT_B_IMM("001",bneq,src1!=src2);
@@ -232,12 +244,26 @@ static int decode_exec(Decode *s) {
 
 
 	INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, NEMUTRAP(s->pc, R(10))); // R(10) is $a0
+	INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , N, isa_raise_intr(0, s->pc)); 
   INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv    , N, INV(s->pc));
   INSTPAT_END();
 
   R(0) = 0; // reset $zero to 0
 
   return 0;
+}
+
+extern word_t g_csr_mtvec;
+
+word_t _handel_csr_rw(word_t csr,word_t src1,bool is_write){
+	if(csr==CSR_MTVEC){
+		word_t old=g_csr_mtvec;
+		if(is_write)g_csr_mtvec=src1;
+		return old;
+	}
+	else{
+		panic("unsupported csr read/write: 0x%03X",csr);
+	}
 }
 
 int isa_exec_once(Decode *s) {
