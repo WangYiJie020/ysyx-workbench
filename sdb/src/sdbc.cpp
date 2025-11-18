@@ -5,7 +5,6 @@
 using namespace std;
 
 sdb_debuger sdb_create_debuger(sdb_paddr_t init_pc, sdb_cpu_executor exec, sdb_mem_loader loadmem, sdb_reg_snapshoter shotreg, const char **reg_names, size_t n_reg_names, sdb_disasmsembler disasm, sdb_inst_fetcher fetcher){
-static 	auto regname_vec=	vector<string_view>(reg_names,reg_names+n_reg_names);	
 	return (sdb_debuger)(new sdb::debuger(
 		init_pc,
 		exec,
@@ -13,7 +12,7 @@ static 	auto regname_vec=	vector<string_view>(reg_names,reg_names+n_reg_names);
 		[shotreg](sdb::reg_snapshot_t& snap){
 			shotreg(snap.data());
 		},
-		regname_vec,
+		vector<string_view>(reg_names,reg_names+n_reg_names),
 		[fetcher](sdb::paddr_t pc){
 			auto code=fetcher(pc);
 			return sdb::vlen_inst_code(code.data,code.data+code.len);

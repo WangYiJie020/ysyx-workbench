@@ -142,7 +142,7 @@ private:
 	mem_loader _loadmem;
 
 	reg_snapshoter _shot_reg;
-	std::span<std::string_view> _reg_names;
+	std::vector<std::string_view> _reg_names;
 	reg_snapshot_t _reg_snap;
 
 	inst_disasmsembler _disasm;
@@ -206,10 +206,10 @@ public:
 
 	debuger(
 			paddr_t init_pc,
-			cpu_executor e,mem_loader ml,reg_snapshoter rss,std::vector<std::string_view> reg_names,
+			cpu_executor e,mem_loader ml,reg_snapshoter rss,auto&& regnames,
 			inst_fetcher f=inst_fetcher(),
 			inst_disasmsembler d=default_disasm
-	): _exec(e),_loadmem(ml),_shot_reg(rss),_reg_names(reg_names),
+	): _exec(e),_loadmem(ml),_shot_reg(rss),_reg_names(regnames),
 	_fetch_inst(f),_INITIAL_PC(init_pc){
 		_disasm=[d](const disasmable_inst& i){
 			return _impl::expand_tabs(d(i),8);
