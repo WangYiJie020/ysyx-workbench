@@ -97,6 +97,10 @@ sdb_vlen_inst_code wrap_fetch_inst(sdb_paddr_t pc){
 	return inst_code;
 }
 
+sdb_debuger get_debuger(){
+	return dbg;
+}
+
 void init_sdb() {
   /* Compile the regular expressions. */
   init_regex();

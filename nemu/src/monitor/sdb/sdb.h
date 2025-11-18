@@ -17,8 +17,11 @@
 #define __SDB_H__
 
 #include <common.h>
+#include <sdbc.h>
 
 word_t expr(char *e, bool *success);
+
+sdb_debuger get_debuger();
 
 void init_wp_pool(); 
 void add_wp(const char* sexpr);

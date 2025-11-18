@@ -19,8 +19,6 @@
 #include <locale.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <string.h>
-#include <elf_tool.h>
 #include "common.h"
 #include "debug.h"
 #include "utils.h"
