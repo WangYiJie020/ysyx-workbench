@@ -30,7 +30,7 @@ void _check(bool cond, const string& msg,
 	}
 }
 static void _ensure_fread(fstream& _fs,void* ptr, size_t siz) {
-	_check(_fs.read((char*)ptr, siz).gcount() == siz,
+	_check((size_t)_fs.read((char*)ptr, siz).gcount() == siz,
 			format("read failed, expected {} bytes", siz));
 }
 

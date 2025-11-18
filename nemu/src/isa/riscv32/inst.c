@@ -26,7 +26,6 @@
 
 #include <limits.h>
 
-#include <elf_tool.h>
 
 static void ftrace_trymatch_jal(word_t pc,word_t npc,word_t rd);
 static void ftrace_trymatch_jalr(word_t pc,word_t npc,word_t rd,word_t r1);

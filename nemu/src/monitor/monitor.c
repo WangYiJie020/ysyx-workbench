@@ -18,7 +18,6 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "sdb/sdb.h"
-#include "elf_tool.h"
 
 void init_rand();
 void init_log(const char *log_file);
@@ -107,18 +106,7 @@ static int parse_args(int argc, char *argv[]) {
   }
   return 0;
 }
-void change_suffix_to_elf(char *filename, size_t size)
-{
-    char *dot = strrchr(filename, '.');
 
-    if (dot) {
-        assert(dot - filename + 4 < size); 
-		strcpy(dot, ".elf");   
-    } else {
-        assert(strlen(filename) + 4 < size);
-        strcat(filename, ".elf");
-    }
-}
 void init_monitor(int argc, char *argv[]) {
   /* Perform some global initialization. */
 
@@ -142,27 +130,21 @@ void init_monitor(int argc, char *argv[]) {
   /* Perform ISA dependent initialization. */
   init_isa();
 
+
   /* Load the image to memory. This will overwrite the built-in image. */
   long img_size = load_img();
-
-  if(img_file&&!elf_file){
-	  static char buf[512];
-	  strcpy(buf,img_file);
-	  change_suffix_to_elf(buf, sizeof(buf));
-	  if(access(buf, F_OK) == 0){
-		  Log("find %s set as elf_file",buf);
-		  elf_file=buf;
-	  }
-  }
-
-  if(elf_file)load_elf(elf_file);
-
-  /* Initialize differential testing. */
-  init_difftest(diff_so_file, img_size, difftest_port);
 
   /* Initialize the simple debugger. */
   init_sdb();
 
+  if(img_file&&!elf_file){
+		sdb_try_findload_elf_fromimg(get_debuger(),img_file);
+  }
+
+  if(elf_file)sdb_load_elf(get_debuger(),elf_file);
+
+  /* Initialize differential testing. */
+  init_difftest(diff_so_file, img_size, difftest_port);
   IFDEF(CONFIG_ITRACE, init_disasm());
   
   init_wp_pool();
@@ -175,7 +157,7 @@ void destroy_monitor(){
 #ifdef CONFIG_DEVICE
 	destroy_device();
 #endif
-	free_elf();
+	sdb_destroy_debuger(get_debuger());
 }
 
 #else // CONFIG_TARGET_AM

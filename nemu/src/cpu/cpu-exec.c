@@ -19,8 +19,6 @@
 #include <locale.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <string.h>
-#include <elf_tool.h>
 #include "common.h"
 #include "debug.h"
 #include "utils.h"
@@ -49,7 +47,7 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #ifdef CONFIG_ITRACE_COND
   if (ITRACE_COND) { log_write("%s\n", _this->logbuf); }
 #endif
-  if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
+//  if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
 
   // jump happen
@@ -70,6 +68,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
   s->snpc = pc;
   isa_exec_once(s);
   cpu.pc = s->dnpc;
+	s->logbuf[0] = 0;
 }
 
 static void execute(uint64_t n) {

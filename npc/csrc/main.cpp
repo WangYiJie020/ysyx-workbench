@@ -301,8 +301,8 @@ int main(int argc, char **argv)
   reset(10);
 
 	if(batch_mode){
-		dbg.cmd_c();
-		return dbg.state().is_bad();
+		dbg.exec_command("c");
+		return dbg.state().is_badexit();
 	}
 
 	puts("\n--- Start ---\n");
