@@ -324,6 +324,7 @@ int main(int argc, char **argv)
 
 	dbg.set_jump_recognizer(sdb_jump_recognizer);
 	dbg.load_difftest_ref("../nemu/build/riscv32-nemu-interpreter-so",img_size);
+	dbg.enable_ftrace=true;
 
 
 #if USE_NVBOARD
