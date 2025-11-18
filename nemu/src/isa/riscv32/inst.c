@@ -119,8 +119,8 @@ word_t d_sra(word_t v,int shamt){
 #define CSR_MSTATUS 0x300
 
 static word_t _handel_csr_rw(word_t csr,word_t src1,bool is_write);
-static word_t _csr_read(word_t csr){return _handel_csr_rw(csr, 0, 0);}
-static void _csr_write(word_t csr,word_t src1){_handel_csr_rw(csr, src1, 1);}
+ word_t _csr_read(word_t csr){return _handel_csr_rw(csr, 0, 0);}
+ void _csr_write(word_t csr,word_t src1){_handel_csr_rw(csr, src1, 1);}
 
 static int decode_exec(Decode *s) {
   s->dnpc = s->snpc;
@@ -230,7 +230,7 @@ static int decode_exec(Decode *s) {
 		  R(rd) = s->pc+4; s->dnpc=(src1+imm)&(~1);
 		  ftrace_trymatch_jalr(s->pc,s->dnpc, rd, BITS(s->isa.inst, 19, 15));
 		  );
-  INSTPAT_I("??????? ????? ????? 001 ????? 11100 11", csrrw  , 
+/*  INSTPAT_I("??????? ????? ????? 001 ????? 11100 11", csrrw  , 
 			if(rd!=0){
 				R(rd)=_csr_read(imm);
 			}
@@ -241,6 +241,7 @@ static int decode_exec(Decode *s) {
 			R(rd)=old;
 			_csr_write(imm,old|src1);
 			);
+			*/
 
 	INSTPAT_B_IMM("000",beq	,src1==src2);
 	INSTPAT_B_IMM("001",bneq,src1!=src2);
