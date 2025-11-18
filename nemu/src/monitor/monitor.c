@@ -143,8 +143,11 @@ void init_monitor(int argc, char *argv[]) {
 
   if(elf_file)sdb_load_elf(get_debuger(),elf_file);
 
+	
+
   /* Initialize differential testing. */
-  init_difftest(diff_so_file, img_size, difftest_port);
+  //init_difftest(diff_so_file, img_size, difftest_port);
+	sdb_load_difftest_ref(get_debuger(), diff_so_file, img_size, difftest_port);
   IFDEF(CONFIG_ITRACE, init_disasm());
   
   init_wp_pool();

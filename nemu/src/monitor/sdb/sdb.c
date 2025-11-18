@@ -48,7 +48,8 @@ static void sync_nemu_state_to_sdb(){
 }
 void set_nemu_state(int state, vaddr_t pc, int halt_ret)
 {
-  difftest_skip_ref();
+  //difftest_skip_ref();
+	sdb_skip_difftest_ref(dbg);
   nemu_state.state = state;
   nemu_state.halt_pc = pc;
   nemu_state.halt_ret = halt_ret;
@@ -148,6 +149,5 @@ void init_sdb() {
 #ifdef CONFIG_ITRACE
 	flags|=SDB_ENTRACE_INST;
 #endif
-	flags|=SDB_ENTRACE_FUNC;
 	sdb_enable_entrace(dbg, flags);
 }
