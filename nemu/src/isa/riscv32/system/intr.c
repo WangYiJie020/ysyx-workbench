@@ -23,11 +23,7 @@ word_t isa_raise_intr(word_t NO, vaddr_t epc) {
    */
 	printf("intr %d at epc=%08X mtvec=%08X\n",(int)NO,(uint32_t)epc,(uint32_t)g_csr_mtvec);
 
-	void(*handler)(void)= (void(*)(void))(uint64_t)g_csr_mtvec;
-
-	handler();
-
-  return 0;
+  return g_csr_mtvec;
 }
 
 word_t isa_query_intr() {
