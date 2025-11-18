@@ -234,13 +234,13 @@ static int decode_exec(Decode *s) {
 			if(rd!=0){
 				R(rd)=_csr_read(imm);
 			}
-			printf("csrw csr=%03X val=%08X\n",(uint32_t)imm,(uint32_t)src1);
+	//		printf("csrw csr=%03X val=%08X\n",(uint32_t)imm,(uint32_t)src1);
 			_csr_write(imm,src1);
 			);
   INSTPAT_I("??????? ????? ????? 010 ????? 11100 11", csrrs  , 
 			word_t old=_csr_read(imm);
 			R(rd)=old;
-			printf("csrs csr=%03X val=%08X\n",(uint32_t)imm,(uint32_t)src1);
+	//		printf("csrs csr=%03X val=%08X\n",(uint32_t)imm,(uint32_t)src1);
 			_csr_write(imm,old|src1);
 			);
 
@@ -272,10 +272,10 @@ word_t _handel_csr_rw(word_t csr,word_t src1,bool is_write){
 				  g_csr_MEPC=0,
 				  g_csr_MSTATUS=0;
 
+	//printf("csr " #csr_name " %s : old=%08X new=%08X\n",is_write?"write":"read", (uint32_t)old,(uint32_t)(is_write?src1:old));
 #define _CASE(csr_name) case CSR_##csr_name: { \
 			old=g_csr_##csr_name; \
 			if(is_write)g_csr_##csr_name=src1; \
-			printf("csr " #csr_name " %s : old=%08X new=%08X\n",is_write?"write":"read", (uint32_t)old,(uint32_t)(is_write?src1:old));\
 			return old; \
 		}
 		word_t old;
