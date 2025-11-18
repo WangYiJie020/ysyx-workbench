@@ -143,10 +143,11 @@ void init_sdb() {
 			wrap_fetch_inst);
 	uint32_t flags=0;
 #ifdef CONFIG_FTRACE
-	flags|=SDB_ENTRACE_FTRACE;
+	flags|=SDB_ENTRACE_FUNC;
 #endif
 #ifdef CONFIG_ITRACE
 	flags|=SDB_ENTRACE_INST;
 #endif
+	flags|=SDB_ENTRACE_FUNC;
 	sdb_enable_entrace(dbg, flags);
 }

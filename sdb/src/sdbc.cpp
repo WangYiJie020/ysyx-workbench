@@ -35,7 +35,7 @@ void sdb_destroy_debuger(sdb_debuger dbg){
 void sdb_enable_entrace(sdb_debuger dbg, int flags){
  _DBG.enable_difftest=(flags&SDB_ENTRACE_DIFFTEST);
  _DBG.enable_inst_trace=(flags&SDB_ENTRACE_INST);
- _DBG.enable_ftrace=(flags&SDB_ENTRACE_FTRACE);
+ _DBG.enable_ftrace=(flags&SDB_ENTRACE_FUNC);
  if(_DBG.enable_ftrace)assert(_DBG.enable_inst_trace);
  if(_DBG.enable_difftest)assert(_DBG.enable_inst_trace);
 }

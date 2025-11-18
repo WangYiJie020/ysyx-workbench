@@ -50,7 +50,7 @@ typedef void(*sdb_disasmsembler)(char* str, int size, uint64_t pc, uint8_t* code
 typedef sdb_jump_type(*sdb_jump_recognizer)(sdbc_vlen_inst inst_code);
 
 #define SDB_ENTRACE_INST 1
-#define SDB_ENTRACE_FTRACE 2
+#define SDB_ENTRACE_FUNC 2
 #define SDB_ENTRACE_DIFFTEST 4
 
 sdb_debuger sdb_create_debuger(
