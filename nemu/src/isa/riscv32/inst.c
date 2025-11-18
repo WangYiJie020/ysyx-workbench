@@ -234,11 +234,13 @@ static int decode_exec(Decode *s) {
 			if(rd!=0){
 				R(rd)=_csr_read(imm);
 			}
+			printf("csrw csr=%03X val=%08X\n",(uint32_t)imm,(uint32_t)src1);
 			_csr_write(imm,src1);
 			);
   INSTPAT_I("??????? ????? ????? 010 ????? 11100 11", csrrs  , 
 			word_t old=_csr_read(imm);
 			R(rd)=old;
+			printf("csrs csr=%03X val=%08X\n",(uint32_t)imm,(uint32_t)src1);
 			_csr_write(imm,old|src1);
 			);
 
