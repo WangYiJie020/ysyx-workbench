@@ -130,8 +130,12 @@ void init_monitor(int argc, char *argv[]) {
   /* Perform ISA dependent initialization. */
   init_isa();
 
+
   /* Load the image to memory. This will overwrite the built-in image. */
   long img_size = load_img();
+
+  /* Initialize the simple debugger. */
+  init_sdb();
 
   if(img_file&&!elf_file){
 		sdb_try_findload_elf_fromimg(get_debuger(),img_file);
@@ -141,10 +145,6 @@ void init_monitor(int argc, char *argv[]) {
 
   /* Initialize differential testing. */
   init_difftest(diff_so_file, img_size, difftest_port);
-
-  /* Initialize the simple debugger. */
-  init_sdb();
-
   IFDEF(CONFIG_ITRACE, init_disasm());
   
   init_wp_pool();
