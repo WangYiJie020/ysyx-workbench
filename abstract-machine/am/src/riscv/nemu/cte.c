@@ -16,6 +16,10 @@ Context* __am_irq_handle(Context *c) {
       default: ev.event = EVENT_ERROR; break;
     }
 
+		if(c->GPR1==-1) {
+			ev.event = EVENT_YIELD;
+		}
+
     c = user_handler(ev, c);
     assert(c != NULL);
   }
