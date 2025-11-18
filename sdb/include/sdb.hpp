@@ -206,7 +206,7 @@ public:
 
 	debuger(
 			paddr_t init_pc,
-			cpu_executor e,mem_loader ml,reg_snapshoter rss,std::span<std::string_view> reg_names,
+			cpu_executor e,mem_loader ml,reg_snapshoter rss,std::vector<std::string_view> reg_names,
 			inst_fetcher f=inst_fetcher(),
 			inst_disasmsembler d=default_disasm
 	): _exec(e),_loadmem(ml),_shot_reg(rss),_reg_names(reg_names),
