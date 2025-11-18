@@ -9,8 +9,10 @@
 
 struct Context {
   // TODO: fix the order of these members to match trap.S
+	union{
   uintptr_t gpr[NR_REGS],mcause, mstatus, mepc;
   void *pdir;
+	};
 };
 
 #ifdef __riscv_e
