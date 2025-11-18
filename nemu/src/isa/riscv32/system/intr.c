@@ -23,6 +23,11 @@ word_t isa_raise_intr(word_t NO, vaddr_t epc) {
    */
 	printf("intr %d at epc=%08X mtvec=%08X\n",(int)NO,(uint32_t)epc,(uint32_t)g_csr_mtvec);
 
+	for(int i=0;i<32;i++){
+		printf("gpr[%2d]=%08X ",i,(uint32_t)cpu.gpr[i]);
+		if(i%4==3)printf("\n");
+	}
+
   return g_csr_mtvec;
 }
 
