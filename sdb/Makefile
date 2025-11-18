@@ -21,8 +21,8 @@ AR = ar rcs
 CFLAGS = -Wall -Wextra -O2 -g
 CXXFLAGS = -Wall -Wextra -O2 -g -std=c++20
 
-CXXFLAGS += $(INCLUDES) -fsanitize=address
-CFLAGS += $(INCLUDES) -fsanitize=address
+CXXFLAGS += $(INCLUDES) 
+CFLAGS += $(INCLUDES)
 
 TARGET = $(BUILD_DIR)/libsdb.a
 all: $(BUILD_DIR) $(TARGET)
