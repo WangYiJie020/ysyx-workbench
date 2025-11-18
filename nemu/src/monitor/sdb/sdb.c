@@ -149,5 +149,8 @@ void init_sdb() {
 #ifdef CONFIG_ITRACE
 	flags|=SDB_ENTRACE_INST;
 #endif
+#ifdef CONFIG_DIFFTEST
+	flags|=SDB_ENTRACE_DIFFTEST;
+#endif
 	sdb_enable_entrace(dbg, flags);
 }
