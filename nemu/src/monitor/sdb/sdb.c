@@ -22,7 +22,7 @@
 #include "sdb.h"
 #include "utils.h"
 
-#include <sdbc.h>
+#include "sdbc.h"
 
 static int is_batch_mode = false;
 
