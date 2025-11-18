@@ -70,7 +70,7 @@ void sdb_enable_entrace(sdb_debuger dbg, int flags);
 
 bool sdb_try_findload_elf_fromimg(sdb_debuger dbg, const char* img_file);
 void sdb_load_elf(sdb_debuger dbg, const char* filename);
-void sdb_load_difftest_ref(sdb_debuger dbg, const char* so_file, size_t img_size);
+void sdb_load_difftest_ref(sdb_debuger dbg, const char* so_file, size_t img_size, int port);
 
 void sdb_exec(sdb_debuger dbg, const char* cmdline);
 void sdb_skip_difftest_ref(sdb_debuger dbg);

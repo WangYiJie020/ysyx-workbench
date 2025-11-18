@@ -221,7 +221,7 @@ public:
 
 	bool try_findload_elf_fromimg(std::string_view img_file);
 	void load_elf(std::string_view filename);
-	void load_difftest_ref(std::string_view so_file,size_t img_size);
+	void load_difftest_ref(std::string_view so_file,size_t img_size,int port);
 
 	void difftest_ref_skip();
 

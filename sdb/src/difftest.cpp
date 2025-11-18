@@ -57,12 +57,12 @@ void _impl::_deleter_difftest::operator()(difftest_imp* ptr){
 #define assert_reg_num() assert(_reg_snap.size()==_reg_names.size()+1)
 #define push_pc_to_regsnap(_pc_) _reg_snap[ _reg_names.size() ] = _pc_;
 
-void debuger::load_difftest_ref(string_view so_file,size_t img_size){COND_ENABLE{
+void debuger::load_difftest_ref(string_view so_file,size_t img_size,int port){COND_ENABLE{
 	_imp_difftest=_impl::difftest_imptr(new _impl::difftest_imp());
 	auto& imp=*_imp_difftest;
 	imp.load(so_file);
 	printf("Difftest load ref from %s\n",string(so_file).c_str());
-	imp.ref_init(0); // currently unuse port
+	imp.ref_init(port); 
 
 	imp.ref_memcpy(_INITIAL_PC, _loadmem(_INITIAL_PC,img_size), img_size, DIFFTEST_TO_REF);
 	assert_reg_num();
