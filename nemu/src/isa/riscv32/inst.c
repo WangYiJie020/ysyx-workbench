@@ -260,19 +260,13 @@ static int decode_exec(Decode *s) {
   return 0;
 }
 
-extern word_t g_csr_mtvec;
+extern word_t g_csr_MTVEC;
 
 word_t _handel_csr_rw(word_t csr,word_t src1,bool is_write){
 	static word_t g_csr_MCAUSE=0,
 				  g_csr_MEPC=0,
 				  g_csr_MSTATUS=0;
 
-	if(csr==CSR_MTVEC){
-		word_t old=g_csr_mtvec;
-		if(is_write)g_csr_mtvec=src1;
-		return old;
-	}
-	else{
 #define _CASE(csr_name) case CSR_##csr_name: { \
 			old=g_csr_##csr_name; \
 			if(is_write)g_csr_##csr_name=src1; \
@@ -284,9 +278,9 @@ word_t _handel_csr_rw(word_t csr,word_t src1,bool is_write){
 			_CASE(MCAUSE);
 			_CASE(MEPC);
 			_CASE(MSTATUS);
+			_CASE(MTVEC);
 			default:panic("unsupported csr read/write: 0x%03X",csr);
 		}
-	}
 }
 
 int isa_exec_once(Decode *s) {
