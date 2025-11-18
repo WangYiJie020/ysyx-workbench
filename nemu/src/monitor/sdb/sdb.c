@@ -21,6 +21,7 @@
 #include <memory/paddr.h>
 #include "sdb.h"
 #include "utils.h"
+#include "cpu/difftest.h"
 
 #include <sdbc.h>
 
@@ -30,6 +31,29 @@ void init_regex();
 void init_wp_pool();
 
 static sdb_debuger dbg;
+
+
+static void sync_sdb_state_to_nemu(){
+	sdbc_cpu_state sdb_s=sdb_get_state(dbg);
+	nemu_state.state=sdb_s.state;
+	nemu_state.halt_pc=sdb_s.pc;
+	nemu_state.halt_ret=sdb_s.halt_ret;
+}
+static void sync_nemu_state_to_sdb(){
+	sdbc_cpu_state sdb_s;
+	sdb_s.state=nemu_state.state;
+	sdb_s.pc=nemu_state.halt_pc;
+	sdb_s.halt_ret=nemu_state.halt_ret;
+	sdb_set_state(dbg, sdb_s);
+}
+void set_nemu_state(int state, vaddr_t pc, int halt_ret)
+{
+  difftest_skip_ref();
+  nemu_state.state = state;
+  nemu_state.halt_pc = pc;
+  nemu_state.halt_ret = halt_ret;
+	sync_nemu_state_to_sdb();
+}
 
 /* We use the `readline' library to provide more flexibility to read from stdin. */
 static char* rl_gets() {
@@ -49,7 +73,6 @@ static char* rl_gets() {
   return line_read;
 }
 
-int is_exit_status_bad(); 
 /*
 static int cmd_q(char *args) {
   if(is_exit_status_bad())return -1;
@@ -70,7 +93,7 @@ void sdb_mainloop() {
 
   for (char *str; (str = rl_gets()) != NULL; ) {
 		sdb_exec(dbg, str);
-
+		sync_sdb_state_to_nemu();
 
 #ifdef CONFIG_DEVICE
     extern void sdl_clear_event_queue();
@@ -90,8 +113,8 @@ uint8_t* wrap_mem_loader(sdb_paddr_t addr, size_t nbyte){
 void wrap_shotreg(uint32_t* reg_snapshot){
 	memcpy(reg_snapshot, cpu.gpr, sizeof(cpu.gpr));
 }
-sdb_vlen_inst_code wrap_fetch_inst(sdb_paddr_t pc){
-	sdb_vlen_inst_code inst_code;
+sdbc_vlen_inst wrap_fetch_inst(sdb_paddr_t pc){
+	sdbc_vlen_inst	inst_code;
 	inst_code.data=(uint8_t*)guest_to_host(pc);
 	inst_code.len=4;
 	return inst_code;

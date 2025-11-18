@@ -6,7 +6,6 @@
 #include <iostream>
 #include <vector>
 #include <deque>
-#include <optional>
 #include <memory>
 
 #include "cmd.hpp"
@@ -16,8 +15,7 @@ namespace sdb {
 	using word_t=uint32_t;
 	using sword_t=int32_t;
 
-	// phiysical addr
-	using paddr_t = word_t;
+	using paddr_t = uint32_t;
 
 	using vlen_inst_code=std::vector<uint8_t>;
 
@@ -96,7 +94,7 @@ struct cpu_state{
 	cpu_state(run_state s,paddr_t pc=0,uint32_t ret=0):
 		state(s),pc(pc),halt_ret(ret){}
 
-	inline bool is_bad()const{
+	inline bool is_badexit()const{
 		bool good=
 			(state==run_state::end&&halt_ret==0)
 			||(state==run_state::quit);
@@ -186,6 +184,24 @@ private:
 	void _dump_inst(const disasmable_inst& inst,bool highlight_disasm=false);
 	void _dump_iringbuf();
 
+	void cmd_q();
+	void cmd_info(std::string_view);
+	void cmd_x(size_t N,expr_t addr);
+
+	inline void cmd_c(){cmd_si(-1);}
+	inline void cmd_si(size_t n=1){
+		if(_state.state==run_state::end||_state.state==run_state::quit){
+			_error("Program has ended. Cannot execuate.");
+			return;
+		}
+		_enable_dump_inst=n<=_MAX_INST_DUMP_PERSTEP;
+		for(;n>0&&is_running();n--)_step_one();
+	}
+
+	void dump_mem(paddr_t addr,paddr_t end);
+	void dump_reg();
+
+
 public:
 
 	debuger(
@@ -217,29 +233,10 @@ public:
 	inline bool is_running(){
 		return _state.state==run_state::running;
 	}	
-
-	inline void cmd_c(){cmd_si(-1);}
-	inline void cmd_si(size_t n=1){
-		if(_state.state==run_state::end||_state.state==run_state::quit){
-			_error("Program has ended. Cannot execuate.");
-			return;
-		}
-		_enable_dump_inst=n<=_MAX_INST_DUMP_PERSTEP;
-		for(;n>0&&is_running();n--)_step_one();
-	}
-
 	inline void abort(){
 		_state.abort();
 		_dump_iringbuf();
 	}
-
-	void cmd_q();
-	void cmd_info(std::string_view);
-	void cmd_x(size_t N,expr_t addr);
-
-	void dump_mem(paddr_t addr,paddr_t end);
-	void dump_reg();
-
 	void exec_command(std::string_view cmdline);
 };
 

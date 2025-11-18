@@ -93,7 +93,7 @@ uint64_t expr_t::eval()const{
 }
 
 void debuger::cmd_q(){
-	if(_state.is_bad()){
+	if(_state.is_badexit()){
 		// cur pc has not executed yet
 		_error("Program exited with bad state. nxt pc = 0x{:08x}", _state.pc);
 	}
