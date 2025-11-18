@@ -253,7 +253,9 @@ static int decode_exec(Decode *s) {
 
 
 	INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, NEMUTRAP(s->pc, R(10))); // R(10) is $a0
-	INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , N, s->dnpc=isa_raise_intr(0, s->pc)); 
+	INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , N, 
+			_csr_write(CSR_MEPC, s->pc);
+			s->dnpc=isa_raise_intr(0x11451419, s->pc)); 
 	INSTPAT("0011000 00010 00000 000 00000 11100 11", mret   , N, s->dnpc=_csr_read(CSR_MEPC)+4);
   INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv    , N, INV(s->pc));
   INSTPAT_END();
