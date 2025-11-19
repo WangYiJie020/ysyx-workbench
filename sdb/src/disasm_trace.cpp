@@ -34,16 +34,18 @@ string sdb::_impl::expand_tabs(std::string_view in, int tabsize) {
     return out;
 }
 
-void sdb::disasm_trace_handler::_dump_inst(disasm_trace_handler::_ctx_ref ctx, bool highlight_disasm) {
-	_dump(ANSI_FG_GRAY "0x{:08X}: {}{:25} " ANSI_FG_GRAY "(",
+string sdb::disasm_trace_handler::_dump_inst(disasm_trace_handler::_ctx_ref ctx, bool highlight_disasm) {
+	string res;
+	res+=format(ANSI_FG_GRAY "0x{:08X}: {}{:25} " ANSI_FG_GRAY "(",
 			ctx.pc,
 			highlight_disasm?ANSI_FG_RED:ANSI_NONE,
 			_disasm(ctx.pc,ctx.inst));
 	for(size_t j=0;j<ctx.inst.size();j++){
-		if(j) _dump(" ");
-	  _dump("{:02X}",ctx.inst[j]);
+		if(j) res+=format(" ");
+	  res+=format("{:02X}",ctx.inst[j]);
 	}
 	auto as_u32code=*(uint32_t*)ctx.inst.data();
-	_dump(" `0x{:08X}",as_u32code);
-	_dump(")" ANSI_NONE "\n");
+	res+=format(" `0x{:08X}",as_u32code);
+	res+=format(")" ANSI_NONE "\n");
+	return _impl::expand_tabs(res);
 }

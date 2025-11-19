@@ -9,7 +9,7 @@ namespace sdb {
 		std::function<std::string(paddr_t pc,vlen_inst_view)>;
 
 	namespace _impl {
-		std::string expand_tabs(std::string_view in, int tabsize);
+		std::string expand_tabs(std::string_view in, int tabsize=8);
 	}
 
 	std::string default_inst_disasm(paddr_t pc,vlen_inst_view inst);
@@ -18,14 +18,13 @@ namespace sdb {
 		private:
 			inst_disasmsembler _disasm;
 		protected:
-			void _dump_inst(
+			std::string _dump_inst(
 					_ctx_ref ctx, bool highlight_disasm=false
 			);
 		public:
 			disasm_trace_handler(inst_disasmsembler d=default_inst_disasm):_disasm(d){}
 			virtual void handle(_ctx_ref ctx)override{
-				_dump_inst(ctx);
-				_log(get_dump());
+				_log("{}",_dump_inst(ctx));
 			}
 	};
 	inline trace_handler_ptr make_disasm_trace_handler(
