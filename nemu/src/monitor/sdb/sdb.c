@@ -74,14 +74,6 @@ static char* rl_gets() {
   return line_read;
 }
 
-/*
-static int cmd_q(char *args) {
-  if(is_exit_status_bad())return -1;
-  else set_nemu_state(NEMU_QUIT,0,0);
-  return -1;
-}
-*/
-
 void sdb_set_batch_mode() {
   is_batch_mode = true;
 }

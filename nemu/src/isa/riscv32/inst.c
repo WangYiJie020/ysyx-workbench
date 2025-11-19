@@ -26,10 +26,6 @@
 
 #include <limits.h>
 
-
-static void ftrace_trymatch_jal(word_t pc,word_t npc,word_t rd);
-static void ftrace_trymatch_jalr(word_t pc,word_t npc,word_t rd,word_t r1);
-
 // We are in riscv32
 #define signed_min INT_MIN
 #define WORD_MAXBITLEN 32
@@ -55,8 +51,6 @@ enum {
 #define immB() do { *imm = SEXT((BITS(i,31,31)<<12)|(BITS(i,7,7)<<11)|(BITS(i,30,25)<<5)|(BITS(i,11,8)<<1),13);}while(0)
 
 #define immJ() do{*imm=getimmJ(i);}while(0)
-
-//#define TRACE_EXEC
 
 // J-immediate encodes a signed offset in multiples of 2 bytes
 // imm[0]=0
@@ -88,9 +82,6 @@ static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_
     default: panic("unsupported type = %d", type);
   }
 
-#ifdef TRACE_EXEC  
-  printf("  |decode:| rd %d r1 %d r2 %d imm %X(%d)\n",*rd,rs1,rs2,*imm,*imm);
-#endif
 }
 
 // sign ext v with dynamic len
@@ -123,12 +114,6 @@ static void _csr_write(word_t csr,word_t src1){_handel_csr_rw(csr, src1, 1);}
 
 static int decode_exec(Decode *s) {
   s->dnpc = s->snpc;
-#ifdef TRACE_EXEC  
-  void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
-  char buf[512];
-  disassemble(buf,sizeof(buf),s->pc,(uint8_t*)&s->isa.inst,s->snpc-s->pc);
-  printf(" |exec:%08X| %-25s \t",s->isa.inst,buf);
-#endif
 
 #define INSTPAT_INST(s) ((s)->isa.inst)
 #define INSTPAT_MATCH(s, name, type, ... /* execute body */ ) { \
@@ -222,12 +207,10 @@ static int decode_exec(Decode *s) {
 
   INSTPAT("??????? ????? ????? ??? ????? 11011 11", jal    , J,
 		  R(rd) = s->pc+4; s->dnpc=s->pc+imm;
-		  ftrace_trymatch_jal(s->pc,s->dnpc, rd);
 		  );
 // setting the least-significant bit of the result to zero (see JALR p47)
   INSTPAT_I("??????? ????? ????? 000 ????? 11001 11", jalr   , 
 		  R(rd) = s->pc+4; s->dnpc=(src1+imm)&(~1);
-		  ftrace_trymatch_jalr(s->pc,s->dnpc, rd, BITS(s->isa.inst, 19, 15));
 		  );
   INSTPAT_I("??????? ????? ????? 001 ????? 11100 11", csrrw  , 
 			if(rd!=0){
@@ -292,42 +275,4 @@ int isa_exec_once(Decode *s) {
   return decode_exec(s);
 }
 
-#define REGIDX_ra 1
 
-#ifdef CONFIG_FTRACE
-int callst_cnt=0;
-
-static void ftrace_log(const char* hint_str,word_t pc,const char* func_name,word_t func_addr){
-	printf("0x%08X:%5s "ANSI_FMT("f`%08X",ANSI_FG_GRAY)"%*s%s \n",pc,hint_str,func_addr,callst_cnt,"",func_name);
-}
-
-void ftrace_trymatch_jal(word_t pc,word_t npc,word_t rd){
-	func_sym f;
-	assert(try_match_func(npc, &f)==0);
-	if(f.addr==npc){
-		ftrace_log("call", pc, f.name, npc);
-		callst_cnt++;
-	}
-}
-void ftrace_trymatch_jalr(word_t pc,word_t npc,word_t rd,word_t r1){
-	func_sym f;
-	if(rd==REGIDX_ra){
-		assert(try_match_func(npc, &f)==0);
-		assert(f.addr==npc);
-		ftrace_log("call", pc, f.name, npc);
-		callst_cnt++;
-	}
-	else if(rd==0&&(r1==REGIDX_ra)){
-		assert(try_match_func(pc, &f)==0);
-		Assert(callst_cnt, "ret stmt should leq call");
-		callst_cnt--;
-		ftrace_log("ret", pc, f.name, f.addr);
-	}
-	else{
-//		printf("______unexpected jalr\n");
-	}
-}
-#else
-void ftrace_trymatch_jal(word_t pc,word_t npc,word_t rd){}
-void ftrace_trymatch_jalr(word_t pc,word_t npc,word_t rd,word_t r1){}
-#endif
