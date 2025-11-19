@@ -132,7 +132,7 @@ void init_sdb() {
 			cpu_exec_wrapper,
 			wrap_mem_loader,
 			wrap_shotreg,
-		 	regs, 32, NULL,
+		 	regs, 32, 
 			wrap_fetch_inst);
 	uint32_t flags=0;
 #ifdef CONFIG_FTRACE

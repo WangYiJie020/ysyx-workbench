@@ -7,6 +7,7 @@
 #include <vector>
 #include <deque>
 #include <memory>
+#include <sstream>
 
 #include "cmd.hpp"
 
@@ -18,13 +19,94 @@ namespace sdb {
 	using paddr_t = uint32_t;
 
 	using vlen_inst_code=std::vector<uint8_t>;
-
-	struct disasmable_inst{
-		paddr_t pc;
-		vlen_inst_code code;
-	};
+	using vlen_inst_view=std::span<const uint8_t>;
 
 	using reg_snapshot_t=std::vector<word_t>;
+	using reg_snapshot_view=std::span<const word_t>;
+
+	enum class run_state{
+		running,
+		stop,
+		end,
+		abort,
+		quit
+	};
+
+	struct cpu_state{
+		run_state state;
+		paddr_t pc;
+		uint32_t halt_ret;
+
+		cpu_state():state(run_state::running),pc(0),halt_ret(0){}
+		cpu_state(run_state s,paddr_t pc=0,uint32_t ret=0):
+			state(s),pc(pc),halt_ret(ret){}
+
+		inline bool is_badexit()const{
+			bool good=
+				(state==run_state::end&&halt_ret==0)
+				||(state==run_state::quit);
+			return !good;
+		}
+
+		void halt(uint32_t ret){
+			state=run_state::end;
+			halt_ret=ret;
+		}
+		void abort(){
+			state=run_state::abort;
+		}
+		bool quited()const{
+			return state==run_state::quit;
+		}
+	};
+
+	struct trace_context{
+		paddr_t pc;
+		reg_snapshot_view regs;
+		vlen_inst_view inst;
+	};
+
+	using output_iterator=std::ostream_iterator<char>;
+
+	class trace_handler{
+	private:
+		std::ostringstream _logbuf;
+		std::ostringstream _dmpbuf;
+
+		std::string _pop_str(std::ostringstream& buf){
+			auto s=buf.str();
+			buf.str("");
+			buf.clear();
+			return s;
+		}
+	protected:
+
+		void _log(std::string_view fmt, auto&&... args){
+			using namespace std;
+			vformat_to(ostream_iterator<char>(_logbuf),
+					fmt,make_format_args(args...));
+		}
+		void _dump(std::string_view fmt, auto&&... args){
+			using namespace std;
+			vformat_to(ostream_iterator<char>(_dmpbuf),
+					fmt,make_format_args(args...));
+		}
+		void _error(std::string_view fmt, auto&&... args){
+			_log("Error: ");
+			_log(fmt,std::forward<decltype(args)>(args)...);
+			_log("\n");
+		}
+		using _ctx_ref = const trace_context&;
+
+	public:
+		std::string get_log(){return _pop_str(_logbuf);}
+		std::string get_dump(){return _pop_str(_dmpbuf);}
+
+		virtual size_t ignore_log_threshold()const{return -1;}
+		virtual void make_dump(){}
+		virtual void handle(_ctx_ref)=0;
+	};
+	using trace_handler_ptr=std::shared_ptr<trace_handler>;
 
 	struct expr_t{
 		std::string_view raw;
@@ -33,11 +115,6 @@ namespace sdb {
 		uint64_t eval()const;
 	};
 
-	enum class jump_type{
-		normal,
-		call,
-		ret
-	};
 
 	// impl should return npc(pc after exec)
 	using cpu_executor=std::function<paddr_t()>;
@@ -56,8 +133,6 @@ namespace sdb {
 	// never modify/read items out of register range!
 	using reg_snapshoter=std::function<void(reg_snapshot_t&)>;
 	using inst_fetcher=std::function<vlen_inst_code(paddr_t pc)>;
-	using inst_disasmsembler=std::function<std::string(const disasmable_inst&)>;
-	using jump_recognizer=std::function<jump_type(const disasmable_inst&)>;
 
 namespace _impl {
 #define _MAKE_DEF(name) \
@@ -68,70 +143,14 @@ namespace _impl {
 		using name##_imptr=std::unique_ptr<name##_imp,_deleter_##name>;\
 
 	_MAKE_DEF(difftest);
-	_MAKE_DEF(ftrace);
 #undef _MAKE_DEF
-	std::string expand_tabs(std::string_view in, int tabsize);
 
 }
 
-std::string default_disasm(const disasmable_inst& inst);
-jump_type default_riscv_jump_recognizer(const disasmable_inst& inst);
-
-enum class run_state{
-	running,
-	stop,
-	end,
-	abort,
-	quit
-};
-
-struct cpu_state{
-	run_state state;
-	paddr_t pc;
-	uint32_t halt_ret;
-
-	cpu_state():state(run_state::running),pc(0),halt_ret(0){}
-	cpu_state(run_state s,paddr_t pc=0,uint32_t ret=0):
-		state(s),pc(pc),halt_ret(ret){}
-
-	inline bool is_badexit()const{
-		bool good=
-			(state==run_state::end&&halt_ret==0)
-			||(state==run_state::quit);
-		return !good;
-	}
-
-	void halt(uint32_t ret){
-		state=run_state::end;
-		halt_ret=ret;
-	}
-	void abort(){
-		state=run_state::abort;
-	}
-	bool quited()const{
-		return state==run_state::quit;
-	}
-};
-
-	
-struct inst_ringbuf{
-	constexpr static size_t n_max_records = 32;
-	std::deque<disasmable_inst> buf;
-
-	inline void push(disasmable_inst&& inst){
-		buf.push_back(inst);
-		while(buf.size()>n_max_records)buf.pop_front();
-	}
-	auto begin(){return buf.begin();}
-	auto end(){return buf.end();}
-};
-
 class debuger{
-
-public:
-	bool enable_ftrace=false,
-			 enable_inst_trace=true,
-			 enable_difftest=true;
+	public:
+		bool enable_difftest=false;
+		bool enable_inst_trace=false;
 private:
 
 	using fmt_str=std::string_view;
@@ -145,17 +164,12 @@ private:
 	std::vector<std::string_view> _reg_names;
 	reg_snapshot_t _reg_snap;
 
-	inst_disasmsembler _disasm;
 	inst_fetcher _fetch_inst;
 
-	inst_ringbuf _iringbuf;
+	std::vector<trace_handler_ptr> _trace_handlers;
 
 	const paddr_t _INITIAL_PC;
 
-	constexpr static size_t _MAX_INST_DUMP_PERSTEP=10;
-	bool _enable_dump_inst=true;
-
-	_impl::ftrace_imptr _imp_ftrace=nullptr;
 	_impl::difftest_imptr _imp_difftest=nullptr;
 
 	clscmd::command_table _cmd_table;
@@ -172,16 +186,11 @@ private:
 			<<std::endl;
 	}
 
-	inline disasmable_inst _fetch_dinst(paddr_t pc)const{
-		return disasmable_inst{pc,_fetch_inst(pc)};
-	}
-
 	void _init_cmd_table();
-	void _ftrace_handler(const disasmable_inst& inst);
 	void _difftest_step(paddr_t pc,paddr_t npc);
 	void _step_one();
+	void _step(size_t n);
 
-	void _dump_inst(const disasmable_inst& inst,bool highlight_disasm=false);
 	void _dump_iringbuf();
 
 	void cmd_q();
@@ -194,8 +203,7 @@ private:
 			_error("Program has ended. Cannot execuate.");
 			return;
 		}
-		_enable_dump_inst=n<=_MAX_INST_DUMP_PERSTEP;
-		for(;n>0&&is_running();n--)_step_one();
+		_step(n);
 	}
 
 	void dump_mem(paddr_t addr,paddr_t end);
@@ -207,25 +215,21 @@ public:
 	debuger(
 			paddr_t init_pc,
 			cpu_executor e,mem_loader ml,reg_snapshoter rss,auto&& regnames,
-			inst_fetcher f=inst_fetcher(),
-			inst_disasmsembler d=default_disasm
+			inst_fetcher f=inst_fetcher()
 	): _exec(e),_loadmem(ml),_shot_reg(rss),_reg_names(regnames),
 	_fetch_inst(f),_INITIAL_PC(init_pc){
-		_disasm=[d](const disasmable_inst& i){
-			return _impl::expand_tabs(d(i),8);
-		};
 		_state.pc=init_pc;
 		_reg_snap.resize(_reg_names.size()+1);
 		_init_cmd_table();
 	}
 
-	bool try_findload_elf_fromimg(std::string_view img_file);
-	void load_elf(std::string_view filename);
+	void add_trace(trace_handler_ptr th){
+		_trace_handlers.push_back(th);
+	}
+
 	void load_difftest_ref(std::string_view so_file,size_t img_size,int port);
 
 	void difftest_ref_skip();
-
-	void set_jump_recognizer(jump_recognizer r);
 
 	inline const cpu_state& state()const{return _state;}
 	inline cpu_state& state(){return _state;}
@@ -235,7 +239,9 @@ public:
 	}	
 	inline void abort(){
 		_state.abort();
-		_dump_iringbuf();
+		for(auto& h:_trace_handlers){
+			h->make_dump();
+		}
 	}
 	void exec_command(std::string_view cmdline);
 };

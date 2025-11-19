@@ -26,56 +26,25 @@ struct std::formatter<errc> : formatter<string> {
     }
 };
 
-void debuger::_dump_inst(const disasmable_inst& inst,bool highlight_disasm){
-	_print(ANSI_FG_GRAY "0x{:08X}: {}{:25} " ANSI_FG_GRAY "(",
-			inst.pc,
-			highlight_disasm?ANSI_FG_RED:ANSI_NONE,
-			_disasm(inst));
-	for(size_t j=0;j<inst.code.size();j++){
-		if(j) _print(" ");
-		_print("{:02X}",inst.code[j]);
-	}
-	auto as_u32code=*(uint32_t*)inst.code.data();
-	_print(" `0x{:08X}",as_u32code);
-	_print(")" ANSI_NONE "\n");
-}
-
-void debuger::_dump_iringbuf(){if (enable_inst_trace) {
-	_print(ANSI_FG_YELLOW "==== recent instructions ====\n" ANSI_NONE);
-	auto last=prev(end(_iringbuf));
-	for(auto it=_iringbuf.begin();it!=_iringbuf.end();++it){
-		_print("[{}{:02}" ANSI_NONE "] ",
-			it==last?ANSI_FG_RED:ANSI_FG_CYAN,
-			distance(it,end(_iringbuf))-1);
-		_dump_inst(*it,it==last);
-	}
-}}
-
-string sdb::_impl::expand_tabs(std::string_view in, int tabsize) {
-    string out;
-    out.reserve(in.size() * tabsize);
-    int col = 0;
-    for (char c : in) {
-        if (c == '\t') {
-            int spaces = tabsize - (col % tabsize);
-            out.append(spaces, ' ');
-            col += spaces;
-        } else {
-            out.push_back(c);
-            col++;
-        }
-    }
-    return out;
-}
-void debuger::_step_one(){
-	if (enable_inst_trace){
-		auto inst=_fetch_dinst(_state.pc);
-		if(_enable_dump_inst)_dump_inst(inst);
-		_iringbuf.push(std::move(inst));
-		if (enable_ftrace){
-			_ftrace_handler(inst);
+void debuger::_step(size_t n){
+	for(size_t i=0;i<n&&is_running();i++){
+		if (enable_inst_trace){
+			auto inst=_fetch_inst(_state.pc);
+			for(auto& h:_trace_handlers){
+				if(h->ignore_log_threshold()<n)continue;
+				h->handle(trace_context{
+					.pc=_state.pc,
+					.regs=reg_snapshot_view(_reg_snap),
+					.inst=inst
+				});
+				_print("{}",h->get_log());
+			}
 		}
+		_step_one();
 	}
+}
+
+void debuger::_step_one(){
 	auto oldpc= _state.pc;
 	_state.pc = _exec();	
 	_difftest_step(oldpc, _state.pc);
@@ -149,36 +118,3 @@ void debuger::exec_command(string_view cmdline){
 		_error("{}", ec);
 	}
 }
-
-
-extern "C" void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
-extern "C" void init_disasm();
-
-string sdb::default_disasm(const disasmable_inst& inst){
-	static bool has_init=false;
-	if(!has_init){
-		init_disasm();
-		has_init=true;
-	}
-	char buf[256];
-	disassemble(buf,sizeof(buf),inst.pc,(uint8_t*)inst.code.data(),inst.code.size());
-	return buf;
-}
-
-jump_type sdb::default_riscv_jump_recognizer(const disasmable_inst& inst){
-	word_t instr=*(word_t*)inst.code.data();
-	uint8_t opcode=instr&0x7f;
-	uint8_t funct3=(instr>>12)&0x7;
-	uint8_t rd=(instr>>7)&0x1f;
-	uint8_t rs1=(instr>>15)&0x1f;
-	bool is_jal=opcode==0x6f;
-	bool is_jalr=opcode==0x67 && funct3==0x0;
-	bool is_ret=is_jalr && rd==0 && rs1==1;
-	bool is_call=(is_jal && rd==1) || (is_jalr && rd==1);
-	if(is_call)return jump_type::call;
-	if(is_ret)return jump_type::ret;
-	return jump_type::normal;
-}
-
-
-
