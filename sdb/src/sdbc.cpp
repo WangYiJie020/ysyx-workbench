@@ -35,10 +35,12 @@ void sdb_destroy_debuger(sdb_debuger dbg){
 #define _DBG (*((sdb::debuger*)dbg))
 using namespace sdb;
 
+static bool enable_ftrace=false;
+
 void sdb_enable_entrace(sdb_debuger dbg, int flags){
  	_DBG.enable_difftest=(flags&SDB_ENTRACE_DIFFTEST);
  	_DBG.enable_inst_trace=(flags&SDB_ENTRACE_INST);
- 	bool enable_ftrace=(flags&SDB_ENTRACE_FUNC);
+ 	enable_ftrace=(flags&SDB_ENTRACE_FUNC);
  	if(enable_ftrace)assert(_DBG.enable_inst_trace);
  	if(_DBG.enable_difftest)assert(_DBG.enable_inst_trace);
 
@@ -46,6 +48,7 @@ void sdb_enable_entrace(sdb_debuger dbg, int flags){
 	{
  	 	_DBG.add_trace(make_disasm_trace_handler());
 		_DBG.add_trace(make_iringbuf_trace_handler());
+		_DBG.add_trace(make_etrace_handler());
 	}
 }
 
@@ -56,6 +59,7 @@ bool sdb_try_findload_elf_fromimg(sdb_debuger dbg, const char* img_file){
 	return true;
 }
 void sdb_load_elf(sdb_debuger dbg, const char* filename){
+	if(!enable_ftrace)return;
 	_DBG.add_trace(
 		sdb::make_ftrace_handler(filename)
 	);
