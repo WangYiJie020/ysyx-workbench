@@ -80,10 +80,19 @@ void debuger::dump_mem(paddr_t addr,paddr_t end){
 	}
 }
 void debuger::dump_reg(){
+	_print(ANSI_FG_YELLOW "==== register ====\n" ANSI_NONE);
 	for(size_t i=0;i<_reg_names.size();i++){
 		auto r=_reg_names[i];
 		auto v=_reg_snap[i];
-		_print("{}:\t0x{:08x}\t{}\n", r, v,v);
+		_print(ANSI_FG_BLUE"{:>3}" ANSI_NONE ": 0x{:08x} ", r, v);
+		if((i+1)%4==0){
+			/*_print("\n" ANSI_FG_GRAY);
+			for(size_t j=i-3;j<=i;j++){
+				auto rv=_reg_snap[j];
+				_print("{:3} {:11} ",' ',rv);
+			}*/
+			_print("\n");
+		}
 	}
 }
 
