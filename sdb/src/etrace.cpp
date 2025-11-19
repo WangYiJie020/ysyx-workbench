@@ -28,7 +28,7 @@ class etrace_handler:public trace_handler{
 						"@pc = 0x{:08X}: ecall\n", ctx.pc);
 			}
 			else if(type==exception_type::eret){
-				_log(ANSI_FG_RED"[ETRACE] Exception return " ANSI_NONE
+				_log(ANSI_FG_RED"[ETRACE] " ANSI_NONE "Exception return "
 						"@pc = 0x{:08X}: mret\n", ctx.pc);
 			}
 		}
