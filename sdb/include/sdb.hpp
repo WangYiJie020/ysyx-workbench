@@ -91,8 +91,9 @@ namespace sdb {
 			vformat_to(ostream_iterator<char>(_dmpbuf),
 					fmt,make_format_args(args...));
 		}
+		void _error_begin();
 		void _error(std::string_view fmt, auto&&... args){
-			_log("Error: ");
+			_error_begin();
 			_log(fmt,std::forward<decltype(args)>(args)...);
 			_log("\n");
 		}

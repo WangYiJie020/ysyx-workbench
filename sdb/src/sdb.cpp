@@ -26,6 +26,10 @@ struct std::formatter<errc> : formatter<string> {
     }
 };
 
+void trace_handler::_error_begin(){
+	_log(ANSI_FG_RED "Error: " ANSI_NONE);
+}
+
 void debuger::_step(size_t n){
 	for(size_t i=0;i<n&&is_running();i++){
 		if (enable_inst_trace){
