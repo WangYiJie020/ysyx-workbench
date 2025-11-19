@@ -23,7 +23,10 @@ namespace sdb {
 			);
 		public:
 			disasm_trace_handler(inst_disasmsembler d=default_inst_disasm):_disasm(d){}
-			virtual void handle(_ctx_ref ctx)override{_dump_inst(ctx);}
+			virtual void handle(_ctx_ref ctx)override{
+				_dump_inst(ctx);
+				_log(get_dump());
+			}
 	};
 	inline trace_handler_ptr make_disasm_trace_handler(
 		inst_disasmsembler disasm=default_inst_disasm
