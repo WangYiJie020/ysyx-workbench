@@ -32,6 +32,7 @@ class sdb::iringbuf_trace_handler : public disasm_trace_handler {
 
 		virtual void handle(const trace_context& ctx)override{
 			buf.emplace_back(ctx);
+			printf("buf size=%zu\n",buf.size());
 			while(buf.size()>n_records)buf.pop_front();
 		}
 		virtual void make_dump()override{
