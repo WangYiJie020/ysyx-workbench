@@ -35,6 +35,10 @@ class sdb::iringbuf_trace_handler : public disasm_trace_handler {
 			while(buf.size()>n_records)buf.pop_front();
 		}
 
+		virtual bool no_call_when_batch(size_t)override{
+			return false;
+		}
+
 		virtual void make_dump()override{
 			_dump(ANSI_FG_YELLOW "==== recent instructions ====\n" ANSI_NONE);
 			auto last=prev(end(buf));
