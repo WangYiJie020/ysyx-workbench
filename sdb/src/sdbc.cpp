@@ -10,7 +10,7 @@
 
 using namespace std;
 
-sdb_debuger sdb_create_debuger(sdb_paddr_t init_pc, sdb_cpu_executor exec, sdb_mem_loader loadmem, sdb_reg_snapshoter shotreg, const char **reg_names, size_t n_reg_names, sdb_inst_fetcher fetcher){
+extern "C" sdb_debuger sdb_create_debuger(sdb_paddr_t init_pc, sdb_cpu_executor exec, sdb_mem_loader loadmem, sdb_reg_snapshoter shotreg, const char **reg_names, size_t n_reg_names, sdb_inst_fetcher fetcher){
 	auto dbg=new sdb::debuger(
 		init_pc,
 		exec,

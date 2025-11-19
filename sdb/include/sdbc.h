@@ -60,7 +60,6 @@ sdb_debuger sdb_create_debuger(
 	sdb_reg_snapshoter shotreg,
 	const char** reg_names,
 	size_t n_reg_names,
-	sdb_disasmsembler disasm,
 	sdb_inst_fetcher fetcher
 );
 
