@@ -1,69 +1,72 @@
-#include "sdb.hpp"
+#include "ftrace.hpp"
 #include "ansi_col.h"
 #include "elf_tool.hpp"
 
 using namespace std;
 using namespace sdb;
 
-struct sdb::_impl::ftrace_imp{
-	elf_handler elf;
-	jump_recognizer recog_jmp;
-	int func_depth=0;
+jump_type sdb::default_riscv_jump_recognizer(vlen_inst_view inst){
+	word_t instr=*(word_t*)inst.data();
+	uint8_t opcode=instr&0x7f;
+	uint8_t funct3=(instr>>12)&0x7;
+	uint8_t rd=(instr>>7)&0x1f;
+	uint8_t rs1=(instr>>15)&0x1f;
+	bool is_jal=opcode==0x6f;
+	bool is_jalr=opcode==0x67 && funct3==0x0;
+	bool is_ret=is_jalr && rd==0 && rs1==1;
+	bool is_call=(is_jal && rd==1) || (is_jalr && rd==1);
+	if(is_call)return jump_type::call;
+	if(is_ret)return jump_type::ret;
+	return jump_type::normal;
+}
+class sdb::ftrace_handler:public trace_handler{
+	private:
+		elf_handler elf;
+		jump_recognizer recog_jmp;
+		int func_depth=0;
+	public:
+		ftrace_handler(
+			string_view elf_file,
+			jump_recognizer r
+		):recog_jmp(r),func_depth(0){
+			fstream fs(string(elf_file),ios::in|ios::binary);
+			elf.load(fs);
+			_log("Loaded ELF file {}\n",elf_file);
+		}
+		virtual void handle(_ctx_ref ctx)override{
+			auto type=recog_jmp(ctx.inst);
+			if(type==jump_type::normal)return;
+			auto hint_str=type==jump_type::call?"call fun":"ret from";
+			if(type==jump_type::call)func_depth++;
+
+			auto f=elf.get_fun_at(ctx.pc);
+			auto fname=f?f->name:"(unknown)";
+
+			_log(
+					"0x{:08X}: "
+					"{}{} "
+					ANSI_FG_GRAY "f`{:08X}"
+					ANSI_NONE "{}{}\n",
+				ctx.pc,
+				type==jump_type::call?ANSI_FG_YELLOW:ANSI_FG_BLUE,
+				hint_str,
+				f?f->addr:0,
+				string(func_depth,' '),
+				fname
+			);
+
+			if(type==jump_type::ret){
+				if(func_depth>0)func_depth--;
+				else _error("ret but func depth is 0");
+			}
+
+		}
 };
-void _impl::_deleter_ftrace::operator()(ftrace_imp* ptr){
-	if(ptr){delete ptr;}
+
+trace_handler_ptr sdb::make_ftrace_handler(
+	string_view elf_file,
+	jump_recognizer recog_jmp
+){
+	return std::make_shared<ftrace_handler>(elf_file,recog_jmp);
 }
-bool debuger::try_findload_elf_fromimg(string_view img_file){
-	auto elf_file=try_find_elf_file_of(string(img_file));
-	if(elf_file.empty())return false;
-	load_elf(elf_file);
-	return true;
-}
-
-
-void debuger::load_elf(string_view filename){
-	_imp_ftrace=_impl::ftrace_imptr(new _impl::ftrace_imp());
-	auto& imp=*_imp_ftrace;
-
-	std::fstream fs(filename.data(),std::ios::in|std::ios::binary);
-	imp.elf.load(fs);
-	_print("Loaded ELF file {}\n",filename);
-	set_jump_recognizer(default_riscv_jump_recognizer);
-}
-void debuger::set_jump_recognizer(jump_recognizer r){
-	if(_imp_ftrace){
-		_imp_ftrace->recog_jmp=r;
-	}
-}
-
-void debuger::_ftrace_handler(const disasmable_inst& inst){
-	if(!_imp_ftrace)return;
-	auto& imp=*_imp_ftrace;
-	auto type=imp.recog_jmp(inst);
-	if(type==jump_type::normal)return;
-	auto hint_str=type==jump_type::call?"call fun":"ret from";
-	if(type==jump_type::call)imp.func_depth++;
-
-	auto f=imp.elf.get_fun_at(inst.pc);
-	auto fname=f?f->name:"(unknown)";
-
-	_print(
-			"0x{:08X}: "
-			"{}{} "
-			ANSI_FG_GRAY "f`{:08X}"
-		 	ANSI_NONE "{}{}\n",
-		inst.pc,
-		type==jump_type::call?ANSI_FG_YELLOW:ANSI_FG_BLUE,
-		hint_str,
-		f?f->addr:0,
-		string(imp.func_depth,' '),
-		fname
-	);
-
-	if(type==jump_type::ret){
-		if(imp.func_depth>0)imp.func_depth--;
-		else _error("ret but func depth is 0");
-	}
-}
-
 

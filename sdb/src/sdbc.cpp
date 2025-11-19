@@ -1,11 +1,17 @@
 #include "sdb.hpp"
 #include "sdbc.h"
+
+#include <ftrace.hpp>
+#include <disasm_trace.hpp>
+#include <iringbuf.hpp>
+#include <elf_tool.hpp>
+
 #include <cassert>
 
 using namespace std;
 
-sdb_debuger sdb_create_debuger(sdb_paddr_t init_pc, sdb_cpu_executor exec, sdb_mem_loader loadmem, sdb_reg_snapshoter shotreg, const char **reg_names, size_t n_reg_names, sdb_disasmsembler disasm, sdb_inst_fetcher fetcher){
-	return (sdb_debuger)(new sdb::debuger(
+sdb_debuger sdb_create_debuger(sdb_paddr_t init_pc, sdb_cpu_executor exec, sdb_mem_loader loadmem, sdb_reg_snapshoter shotreg, const char **reg_names, size_t n_reg_names, sdb_inst_fetcher fetcher){
+	auto dbg=new sdb::debuger(
 		init_pc,
 		exec,
 		loadmem,
@@ -13,17 +19,17 @@ sdb_debuger sdb_create_debuger(sdb_paddr_t init_pc, sdb_cpu_executor exec, sdb_m
 			shotreg(snap.data());
 		},
 		vector<string_view>(reg_names,reg_names+n_reg_names),
-		[fetcher](sdb::paddr_t pc){
-			auto code=fetcher(pc);
-			return sdb::vlen_inst_code(code.data,code.data+code.len);
-		},
-		disasm?[disasm](const sdb::disasmable_inst& inst){
-			char buf[256];
-			disasm(buf,sizeof(buf),
-					inst.pc,(uint8_t*)inst.code.data(),inst.code.size());
-			return string(buf);
-		}:sdb::inst_disasmsembler(sdb::default_disasm)
-	));
+		fetcher?(sdb::inst_fetcher)[fetcher](sdb::paddr_t pc){
+			auto cinst=fetcher(pc);
+			return sdb::vlen_inst_code(cinst.data,cinst.data+cinst.len);
+		}:(sdb::inst_fetcher)[loadmem](sdb::paddr_t pc){
+			// default fetcher: fetch 4 bytes
+			auto data=loadmem(pc,4);
+			return sdb::vlen_inst_code(data,data+4);
+		}
+	);
+	using namespace sdb;
+	return (sdb_debuger)dbg;
 }
 
 void sdb_destroy_debuger(sdb_debuger dbg){
@@ -31,20 +37,29 @@ void sdb_destroy_debuger(sdb_debuger dbg){
 }
 
 #define _DBG (*((sdb::debuger*)dbg))
+using namespace sdb;
 
 void sdb_enable_entrace(sdb_debuger dbg, int flags){
- _DBG.enable_difftest=(flags&SDB_ENTRACE_DIFFTEST);
- _DBG.enable_inst_trace=(flags&SDB_ENTRACE_INST);
- _DBG.enable_ftrace=(flags&SDB_ENTRACE_FUNC);
- if(_DBG.enable_ftrace)assert(_DBG.enable_inst_trace);
- if(_DBG.enable_difftest)assert(_DBG.enable_inst_trace);
+ 	_DBG.enable_difftest=(flags&SDB_ENTRACE_DIFFTEST);
+ 	_DBG.enable_inst_trace=(flags&SDB_ENTRACE_INST);
+ 	bool enable_ftrace=(flags&SDB_ENTRACE_FUNC);
+ 	if(enable_ftrace)assert(_DBG.enable_inst_trace);
+ 	if(_DBG.enable_difftest)assert(_DBG.enable_inst_trace);
+
+ 	if(_DBG.enable_inst_trace)
+ 	 	_DBG.add_trace(make_disasm_trace_handler());
 }
 
 bool sdb_try_findload_elf_fromimg(sdb_debuger dbg, const char* img_file){
-	return _DBG.try_findload_elf_fromimg(img_file);
+	string imgf=try_find_elf_file_of(img_file);
+	if(imgf.empty())return false;
+	sdb_load_elf(dbg,imgf.c_str());
+	return true;
 }
 void sdb_load_elf(sdb_debuger dbg, const char* filename){
-	_DBG.load_elf(filename);
+	_DBG.add_trace(
+		sdb::make_ftrace_handler(filename)
+	);
 }
 void sdb_load_difftest_ref(sdb_debuger dbg, const char* so_file, size_t img_size,int port){
 	_DBG.load_difftest_ref(so_file,img_size,port);
