@@ -6,6 +6,7 @@ BUILD_DIR = ./build
 CXX_OBJ = $(CXX_SRC:src/%.cpp=$(BUILD_DIR)/%.o)
 C_OBJ = $(C_SRC:src/%.c=$(BUILD_DIR)/%.o)
 OBJS = $(CXX_OBJ) $(C_OBJ)
+DEPS = $(OBJS:.o=.d)
 
 INC_PATH = ./include ./src
 
@@ -18,11 +19,9 @@ CC = gcc
 CXX = g++
 AR = ar rcs
 
-CFLAGS = -Wall -Wextra -O2 -g
-CXXFLAGS = -Wall -Wextra -O2 -g -std=c++20
-
-CXXFLAGS += $(INCLUDES) 
-CFLAGS += $(INCLUDES)
+COMMON_FLAGS = -MMD -MP -Wall -Wextra -O2 -g $(INCLUDES) 
+CFLAGS = $(COMMON_FLAGS)
+CXXFLAGS = $(COMMON_FLAGS) -std=c++20
 
 TARGET = $(BUILD_DIR)/libsdb.a
 all: $(BUILD_DIR) $(TARGET)
@@ -43,6 +42,8 @@ $(BUILD_DIR)/%.o: src/%.c
 
 $(BUILD_DIR)/%.o: src/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+-include $(DEPS)
 
 clean:
 	rm -f $(BUILD_DIR)/*
