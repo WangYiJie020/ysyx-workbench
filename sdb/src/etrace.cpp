@@ -23,15 +23,14 @@ class etrace_handler:public trace_handler{
 		virtual void handle(_ctx_ref ctx)override{
 			auto type=_recog_exc(ctx.inst);
 			if(type==exception_type::none)return;
-			string hint_str=type==exception_type::ecall?"ecall":"eret ";
-			_log(
-				"0x{:08X}: {}{}{}\n",
-				ctx.pc,
-				type==exception_type::ecall?ANSI_FG_YELLOW:ANSI_FG_BLUE,
-				hint_str,
-				ANSI_NONE
-			);
-
+			if(type==exception_type::ecall){
+				_log(ANSI_FG_RED"[ETRACE] Exception happened " ANSI_NONE
+						"@pc = 0x{:08X}: ecall\n", ctx.pc);
+			}
+			else if(type==exception_type::eret){
+				_log(ANSI_FG_RED"[ETRACE] Exception return " ANSI_NONE
+						"@pc = 0x{:08X}: mret\n", ctx.pc);
+			}
 		}
 };
 
