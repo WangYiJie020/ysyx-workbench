@@ -84,8 +84,15 @@ void debuger::dump_reg(){
 	for(size_t i=0;i<_reg_names.size();i++){
 		auto r=_reg_names[i];
 		auto v=_reg_snap[i];
-		_print(ANSI_FG_BLUE"{:3}" ANSI_NONE ": 0x{:08x} ({:10}) ", r, v,v);
-		if((i+1)%4==0)_print("\n");
+		_print(ANSI_FG_BLUE"{:3}" ANSI_NONE ": 0x{:08x}", r, v);
+		if((i+1)%4==0){
+			_print("\n");
+			for(size_t j=i-3;j<=i;j++){
+				auto rv=_reg_snap[j];
+				_print("{:3}~ {:10} ",' ',rv);
+			}
+			_print("\n");
+		}
 	}
 }
 
