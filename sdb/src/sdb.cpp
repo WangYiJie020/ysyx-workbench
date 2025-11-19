@@ -89,7 +89,7 @@ void debuger::dump_reg(){
 			_print("\n" ANSI_FG_GRAY);
 			for(size_t j=i-3;j<=i;j++){
 				auto rv=_reg_snap[j];
-				_print("{:3}d{:11} ",' ',rv);
+				_print("{:3} {:11} ",' ',rv);
 			}
 			_print("\n");
 		}
