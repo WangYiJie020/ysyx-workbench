@@ -102,7 +102,7 @@ namespace sdb {
 		std::string get_log(){return _pop_str(_logbuf);}
 		std::string get_dump(){return _pop_str(_dmpbuf);}
 
-		virtual size_t max_call_percmd()const{return -1;}
+		virtual size_t ignore_log_threshold()const{return -1;}
 		virtual void make_dump(){}
 		virtual void handle(_ctx_ref)=0;
 	};
@@ -170,9 +170,6 @@ private:
 
 	const paddr_t _INITIAL_PC;
 
-	constexpr static size_t _MAX_INST_DUMP_PERSTEP=10;
-	bool _enable_dump_inst=true;
-
 	_impl::difftest_imptr _imp_difftest=nullptr;
 
 	clscmd::command_table _cmd_table;
@@ -192,6 +189,7 @@ private:
 	void _init_cmd_table();
 	void _difftest_step(paddr_t pc,paddr_t npc);
 	void _step_one();
+	void _step(size_t n);
 
 	void _dump_iringbuf();
 
@@ -205,8 +203,7 @@ private:
 			_error("Program has ended. Cannot execuate.");
 			return;
 		}
-		_enable_dump_inst=n<=_MAX_INST_DUMP_PERSTEP;
-		for(;n>0&&is_running();n--)_step_one();
+		_step(n);
 	}
 
 	void dump_mem(paddr_t addr,paddr_t end);

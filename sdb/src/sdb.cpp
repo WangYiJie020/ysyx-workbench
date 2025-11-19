@@ -26,18 +26,25 @@ struct std::formatter<errc> : formatter<string> {
     }
 };
 
-void debuger::_step_one(){
-	if (enable_inst_trace){
-		auto inst=_fetch_inst(_state.pc);
-		for(auto& h:_trace_handlers){
-			h->handle(trace_context{
-				.pc=_state.pc,
-				.regs=reg_snapshot_view(_reg_snap),
-				.inst=inst
-			});
-			_print("{}",h->get_log());
+void debuger::_step(size_t n){
+	for(size_t i=0;i<n&&is_running();i++){
+		if (enable_inst_trace){
+			auto inst=_fetch_inst(_state.pc);
+			for(auto& h:_trace_handlers){
+				if(h->ignore_log_threshold()<n)continue;
+				h->handle(trace_context{
+					.pc=_state.pc,
+					.regs=reg_snapshot_view(_reg_snap),
+					.inst=inst
+				});
+				_print("{}",h->get_log());
+			}
 		}
+		_step_one();
 	}
+}
+
+void debuger::_step_one(){
 	auto oldpc= _state.pc;
 	_state.pc = _exec();	
 	_difftest_step(oldpc, _state.pc);
