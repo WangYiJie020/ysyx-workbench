@@ -35,6 +35,7 @@ void debuger::_step_one(){
 				.regs=reg_snapshot_view(_reg_snap),
 				.inst=inst
 			});
+			_print("{}\n",h->get_log());
 		}
 	}
 	auto oldpc= _state.pc;
