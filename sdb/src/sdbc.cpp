@@ -47,7 +47,10 @@ void sdb_enable_entrace(sdb_debuger dbg, int flags){
  	if(_DBG.enable_difftest)assert(_DBG.enable_inst_trace);
 
  	if(_DBG.enable_inst_trace)
+	{
  	 	_DBG.add_trace(make_disasm_trace_handler());
+		_DBG.add_trace(make_iringbuf_trace_handler());
+	}
 }
 
 bool sdb_try_findload_elf_fromimg(sdb_debuger dbg, const char* img_file){

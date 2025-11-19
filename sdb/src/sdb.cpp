@@ -31,7 +31,7 @@ void debuger::_step(size_t n){
 		if (enable_inst_trace){
 			auto inst=_fetch_inst(_state.pc);
 			for(auto& h:_trace_handlers){
-				if(h->ignore_log_threshold()<n)continue;
+				if(h->no_call_when_batch(n))continue;
 				h->handle(trace_context{
 					.pc=_state.pc,
 					.regs=reg_snapshot_view(_reg_snap),
