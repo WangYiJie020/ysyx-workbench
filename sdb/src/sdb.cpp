@@ -26,8 +26,8 @@ struct std::formatter<errc> : formatter<string> {
     }
 };
 
-void trace_handler::_error_begin(){
-	_log(ANSI_FG_RED "Error: " ANSI_NONE);
+string_view sdb::_impl::error_head_str(){
+	return ANSI_FG_RED "[ERROR] " ANSI_NONE;
 }
 
 void debuger::_step(size_t n){

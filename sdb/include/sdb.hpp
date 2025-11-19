@@ -68,6 +68,10 @@ namespace sdb {
 
 	using output_iterator=std::ostream_iterator<char>;
 
+	namespace _impl{
+		std::string_view error_head_str();
+	}
+
 	class trace_handler{
 	private:
 		std::ostringstream _logbuf;
@@ -91,9 +95,8 @@ namespace sdb {
 			vformat_to(ostream_iterator<char>(_dmpbuf),
 					fmt,make_format_args(args...));
 		}
-		void _error_begin();
 		void _error(std::string_view fmt, auto&&... args){
-			_error_begin();
+			_log(_impl::error_head_str());
 			_log(fmt,std::forward<decltype(args)>(args)...);
 			_log("\n");
 		}
@@ -185,7 +188,7 @@ private:
 	}
 	inline void _error(fmt_str fmt, auto&&... args){
 		std::cerr
-			<<"Error: "
+			<<_impl::error_head_str()
 			<<vformat(fmt,std::make_format_args(args...))
 			<<std::endl;
 	}
