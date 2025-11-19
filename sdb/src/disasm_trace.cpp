@@ -39,7 +39,7 @@ string sdb::disasm_trace_handler::_dump_inst(disasm_trace_handler::_ctx_ref ctx,
 	res+=format(ANSI_FG_GRAY "0x{:08X}: {}{:25} " ANSI_FG_GRAY "(",
 			ctx.pc,
 			highlight_disasm?ANSI_FG_RED:ANSI_NONE,
-			_disasm(ctx.pc,ctx.inst));
+			_impl::expand_tabs(_disasm(ctx.pc,ctx.inst)));
 	for(size_t j=0;j<ctx.inst.size();j++){
 		if(j) res+=format(" ");
 	  res+=format("{:02X}",ctx.inst[j]);
@@ -47,5 +47,5 @@ string sdb::disasm_trace_handler::_dump_inst(disasm_trace_handler::_ctx_ref ctx,
 	auto as_u32code=*(uint32_t*)ctx.inst.data();
 	res+=format(" `0x{:08X}",as_u32code);
 	res+=format(")" ANSI_NONE "\n");
-	return _impl::expand_tabs(res);
+	return res;
 }
