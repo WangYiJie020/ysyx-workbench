@@ -16,21 +16,27 @@ namespace sdb {
 
 	class disasm_trace_handler:public trace_handler{
 		private:
+			size_t _threshold;
 			inst_disasmsembler _disasm;
 		protected:
 			std::string _dump_inst(
 					_ctx_ref ctx, bool highlight_disasm=false
 			);
 		public:
-			disasm_trace_handler(inst_disasmsembler d=default_inst_disasm):_disasm(d){}
+			disasm_trace_handler(inst_disasmsembler d=default_inst_disasm,size_t th=16)
+				:_threshold(th),_disasm(d){}
 			virtual void handle(_ctx_ref ctx)override{
 				_log("{}",_dump_inst(ctx));
 			}
+			virtual size_t ignore_log_threshold()const override{
+				return 1;
+			}
 	};
 	inline trace_handler_ptr make_disasm_trace_handler(
-		inst_disasmsembler disasm=default_inst_disasm
+		inst_disasmsembler disasm=default_inst_disasm,
+		size_t n_show_threshold=16
 	){
-		return std::make_shared<disasm_trace_handler>(disasm);
+		return std::make_shared<disasm_trace_handler>(disasm,n_show_threshold);
 	}
 
 }
