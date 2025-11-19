@@ -253,7 +253,7 @@ extern word_t g_csr_MTVEC;
 word_t _handel_csr_rw(word_t csr,word_t src1,bool is_write){
 	static word_t g_csr_MCAUSE=0,
 				  g_csr_MEPC=0,
-				  g_csr_MSTATUS=0;
+				  g_csr_MSTATUS=0x1800;
 
 #define _CASE(csr_name) case CSR_##csr_name: { \
 			old=g_csr_##csr_name; \
