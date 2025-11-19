@@ -138,6 +138,7 @@ void init_sdb() {
 #ifdef CONFIG_FTRACE
 	flags|=SDB_ENTRACE_FUNC;
 #endif
+	flags|=SDB_ENTRACE_FUNC;
 #ifdef CONFIG_ITRACE
 	flags|=SDB_ENTRACE_INST;
 #endif
