@@ -1,11 +1,7 @@
 #include "sdb.hpp"
 #include "sdbc.h"
-
-#include <ftrace.hpp>
-#include <disasm_trace.hpp>
-#include <iringbuf.hpp>
 #include <elf_tool.hpp>
-
+#include <tracers.hpp>
 #include <cassert>
 
 using namespace std;
