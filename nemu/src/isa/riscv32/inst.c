@@ -239,7 +239,7 @@ static int decode_exec(Decode *s) {
 			_csr_write(CSR_MEPC, s->pc);
 			_csr_write(CSR_MCAUSE, 11); // ECALL from M-mode
 			s->dnpc=isa_raise_intr(0x11451419, s->pc)); 
-	INSTPAT("0011000 00010 00000 000 00000 11100 11", mret   , N, s->dnpc=_csr_read(CSR_MEPC)+4);
+	INSTPAT("0011000 00010 00000 000 00000 11100 11", mret   , N, s->dnpc=_csr_read(CSR_MEPC));
   INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv    , N, INV(s->pc));
   INSTPAT_END();
 
