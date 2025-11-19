@@ -254,10 +254,10 @@ word_t _handel_csr_rw(word_t csr,word_t src1,bool is_write){
 				  g_csr_MEPC=0,
 				  g_csr_MSTATUS=0;
 
-	//printf("csr " #csr_name " %s : old=%08X new=%08X\n",is_write?"write":"read", (uint32_t)old,(uint32_t)(is_write?src1:old));
 #define _CASE(csr_name) case CSR_##csr_name: { \
 			old=g_csr_##csr_name; \
 			if(is_write)g_csr_##csr_name=src1; \
+	printf("csr " #csr_name " %s : old=%08X new=%08X\n",is_write?"write":"read", (uint32_t)old,(uint32_t)(is_write?src1:old));\
 			return old; \
 		}
 		word_t old;
