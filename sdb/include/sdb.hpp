@@ -100,7 +100,10 @@ namespace sdb {
 
 	public:
 		std::string get_log(){return _pop_str(_logbuf);}
-		std::string get_dump(){return _pop_str(_dmpbuf);}
+		std::string get_dump(){
+			make_dump();
+			return _pop_str(_dmpbuf);
+		}
 
 		virtual size_t ignore_log_threshold()const{return -1;}
 		virtual void make_dump(){}
