@@ -243,7 +243,7 @@ public:
 	inline void abort(){
 		_state.abort();
 		for(auto h:_trace_handlers){
-			_print("{}\n",h->get_dump());
+			_print("{}",h->get_dump());
 		}
 		dump_reg();
 	}
