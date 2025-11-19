@@ -242,8 +242,8 @@ public:
 	}	
 	inline void abort(){
 		_state.abort();
-		for(auto& h:_trace_handlers){
-			h->make_dump();
+		for(auto h:_trace_handlers){
+			_print("{}\n",h->get_dump());
 		}
 	}
 	void exec_command(std::string_view cmdline);
