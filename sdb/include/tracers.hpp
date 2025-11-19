@@ -49,8 +49,6 @@ namespace sdb {
 	// ftrace
 
 	class ftrace_handler;
-	using ftrace_handler_ptr=std::shared_ptr<ftrace_handler>;
-
 	enum class jump_type{
 		normal,
 		call,
@@ -64,6 +62,17 @@ namespace sdb {
 		std::string_view elf_file,
 		jump_recognizer recog_jmp=default_riscv_jump_recognizer
 	);
+
+	// etrace
+	
+	enum class exception_type{
+		none,
+		ecall,
+		eret
+	};
+	using exception_recognizer=std::function<exception_type(vlen_inst_view)>;
+	exception_type default_riscv_exception_recognizer(vlen_inst_view inst);
+	trace_handler_ptr make_etrace_handler(exception_recognizer recog_exc=default_riscv_exception_recognizer);
 
 }
 
