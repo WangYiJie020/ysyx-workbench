@@ -42,7 +42,7 @@ class sdb::iringbuf_trace_handler : public disasm_trace_handler {
 					it==last?ANSI_FG_RED:ANSI_FG_CYAN,
 					distance(it,end(buf))-1
 				);
-				_dump_inst(*it,it==last);
+				_dump(_dump_inst(*it,it==last));
 			}
 		}
 };

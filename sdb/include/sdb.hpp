@@ -73,6 +73,12 @@ namespace sdb {
 		std::ostringstream _logbuf;
 		std::ostringstream _dmpbuf;
 
+		std::string _pop_str(std::ostringstream& buf){
+			auto s=buf.str();
+			buf.str("");
+			buf.clear();
+			return s;
+		}
 	protected:
 
 		void _log(std::string_view fmt, auto&&... args){
@@ -93,8 +99,8 @@ namespace sdb {
 		using _ctx_ref = const trace_context&;
 
 	public:
-		std::string get_log()const{return _logbuf.str();}
-		std::string get_dump()const{return _dmpbuf.str();}
+		std::string get_log(){return _pop_str(_logbuf);}
+		std::string get_dump(){return _pop_str(_dmpbuf);}
 
 		virtual size_t max_call_percmd()const{return -1;}
 		virtual void make_dump(){}
