@@ -46,3 +46,9 @@ class sdb::iringbuf_trace_handler : public disasm_trace_handler {
 			}
 		}
 };
+
+trace_handler_ptr sdb::make_iringbuf_trace_handler(
+	inst_disasmsembler disasm,size_t n_records
+){
+	return make_shared<iringbuf_trace_handler>(disasm,n_records);
+}
