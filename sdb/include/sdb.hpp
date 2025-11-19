@@ -105,7 +105,7 @@ namespace sdb {
 			return _pop_str(_dmpbuf);
 		}
 
-		virtual size_t ignore_log_threshold()const{return -1;}
+		virtual bool no_call_when_batch(size_t){return false;}
 		virtual void make_dump(){}
 		virtual void handle(_ctx_ref)=0;
 	};
@@ -245,6 +245,7 @@ public:
 		for(auto h:_trace_handlers){
 			_print("{}\n",h->get_dump());
 		}
+		dump_reg();
 	}
 	void exec_command(std::string_view cmdline);
 };

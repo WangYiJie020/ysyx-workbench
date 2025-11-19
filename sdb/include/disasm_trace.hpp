@@ -28,8 +28,8 @@ namespace sdb {
 			virtual void handle(_ctx_ref ctx)override{
 				_log("{}",_dump_inst(ctx));
 			}
-			virtual size_t ignore_log_threshold()const override{
-				return 1;
+			virtual bool no_call_when_batch(size_t n)override{
+				return n>_threshold;
 			}
 	};
 	inline trace_handler_ptr make_disasm_trace_handler(
