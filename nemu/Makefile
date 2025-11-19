@@ -65,6 +65,7 @@ run: export LSAN_OPTIONS=suppressions=asan_suppress.txt
 
 INC_PATH += $(abspath ../sdb/include)
 LDFLAGS += -L$(abspath ../sdb/build) -lsdb
+ARCHIVES += $(abspath ../sdb/build/libsdb.a)
 
 ifdef CONFIG_TARGET_AM
 include $(AM_HOME)/Makefile
