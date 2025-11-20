@@ -70,6 +70,15 @@ module top(
         .a0(a0),
         .wen(wen)
     );
+    reg `WORD_RANGE csr_wdata,csr_rdata;
+    reg csr_wen, csr_ren;
+    ControlStatusRegister csrs(
+        .clk(clk),
+        .addr(inst[31:20]),
+        .wdata(csr_wdata),.rdata(csr_rdata),
+        .wen(csr_wen),.ren(csr_ren)
+    );
+    wire is_system;
 
     decode_operand dec_opr(
         .inst(inst),
@@ -83,7 +92,8 @@ module top(
         .is_arithmetic(is_arithmetic),
         .is_load(is_load),
         .is_lui(is_lui),
-        .is_auipc(is_auipc)
+        .is_auipc(is_auipc),
+        .is_system(is_system)
     );
 
     wire [6:0] opcode=inst[6:0];
@@ -133,6 +143,7 @@ module top(
 
 
     assign wen=(itype!=TypeS)&&(itype!=TypeN)&&(itype!=TypeB);
+    assign csr_ren=is_system&&(func3t==3'b010); // csrrs
 
     reg `WORD_RANGE mem_rdata;
 //    always@(safe_maddr)begin
@@ -153,6 +164,18 @@ module top(
                     wdata=pc+4;
                 end else if(is_arithmetic)begin
                     wdata=alu_res;
+                end else if(is_system)begin
+                    case(func3t)
+                        3'b010: begin // csrrs
+                            csr_wen=(src1!=0);
+                            wdata=csr_rdata;
+                            csr_wdata=csr_rdata | src1;
+                        end
+                        default: begin
+                            $display("(system) UNKNOWN func3t %d",func3t);
+                            sim_panic();
+                        end
+                    endcase
                 end else if(is_load)begin
                    // $display("Load data since inst=%08X",inst);
                     mem_rdata=pmem_read(safe_maddr);
