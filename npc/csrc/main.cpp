@@ -50,7 +50,7 @@ void nvboard_init(int vga_clk_cycle);
 
 
 
-word_t mem[6*1024*1024/4]={
+word_t mem[600*1024*1024/4]={
   0x00000297,  // auipc t0,0
   0x00028823,  // sb  zero,16(t0)
   0x0102c503,  // lbu a0,16(t0)
@@ -303,8 +303,8 @@ int main(int argc, char **argv)
 	}
 
 
-// dbg.enable_difftest=true;
-//	dbg.load_difftest_ref("../nemu/build/riscv32-nemu-interpreter-so",img_size,0);
+ dbg.enable_difftest=true;
+	dbg.load_difftest_ref("../nemu/build/riscv32-nemu-interpreter-so",img_size,0);
 
 
 #if USE_NVBOARD

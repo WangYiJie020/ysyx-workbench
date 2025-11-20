@@ -16,6 +16,8 @@ parameter int PC_BEFORE_START=INIT_PC-4;
 
 parameter int NOP_INST_ADDR = PC_BEFORE_START;
 
+parameter int INST_ECALL=32'h00000073;
+parameter int INST_MRET=32'h30200073;
 
 module top(
     input clk,
@@ -72,9 +74,12 @@ module top(
     );
     reg `WORD_RANGE csr_wdata,csr_rdata;
     reg csr_wen, csr_ren;
+
+    reg [11:0] csr_addr;
     ControlStatusRegister csrs(
-        .clk(clk),
-        .addr(inst[31:20]),
+        .rst(rst),
+        .clk(clk),.pc(pc),.inst(inst),
+        .addr(csr_addr),
         .wdata(csr_wdata),.rdata(csr_rdata),
         .wen(csr_wen),.ren(csr_ren)
     );
@@ -131,9 +136,27 @@ module top(
         .take_branch(take_branch)
     );
 
+    wire is_ecall=(inst==INST_ECALL);
+    wire is_mret=(inst==INST_MRET);
+
+    // csr_addr
+    always@(*) begin
+        if(is_ecall)begin
+            csr_addr=MTVEC_ADDR;
+        end else if(is_mret)begin
+            csr_addr=MEPC_ADDR;
+        end else if(is_system)begin
+            csr_addr=inst[31:20];
+        end else begin
+            csr_addr=12'h000; // unused
+        end
+    end
+
     // nxt_pc
     always@(*) begin
-        if(is_jalr)nxt_pc=(s1pi_addr&~1);
+        if(is_ecall|is_mret)begin
+            nxt_pc=csr_rdata; // mtvec or mepc
+        end else if(is_jalr)nxt_pc=(s1pi_addr&~1);
         else if(itype==TypeJ)nxt_pc=pc+imm;
         else if(itype==TypeB)begin
             if(take_branch) nxt_pc=pc+imm;
@@ -141,9 +164,12 @@ module top(
         end else nxt_pc=pc+4;
     end
 
-
     assign wen=(itype!=TypeS)&&(itype!=TypeN)&&(itype!=TypeB);
-    assign csr_ren=is_system&&(func3t==3'b010); // csrrs
+    assign csr_ren=is_system&&(
+        (func3t==3'b010) // csrrs
+        ||(func3t==3'b001&&rd!=0) // csrrw
+        ||(is_ecall|is_mret)
+    );
 
     reg `WORD_RANGE mem_rdata;
 //    always@(safe_maddr)begin
@@ -165,19 +191,25 @@ module top(
                 end else if(is_arithmetic)begin
                     wdata=alu_res;
                 end else if(is_system)begin
-                    case(func3t)
-                        3'b010: begin // csrrs
-                            //$display("CSR Read addr %03X data %08X",
-                            //    inst[31:20],csr_rdata);
-                            csr_wen=(src1!=0);
-                            wdata=csr_rdata;
-                            csr_wdata=csr_rdata | src1;
-                        end
-                        default: begin
-                            $display("(system) UNKNOWN func3t %d",func3t);
-                            sim_panic();
-                        end
-                    endcase
+                    if(is_mret|is_ecall)begin // no writeback
+                    end else begin
+                        case(func3t)
+                            3'b010: begin // csrrs
+                                csr_wen=(src1!=0);
+                                wdata=csr_rdata;
+                                csr_wdata=csr_rdata | src1;
+                            end
+                            3'b001: begin // csrrw
+                                csr_wen=1;
+                                wdata=csr_rdata;
+                                csr_wdata=src1;
+                            end
+                            default: begin
+                                $display("(system) UNKNOWN func3t %d",func3t);
+                                sim_panic();
+                            end
+                        endcase
+                    end
                 end else if(is_load)begin
                    // $display("Load data since inst=%08X",inst);
                     mem_rdata=pmem_read(safe_maddr);

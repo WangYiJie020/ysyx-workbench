@@ -78,7 +78,11 @@ void assert_fail_msg() {
 #define putsyellow(s)  printf(ANSI_FG_YELLOW s ANSI_NONE"\n");
 //  putsyellow("register info");
 //  isa_reg_display();
-	sdb_abort(get_debuger());
+
+	sdb_debuger dbg=get_debuger();
+	if(dbg){
+		sdb_abort(dbg);
+	}
   statistic();
 }
 

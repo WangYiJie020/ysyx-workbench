@@ -107,6 +107,8 @@ word_t d_sra(word_t v,int shamt){
 #define CSR_MCAUSE 0x342
 #define CSR_MEPC 0x341
 #define CSR_MSTATUS 0x300
+#define CSR_MVENDORID 0xF11
+#define CSR_MARCHID 0xF12
 
 static word_t _handel_csr_rw(word_t csr,word_t src1,bool is_write);
 static word_t _csr_read(word_t csr){return _handel_csr_rw(csr, 0, 0);}
@@ -212,18 +214,21 @@ static int decode_exec(Decode *s) {
   INSTPAT_I("??????? ????? ????? 000 ????? 11001 11", jalr   , 
 		  R(rd) = s->pc+4; s->dnpc=(src1+imm)&(~1);
 		  );
+
+	word_t csr_imm=BITS(s->isa.inst,31,20); // no sext
+
   INSTPAT_I("??????? ????? ????? 001 ????? 11100 11", csrrw  , 
 			if(rd!=0){
-				R(rd)=_csr_read(imm);
+				R(rd)=_csr_read(csr_imm);
 			}
 	//		printf("csrw csr=%03X val=%08X\n",(uint32_t)imm,(uint32_t)src1);
-			_csr_write(imm,src1);
+			_csr_write(csr_imm,src1);
 			);
   INSTPAT_I("??????? ????? ????? 010 ????? 11100 11", csrrs  , 
-			word_t old=_csr_read(imm);
+			word_t old=_csr_read(csr_imm);
 			R(rd)=old;
 	//		printf("csrs csr=%03X val=%08X\n",(uint32_t)imm,(uint32_t)src1);
-			_csr_write(imm,old|src1);
+			_csr_write(csr_imm,old|src1);
 			);
 
 	INSTPAT_B_IMM("000",beq	,src1==src2);
@@ -254,6 +259,8 @@ extern word_t g_csr_MTVEC;
 word_t _handel_csr_rw(word_t csr,word_t src1,bool is_write){
 	static word_t g_csr_MCAUSE=0,
 				  g_csr_MEPC=0,
+					g_csr_MVENDORID=0x79737978,
+					g_csr_MARCHID=25100261,
 				  g_csr_MSTATUS=0x1800;
 
 	//printf("csr " #csr_name " %s : old=%08X new=%08X\n",is_write?"write":"read", (uint32_t)old,(uint32_t)(is_write?src1:old));
@@ -268,6 +275,8 @@ word_t _handel_csr_rw(word_t csr,word_t src1,bool is_write){
 			_CASE(MEPC);
 			_CASE(MSTATUS);
 			_CASE(MTVEC);
+			_CASE(MVENDORID);
+			_CASE(MARCHID);
 			default:panic("unsupported csr read/write: 0x%03X",csr);
 		}
 }
