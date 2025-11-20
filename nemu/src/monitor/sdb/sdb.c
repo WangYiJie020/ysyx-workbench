@@ -134,6 +134,7 @@ void init_sdb() {
 			wrap_shotreg,
 		 	regs, 32, 
 			wrap_fetch_inst);
+	assert(dbg);
 	uint32_t flags=0;
 #ifdef CONFIG_FTRACE
 	flags|=SDB_ENTRACE_FUNC;
