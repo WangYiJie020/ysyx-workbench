@@ -74,6 +74,10 @@ void sdb_skip_difftest_ref(sdb_debuger dbg){
 	_DBG.difftest_ref_skip();
 }
 
+void sdb_abort(sdb_debuger dbg){
+	_DBG.abort();
+}
+
 void sdb_set_state(sdb_debuger dbg, sdbc_cpu_state state){
 	sdb::cpu_state s;
 	s.state=(sdb::run_state)state.state;

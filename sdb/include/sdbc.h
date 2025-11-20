@@ -74,6 +74,8 @@ void sdb_load_difftest_ref(sdb_debuger dbg, const char* so_file, size_t img_size
 void sdb_exec(sdb_debuger dbg, const char* cmdline);
 void sdb_skip_difftest_ref(sdb_debuger dbg);
 
+void sdb_abort(sdb_debuger dbg);
+
 void sdb_set_state(sdb_debuger dbg, sdbc_cpu_state state);
 sdbc_cpu_state sdb_get_state(sdb_debuger dbg);
 

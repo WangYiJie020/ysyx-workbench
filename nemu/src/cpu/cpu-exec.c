@@ -23,6 +23,9 @@
 #include "debug.h"
 #include "utils.h"
 
+#include <sdbc.h>
+#include "../monitor/sdb/sdb.h"
+
 /* The assembly code of instructions executed is only output to the screen
  * when the number of instructions executed is less than this value.
  * This is useful when you use the `si' command.
@@ -73,8 +76,9 @@ static void statistic() {
 
 void assert_fail_msg() {
 #define putsyellow(s)  printf(ANSI_FG_YELLOW s ANSI_NONE"\n");
-  putsyellow("register info");
-  isa_reg_display();
+//  putsyellow("register info");
+//  isa_reg_display();
+	sdb_abort(get_debuger());
   statistic();
 }
 
