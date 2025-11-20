@@ -32,7 +32,7 @@ void sdb_destroy_debuger(sdb_debuger dbg){
 	delete (sdb::debuger*)dbg;
 }
 
-#define _DBG (*((sdb::debuger*)dbg))
+#define _DBG (assert(dbg),(*((sdb::debuger*)dbg)))
 using namespace sdb;
 
 static bool enable_ftrace=false;
