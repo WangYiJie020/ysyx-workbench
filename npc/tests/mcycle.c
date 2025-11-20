@@ -1,10 +1,12 @@
 #include <stdio.h>
+#include <stdint.h>
 
 void print(){
-	unsigned long cycles;
-asm volatile ("csrr %0, mcycle" : "=r"(cycles));
-	printf("Cycle count: %lu\n", cycles);
-
+	uint64_t c1,c2,c3;
+	asm volatile ("csrr %0, mcycle" : "=r"(c1));
+	asm volatile ("csrr %0, mcycle" : "=r"(c2));
+	asm volatile ("csrr %0, mcycle" : "=r"(c3));
+	printf("continuous mcycle: %lu %lu %lu\n",c1,c2,c3);
 }
 
 int main(){
