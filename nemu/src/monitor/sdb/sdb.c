@@ -31,15 +31,17 @@ void init_regex();
 void init_wp_pool();
 
 static sdb_debuger dbg;
-
+static bool _sdb_inited=false;
 
 void sync_sdb_state_to_nemu(){
+	if(!_sdb_inited)return;
 	sdbc_cpu_state sdb_s=sdb_get_state(dbg);
 	nemu_state.state=sdb_s.state;
 	nemu_state.halt_pc=sdb_s.pc;
 	nemu_state.halt_ret=sdb_s.halt_ret;
 }
 void sync_nemu_state_to_sdb(){
+	if(!_sdb_inited)return;
 	sdbc_cpu_state sdb_s;
 	sdb_s.state=nemu_state.state;
 	sdb_s.pc=nemu_state.halt_pc;
@@ -119,6 +121,7 @@ sdb_debuger get_debuger(){
 }
 
 void init_sdb() {
+
   /* Compile the regular expressions. */
   init_regex();
 
@@ -135,6 +138,7 @@ void init_sdb() {
 		 	regs, 32, 
 			wrap_fetch_inst);
 	assert(dbg);
+	_sdb_inited=true;
 	uint32_t flags=0;
 #ifdef CONFIG_FTRACE
 	flags|=SDB_ENTRACE_FUNC;
