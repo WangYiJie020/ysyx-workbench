@@ -212,18 +212,21 @@ static int decode_exec(Decode *s) {
   INSTPAT_I("??????? ????? ????? 000 ????? 11001 11", jalr   , 
 		  R(rd) = s->pc+4; s->dnpc=(src1+imm)&(~1);
 		  );
+
+	word_t csr_imm=BITS(s->isa.inst,31,20); // no sext
+
   INSTPAT_I("??????? ????? ????? 001 ????? 11100 11", csrrw  , 
 			if(rd!=0){
-				R(rd)=_csr_read(imm);
+				R(rd)=_csr_read(csr_imm);
 			}
 	//		printf("csrw csr=%03X val=%08X\n",(uint32_t)imm,(uint32_t)src1);
-			_csr_write(imm,src1);
+			_csr_write(csr_imm,src1);
 			);
   INSTPAT_I("??????? ????? ????? 010 ????? 11100 11", csrrs  , 
-			word_t old=_csr_read(imm);
+			word_t old=_csr_read(csr_imm);
 			R(rd)=old;
 	//		printf("csrs csr=%03X val=%08X\n",(uint32_t)imm,(uint32_t)src1);
-			_csr_write(imm,old|src1);
+			_csr_write(csr_imm,old|src1);
 			);
 
 	INSTPAT_B_IMM("000",beq	,src1==src2);
