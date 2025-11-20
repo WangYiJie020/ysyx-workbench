@@ -189,25 +189,25 @@ module top(
                 end else if(is_arithmetic)begin
                     wdata=alu_res;
                 end else if(is_system)begin
-                    if(inst==INST_MRET)begin // no writeback
+                    if(is_mret|is_ecall)begin // no writeback
                     end else begin
-                    case(func3t)
-                        3'b010: begin // csrrs
-                            csr_wen=(src1!=0);
-                            wdata=csr_rdata;
-                            csr_wdata=csr_rdata | src1;
-                        end
-                        3'b001: begin // csrrw
-                            csr_wen=1;
-                            wdata=csr_rdata;
-                            csr_wdata=src1;
-                        end
-                        default: begin
-                            $display("(system) UNKNOWN func3t %d",func3t);
-                            sim_panic();
-                        end
-                    endcase
-                end
+                        case(func3t)
+                            3'b010: begin // csrrs
+                                csr_wen=(src1!=0);
+                                wdata=csr_rdata;
+                                csr_wdata=csr_rdata | src1;
+                            end
+                            3'b001: begin // csrrw
+                                csr_wen=1;
+                                wdata=csr_rdata;
+                                csr_wdata=src1;
+                            end
+                            default: begin
+                                $display("(system) UNKNOWN func3t %d",func3t);
+                                sim_panic();
+                            end
+                        endcase
+                    end
                 end else if(is_load)begin
                    // $display("Load data since inst=%08X",inst);
                     mem_rdata=pmem_read(safe_maddr);
