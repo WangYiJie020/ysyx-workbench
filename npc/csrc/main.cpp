@@ -287,7 +287,6 @@ int main(int argc, char **argv)
 
 	load_img();
 
-	dbg.enable_difftest=true;
 	dbg.enable_inst_trace=true;
 	
 	dbg.add_trace(sdb::make_disasm_trace_handler());
@@ -304,6 +303,7 @@ int main(int argc, char **argv)
 	}
 
 
+// dbg.enable_difftest=true;
 //	dbg.load_difftest_ref("../nemu/build/riscv32-nemu-interpreter-so",img_size,0);
 
 
