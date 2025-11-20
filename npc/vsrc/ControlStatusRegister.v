@@ -47,7 +47,8 @@ module ControlStatusRegister(
     end
 
     always@(posedge clk) begin
-        $display("CSR : addr %03X data %08X wen %b ren %b",addr,wdata,wen,ren);
+        $display("CSR : addr %03X data %08X wen %b ren %b rf[%d]=%d",
+            addr,wdata,wen,ren,idx,rf[idx]);
         mcycle <= mcycle + 1;
         if(inst==INST_ECALL) begin
             rf[1] <= pc; // mepc
