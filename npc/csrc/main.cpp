@@ -291,11 +291,13 @@ int main(int argc, char **argv)
 	dbg.add_trace(sdb::make_etrace_handler());
 	dbg.add_trace(sdb::make_iringbuf_trace_handler());
 
-	auto elf_file=try_find_elf_file_of(img_file);
+	if(img_file){
+		auto elf_file=try_find_elf_file_of(img_file);
 
-	if(!elf_file.empty()){
-		printf("Found ELF file: %s\n",elf_file.c_str());
-		dbg.add_trace(sdb::make_ftrace_handler(elf_file));
+		if(!elf_file.empty()){
+			printf("Found ELF file: %s\n",elf_file.c_str());
+			dbg.add_trace(sdb::make_ftrace_handler(elf_file));
+		}
 	}
 
 
