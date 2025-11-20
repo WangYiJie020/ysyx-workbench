@@ -286,6 +286,9 @@ int main(int argc, char **argv)
 	using namespace std::ranges;
 
 	load_img();
+
+	dbg.enable_difftest=true;
+	dbg.enable_inst_trace=true;
 	
 	dbg.add_trace(sdb::make_disasm_trace_handler());
 	dbg.add_trace(sdb::make_etrace_handler());
@@ -301,8 +304,7 @@ int main(int argc, char **argv)
 	}
 
 
-//	dbg.load_difftest_ref("../nemu/build/riscv32-nemu-interpreter-so",img_size);
-	dbg.enable_difftest=false;
+	dbg.load_difftest_ref("../nemu/build/riscv32-nemu-interpreter-so",img_size,0);
 
 
 #if USE_NVBOARD
