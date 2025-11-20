@@ -154,7 +154,7 @@ module top(
     always@(*) begin
         if(inst==INST_EBREAK)begin
             raise_break(a0);
-        end
+        end else begin
        // $display("Decode inst %08X @ %08X",inst,pc);
 
         wdata=32'hCDCDCDCD;
@@ -232,6 +232,7 @@ module top(
             default:$display("(top) UNKNOWN itype %d",itype);
 
         endcase
+    end
         //$display("pc %08X nxt_pc %08X",pc,nxt_pc);
     end
 
