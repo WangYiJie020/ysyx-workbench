@@ -50,7 +50,8 @@ void debuger::_step(size_t n){
 
 void debuger::_step_one(){
 	auto oldpc= _state.pc;
-	_state.pc = _exec();	
+	_state.pc = _exec();
+	if(!is_running())return;
 	_difftest_step(oldpc, _state.pc);
 }
 
