@@ -26,6 +26,10 @@ struct std::formatter<errc> : formatter<string> {
     }
 };
 
+string_view sdb::_impl::error_head_str(){
+	return ANSI_FG_RED "[ERROR] " ANSI_NONE;
+}
+
 void debuger::_step(size_t n){
 	for(size_t i=0;i<n&&is_running();i++){
 		if (enable_inst_trace){
