@@ -14,6 +14,7 @@ parameter MARCHID_VALUE   = 32'd25100261;
 
 module ControlStatusRegister(
     input clk,
+    input rst,
     input [31:0] pc,
     input [31:0] inst,
     input [11:0] addr,
@@ -46,18 +47,27 @@ module ControlStatusRegister(
         rdata = 32'd0;
     end
 
-    always@(posedge clk) begin
-       // $display("CSR : addr %03X data %08X wen %b ren %b",
-       //     addr,wdata,wen,ren);
-       // for(int i=0;i<5;i=i+1) begin
-       //     $display("  rf[%0d] = %08X",i,rf[i]);
-       // end
-        mcycle <= mcycle + 1;
-        if(inst==INST_ECALL) begin
-            rf[1] <= pc; // mepc
-            rf[2] <= 32'd11; // mcause, environment call from M-mode
+    always@(posedge clk,posedge rst) begin
+        // $display("CSR : addr %03X data %08X wen %b ren %b",
+        //     addr,wdata,wen,ren);
+        // for(int i=0;i<5;i=i+1) begin
+        //     $display("  rf[%0d] = %08X",i,rf[i]);
+        // end
+        if(rst) begin
+            rf[0] <= 32'h00001800;
+            rf[1] <= 32'd0;
+            rf[2] <= 32'd0;
+            rf[3] <= 32'd0;
+            rf[4] <= 32'd0;
+            mcycle <= 64'd0;
         end else begin
-            if(wen) rf[idx] <= wdata;
+            mcycle <= mcycle + 1;
+            if(inst==INST_ECALL) begin
+                rf[1] <= pc; // mepc
+                rf[2] <= 32'd11; // mcause, environment call from M-mode
+            end else begin
+                if(wen) rf[idx] <= wdata;
+            end
         end
     end
 endmodule

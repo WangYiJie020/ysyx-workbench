@@ -77,6 +77,7 @@ module top(
 
     reg [11:0] csr_addr;
     ControlStatusRegister csrs(
+        .rst(rst),
         .clk(clk),.pc(pc),.inst(inst),
         .addr(csr_addr),
         .wdata(csr_wdata),.rdata(csr_rdata),
