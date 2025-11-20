@@ -2,7 +2,7 @@
 
 void print(){
 	unsigned long cycles;
-	asm volatile ("rdcycle %0" : "=r" (cycles));
+asm volatile ("csrr %0, mcycle" : "=r"(cycles));
 	printf("Cycle count: %lu\n", cycles);
 
 }
