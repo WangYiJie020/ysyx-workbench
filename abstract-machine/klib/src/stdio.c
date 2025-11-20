@@ -196,7 +196,7 @@ static int meta_printf(putch_func f_putch,void* exinfo,const char *fmt, va_list 
 							 uint64_t u;
 					_load_vlen_var(u, unsigned);
 					 int base=(*fmt=='u')?10
-						 :(*fmt=='u')?8
+						 :(*fmt=='o')?8
 						 :16;
 					 _callwithctx(put_unum,u,base,conversion=='X');
 					 break;
