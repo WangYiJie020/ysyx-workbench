@@ -167,6 +167,7 @@ module top(
     assign csr_ren=is_system&&(
         (func3t==3'b010) // csrrs
         ||(func3t==3'b001&&rd!=0) // csrrw
+        ||(is_ecall|is_mret)
     );
 
     reg `WORD_RANGE mem_rdata;

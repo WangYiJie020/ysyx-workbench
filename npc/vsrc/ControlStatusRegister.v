@@ -47,11 +47,11 @@ module ControlStatusRegister(
     end
 
     always@(posedge clk) begin
-        $display("CSR : addr %03X data %08X wen %b ren %b",
-            addr,wdata,wen,ren);
-        for(int i=0;i<5;i=i+1) begin
-            $display("  rf[%0d] = %08X",i,rf[i]);
-        end
+       // $display("CSR : addr %03X data %08X wen %b ren %b",
+       //     addr,wdata,wen,ren);
+       // for(int i=0;i<5;i=i+1) begin
+       //     $display("  rf[%0d] = %08X",i,rf[i]);
+       // end
         mcycle <= mcycle + 1;
         if(inst==INST_ECALL) begin
             rf[1] <= pc; // mepc
