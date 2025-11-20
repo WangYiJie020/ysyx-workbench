@@ -19,7 +19,7 @@ CC = gcc
 CXX = g++
 AR = ar rcs
 
-COMMON_FLAGS = -MMD -MP -Wall -Wextra -O2 -g $(INCLUDES) 
+COMMON_FLAGS = -fPIC -MMD -MP -Wall -Wextra -O2 -g $(INCLUDES) 
 CFLAGS = $(COMMON_FLAGS)
 CXXFLAGS = $(COMMON_FLAGS) -std=c++20
 

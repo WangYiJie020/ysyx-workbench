@@ -31,15 +31,18 @@ void init_regex();
 void init_wp_pool();
 
 static sdb_debuger dbg;
-
+static bool _sdb_inited=false;
+#define _skip_when_noinit() do{if(!_sdb_inited)return;}while(0)
 
 void sync_sdb_state_to_nemu(){
+	_skip_when_noinit();
 	sdbc_cpu_state sdb_s=sdb_get_state(dbg);
 	nemu_state.state=sdb_s.state;
 	nemu_state.halt_pc=sdb_s.pc;
 	nemu_state.halt_ret=sdb_s.halt_ret;
 }
 void sync_nemu_state_to_sdb(){
+	_skip_when_noinit();
 	sdbc_cpu_state sdb_s;
 	sdb_s.state=nemu_state.state;
 	sdb_s.pc=nemu_state.halt_pc;
@@ -48,6 +51,7 @@ void sync_nemu_state_to_sdb(){
 }
 void set_nemu_state(int state, vaddr_t pc, int halt_ret)
 {
+	_skip_when_noinit();
   //difftest_skip_ref();
 	sdb_skip_difftest_ref(dbg);
   nemu_state.state = state;
@@ -119,6 +123,7 @@ sdb_debuger get_debuger(){
 }
 
 void init_sdb() {
+
   /* Compile the regular expressions. */
   init_regex();
 
@@ -134,6 +139,8 @@ void init_sdb() {
 			wrap_shotreg,
 		 	regs, 32, 
 			wrap_fetch_inst);
+	assert(dbg);
+	_sdb_inited=true;
 	uint32_t flags=0;
 #ifdef CONFIG_FTRACE
 	flags|=SDB_ENTRACE_FUNC;

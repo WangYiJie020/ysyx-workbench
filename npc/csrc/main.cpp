@@ -1,5 +1,4 @@
 #include <array>
-#include <unordered_map>
 
 #include <cstdint>
 #include <stdio.h>
@@ -17,6 +16,8 @@
 #include <nvboard.h>
 
 #include "sdb.hpp"
+#include "tracers.hpp"
+#include "elf_tool.hpp"
 
 #ifndef TOP_NAME
 #define TOP_NAME Vtop
@@ -170,7 +171,7 @@ sdb::debuger dbg(
 	cpu_exec_once,
 	sdb_loadmem,
 	sdb_shot_regsnap,
-	reg_names,
+	std::vector<std::string_view>(reg_names.begin(),reg_names.end()),
 	sdb_inst_fetcher
 );
 
@@ -285,12 +286,25 @@ int main(int argc, char **argv)
 	using namespace std::ranges;
 
 	load_img();
-	
-	dbg.try_findload_elf_fromimg(img_file);
 
-//	dbg.load_difftest_ref("../nemu/build/riscv32-nemu-interpreter-so",img_size);
-	dbg.enable_ftrace=true;
-	dbg.enable_difftest=false;
+	dbg.enable_difftest=true;
+	dbg.enable_inst_trace=true;
+	
+	dbg.add_trace(sdb::make_disasm_trace_handler());
+	dbg.add_trace(sdb::make_etrace_handler());
+	dbg.add_trace(sdb::make_iringbuf_trace_handler());
+
+	if(img_file){
+		auto elf_file=try_find_elf_file_of(img_file);
+
+		if(!elf_file.empty()){
+			printf("Found ELF file: %s\n",elf_file.c_str());
+			dbg.add_trace(sdb::make_ftrace_handler(elf_file));
+		}
+	}
+
+
+	dbg.load_difftest_ref("../nemu/build/riscv32-nemu-interpreter-so",img_size,0);
 
 
 #if USE_NVBOARD
