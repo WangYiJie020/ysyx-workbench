@@ -28,8 +28,9 @@ void _trm_init() {
 	asm volatile("csrr %0, mvendorid" : "=r"(mvendor_id));
 	asm volatile("csrr %0, marchid" : "=r"(marchid));
 	char* vendor=(char*)&mvendor_id;
-	printf("Mvendor ID: 0x%08x (%c%c%c%c)\n", mvendor_id, vendor[0], vendor[1], vendor[2], vendor[3]);
-	printf("March ID: 0x%08x\n", marchid);
+	printf("mvendor: 0x%08x (%c%c%c%c)\n", mvendor_id,
+		 	vendor[3], vendor[2], vendor[1], vendor[0]);
+	printf("marchid: %d\n", marchid);
   int ret = main(mainargs);
   halt(ret);
 }
