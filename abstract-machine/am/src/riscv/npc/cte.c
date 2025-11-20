@@ -11,7 +11,7 @@ Context* __am_irq_handle(Context *c) {
 			case 11: {
 				if(c->GPR1==-1) {
 					ev.event = EVENT_YIELD;
-					c->mepc += 4;
+					//c->mepc += 4;
 				} else {
 				 	assert(0);	
 				}
