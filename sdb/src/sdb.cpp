@@ -49,7 +49,6 @@ void debuger::_step(size_t n){
 }
 
 void debuger::_step_one(){
-	puts("step one");
 	auto oldpc= _state.pc;
 	_state.pc = _exec();
 	if(!is_running())return;
