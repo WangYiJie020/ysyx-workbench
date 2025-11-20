@@ -303,8 +303,8 @@ int main(int argc, char **argv)
 	}
 
 
-// dbg.enable_difftest=true;
-//	dbg.load_difftest_ref("../nemu/build/riscv32-nemu-interpreter-so",img_size,0);
+ dbg.enable_difftest=true;
+	dbg.load_difftest_ref("../nemu/build/riscv32-nemu-interpreter-so",img_size,0);
 
 
 #if USE_NVBOARD
