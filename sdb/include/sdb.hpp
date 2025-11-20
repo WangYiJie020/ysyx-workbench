@@ -244,14 +244,7 @@ public:
 	inline bool is_running(){
 		return _state.state==run_state::running;
 	}	
-	inline void abort(){
-		_state.abort();
-		_print("Program aborted.\n");
-		for(auto h:_trace_handlers){
-			_print("{}",h->get_dump());
-		}
-		dump_reg();
-	}
+	void abort();
 	void exec_command(std::string_view cmdline);
 };
 

@@ -48,6 +48,15 @@ void debuger::_step(size_t n){
 	}
 }
 
+void debuger::abort(){
+	_state.abort();
+	_print("Program aborted.\n");
+	for(auto h:_trace_handlers){
+		_print("{}",h->get_dump());
+	}
+	dump_reg();
+}
+
 void debuger::_step_one(){
 	auto oldpc= _state.pc;
 	_state.pc = _exec();
