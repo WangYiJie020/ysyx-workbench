@@ -246,6 +246,7 @@ public:
 	}	
 	inline void abort(){
 		_state.abort();
+		_print("Program aborted.\n");
 		for(auto h:_trace_handlers){
 			_print("{}",h->get_dump());
 		}
