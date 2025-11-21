@@ -34,7 +34,6 @@ string_view sdb::_impl::error_head_str(){
 
 trace_context debuger::_make_trace_ctx(){
 	auto inst=_fetch_inst(_state.pc);
-	assert(inst.size()>0);
 	for(auto ch:inst)_print("{:02x} ",ch);
 	return trace_context{
 		_state.last_pc,
@@ -65,6 +64,7 @@ void debuger::_step(size_t n){
 		&trace_handler::require_call_after_inst_exec
 	);
 	auto invoke=[this](auto h){
+		printf("invoking handler %p\n",h.get());
 		h->handle(_make_trace_ctx());
 		_print("{}",h->get_log());
 		if(h->is_require_abort()){
