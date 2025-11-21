@@ -70,8 +70,6 @@ void debuger::_step(size_t n){
 			abort();
 		}
 	};
-	printf("before exec handlers: %zu, after exec handlers: %zu\n",
-		before_exec.size(),after_exec.size());
 
 	for(size_t i=0;i<n&&is_running();i++){
 		ranges::for_each(before_exec,invoke);
@@ -92,6 +90,7 @@ void debuger::abort(){
 void debuger::_step_one(){
 	_state.last_pc= _state.pc;
 	_state.pc = _exec();
+	_shot_reg(_reg_snap);
 }
 
 uint64_t expr_t::eval()const{
