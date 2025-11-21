@@ -56,7 +56,7 @@ void set_nemu_state(int state, vaddr_t pc, int halt_ret)
   nemu_state.state = state;
   nemu_state.halt_pc = pc;
   nemu_state.halt_ret = halt_ret;
-	sync_nemu_state_to_sdb();
+	//sync_nemu_state_to_sdb();
 }
 
 /* We use the `readline' library to provide more flexibility to read from stdin. */
