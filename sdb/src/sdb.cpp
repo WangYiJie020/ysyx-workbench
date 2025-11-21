@@ -54,7 +54,7 @@ void debuger::add_trace(trace_handler_ptr h){
 }
 void debuger::_step(size_t n){
 	if(!enable_inst_trace){
-		_exec(n);
+		for(size_t i=0;i<n&&is_running();i++)	_step_one();
 		return;
 	}
 	vector<trace_handler_ptr> before_exec,after_exec;
@@ -92,7 +92,7 @@ void debuger::abort(){
 
 void debuger::_step_one(){
 	_state.last_pc= _state.pc;
-	_state.pc = _exec(1);
+	_state.pc = _exec();
 	_shot_reg(_reg_snap);
 }
 
