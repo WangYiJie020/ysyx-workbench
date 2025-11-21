@@ -89,7 +89,7 @@ static void audio_io_handler(uint32_t offset, int len, bool is_write) {
 
 static void audio_buf_io_handler(uint32_t offset, int len, bool is_write) {
 	if(is_write){
-		printf("Audio buffer write: offset=%u, len=%d\n", offset, len);
+		//printf("Audio buffer write: offset=%u, len=%d\n", offset, len);
 		sbuf_data_end = sbuf_ring_add(sbuf_data_end, len);
 	}
 	else {
