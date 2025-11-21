@@ -60,6 +60,7 @@ static void audio_io_handler(uint32_t offset, int len, bool is_write) {
 		{
 			// A successful call to SDL_OpenAudio() is always device id 1, and legacy SDL audio APIs assume you want this device ID.
 			int queued = SDL_GetQueuedAudioSize(1);
+			printf("Audio queued size: %d bytes\n", queued);
 			audio_base[reg_count] = queued;
 		}
 	}
