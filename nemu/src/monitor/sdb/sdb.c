@@ -89,7 +89,7 @@ void sdb_mainloop() {
 
   for (char *str; (str = rl_gets()) != NULL; ) {
 		sdb_exec(dbg, str);
-		sync_sdb_state_to_nemu();
+		//sync_sdb_state_to_nemu();
 		if(nemu_state.state==NEMU_QUIT)break;
 
 #ifdef CONFIG_DEVICE
