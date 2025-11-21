@@ -78,7 +78,7 @@ static void audio_io_handler(uint32_t offset, int len, bool is_write) {
 	else{
 		if(offset == reg_bufwhead * 4)
 		{
-			audio_base[reg_bufwhead] = sbuf_data_head-sbuf;
+			audio_base[reg_bufwhead] = sbuf_data_end-sbuf;
 		}
 		else if(offset == reg_count * 4)
 		{
