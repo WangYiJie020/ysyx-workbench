@@ -54,7 +54,7 @@ void debuger::add_trace(trace_handler_ptr h){
 }
 void debuger::_step(size_t n){
 	if(!enable_inst_trace){
-		for(size_t i=0;i<n&&is_running();i++)	_step_one();
+		for(size_t i=0;i<n&&is_running();i++)	_exec();
 		return;
 	}
 	vector<trace_handler_ptr> before_exec,after_exec;
