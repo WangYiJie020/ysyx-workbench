@@ -143,14 +143,14 @@ void init_sdb() {
 	assert(dbg);
 	_sdb_inited=true;
 	uint32_t flags=0;
+#ifdef CONFIG_ITRACE
+	flags|=SDB_ENTRACE_INST;
+#ifdef CONFIG_DIFFTEST
+	flags|=SDB_ENTRACE_DIFFTEST;
+#endif
 #ifdef CONFIG_FTRACE
 	flags|=SDB_ENTRACE_FUNC;
 #endif
-#ifdef CONFIG_ITRACE
-	flags|=SDB_ENTRACE_INST;
-#endif
-#ifdef CONFIG_DIFFTEST
-	flags|=SDB_ENTRACE_DIFFTEST;
 #endif
 	sdb_enable_entrace(dbg, flags);
 }
