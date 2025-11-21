@@ -27,8 +27,9 @@ enum {
   nr_reg
 };
 
-static uint8_t *sbuf = NULL;
+static uint8_t *sbuf = NULL,*sbuf_data_head=NULL, *sbuf_data_end=NULL;
 static uint32_t *audio_base = NULL;
+
 
 static void audio_callback(void *userdata, Uint8 *stream, int len) {
 	printf("Audio callback called, len=%d\n", len);
@@ -56,16 +57,15 @@ static void audio_io_handler(uint32_t offset, int len, bool is_write) {
 			printf("Audio initialized: freq=%d, channels=%d, samples=%d\n", s.freq, s.channels, s.samples);
 		}
 	}
-	else {
-		if(offset == reg_count * 4)
-		{
-			// A successful call to SDL_OpenAudio() is always device id 1, and legacy SDL audio APIs assume you want this device ID.
-			int queued = SDL_GetQueuedAudioSize(1);
-			printf("Audio queued size: %d bytes\n", queued);
-			audio_base[reg_count] = queued;
-		}
-	}
+}
 
+static void audio_buf_io_handler(uint32_t offset, int len, bool is_write) {
+	if(is_write){
+		printf("Audio buffer write: offset=%u, len=%d\n", offset, len);
+
+	}
+	else {
+	}
 }
 
 void init_audio() {
@@ -81,5 +81,7 @@ void init_audio() {
 #endif
 
   sbuf = (uint8_t *)new_space(CONFIG_SB_SIZE);
-  add_mmio_map("audio-sbuf", CONFIG_SB_ADDR, sbuf, CONFIG_SB_SIZE, NULL);
+	sbuf_data_head = sbuf;
+	sbuf_data_end = sbuf;
+  add_mmio_map("audio-sbuf", CONFIG_SB_ADDR, sbuf, CONFIG_SB_SIZE, audio_buf_io_handler);
 }
