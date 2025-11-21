@@ -135,7 +135,7 @@ namespace sdb {
 
 
 	// impl should return npc(pc after exec)
-	using cpu_executor=std::function<paddr_t()>;
+	using cpu_executor=std::function<paddr_t(size_t n)>;
 	// impl should prepare n bytes continuously in mem corresponding to addr
 	// and return the pointer to the first byte
 	using mem_loader=std::function<uint8_t*(paddr_t addr,size_t n)>;

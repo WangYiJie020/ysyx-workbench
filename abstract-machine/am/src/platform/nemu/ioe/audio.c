@@ -14,7 +14,7 @@ void __am_audio_init() {
 }
 
 void __am_audio_config(AM_AUDIO_CONFIG_T *cfg) {
-  cfg->present = false;
+  cfg->present = true;
 	cfg->bufsize = inl(AUDIO_SBUF_SIZE_ADDR);
 }
 
@@ -39,6 +39,6 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
 	uint32_t woffset = inl(AUDIO_SBUF_WHAED);
 	//printf("audio play len=%d write offset %u\n", len, woffset);
 	for (int i = 0; i < len; i++) {
-		outb(AUDIO_SBUF_ADDR+(woffset+i)%bufsize, buf[i]);
+		outl(AUDIO_SBUF_ADDR+(woffset+i)%bufsize, buf[i]);
 	}
 }

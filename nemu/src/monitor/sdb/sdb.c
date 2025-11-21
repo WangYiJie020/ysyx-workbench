@@ -52,8 +52,7 @@ void sync_nemu_state_to_sdb(){
 void set_nemu_state(int state, vaddr_t pc, int halt_ret)
 {
 	_skip_when_noinit();
-  //difftest_skip_ref();
-	sdb_skip_difftest_ref(dbg);
+	IFDEF(CONFIG_DIFFTEST,sdb_skip_difftest_ref(dbg));
   nemu_state.state = state;
   nemu_state.halt_pc = pc;
   nemu_state.halt_ret = halt_ret;
@@ -101,8 +100,8 @@ void sdb_mainloop() {
   }
 }
 
-sdb_paddr_t cpu_exec_wrapper() {
-	cpu_exec(1);
+sdb_paddr_t cpu_exec_wrapper(size_t nstep) {
+	cpu_exec(nstep);
 	return cpu.pc;
 }
 uint8_t* wrap_mem_loader(sdb_paddr_t addr, size_t nbyte){
