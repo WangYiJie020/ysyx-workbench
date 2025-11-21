@@ -34,6 +34,7 @@ string_view sdb::_impl::error_head_str(){
 
 trace_context debuger::_make_trace_ctx(){
 	auto inst=_fetch_inst(_state.pc);
+	assert(inst.size()>0);
 	for(auto ch:inst)_print("{:02x} ",ch);
 	return trace_context{
 		_state.last_pc,
