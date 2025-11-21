@@ -32,12 +32,13 @@ string_view sdb::_impl::error_head_str(){
 	return ANSI_FG_RED "[ERROR] " ANSI_NONE;
 }
 
-trace_context debuger::_make_trace_ctx(vlen_inst_view inst){
+trace_context debuger::_make_trace_ctx(){
+	_load_inst();
 	return trace_context{
 		_state.last_pc,
 		_state.pc,
 		_reg_snap,
-		inst,
+		_current_inst,
 		_reg_names
 	};
 }
@@ -45,7 +46,8 @@ trace_context debuger::_make_trace_ctx(vlen_inst_view inst){
 void debuger::add_trace(trace_handler_ptr h){
 	_trace_handlers.push_back(h);
 	auto mem=_loadmem(_MEMARY_BASE,_IMG_SIZE);
-	h->init(_make_trace_ctx(_fetch_inst(_INITIAL_PC)),
+
+	h->init(_make_trace_ctx(),
 		 	std::span<uint8_t>(mem,mem+_IMG_SIZE),
 		 	_MEMARY_BASE);
 }
@@ -62,8 +64,7 @@ void debuger::_step(size_t n){
 		&trace_handler::require_call_after_inst_exec
 	);
 	auto invoke=[this](auto h){
-		auto ctx=_make_trace_ctx(_fetch_inst(_state.pc));
-		h->handle(ctx);
+		h->handle(_make_trace_ctx());
 		_print("{}",h->get_log());
 		if(h->is_require_abort()){
 			abort();

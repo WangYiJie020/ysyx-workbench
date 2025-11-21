@@ -159,6 +159,7 @@ private:
 	std::vector<std::string_view> _reg_names;
 	reg_snapshot_t _reg_snap;
 
+	vlen_inst_code _current_inst;
 	inst_fetcher _fetch_inst;
 
 	std::vector<trace_handler_ptr> _trace_handlers;
@@ -182,10 +183,15 @@ private:
 	}
 
 	void _init_cmd_table();
+
+	inline void _load_inst(){
+		_current_inst=_fetch_inst(_state.pc);
+	}
+
 	void _step_one();
 	void _step(size_t n);
 
-	trace_context _make_trace_ctx(vlen_inst_view inst);
+	trace_context _make_trace_ctx();
 
 	void cmd_q();
 	void cmd_info(std::string_view);
