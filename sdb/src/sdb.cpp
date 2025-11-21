@@ -65,7 +65,9 @@ void debuger::_step(size_t n){
 		&trace_handler::require_call_after_inst_exec
 	);
 	auto invoke=[this](auto h){
-		h->handle(_make_trace_ctx());
+		auto ctx=_make_trace_ctx();
+		printf("Invoking handler %p inst size %zu\n",h.get(),ctx.inst.size());
+		h->handle(ctx);
 		_print("{}",h->get_log());
 		if(h->is_require_abort()){
 			abort();
