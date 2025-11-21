@@ -50,6 +50,7 @@ void debuger::add_trace(trace_handler_ptr h){
 	h->init(_make_trace_ctx(),
 		 	std::span<uint8_t>(mem,mem+_IMG_SIZE),
 		 	_MEMARY_BASE);
+	_print("{}",h->get_log());
 }
 void debuger::_step(size_t n){
 	if(!enable_inst_trace){
