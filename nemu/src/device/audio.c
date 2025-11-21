@@ -31,6 +31,7 @@ static uint8_t *sbuf = NULL;
 static uint32_t *audio_base = NULL;
 
 static void audio_callback(void *userdata, Uint8 *stream, int len) {
+	printf("Audio callback called, len=%d\n", len);
 	int sbuf_size = audio_base[reg_sbuf_size];
 	int cpy_len = sbuf_size < len ? sbuf_size : len;
 	memcpy(stream, sbuf, cpy_len);
