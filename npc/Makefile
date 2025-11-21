@@ -42,9 +42,10 @@ CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
 
 CXXFLAGS += -fsanitize=address -std=c++20
 LDFLAGS += -fsanitize=address -L$(abspath ../sdb/build) -lsdb
+ARCHIVES += $(NVBOARD_ARCHIVE) $(abspath ../sdb/build/libsdb.a)
 
 
-$(BIN): $(VSRCS) $(INCHEADERS) $(CSRCS) $(NVBOARD_ARCHIVE)
+$(BIN): $(VSRCS) $(INCHEADERS) $(CSRCS) $(ARCHIVES)
 	@rm -rf $(OBJ_DIR)
 	$(VERILATOR) $(VERILATOR_CFLAGS) \
 		--top-module $(TOPNAME) $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE) \
