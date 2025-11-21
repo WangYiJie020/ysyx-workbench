@@ -1,6 +1,7 @@
 #include "sdb.hpp"
 #include <dlfcn.h>
 #include <assert.h>
+#include <tracers.hpp>
 
 using namespace std;
 using namespace sdb;
@@ -14,7 +15,7 @@ typedef void(*ref_difftest_exec_t)(size_t n);
 ;
 enum { DIFFTEST_TO_DUT, DIFFTEST_TO_REF };
 
-struct sdb::_impl::difftest_imp{
+struct sdb::difftest_trace_handler::difftest_imp{
 	void* handle=nullptr;
 	ref_difftest_init_t ref_init=nullptr;
 	ref_difftest_memcpy_t ref_memcpy=nullptr;
@@ -29,7 +30,6 @@ struct sdb::_impl::difftest_imp{
 		if(!fn)
 			throw runtime_error(format("load {} failed: {}", name, dlerror()));
 	}
-
 
 	~difftest_imp(){
 		if(handle){
@@ -50,60 +50,58 @@ struct sdb::_impl::difftest_imp{
 
 };
 
-void _impl::_deleter_difftest::operator()(difftest_imp* ptr){
-	if(ptr){delete ptr;}
+using hander_t=sdb::difftest_trace_handler;
+
+void hander_t::_imp_deleter::operator()(difftest_imp* p){
+	delete p;
 }
 
-#define assert_reg_num() assert(_reg_snap.size()==_reg_names.size()+1)
-#define push_pc_to_regsnap(_pc_) _reg_snap[ _reg_names.size() ] = _pc_;
+hander_t::difftest_trace_handler(string_view ref_so_file,int port){
+	_imp=unique_ptr<difftest_imp,_imp_deleter>(new difftest_imp());
+	_imp->load(ref_so_file);
+	_log("Difftest load ref from {}\n",ref_so_file);
+	_require_call_after_inst_exec=true;
+	_imp->ref_init(port);
+}
 
-void debuger::load_difftest_ref(string_view so_file,size_t img_size,int port){COND_ENABLE{
-	_imp_difftest=_impl::difftest_imptr(new _impl::difftest_imp());
-	auto& imp=*_imp_difftest;
-	imp.load(so_file);
-	printf("Difftest load ref from %s\n",string(so_file).c_str());
-	imp.ref_init(port); 
+static reg_snapshot_t pack_regs_and_pc(const trace_context& ctx){
+	reg_snapshot_t regs(ctx.regs.begin(), ctx.regs.end());
+	regs.push_back(ctx.pc);
+	return regs;
+}
 
-	imp.ref_memcpy(_INITIAL_PC, _loadmem(_INITIAL_PC,img_size), img_size, DIFFTEST_TO_REF);
-	assert_reg_num();
-	push_pc_to_regsnap(_INITIAL_PC);
-	imp.ref_regcpy(_reg_snap.data(), DIFFTEST_TO_REF);
-	
-}}
-
-void debuger::difftest_ref_skip(){COND_ENABLE{
-	auto& imp=*_imp_difftest;
-	imp.is_skip_ref=true;
-}}
-
-void debuger::_difftest_step(paddr_t pc,paddr_t npc){COND_ENABLE{
-	auto& imp=*_imp_difftest;
-	_shot_reg(_reg_snap);
-	assert_reg_num();
-	// after ref exec, its pc should be npc
-	push_pc_to_regsnap(npc);
-
+void hander_t::init(_ctx_ref ctx,std::span<uint8_t> img_data, paddr_t img_base){
+	_imp->ref_memcpy(img_base, img_data.data(), img_data.size(), DIFFTEST_TO_REF);
+	auto regs=pack_regs_and_pc(ctx);
+	_imp->ref_regcpy(regs.data(), DIFFTEST_TO_REF);
+}
+void hander_t::skip_ref(){
+	_imp->is_skip_ref=true;
+}
+void hander_t::handle(_ctx_ref ctx){
+	auto& imp=*_imp;
 	if(imp.is_skip_ref){
-		imp.ref_regcpy(_reg_snap.data(),DIFFTEST_TO_REF);
+		auto regs=pack_regs_and_pc(ctx);
+		imp.ref_regcpy(regs.data(),DIFFTEST_TO_REF);
 		imp.is_skip_ref=false;
 		return;
 	}
-
+	auto regs=pack_regs_and_pc(ctx);
 	imp.ref_exec(1);
-	reg_snapshot_t ref_regs(_reg_snap.size());
+	reg_snapshot_t ref_regs(regs.size());
 	imp.ref_regcpy(ref_regs.data(), DIFFTEST_TO_DUT);
-	for(size_t i=0;i<_reg_snap.size();i++){
-		if(ref_regs[i]!=_reg_snap[i]){
-			_error(
+	for(size_t i=0;i<regs.size();i++){
+		if(ref_regs[i]!=regs[i]){
+			_log(
 				"Difftest failed at pc = {:#x}, reg {}({}) not match: dut = {:#x}, ref = {:#x}",
-				pc,
+				ctx.pc,
 				i,
-				i < _reg_names.size() ? _reg_names[i] : "pc",
-				_reg_snap[i],
+				i < ctx.reg_names.size() ? ctx.reg_names[i] : "pc",
+				regs[i],
 				ref_regs[i]
 			);
-			this->abort();
+			this->_require_abort=true;
 			break;
 		}
 	}
-}}
+}

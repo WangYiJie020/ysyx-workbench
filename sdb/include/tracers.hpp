@@ -46,6 +46,26 @@ namespace sdb {
 			inst_disasmsembler=default_inst_disasm,size_t n_records=32
 	);
 
+	// difftest
+	
+	class difftest_trace_handler:public trace_handler{
+		private:
+			struct difftest_imp;
+			struct _imp_deleter{void operator()(difftest_imp* p);};
+			std::unique_ptr<difftest_imp,_imp_deleter> _imp;
+		public:
+			difftest_trace_handler(std::string_view ref_so_file,int port);
+			virtual void handle(_ctx_ref)override; // step ref
+			virtual void init(_ctx_ref,std::span<uint8_t> img_data, paddr_t img_base_addr)override;
+			void skip_ref();
+	};
+	using difftest_trace_handler_ptr=std::shared_ptr<difftest_trace_handler>;
+	inline difftest_trace_handler_ptr make_difftest_trace_handler(
+		std::string_view ref_so_file,int port
+	){
+		return std::make_shared<difftest_trace_handler>(ref_so_file,port);
+	}
+
 	// ftrace
 
 	class ftrace_handler;

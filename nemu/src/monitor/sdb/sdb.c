@@ -131,9 +131,10 @@ void init_sdb() {
   init_wp_pool();
 
 	extern const char* regs[32];
+	extern long img_size;
 
 	dbg=sdb_create_debuger(
-			CONFIG_MBASE,
+			CONFIG_MBASE,img_size,
 			cpu_exec_wrapper,
 			wrap_mem_loader,
 			wrap_shotreg,

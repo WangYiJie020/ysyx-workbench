@@ -6,9 +6,11 @@
 
 using namespace std;
 
-extern "C" sdb_debuger sdb_create_debuger(sdb_paddr_t init_pc, sdb_cpu_executor exec, sdb_mem_loader loadmem, sdb_reg_snapshoter shotreg, const char **reg_names, size_t n_reg_names, sdb_inst_fetcher fetcher){
+extern "C" sdb_debuger sdb_create_debuger(
+		sdb_paddr_t init_pc,size_t img_size,
+	 	sdb_cpu_executor exec, sdb_mem_loader loadmem, sdb_reg_snapshoter shotreg, const char **reg_names, size_t n_reg_names, sdb_inst_fetcher fetcher){
 	auto dbg=new sdb::debuger(
-		init_pc,
+		init_pc,init_pc,img_size,
 		exec,
 		loadmem,
 		[shotreg](sdb::reg_snapshot_t& snap){
@@ -38,11 +40,11 @@ using namespace sdb;
 static bool enable_ftrace=false;
 
 void sdb_enable_entrace(sdb_debuger dbg, int flags){
- 	_DBG.enable_difftest=(flags&SDB_ENTRACE_DIFFTEST);
+ 	bool enable_difftest=(flags&SDB_ENTRACE_DIFFTEST);
  	_DBG.enable_inst_trace=(flags&SDB_ENTRACE_INST);
  	enable_ftrace=(flags&SDB_ENTRACE_FUNC);
  	if(enable_ftrace)assert(_DBG.enable_inst_trace);
- 	if(_DBG.enable_difftest)assert(_DBG.enable_inst_trace);
+ 	if(enable_difftest)assert(_DBG.enable_inst_trace);
 
  	if(_DBG.enable_inst_trace)
 	{
@@ -64,14 +66,20 @@ void sdb_load_elf(sdb_debuger dbg, const char* filename){
 		sdb::make_ftrace_handler(filename)
 	);
 }
-void sdb_load_difftest_ref(sdb_debuger dbg, const char* so_file, size_t img_size,int port){
-	_DBG.load_difftest_ref(so_file,img_size,port);
+
+static sdb::difftest_trace_handler_ptr difftest_handler=nullptr;
+
+void sdb_load_difftest_ref(sdb_debuger dbg, const char* so_file, int port){
+	assert(difftest_handler==nullptr);
+	difftest_handler=sdb::make_difftest_trace_handler(so_file,port);
+	_DBG.add_trace(difftest_handler);
 }
 void sdb_exec(sdb_debuger dbg, const char* cmdline){
 	_DBG.exec_command(cmdline);
 }
-void sdb_skip_difftest_ref(sdb_debuger dbg){
-	_DBG.difftest_ref_skip();
+void sdb_skip_difftest_ref(sdb_debuger){
+	assert(difftest_handler!=nullptr);
+	difftest_handler->skip_ref();
 }
 
 void sdb_abort(sdb_debuger dbg){
