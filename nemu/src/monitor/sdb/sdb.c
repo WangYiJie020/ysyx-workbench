@@ -42,8 +42,6 @@ void sync_sdb_state_to_nemu(){
 	nemu_state.halt_ret=sdb_s.halt_ret;
 }
 void sync_nemu_state_to_sdb(){
-	assert(0);
-	return;
 	_skip_when_noinit();
 	sdbc_cpu_state sdb_s;
 	sdb_s.state=nemu_state.state;
@@ -58,7 +56,7 @@ void set_nemu_state(int state, vaddr_t pc, int halt_ret)
   nemu_state.state = state;
   nemu_state.halt_pc = pc;
   nemu_state.halt_ret = halt_ret;
-	//sync_nemu_state_to_sdb();
+	sync_nemu_state_to_sdb();
 }
 
 /* We use the `readline' library to provide more flexibility to read from stdin. */
@@ -91,7 +89,7 @@ void sdb_mainloop() {
 
   for (char *str; (str = rl_gets()) != NULL; ) {
 		sdb_exec(dbg, str);
-		//sync_sdb_state_to_nemu();
+		sync_sdb_state_to_nemu();
 		if(nemu_state.state==NEMU_QUIT)break;
 
 #ifdef CONFIG_DEVICE
