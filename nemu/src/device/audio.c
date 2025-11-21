@@ -50,7 +50,7 @@ static size_t sbuf_data_count(){
 static void audio_callback(void *userdata, Uint8 *stream, int len) {
 	size_t sbuf_cnt = sbuf_data_count();
 
-	printf("Audio callback called, len=%d sbuf_cnt=%zu\n", len, sbuf_cnt);
+//	printf("Audio callback called, len=%d sbuf_cnt=%zu\n", len, sbuf_cnt);
 	int cpy_len = sbuf_cnt < len ? sbuf_cnt : len;
 	memcpy(stream, sbuf_data_head, cpy_len);
 	if(cpy_len < len){
@@ -72,7 +72,7 @@ static void audio_io_handler(uint32_t offset, int len, bool is_write) {
 			assert(SDL_InitSubSystem(SDL_INIT_AUDIO)==0);
 			assert(SDL_OpenAudio(&s, NULL) == 0);
 			SDL_PauseAudio(0);
-			printf("Audio initialized: freq=%d, channels=%d, samples=%d\n", s.freq, s.channels, s.samples);
+			//printf("Audio initialized: freq=%d, channels=%d, samples=%d\n", s.freq, s.channels, s.samples);
 		}
 	}
 	else{
