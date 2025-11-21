@@ -37,7 +37,7 @@ typedef struct {
 }sdbc_cpu_state;
 
 // should return the next pc
-typedef sdb_paddr_t(*sdb_cpu_executor)();
+typedef sdb_paddr_t(*sdb_cpu_executor)(size_t nstep);
 // should return pointer to nbyte data at addr
 typedef uint8_t*(*sdb_mem_loader)(sdb_paddr_t addr, size_t nbyte);
 // should fill reg_snapshot with current register values
