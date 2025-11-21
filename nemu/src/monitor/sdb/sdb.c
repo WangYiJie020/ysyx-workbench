@@ -102,8 +102,8 @@ void sdb_mainloop() {
   }
 }
 
-sdb_paddr_t cpu_exec_wrapper() {
-	cpu_exec(1);
+sdb_paddr_t cpu_exec_wrapper(size_t nstep) {
+	cpu_exec(nstep);
 	return cpu.pc;
 }
 uint8_t* wrap_mem_loader(sdb_paddr_t addr, size_t nbyte){
