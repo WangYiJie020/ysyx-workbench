@@ -24,12 +24,28 @@ enum {
   reg_sbuf_size,
   reg_init,
   reg_count,
+	reg_bufwhead,
   nr_reg
 };
 
 static uint8_t *sbuf = NULL,*sbuf_data_head=NULL, *sbuf_data_end=NULL;
 static uint32_t *audio_base = NULL;
 
+static uint8_t* sbuf_ring_add(uint8_t* ptr, int add){
+	ptr += add;
+	if(ptr >= sbuf + CONFIG_SB_SIZE){
+		ptr -= CONFIG_SB_SIZE;
+	}
+	return ptr;
+}
+static size_t sbuf_data_count(){
+	if(sbuf_data_end >= sbuf_data_head){
+		return sbuf_data_end - sbuf_data_head;
+	}
+	else{
+		return (sbuf + CONFIG_SB_SIZE - sbuf_data_head) + (sbuf_data_end - sbuf);
+	}
+}
 
 static void audio_callback(void *userdata, Uint8 *stream, int len) {
 	printf("Audio callback called, len=%d\n", len);
@@ -39,6 +55,7 @@ static void audio_callback(void *userdata, Uint8 *stream, int len) {
 	if(cpy_len < len){
 		memset(stream + cpy_len, 0, len - cpy_len);
 	}
+	sbuf_data_head = sbuf_ring_add(sbuf_data_head, cpy_len);
 }
 
 static void audio_io_handler(uint32_t offset, int len, bool is_write) {
@@ -57,12 +74,18 @@ static void audio_io_handler(uint32_t offset, int len, bool is_write) {
 			printf("Audio initialized: freq=%d, channels=%d, samples=%d\n", s.freq, s.channels, s.samples);
 		}
 	}
+	else{
+		if(offset == reg_bufwhead * 4)
+		{
+			audio_base[reg_bufwhead] = sbuf_data_count();
+		}
+	}
 }
 
 static void audio_buf_io_handler(uint32_t offset, int len, bool is_write) {
 	if(is_write){
 		printf("Audio buffer write: offset=%u, len=%d\n", offset, len);
-
+		sbuf_data_end = sbuf_ring_add(sbuf_data_end, len);
 	}
 	else {
 	}

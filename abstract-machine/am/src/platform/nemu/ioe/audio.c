@@ -7,6 +7,7 @@
 #define AUDIO_SBUF_SIZE_ADDR (AUDIO_ADDR + 0x0c)
 #define AUDIO_INIT_ADDR      (AUDIO_ADDR + 0x10)
 #define AUDIO_COUNT_ADDR     (AUDIO_ADDR + 0x14)
+#define AUDIO_SBUF_WHAED     (AUDIO_ADDR + 0x18)
 
 void __am_audio_init() {
 }
@@ -30,7 +31,11 @@ void __am_audio_status(AM_AUDIO_STATUS_T *stat) {
 void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
 	int len = ctl->buf.end - ctl->buf.start;
 	uint8_t *buf = (uint8_t *)ctl->buf.start;
+
+	while (inl(AUDIO_COUNT_ADDR) + len > inl(AUDIO_SBUF_SIZE_ADDR));
+
+	uint32_t woffset = inl(AUDIO_SBUF_WHAED);
 	for (int i = 0; i < len; i++) {
-		outb(AUDIO_SBUF_ADDR, buf[i]);
+		outb(AUDIO_SBUF_ADDR+woffset, buf[i]);
 	}
 }
