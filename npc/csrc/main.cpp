@@ -304,7 +304,7 @@ int main(int argc, char **argv)
 
 		if(!elf_file.empty()){
 			printf("Found ELF file: %s\n",elf_file.c_str());
-			//dbg->add_trace(sdb::make_ftrace_handler(elf_file));
+			dbg->add_trace(sdb::make_ftrace_handler(elf_file));
 		}
 	}
 
