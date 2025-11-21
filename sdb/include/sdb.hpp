@@ -185,7 +185,7 @@ private:
 	void _step_one();
 	void _step(size_t n);
 
-	trace_context _make_trace_ctx();
+	trace_context _make_trace_ctx(vlen_inst_view inst);
 
 	void cmd_q();
 	void cmd_info(std::string_view);

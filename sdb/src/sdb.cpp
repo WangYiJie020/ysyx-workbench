@@ -32,10 +32,7 @@ string_view sdb::_impl::error_head_str(){
 	return ANSI_FG_RED "[ERROR] " ANSI_NONE;
 }
 
-trace_context debuger::_make_trace_ctx(){
-	auto inst=_fetch_inst(_state.pc);
-	printf("Fetched instruction bytes: ");
-	for(auto ch:inst)_print("{:02x} ",ch);
+trace_context debuger::_make_trace_ctx(vlen_inst_view inst){
 	return trace_context{
 		_state.last_pc,
 		_state.pc,
@@ -48,7 +45,7 @@ trace_context debuger::_make_trace_ctx(){
 void debuger::add_trace(trace_handler_ptr h){
 	_trace_handlers.push_back(h);
 	auto mem=_loadmem(_MEMARY_BASE,_IMG_SIZE);
-	h->init(_make_trace_ctx(),
+	h->init(_make_trace_ctx(_fetch_inst(_INITIAL_PC)),
 		 	std::span<uint8_t>(mem,mem+_IMG_SIZE),
 		 	_MEMARY_BASE);
 }
@@ -65,7 +62,7 @@ void debuger::_step(size_t n){
 		&trace_handler::require_call_after_inst_exec
 	);
 	auto invoke=[this](auto h){
-		auto ctx=_make_trace_ctx();
+		auto ctx=_make_trace_ctx(_fetch_inst(_state.pc));
 		h->handle(ctx);
 		_print("{}",h->get_log());
 		if(h->is_require_abort()){
