@@ -48,10 +48,11 @@ static size_t sbuf_data_count(){
 }
 
 static void audio_callback(void *userdata, Uint8 *stream, int len) {
-	printf("Audio callback called, len=%d\n", len);
-	int sbuf_size = audio_base[reg_sbuf_size];
-	int cpy_len = sbuf_size < len ? sbuf_size : len;
-	memcpy(stream, sbuf, cpy_len);
+	size_t sbuf_cnt = sbuf_data_count();
+
+	printf("Audio callback called, len=%d sbuf_cnt=%zu\n", len, sbuf_cnt);
+	int cpy_len = sbuf_cnt < len ? sbuf_cnt : len;
+	memcpy(stream, sbuf_data_head, cpy_len);
 	if(cpy_len < len){
 		memset(stream + cpy_len, 0, len - cpy_len);
 	}
