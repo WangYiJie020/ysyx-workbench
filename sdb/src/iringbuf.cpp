@@ -16,9 +16,11 @@ struct _irb_inst_ctx{
 	}
 	operator trace_context()const{
 		return trace_context{
+			.lastpc=0, // not used
 			.pc=pc,
 			.regs=reg_snapshot_view(regs),
-			.inst=vlen_inst_view(inst)
+			.inst=vlen_inst_view(inst),
+			.reg_names={} // not used
 		};
 	}
 };

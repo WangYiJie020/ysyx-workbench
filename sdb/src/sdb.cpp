@@ -1,5 +1,7 @@
 #include "sdb.hpp"
 #include <assert.h>
+#include <ranges>
+#include <algorithm>
 
 #include "ansi_col.h"
 
@@ -30,21 +32,47 @@ string_view sdb::_impl::error_head_str(){
 	return ANSI_FG_RED "[ERROR] " ANSI_NONE;
 }
 
+trace_context debuger::_make_trace_ctx(){
+	return trace_context{
+		_state.last_pc,
+		_state.pc,
+		_reg_snap,
+		_fetch_inst(_state.pc),
+		_reg_names
+	};
+}
+
+void debuger::add_trace(trace_handler_ptr h){
+	_trace_handlers.push_back(h);
+	auto mem=_loadmem(_MEMARY_BASE,_IMG_SIZE);
+	h->init(_make_trace_ctx(),
+		 	std::span<uint8_t>(mem,mem+_IMG_SIZE),
+		 	_MEMARY_BASE);
+}
 void debuger::_step(size_t n){
-	for(size_t i=0;i<n&&is_running();i++){
-		if (enable_inst_trace){
-			auto inst=_fetch_inst(_state.pc);
-			for(auto& h:_trace_handlers){
-				if(h->no_call_when_batch(n))continue;
-				h->handle(trace_context{
-					.pc=_state.pc,
-					.regs=reg_snapshot_view(_reg_snap),
-					.inst=inst
-				});
-				_print("{}",h->get_log());
-			}
+	if(!enable_inst_trace){
+		for(size_t i=0;i<n&&is_running();i++)	_step_one();
+		return;
+	}
+	vector<trace_handler_ptr> before_exec,after_exec;
+	ranges::partition_copy(
+		_trace_handlers,
+		back_inserter(after_exec),
+		back_inserter(before_exec),
+		&trace_handler::require_call_after_inst_exec
+	);
+	auto invoke=[this](auto h){
+		h->handle(_make_trace_ctx());
+		_print("{}",h->get_log());
+		if(h->is_require_abort()){
+			abort();
 		}
+	};
+
+	for(size_t i=0;i<n&&is_running();i++){
+		ranges::for_each(before_exec,invoke);
 		_step_one();
+		ranges::for_each(after_exec,invoke);
 	}
 }
 
@@ -58,10 +86,8 @@ void debuger::abort(){
 }
 
 void debuger::_step_one(){
-	auto oldpc= _state.pc;
+	_state.last_pc= _state.pc;
 	_state.pc = _exec();
-	if(enable_difftest)
-	_difftest_step(oldpc, _state.pc);
 }
 
 uint64_t expr_t::eval()const{

@@ -34,6 +34,7 @@ namespace sdb {
 
 	struct cpu_state{
 		run_state state;
+		paddr_t last_pc;
 		paddr_t pc;
 		uint32_t halt_ret;
 
@@ -55,15 +56,13 @@ namespace sdb {
 		void abort(){
 			state=run_state::abort;
 		}
-		bool quited()const{
-			return state==run_state::quit;
-		}
 	};
 
 	struct trace_context{
-		paddr_t pc;
+		paddr_t lastpc,pc;
 		reg_snapshot_view regs;
 		vlen_inst_view inst;
+		std::span<std::string_view> reg_names;
 	};
 
 	using output_iterator=std::ostream_iterator<char>;
@@ -84,6 +83,8 @@ namespace sdb {
 			return s;
 		}
 	protected:
+		bool _require_call_after_inst_exec=false;
+		bool _require_abort=false;
 
 		void _log(std::string_view fmt, auto&&... args){
 			using namespace std;
@@ -108,6 +109,16 @@ namespace sdb {
 			make_dump();
 			return _pop_str(_dmpbuf);
 		}
+		inline bool require_call_after_inst_exec()const{
+			return _require_call_after_inst_exec;
+		}
+		inline bool is_require_abort()const{
+			return _require_abort;
+		}
+
+		virtual void init(_ctx_ref,std::span<uint8_t> init_mem,paddr_t mem_base){
+			(void)init_mem; (void)mem_base;
+		}
 
 		virtual bool no_call_when_batch(size_t){return false;}
 		virtual void make_dump(){}
@@ -129,34 +140,11 @@ namespace sdb {
 	// and return the pointer to the first byte
 	using mem_loader=std::function<uint8_t*(paddr_t addr,size_t n)>;
 	// impl should fill reg_snapshot_t with current register values 
-	//
-	// passed reg_snapshot_t has more size than needed, which is reserved for pc
-	// and future use. 
-	// and those extra items are only set when difftest step, so their values
-	// maybe garbage during normal use.
-	//
-	// !!!**NOTICE**!!!
-	// never resize!
-	// never modify/read items out of register range!
 	using reg_snapshoter=std::function<void(reg_snapshot_t&)>;
 	using inst_fetcher=std::function<vlen_inst_code(paddr_t pc)>;
 
-namespace _impl {
-#define _MAKE_DEF(name) \
-		struct name##_imp; \
-		struct _deleter_##name{\
-			void operator()(name##_imp* ptr);\
-		};\
-		using name##_imptr=std::unique_ptr<name##_imp,_deleter_##name>;\
-
-	_MAKE_DEF(difftest);
-#undef _MAKE_DEF
-
-}
-
 class debuger{
 	public:
-		bool enable_difftest=false;
 		bool enable_inst_trace=false;
 private:
 
@@ -176,8 +164,8 @@ private:
 	std::vector<trace_handler_ptr> _trace_handlers;
 
 	const paddr_t _INITIAL_PC;
-
-	_impl::difftest_imptr _imp_difftest=nullptr;
+	const paddr_t _MEMARY_BASE;
+	const size_t _IMG_SIZE;
 
 	clscmd::command_table _cmd_table;
 
@@ -194,11 +182,10 @@ private:
 	}
 
 	void _init_cmd_table();
-	void _difftest_step(paddr_t pc,paddr_t npc);
 	void _step_one();
 	void _step(size_t n);
 
-	void _dump_iringbuf();
+	trace_context _make_trace_ctx();
 
 	void cmd_q();
 	void cmd_info(std::string_view);
@@ -216,27 +203,21 @@ private:
 	void dump_mem(paddr_t addr,paddr_t end);
 	void dump_reg();
 
-
 public:
 
 	debuger(
-			paddr_t init_pc,
+			paddr_t init_pc,paddr_t mem_base,paddr_t img_size,
 			cpu_executor e,mem_loader ml,reg_snapshoter rss,auto&& regnames,
 			inst_fetcher f=inst_fetcher()
 	): _exec(e),_loadmem(ml),_shot_reg(rss),_reg_names(regnames),
-	_fetch_inst(f),_INITIAL_PC(init_pc){
+	_fetch_inst(f),
+	_INITIAL_PC(init_pc),_MEMARY_BASE(mem_base),_IMG_SIZE(img_size){
 		_state.pc=init_pc;
-		_reg_snap.resize(_reg_names.size()+1);
+		_reg_snap.resize(_reg_names.size());
 		_init_cmd_table();
 	}
 
-	void add_trace(trace_handler_ptr th){
-		_trace_handlers.push_back(th);
-	}
-
-	void load_difftest_ref(std::string_view so_file,size_t img_size,int port);
-
-	void difftest_ref_skip();
+	void add_trace(trace_handler_ptr th);
 
 	inline const cpu_state& state()const{return _state;}
 	inline cpu_state& state(){return _state;}
