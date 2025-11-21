@@ -165,21 +165,15 @@ sdb::vlen_inst_code sdb_inst_fetcher(sdb::paddr_t pc){
 uint8_t* sdb_loadmem(sdb::paddr_t addr, size_t nbyte){
 	return mem_atguest(addr);
 }
+sdb::difftest_trace_handler_ptr diff_handler;
+std::shared_ptr<sdb::debuger> dbg;
 
-sdb::debuger dbg(
-	INITIAL_PC,	
-	cpu_exec_once,
-	sdb_loadmem,
-	sdb_shot_regsnap,
-	std::vector<std::string_view>(reg_names.begin(),reg_names.end()),
-	sdb_inst_fetcher
-);
 
 extern "C" int pmem_read(int raddr) {
 	// printf("pmem_read called %08X\n",raddr);
 	if(raddr==NOP_INST_ADDR)return NOP_INST;
 	if(raddr==MMIO_RTC_ADDR||raddr==MMIO_RTC_ADDR+4){
-		dbg.difftest_ref_skip();
+		diff_handler->skip_ref();
 		static uint64_t time_in_us;
 		if(raddr==MMIO_RTC_ADDR){
 			struct timespec ts;
@@ -209,7 +203,7 @@ extern "C" int pmem_read(int raddr) {
 extern "C" void pmem_write(int waddr, int wdata, char wmask) {
 	if(waddr==MMIO_SERIAL_PORT){
 		//printf("pmem_write to serial port: %c\n",wdata&0xff);
-		dbg.difftest_ref_skip();		
+		diff_handler->skip_ref();
 		putchar(wdata&0xff);
 		fflush(stdout);
 		return;
@@ -239,7 +233,7 @@ extern "C" void pmem_write(int waddr, int wdata, char wmask) {
 
 
 extern "C" void raise_break(int a0){
-	dbg.state().halt(a0);
+	dbg->state().halt(a0);
 
 	is_running=false;
 #define ANSI_FG_RED     "\33[1;31m"
@@ -259,7 +253,7 @@ extern "C" void raise_break(int a0){
 extern "C" void sim_panic(){
 	puts("SIM PANIC!");
 	is_running=false;
-	dbg.abort();
+	dbg->abort();
 }
 
 static void parse_args(int argc, char** argv){
@@ -289,25 +283,34 @@ int main(int argc, char **argv)
 
 	load_img();
 
-	dbg.enable_inst_trace=true;
+	dbg=std::make_shared<sdb::debuger>(
+		INITIAL_PC,INITIAL_PC,img_size,
+		cpu_exec_once,
+		sdb_loadmem,
+		sdb_shot_regsnap,
+		std::vector<std::string_view>(reg_names.begin(),reg_names.end()),
+		sdb_inst_fetcher
+	);
+
+
+	dbg->enable_inst_trace=true;
 	
-	dbg.add_trace(sdb::make_disasm_trace_handler(sdb::default_inst_disasm,16));
-	dbg.add_trace(sdb::make_etrace_handler());
-	dbg.add_trace(sdb::make_iringbuf_trace_handler());
+	dbg->add_trace(sdb::make_disasm_trace_handler(sdb::default_inst_disasm,16));
+	dbg->add_trace(sdb::make_etrace_handler());
+	dbg->add_trace(sdb::make_iringbuf_trace_handler());
 
 	if(img_file){
 		auto elf_file=try_find_elf_file_of(img_file);
 
 		if(!elf_file.empty()){
 			printf("Found ELF file: %s\n",elf_file.c_str());
-			//dbg.add_trace(sdb::make_ftrace_handler(elf_file));
+			//dbg->add_trace(sdb::make_ftrace_handler(elf_file));
 		}
 	}
 
 
- dbg.enable_difftest=true;
-	dbg.load_difftest_ref("../nemu/build/riscv32-nemu-interpreter-so",img_size,0);
-
+	diff_handler=sdb::make_difftest_trace_handler("../nemu/build/riscv32-nemu-interpreter-so",0);
+	dbg->add_trace(diff_handler);
 
 #if USE_NVBOARD
     nvboard_bind_all_pins(&dut);
@@ -317,8 +320,8 @@ int main(int argc, char **argv)
   reset(10);
 
 	if(batch_mode){
-		dbg.exec_command("c");
-		return dbg.state().is_badexit();
+		dbg->exec_command("c");
+		return dbg->state().is_badexit();
 	}
 
 	puts("\n--- Start ---\n");
@@ -327,8 +330,8 @@ int main(int argc, char **argv)
 	while(true){
 		std::cout<<"(sdb) ";
 		std::getline(std::cin,cmd);
-		dbg.exec_command(cmd);
-		if(dbg.state().quited()){
+		dbg->exec_command(cmd);
+		if(dbg->state().state==sdb::run_state::quit){
 			break;
 		}
 	}
