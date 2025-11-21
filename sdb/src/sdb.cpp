@@ -33,11 +33,13 @@ string_view sdb::_impl::error_head_str(){
 }
 
 trace_context debuger::_make_trace_ctx(){
+	auto inst=_fetch_inst(_state.pc);
+	for(auto ch:inst)_print("{:02x} ",ch);
 	return trace_context{
 		_state.last_pc,
 		_state.pc,
 		_reg_snap,
-		_fetch_inst(_state.pc),
+		inst,
 		_reg_names
 	};
 }
