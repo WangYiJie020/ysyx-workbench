@@ -46,6 +46,7 @@ static void init_disasm() {
 }
 static void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte) {
 	cs_insn *insn;
+	printf("Disassembling instruction %u bytes: ", nbyte);
 	for(int i=0;i<nbyte;i++) {
 	 printf("%02x ", code[i]);
 	}
