@@ -42,6 +42,8 @@ void sync_sdb_state_to_nemu(){
 	nemu_state.halt_ret=sdb_s.halt_ret;
 }
 void sync_nemu_state_to_sdb(){
+	assert(0);
+	return;
 	_skip_when_noinit();
 	sdbc_cpu_state sdb_s;
 	sdb_s.state=nemu_state.state;
