@@ -34,7 +34,7 @@ string_view sdb::_impl::error_head_str(){
 
 trace_context debuger::_make_trace_ctx(){
 	auto inst=_fetch_inst(_state.pc);
-	_print("Fetched instruction bytes: ");
+	printf("Fetched instruction bytes: ");
 	for(auto ch:inst)_print("{:02x} ",ch);
 	return trace_context{
 		_state.last_pc,
