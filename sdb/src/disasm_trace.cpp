@@ -68,6 +68,10 @@ string sdb::default_inst_disasm(paddr_t pc,vlen_inst_view inst){
 		has_init=true;
 	}
 	char buf[256];
+	printf("in default_inst_disasm %zu", inst.size());
+	for(auto ch:inst){
+		printf("%02x ",ch);
+	}
 	disassemble(buf,sizeof(buf),pc,(uint8_t*)inst.data(),inst.size());
 	return buf;
 }
