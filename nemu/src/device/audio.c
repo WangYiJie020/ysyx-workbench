@@ -30,12 +30,47 @@ enum {
 static uint8_t *sbuf = NULL;
 static uint32_t *audio_base = NULL;
 
+static void audio_callback(void *userdata, Uint8 *stream, int len) {
+	int sbuf_size = audio_base[reg_sbuf_size];
+	int cpy_len = sbuf_size < len ? sbuf_size : len;
+	memcpy(stream, sbuf, cpy_len);
+	if(cpy_len < len){
+		memset(stream + cpy_len, 0, len - cpy_len);
+	}
+}
+
 static void audio_io_handler(uint32_t offset, int len, bool is_write) {
+	if(is_write){
+		if(offset == reg_init * 4)
+		{
+			SDL_AudioSpec s={};
+			s.format = AUDIO_S16SYS;
+			s.freq = audio_base[reg_freq];
+			s.channels = audio_base[reg_channels];
+			s.samples = audio_base[reg_samples];
+			s.callback = audio_callback;
+			assert(SDL_InitSubSystem(SDL_INIT_AUDIO)==0);
+			assert(SDL_OpenAudio(&s, NULL) == 0);
+			SDL_PauseAudio(0);
+		}
+	}
+	else {
+		if(offset == reg_count * 4)
+		{
+			// A successful call to SDL_OpenAudio() is always device id 1, and legacy SDL audio APIs assume you want this device ID.
+			int queued = SDL_GetQueuedAudioSize(1);
+			audio_base[reg_count] = queued;
+		}
+	}
+
 }
 
 void init_audio() {
   uint32_t space_size = sizeof(uint32_t) * nr_reg;
   audio_base = (uint32_t *)new_space(space_size);
+
+	audio_base[reg_sbuf_size] = CONFIG_SB_SIZE;
+
 #ifdef CONFIG_HAS_PORT_IO
   add_pio_map ("audio", CONFIG_AUDIO_CTL_PORT, audio_base, space_size, audio_io_handler);
 #else
