@@ -58,7 +58,9 @@ void debuger::_step(size_t n){
 	}
 	vector<trace_handler_ptr> before_exec,after_exec;
 	ranges::partition_copy(
-		_trace_handlers,
+	_trace_handlers|filter([n](auto h){
+			return !h->no_call_when_batch(n);
+			}),
 		back_inserter(after_exec),
 		back_inserter(before_exec),
 		&trace_handler::require_call_after_inst_exec
