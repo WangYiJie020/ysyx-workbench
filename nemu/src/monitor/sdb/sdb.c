@@ -52,8 +52,7 @@ void sync_nemu_state_to_sdb(){
 void set_nemu_state(int state, vaddr_t pc, int halt_ret)
 {
 	_skip_when_noinit();
-  //difftest_skip_ref();
-	sdb_skip_difftest_ref(dbg);
+	IFDEF(CONFIG_DIFFTEST,sdb_skip_difftest_ref(dbg));
   nemu_state.state = state;
   nemu_state.halt_pc = pc;
   nemu_state.halt_ret = halt_ret;
