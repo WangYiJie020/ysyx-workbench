@@ -52,6 +52,7 @@ static void audio_io_handler(uint32_t offset, int len, bool is_write) {
 			assert(SDL_InitSubSystem(SDL_INIT_AUDIO)==0);
 			assert(SDL_OpenAudio(&s, NULL) == 0);
 			SDL_PauseAudio(0);
+			printf("Audio initialized: freq=%d, channels=%d, samples=%d\n", s.freq, s.channels, s.samples);
 		}
 	}
 	else {
