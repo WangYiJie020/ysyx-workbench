@@ -208,6 +208,7 @@ extern "C" int pmem_read(int raddr) {
 
 extern "C" void pmem_write(int waddr, int wdata, char wmask) {
 	if(waddr==MMIO_SERIAL_PORT){
+		printf("pmem_write to serial port: %c\n",wdata&0xff);
 		dbg.difftest_ref_skip();		
 		putchar(wdata&0xff);
 		return;
