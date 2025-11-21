@@ -38,7 +38,6 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
 	uint32_t woffset = inl(AUDIO_SBUF_WHAED);
 	printf("audio play len=%d write offset %u\n", len, woffset);
 	for (int i = 0; i < len; i++) {
-		printf("audio write buf[%d]=%02x to %u\n", i, buf[i], AUDIO_SBUF_ADDR+woffset);
-		outb(AUDIO_SBUF_ADDR+woffset, buf[i]);
+		outb(AUDIO_SBUF_ADDR+woffset+i, buf[i]);
 	}
 }
