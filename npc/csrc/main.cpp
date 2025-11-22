@@ -139,8 +139,8 @@ static long load_img() {
   return img_size;
 }
 
-sdb::paddr_t cpu_exec_once(){
-	single_cycle();
+sdb::paddr_t wrap_cpu_exec(size_t n){
+	for(size_t i=0;i<n;i++)single_cycle();
 	return dut.nxt_pc;
 }
 
@@ -285,7 +285,7 @@ int main(int argc, char **argv)
 
 	dbg=std::make_shared<sdb::debuger>(
 		INITIAL_PC,INITIAL_PC,img_size,
-		cpu_exec_once,
+		wrap_cpu_exec,
 		sdb_loadmem,
 		sdb_shot_regsnap,
 		std::vector<std::string_view>(reg_names.begin(),reg_names.end()),
