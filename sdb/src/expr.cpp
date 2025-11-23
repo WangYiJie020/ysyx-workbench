@@ -107,7 +107,7 @@ static bool make_token(char *e) {
     /* Try all rules one by one. */
     for (i = 0; i < NR_REGEX; i ++) {
 			//printf("try match %s ,re %s\n",e+position,rules[i].regex);
-			if(regex_search(e+position,match_result,re[i])){
+			if(regex_search(e+position,match_result,re[i],regex_constants::match_continuous)){
 
         char *substr_start = e + position;
 				
