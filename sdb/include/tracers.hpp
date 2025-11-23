@@ -100,7 +100,7 @@ namespace sdb {
 		uint64_t _last_val;
 		expr_t _expr;
 	public:	
-		watchpoint_tracer(auto e):_expr(e){}
+		watchpoint_tracer(auto e):trace_handler("watchpoint` "+e.raw),_expr(e){}
 		virtual void init(_ctx_ref ctx,std::span<uint8_t>,paddr_t)override{
 			_last_val=ctx.eval(_expr);
 		}
