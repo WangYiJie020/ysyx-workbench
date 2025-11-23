@@ -34,7 +34,7 @@ static struct rule {
 
   {"[ \r\n]+", TK_NOTYPE},    // spaces
   {"\\+", '+'},         // plus
-  {"\\-", '-'},         // minus
+  {"-", '-'},         // minus
   {"\\*", '*'},         // multiply
   {"/", '/'},           // divide
   {"\\(", '('},         // left parenthesis
