@@ -106,8 +106,8 @@ static bool make_token(char *e) {
   while (e[position] != '\0') {
     /* Try all rules one by one. */
     for (i = 0; i < NR_REGEX; i ++) {
-			printf("try match %s ,re %s\n",e+position,rules[i].regex);
-			if(std::regex_match(e+position,match_result,re[i])){
+			//printf("try match %s ,re %s\n",e+position,rules[i].regex);
+			if(regex_match(e+position,match_result,re[i])){
         char *substr_start = e + position;
 				
         int substr_len = match_result[0].length();
