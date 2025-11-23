@@ -100,6 +100,7 @@ void debuger::_dump_all(){
 
 void debuger::stop(){
 	_state.stop();
+	assert(!is_running());
 	_print("Program stopped.\n");
 	_dump_all();
 }
