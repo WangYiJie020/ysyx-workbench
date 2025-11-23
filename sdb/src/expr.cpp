@@ -103,6 +103,7 @@ static bool make_token(char *e) {
   while (e[position] != '\0') {
     /* Try all rules one by one. */
     for (i = 0; i < NR_REGEX; i ++) {
+			printf("try match %s ,re %s\n",e+position,rules[i].regex);
 			if(std::regex_match(e+position,match_result,re[i])){
         char *substr_start = e + position;
 				
@@ -118,11 +119,11 @@ static bool make_token(char *e) {
          * of tokens, some extra actions should be performed.
          */
 
-		assert(nr_token < MAX_TOKEN_NUM);
+			assert(nr_token < MAX_TOKEN_NUM);
 
-		tokens[nr_token].type = rules[i].token_type;
+			tokens[nr_token].type = rules[i].token_type;
 
-        switch (rules[i].token_type) {
+			switch (rules[i].token_type) {
 			case TK_NOTYPE: break;
 			case TK_REG:
 			case TK_HEX:
