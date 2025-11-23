@@ -145,6 +145,12 @@ optional<word_t> debuger::_get_reg_from_name(string_view name){
 	auto idx=it-_reg_names.begin();
 	return _reg_snap[idx];
 }
+void debuger::cmd_p(expr_t e){
+	_print("{}\n", e.eval(
+			bind_front(&debuger::_get_reg_from_name,this),
+			_loadmem
+			));
+}
 void debuger::cmd_x(size_t N,expr_t e_addr){
 	paddr_t addr=e_addr.eval(
 			bind_front(&debuger::_get_reg_from_name,this),
@@ -163,6 +169,7 @@ void debuger::_init_cmd_table(){
 		_ITEM("si","Step the program for N instructions",cmd_si,1),
 		_ITEM("info", "Display information about registers or watchpoints",cmd_info),
 		_ITEM("x", "Examine memory: x N EXPR",cmd_x),
+		_ITEM("p", "print EXPR",cmd_p),
 		};
 }
 
