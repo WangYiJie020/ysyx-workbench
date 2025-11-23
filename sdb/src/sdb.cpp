@@ -127,6 +127,17 @@ void debuger::_step_one(){
 	_shot_reg(_reg_snap);
 }
 
+void debuger::cmd_si(size_t n){
+	if(_state.state==run_state::end||_state.state==run_state::quit){
+		_error("Program has ended. Cannot execuate.");
+		return;
+	}
+	ranges::for_each(_trace_handlers,&trace_handler::reset_int);
+	_state.state=run_state::running;
+	_step(n);
+}
+
+
 void debuger::cmd_q(){
 	if(_state.is_badexit()){
 		// cur pc has not executed yet
