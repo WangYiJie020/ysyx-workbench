@@ -65,6 +65,9 @@ namespace sdb {
 		void abort(){
 			state=run_state::abort;
 		}
+		void stop(){
+			state=run_state::stop;
+		}
 	};
 	struct expr_t{
 		using get_reg_by_name_f=std::function<std::optional<word_t>(std::string_view)>;
@@ -107,6 +110,8 @@ namespace sdb {
 			return s;
 		}
 	protected:
+
+
 		bool _require_call_after_inst_exec=false;
 		enum class _require_interrupt_type{
 			none,
@@ -136,6 +141,9 @@ namespace sdb {
 		using _ctx_ref = const trace_context&;
 
 	public:
+		std::string name;
+		trace_handler(std::string n="unnamed"):name(n){}
+
 		std::string get_log(){return _pop_str(_logbuf);}
 		std::string get_dump(){
 			make_dump();
@@ -235,6 +243,8 @@ private:
 	void dump_mem(paddr_t addr,paddr_t end);
 	void dump_reg();
 
+	void _dump_all();
+
 public:
 
 	debuger(
@@ -258,6 +268,7 @@ public:
 		return _state.state==run_state::running;
 	}	
 	void abort();
+	void stop();
 	void exec_command(std::string_view cmdline);
 };
 

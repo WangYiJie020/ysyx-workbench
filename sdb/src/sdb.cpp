@@ -73,7 +73,12 @@ void debuger::_step(size_t n){
 		h->handle(_make_trace_ctx());
 		_print("{}",h->get_log());
 		if(h->is_require_abort()){
+			_print("{} require abort\n", h->name);
 			abort();
+		}
+		if(h->is_require_stop()){
+			_print("{} require stop\n", h->name);
+			stop();
 		}
 	};
 
@@ -84,13 +89,23 @@ void debuger::_step(size_t n){
 	}
 }
 
-void debuger::abort(){
-	_state.abort();
-	_print("Program aborted.\n");
+void debuger::_dump_all(){
 	for(auto h:_trace_handlers){
 		_print("{}",h->get_dump());
 	}
 	dump_reg();
+}
+
+void debuger::stop(){
+	_state.stop();
+	_print("Program stopped.\n");
+	_dump_all();
+}
+
+void debuger::abort(){
+	_state.abort();
+	_print("Program aborted.\n");
+	_dump_all();
 }
 
 void debuger::_step_one(){
