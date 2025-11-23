@@ -96,9 +96,9 @@ void debuger::_step(size_t n){
 
 void debuger::_dump_all(){
 	for(auto h:_trace_handlers){
-		//_print("{}",h->get_dump());
+		_print("{}",h->get_dump());
 	}
-	//dump_reg();
+	dump_reg();
 }
 
 void debuger::stop(){
