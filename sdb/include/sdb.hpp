@@ -232,14 +232,7 @@ private:
 	void cmd_w(expr_t);
 
 	inline void cmd_c(){cmd_si(-1);}
-	inline void cmd_si(size_t n=1){
-		if(_state.state==run_state::end||_state.state==run_state::quit){
-			_error("Program has ended. Cannot execuate.");
-			return;
-		}
-		_step(n);
-	}
-
+	void cmd_si(size_t n=1);
 	void dump_mem(paddr_t addr,paddr_t end);
 	void dump_reg();
 
