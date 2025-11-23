@@ -33,7 +33,7 @@ static struct rule {
    */
 
   {"[ \r\n]+", TK_NOTYPE},    // spaces
-  {"\\+", '+'},         // plus
+  {"+", '+'},         // plus
   {"-", '-'},         // minus
   {"\\*", '*'},         // multiply
   {"/", '/'},           // divide
