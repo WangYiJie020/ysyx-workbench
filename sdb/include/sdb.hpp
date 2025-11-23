@@ -5,7 +5,6 @@
 #include <format>
 #include <iostream>
 #include <vector>
-#include <deque>
 #include <memory>
 #include <sstream>
 
@@ -24,6 +23,16 @@ namespace sdb {
 	using reg_snapshot_t=std::vector<word_t>;
 	using reg_snapshot_view=std::span<const word_t>;
 	
+	// impl should return npc(pc after exec)
+	using cpu_executor=std::function<paddr_t(size_t n)>;
+	// impl should prepare n bytes continuously in mem corresponding to addr
+	// and return the pointer to the first byte
+	using mem_loader=std::function<uint8_t*(paddr_t addr,size_t n)>;
+	// impl should fill reg_snapshot_t with current register values 
+	using reg_snapshoter=std::function<void(reg_snapshot_t&)>;
+	using inst_fetcher=std::function<vlen_inst_code(paddr_t pc)>;
+
+
 	enum class run_state{
 		running,
 		stop,
@@ -57,12 +66,27 @@ namespace sdb {
 			state=run_state::abort;
 		}
 	};
+	struct expr_t{
+		using get_reg_by_name_f=std::function<std::optional<word_t>(std::string_view)>;
+		std::string_view raw;
+		expr_t(){}
+		expr_t(std::string_view s):raw(s){}
+		uint64_t eval(
+				get_reg_by_name_f fr,
+				mem_loader fm
+				)const;
+	};
 
 	struct trace_context{
 		paddr_t lastpc,pc;
 		reg_snapshot_view regs;
 		vlen_inst_view inst;
 		std::span<std::string_view> reg_names;
+		mem_loader loadmem;
+		expr_t::get_reg_by_name_f get_reg;
+		auto eval(const expr_t& e)const{
+			return e.eval(get_reg, loadmem);
+		}
 	};
 
 	using output_iterator=std::ostream_iterator<char>;
@@ -84,7 +108,15 @@ namespace sdb {
 		}
 	protected:
 		bool _require_call_after_inst_exec=false;
-		bool _require_abort=false;
+		enum class _require_interrupt_type{
+			none,
+			stop,
+			abort,
+		};
+		_require_interrupt_type _req_int_t;
+
+		void _req_abort(){_req_int_t=_require_interrupt_type::abort;}
+		void _req_stop(){_req_int_t=_require_interrupt_type::stop;}
 
 		void _log(std::string_view fmt, auto&&... args){
 			using namespace std;
@@ -109,11 +141,17 @@ namespace sdb {
 			make_dump();
 			return _pop_str(_dmpbuf);
 		}
+		inline void reset_int(){
+			_req_int_t=_require_interrupt_type::none;
+		}
 		inline bool require_call_after_inst_exec()const{
 			return _require_call_after_inst_exec;
 		}
 		inline bool is_require_abort()const{
-			return _require_abort;
+			return _req_int_t==_require_interrupt_type::abort;
+		}
+		inline bool is_require_stop()const{
+			return _req_int_t==_require_interrupt_type::stop;
 		}
 
 		virtual void init(_ctx_ref,std::span<uint8_t> init_mem,paddr_t mem_base){
@@ -126,26 +164,6 @@ namespace sdb {
 	};
 	using trace_handler_ptr=std::shared_ptr<trace_handler>;
 
-
-	// impl should return npc(pc after exec)
-	using cpu_executor=std::function<paddr_t(size_t n)>;
-	// impl should prepare n bytes continuously in mem corresponding to addr
-	// and return the pointer to the first byte
-	using mem_loader=std::function<uint8_t*(paddr_t addr,size_t n)>;
-	// impl should fill reg_snapshot_t with current register values 
-	using reg_snapshoter=std::function<void(reg_snapshot_t&)>;
-	using inst_fetcher=std::function<vlen_inst_code(paddr_t pc)>;
-
-	struct expr_t{
-		using get_reg_by_name_f=std::function<std::optional<word_t>(std::string_view)>;
-		std::string_view raw;
-		expr_t(){}
-		expr_t(std::string_view s):raw(s){}
-		uint64_t eval(
-				get_reg_by_name_f fr,
-				mem_loader fm
-				)const;
-	};
 
 class debuger{
 	public:
@@ -203,6 +221,7 @@ private:
 	void cmd_q();
 	void cmd_info(std::string_view);
 	void cmd_x(size_t N,expr_t addr);
+	void cmd_w(expr_t);
 
 	inline void cmd_c(){cmd_si(-1);}
 	inline void cmd_si(size_t n=1){

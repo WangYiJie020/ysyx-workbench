@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <ranges>
 #include <algorithm>
+#include <tracers.hpp>
 
 #include "ansi_col.h"
 
@@ -39,7 +40,9 @@ trace_context debuger::_make_trace_ctx(){
 		_state.pc,
 		_reg_snap,
 		_current_inst,
-		_reg_names
+		_reg_names,
+		_loadmem,
+		bind_front(&debuger::_get_reg_from_name,this),
 	};
 }
 
@@ -140,6 +143,9 @@ void debuger::cmd_info(string_view s){
 }
 
 optional<word_t> debuger::_get_reg_from_name(string_view name){
+	if(name=="pc"){
+		return _state.pc;
+	}
 	auto it=ranges::find(_reg_names,name);
 	if(it==_reg_names.end())return nullopt;
 	auto idx=it-_reg_names.begin();
@@ -153,12 +159,13 @@ void debuger::cmd_p(expr_t e){
 }
 void debuger::cmd_x(size_t N,expr_t e_addr){
 	paddr_t addr=e_addr.eval(
-			bind_front(&debuger::_get_reg_from_name,this),
+		bind_front(&debuger::_get_reg_from_name,this),
 			_loadmem
 			);
-	_print("call x {} {:08x}", N,addr);
-	cout<<endl;
 	dump_mem(addr, addr+N*4);
+}
+void debuger::cmd_w(expr_t e){
+	add_trace(make_shared<watchpoint_tracer>(e));
 }
 
 void debuger::_init_cmd_table(){
@@ -170,6 +177,7 @@ void debuger::_init_cmd_table(){
 		_ITEM("info", "Display information about registers or watchpoints",cmd_info),
 		_ITEM("x", "Examine memory: x N EXPR",cmd_x),
 		_ITEM("p", "print EXPR",cmd_p),
+		_ITEM("w","watch point: w EXPR",cmd_w),
 		};
 }
 
