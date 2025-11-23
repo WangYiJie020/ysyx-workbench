@@ -59,10 +59,13 @@ static std::regex re[NR_REGEX] = {};
  * Therefore we compile them only once before any usage.
  */
 void init_regex() {
+	static bool inited=false;
+	if(inited)return;
   int i;
   for (i = 0; i < NR_REGEX; i ++) {
 		re[i]=std::regex(rules[i].regex,std::regex::extended);
   }
+	inited=true;
 }
 
 typedef struct token {
@@ -317,6 +320,7 @@ sdb::word_t _eval_sub(int p, int q, _eval_ctx& ctx,bool *success) {
 
 using namespace sdb;
 uint64_t sdb::expr_t::eval(get_reg_by_name_f fr,mem_loader fm)const{
+	init_regex();
 	std::string s(raw);
 	if (!make_token(s.data())) {
     return 0;
