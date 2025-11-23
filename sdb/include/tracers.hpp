@@ -106,7 +106,11 @@ namespace sdb {
 		}
 		virtual void handle(_ctx_ref ctx)override{
 			auto val=ctx.eval(_expr);
-			if(_last_val!=val)_req_stop();
+			if(_last_val!=val){
+				_log("watchpoint : {} : old value {:08X}, new {:08X}\n",
+						_expr.raw,_last_val,val);
+				_req_stop();
+			}
 			_last_val=val;
 		}
 	};
