@@ -85,7 +85,7 @@ void debuger::_step(size_t n){
 	for(size_t i=0;i<n&&is_running();i++){
 		_print("step {} before exec\n", i);
 		ranges::for_each(before_exec,invoke);
-		if(!is_running())break;
+		//if(!is_running())break;
 		_print("step {} before exec after handle\n", i);
 		_step_one();
 		_print("step {} after exec\n", i);
