@@ -107,13 +107,14 @@ static bool make_token(char *e) {
     /* Try all rules one by one. */
     for (i = 0; i < NR_REGEX; i ++) {
 			//printf("try match %s ,re %s\n",e+position,rules[i].regex);
-			if(regex_search(e+position,match_result,re[i])){
+			if(regex_match(e+position,match_result,re[i])){
+
         char *substr_start = e + position;
 				
         int substr_len = match_result[0].length();
 
-//        Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
-//            i, rules[i].regex, position, substr_len, substr_len, substr_start);
+        printf("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
+            i, rules[i].regex, position, substr_len, substr_len, substr_start);
 
         position += substr_len;
 
