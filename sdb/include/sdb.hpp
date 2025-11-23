@@ -71,7 +71,7 @@ namespace sdb {
 	};
 	struct expr_t{
 		using get_reg_by_name_f=std::function<std::optional<word_t>(std::string_view)>;
-		std::string_view raw;
+		std::string raw;
 		expr_t(){}
 		expr_t(std::string_view s):raw(s){}
 		uint64_t eval(
