@@ -199,6 +199,7 @@ private:
 
 	trace_context _make_trace_ctx();
 
+	void cmd_p(expr_t);
 	void cmd_q();
 	void cmd_info(std::string_view);
 	void cmd_x(size_t N,expr_t addr);
