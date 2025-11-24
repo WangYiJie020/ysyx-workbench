@@ -1,6 +1,9 @@
-*.*
-*
-!*/
+\.*
+asan.blacklist
+build/
+compile_commands.json
+*.orig
+
 !Makefile
 !*.mk
 !*.[cSh]
