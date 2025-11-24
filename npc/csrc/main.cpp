@@ -140,7 +140,7 @@ static long load_img() {
 }
 
 sdb::paddr_t wrap_cpu_exec(size_t n){
-	for(size_t i=0;i<n;i++)single_cycle();
+	for(size_t i=0;i<n&&is_running;i++)single_cycle();
 	return dut.nxt_pc;
 }
 
