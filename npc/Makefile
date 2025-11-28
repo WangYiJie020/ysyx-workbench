@@ -2,13 +2,24 @@ BUILD_DIR = ./build
 TOP_NAME = Top # case sensitive
 
 SIM_CSRC_DIR = ./csrc
+SIM_BIN = $(BUILD_DIR)/$(TOP_NAME)
 
 SIM_IMG ?=
+
+
+default: $(SIM_BIN)
+	
 
 # Chisel
 CHISEL_DESIGN = design
 CHISEL_SRCS = $(shell find $(abspath $(CHISEL_DESIGN)) -name "*.scala")
+CHISEL_SRCS += build.mill
 CHISEL2V_EMIT_DIR = $(BUILD_DIR)/chisel2v
+CHISEL2V_DONE = $(BUILD_DIR)/verilog.done
+$(CHISEL2V_DONE): $(CHISEL_SRCS)
+	$(call git_commit, "generate verilog")
+	mill -i $(CHISEL_DESIGN).runMain Elaborate --target-dir $(CHISEL2V_EMIT_DIR)
+	touch $(CHISEL2V_DONE)
 
 # Verilator
 VERILATOR = verilator
@@ -16,7 +27,6 @@ VERILATOR_CFLAGS += -MMD --build -cc -O3 \
 										--x-assign fast --x-initial fast --noassert
 
 V2CXX_EMIT_DIR = $(BUILD_DIR)/v2cxx
-SIM_BIN = $(BUILD_DIR)/$(TOP_NAME)
 
 SIM_VSRCS = $(shell find $(abspath $(CHISEL2V_EMIT_DIR)) -name "*.v" -or -name "*.sv")
 SIM_CSRCS = $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
@@ -31,7 +41,6 @@ $(shell mkdir -p $(BUILD_DIR))
 $(shell mkdir -p $(V2CXX_EMIT_DIR))
 $(shell mkdir -p $(CHISEL2V_EMIT_DIR))
 
-default: $(SIM_BIN)
 
 # NVBOARD
 NXDC_FILES = $(addprefix $(BUILD_DIR)/,$(shell find . -maxdepth 1 -name "*.nxdc"))
@@ -54,9 +63,9 @@ CXXFLAGS += $(SAN_FLAGS) -std=c++20
 $(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) verilog
 	@rm -rf $(V2CXX_EMIT_DIR)
 	$(VERILATOR) $(VERILATOR_CFLAGS) \
+		$(SIM_CSRCS) $(NVBOARD_ARCHIVE) \
 		--top-module $(TOP_NAME) $(SIM_VSRCS) \
 		$(addprefix -CFLAGS , $(CXXFLAGS)) \
-		$(SIM_CSRCS) $(NVBOARD_ARCHIVE) \
 		$(addprefix -LDFLAGS , $(LDFLAGS)) \
 		--Mdir $(V2CXX_EMIT_DIR) --exe -o $(abspath $(SIM_BIN))
 
@@ -65,14 +74,7 @@ all: default
 test:
 	mill -i $(CHISEL_DESIGN).test
 
-CHISEL2V_DONE = $(BUILD_DIR)/verilog.done
-$(CHISEL2V_DONE): $(CHISEL_SRCS)
-	$(call git_commit, "generate verilog")
-	echo $(CHISEL_SRCS)
-	mill -i $(CHISEL_DESIGN).runMain Elaborate --target-dir $(CHISEL2V_EMIT_DIR)
-	touch $(CHISEL2V_DONE)
-
-verilog:$(CHISEL2V_DONE)
+verilog: $(CHISEL2V_DONE)
 
 help:
 	mill -i $(CHISEL_DESIGN).runMain Elaborate --help
