@@ -1,4 +1,4 @@
-top=top
+top=
 
 # VGA_CLK is set to clk in this example
 io_VGA_VSYNC VGA_VSYNC

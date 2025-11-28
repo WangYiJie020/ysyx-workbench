@@ -36,7 +36,11 @@ $(shell mkdir -p $(CHISEL2V_EMIT_DIR))
 default: $(SIM_BIN)
 
 # NVBOARD
-NXDC_FILES = $(shell find $(abspath .) -name "*.nxdc")
+NXDC_FILES = $(addprefix $(BUILD_DIR)/,$(shell find . -name "*.nxdc"))
+
+$(BUILD_DIR)/%.nxdc: %.nxdc
+	@sed 's/top=/top=$(TOP_NAME)/g' $< > $@
+
 NVB_AUTOBIND_SRC = $(abspath $(BUILD_DIR)/auto_bind.cpp)
 $(NVB_AUTOBIND_SRC): $(NXDC_FILES)
 	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
