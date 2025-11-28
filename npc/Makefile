@@ -7,7 +7,7 @@ SIM_IMG ?=
 
 # Chisel
 CHISEL_DESIGN = design
-CHISEL_EMIT_DIR = $(BUILD_DIR)/vsrc
+CHISEL2V_EMIT_DIR = $(BUILD_DIR)/chisel2v
 
 
 # Verilator
@@ -15,10 +15,12 @@ VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc -O3 \
 										--x-assign fast --x-initial fast --noassert
 
-SIM_OBJ_DIR = $(BUILD_DIR)/vobj
+V2CXX_EMIT_DIR = $(BUILD_DIR)/v2cxx
 SIM_BIN = $(BUILD_DIR)/$(TOP_NAME)
 
-SIM_VSRCS = $(shell find $(abspath $(CHISEL_EMIT_DIR)) -name "*.v" -or -name "*.sv")
+INC_PATH += $(V2CXX_EMIT_DIR)
+
+SIM_VSRCS = $(shell find $(abspath $(CHISEL2V_EMIT_DIR)) -name "*.v" -or -name "*.sv")
 SIM_CSRCS = $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 
 # sdb
@@ -28,8 +30,8 @@ ARCHIVES += $(NVBOARD_ARCHIVE) $(abspath ../sdb/build/libsdb.a)
 
 # dirs
 $(shell mkdir -p $(BUILD_DIR))
-$(shell mkdir -p $(SIM_OBJ_DIR))
-$(shell mkdir -p $(CHISEL_EMIT_DIR))
+$(shell mkdir -p $(V2CXX_EMIT_DIR))
+$(shell mkdir -p $(CHISEL2V_EMIT_DIR))
 
 default: $(SIM_BIN)
 
@@ -41,8 +43,6 @@ $(NVB_AUTOBIND_SRC): $(NXDC_FILES)
 
 SIM_CSRCS += $(NVB_AUTOBIND_SRC)
 
-
-
 # rules for NVBoard
 include $(NVBOARD_HOME)/scripts/nvboard.mk
 
@@ -53,11 +53,11 @@ SAN_FLAGS?= #SAN_FLAGS+=-fsanitize=address
 CXXFLAGS += $(SAN_FLAGS) -std=c++20
 
 $(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) verilog
-	@rm -rf $(SIM_OBJ_DIR)
+	@rm -rf $(V2CXX_EMIT_DIR)
 	$(VERILATOR) $(VERILATOR_CFLAGS) \
 		--top-module $(TOP_NAME) $(SIM_CSRCS) $(SIM_VSRCS) $(NVBOARD_ARCHIVE) \
 		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
-		--Mdir $(SIM_OBJ_DIR) --exe -o $(abspath $(SIM_BIN))
+		--Mdir $(V2CXX_EMIT_DIR) --exe -o $(abspath $(SIM_BIN))
 
 all: default
 
@@ -67,7 +67,7 @@ test:
 verilog:
 	$(call git_commit, "generate verilog")
 	mkdir -p $(BUILD_DIR)
-	mill -i $(CHISEL_DESIGN).runMain Elaborate --target-dir $(CHISEL_EMIT_DIR)
+	mill -i $(CHISEL_DESIGN).runMain Elaborate --target-dir $(CHISEL2V_EMIT_DIR)
 
 help:
 	mill -i $(CHISEL_DESIGN).runMain Elaborate --help
