@@ -1,7 +1,10 @@
 package top
 
 import chisel3._
-class Top(word_width:Int=32) extends Module{
+import chisel3.experimental.IO
+import firrtl.transforms.DontTouchAnnotation
+
+class TopIO extends Bundle{
   val btn = Input(UInt(5.W))
   val sw = Input(UInt(16.W))
   val ps2_clk = Input(Bool())
@@ -26,6 +29,12 @@ class Top(word_width:Int=32) extends Module{
   val seg5 = Output(UInt(8.W))
   val seg6 = Output(UInt(8.W))
   val seg7 = Output(UInt(8.W))
+}
+
+
+class Top(word_width:Int=32) extends Module{
+  val io = IO(new TopIO)
+  dontTouch(io)
  
   val pc = Output(UInt(word_width.W))
   val nxt_pc = Output(UInt(word_width.W))
