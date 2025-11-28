@@ -18,8 +18,6 @@ VERILATOR_CFLAGS += -MMD --build -cc -O3 \
 V2CXX_EMIT_DIR = $(BUILD_DIR)/v2cxx
 SIM_BIN = $(BUILD_DIR)/$(TOP_NAME)
 
-INC_PATH += $(abspath $(V2CXX_EMIT_DIR))
-
 SIM_VSRCS = $(shell find $(abspath $(CHISEL2V_EMIT_DIR)) -name "*.v" -or -name "*.sv")
 SIM_CSRCS = $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 
@@ -37,14 +35,11 @@ default: $(SIM_BIN)
 
 # NVBOARD
 NXDC_FILES = $(addprefix $(BUILD_DIR)/,$(shell find . -maxdepth 1 -name "*.nxdc"))
-
 $(BUILD_DIR)/%.nxdc: %.nxdc
 	@sed 's/top=.*/top=$(TOP_NAME)/g' $< > $@
-
 NVB_AUTOBIND_SRC = $(abspath $(BUILD_DIR)/auto_bind.cpp)
 $(NVB_AUTOBIND_SRC): $(NXDC_FILES)
 	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
-
 SIM_CSRCS += $(NVB_AUTOBIND_SRC)
 
 # rules for NVBoard
