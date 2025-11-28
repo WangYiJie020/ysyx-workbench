@@ -12,7 +12,7 @@ CHISEL2V_EMIT_DIR = $(BUILD_DIR)/chisel2v
 
 # Verilator
 VERILATOR = verilator
-VERILATOR_CFLAGS += -MMD --build -cc -O3 \
+VERILATOR_CFLAGS += -MMD --build -cc -O3 --quiet\
 										--x-assign fast --x-initial fast --noassert
 
 V2CXX_EMIT_DIR = $(BUILD_DIR)/v2cxx
