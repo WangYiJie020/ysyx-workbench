@@ -38,7 +38,7 @@ class Top(word_width:Int=32) extends Module{
   }
   val io = IO(new TopIO)
   dontTouch(io)
-  val zio = zeroOf(io)
+  //val zio = zeroOf(io)
  
   val pc = Output(UInt(word_width.W))
   val nxt_pc = Output(UInt(word_width.W))
