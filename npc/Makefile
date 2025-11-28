@@ -1,5 +1,5 @@
 BUILD_DIR = ./build
-TOP_NAME = top
+TOP_NAME = Top # case sensitive
 
 SIM_CSRC_DIR = ./csrc
 
@@ -9,14 +9,16 @@ SIM_IMG ?=
 CHISEL_DESIGN = design
 CHISEL_EMIT_DIR = $(BUILD_DIR)/vsrc
 
+
 # Verilator
-VERILATOR = Verilator
+VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc -O3 \
 										--x-assign fast --x-initial fast --noassert
+
 SIM_OBJ_DIR = $(BUILD_DIR)/vobj
 SIM_BIN = $(BUILD_DIR)/$(TOP_NAME)
 
-SIM_VSRCS = $(shell find $(abspath $(CHISEL_EMIT_DIR)) -name "*.v")
+SIM_VSRCS = $(shell find $(abspath $(CHISEL_EMIT_DIR)) -name "*.v" -or -name "*.sv")
 SIM_CSRCS = $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 
 # sdb
@@ -24,10 +26,15 @@ INC_PATH += $(abspath ../sdb/include)
 LDFLAGS += $(SAN_FLAGS) -L$(abspath ../sdb/build) -lsdb
 ARCHIVES += $(NVBOARD_ARCHIVE) $(abspath ../sdb/build/libsdb.a)
 
+# dirs
+$(shell mkdir -p $(BUILD_DIR))
+$(shell mkdir -p $(SIM_OBJ_DIR))
+$(shell mkdir -p $(CHISEL_EMIT_DIR))
+
 default: $(SIM_BIN)
 
 # NVBOARD
-NXDC_FILES = $(TOP_NAME).nxdc
+NXDC_FILES = $(shell find $(abspath .) -name "*.nxdc")
 NVB_AUTOBIND_SRC = $(abspath $(BUILD_DIR)/auto_bind.cpp)
 $(NVB_AUTOBIND_SRC): $(NXDC_FILES)
 	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
@@ -35,24 +42,22 @@ $(NVB_AUTOBIND_SRC): $(NXDC_FILES)
 SIM_CSRCS += $(NVB_AUTOBIND_SRC)
 
 
-$(shell mkdir -p $(BUILD_DIR))
-$(shell mkdir -p $(SIM_OBJ_DIR))
 
 # rules for NVBoard
 include $(NVBOARD_HOME)/scripts/nvboard.mk
 
 # rules for verilator
 INCFLAGS = $(addprefix -I, $(INC_PATH))
-CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
+CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOP_NAME)\""
 SAN_FLAGS?= #SAN_FLAGS+=-fsanitize=address
 CXXFLAGS += $(SAN_FLAGS) -std=c++20
 
-$(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES)
+$(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) verilog
 	@rm -rf $(SIM_OBJ_DIR)
 	$(VERILATOR) $(VERILATOR_CFLAGS) \
-		--top-module $(TOPNAME) $(SIM_CSRCS) $(SIM_VSRCS) $(NVBOARD_ARCHIVE) \
+		--top-module $(TOP_NAME) $(SIM_CSRCS) $(SIM_VSRCS) $(NVBOARD_ARCHIVE) \
 		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
-		--Mdir $(OBJ_DIR) --exe -o $(abspath $(BIN))
+		--Mdir $(OBJ_DIR) --exe -o $(abspath $(SIM_BIN))
 
 all: default
 
