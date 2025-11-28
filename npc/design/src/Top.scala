@@ -1,8 +1,6 @@
 package top
 
 import chisel3._
-import chisel3.experimental.IO
-import firrtl.transforms.DontTouchAnnotation
 
 class TopIO extends Bundle{
   val btn = Input(UInt(5.W))
