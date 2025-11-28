@@ -16,7 +16,7 @@ VERILATOR_CFLAGS += -MMD --build -cc -O3 \
 SIM_OBJ_DIR = $(BUILD_DIR)/vobj
 SIM_BIN = $(BUILD_DIR)/$(TOP_NAME)
 
-SIM_VSRCS = $(shell find $(abspath $(CHISEL_EMIT_DIR)) -name "*/v")
+SIM_VSRCS = $(shell find $(abspath $(CHISEL_EMIT_DIR)) -name "*.v")
 SIM_CSRCS = $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 
 # sdb
@@ -27,7 +27,7 @@ ARCHIVES += $(NVBOARD_ARCHIVE) $(abspath ../sdb/build/libsdb.a)
 default: $(SIM_BIN)
 
 # NVBOARD
-NXDC_FILES = constr/top.nxdc
+NXDC_FILES = $(TOP_NAME).nxdc
 NVB_AUTOBIND_SRC = $(abspath $(BUILD_DIR)/auto_bind.cpp)
 $(NVB_AUTOBIND_SRC): $(NXDC_FILES)
 	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
