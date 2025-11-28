@@ -56,7 +56,7 @@ include $(NVBOARD_HOME)/scripts/nvboard.mk
 
 # rules for verilator
 INCFLAGS = $(addprefix -I, $(INC_PATH))
-CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOP_NAME)\""
+CXXFLAGS += $(INCFLAGS) -DTOP_NAME=V$(TOP_NAME)
 SAN_FLAGS?= #SAN_FLAGS+=-fsanitize=address
 CXXFLAGS += $(SAN_FLAGS) -std=c++20
 
