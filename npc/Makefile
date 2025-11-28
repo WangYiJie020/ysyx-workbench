@@ -57,7 +57,7 @@ $(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) verilog
 	$(VERILATOR) $(VERILATOR_CFLAGS) \
 		--top-module $(TOP_NAME) $(SIM_CSRCS) $(SIM_VSRCS) $(NVBOARD_ARCHIVE) \
 		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
-		--Mdir $(OBJ_DIR) --exe -o $(abspath $(SIM_BIN))
+		--Mdir $(SIM_OBJ_DIR) --exe -o $(abspath $(SIM_BIN))
 
 all: default
 
