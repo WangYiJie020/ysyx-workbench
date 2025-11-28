@@ -7,8 +7,8 @@ SIM_IMG ?=
 
 # Chisel
 CHISEL_DESIGN = design
+CHISEL_SRCS = $(shell find $(abspath $(CHISEL_DESIGN)) -name "*.scala")
 CHISEL2V_EMIT_DIR = $(BUILD_DIR)/chisel2v
-
 
 # Verilator
 VERILATOR = verilator
@@ -53,7 +53,7 @@ CXXFLAGS += $(SAN_FLAGS) -std=c++20
 
 $(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) verilog
 	@rm -rf $(V2CXX_EMIT_DIR)
-	@$(VERILATOR) $(VERILATOR_CFLAGS) \
+	$(VERILATOR) $(VERILATOR_CFLAGS) \
 		--top-module $(TOP_NAME) $(SIM_VSRCS) \
 		$(addprefix -CFLAGS , $(CXXFLAGS)) \
 		$(SIM_CSRCS) $(NVBOARD_ARCHIVE) \
@@ -65,7 +65,7 @@ all: default
 test:
 	mill -i $(CHISEL_DESIGN).test
 
-verilog:
+verilog: $(CHISEL_SRCS)
 	$(call git_commit, "generate verilog")
 	mkdir -p $(BUILD_DIR)
 	mill -i $(CHISEL_DESIGN).runMain Elaborate --target-dir $(CHISEL2V_EMIT_DIR)
