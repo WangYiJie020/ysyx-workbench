@@ -1,7 +1,7 @@
 package top
 
 import chisel3._
-class Top(word_width:Int) extends Module{
+class Top(word_width:Int=32) extends Module{
   val btn = Input(UInt(5.W))
   val sw = Input(UInt(16.W))
   val ps2_clk = Input(Bool())
