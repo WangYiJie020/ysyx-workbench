@@ -1,4 +1,4 @@
-top=
+top=_will_fill_by_makefile_
 
 # VGA_CLK is set to clk in this example
 io_VGA_VSYNC VGA_VSYNC
