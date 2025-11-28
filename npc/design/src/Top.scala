@@ -31,14 +31,9 @@ class TopIO extends Bundle{
 
 
 class Top(word_width:Int=32) extends Module{
-  def zeroOf[T <: Data](gen: T): T = {
-    val w = Wire(gen.cloneType)
-    w := 0.U.asTypeOf(gen)
-    w
-  }
   val io = IO(new TopIO)
   dontTouch(io)
-  //val zio = zeroOf(io)
+  io:=DontCare
  
   val pc = Output(UInt(word_width.W))
   val nxt_pc = Output(UInt(word_width.W))
