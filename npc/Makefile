@@ -65,10 +65,12 @@ all: default
 test:
 	mill -i $(CHISEL_DESIGN).test
 
-verilog: $(CHISEL_SRCS)
+$(BUILD_DIR)/verilog: $(CHISEL_SRCS)
 	$(call git_commit, "generate verilog")
 	echo $(CHISEL_SRCS)
 	mill -i $(CHISEL_DESIGN).runMain Elaborate --target-dir $(CHISEL2V_EMIT_DIR)
+
+verilog:$(BUILD_DIR)/verilog
 
 help:
 	mill -i $(CHISEL_DESIGN).runMain Elaborate --help
