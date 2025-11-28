@@ -53,12 +53,12 @@ CXXFLAGS += $(SAN_FLAGS) -std=c++20
 
 $(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) verilog
 	@rm -rf $(V2CXX_EMIT_DIR)
-	$(VERILATOR) $(VERILATOR_CFLAGS) \
+	@$(VERILATOR) $(VERILATOR_CFLAGS) \
 		--top-module $(TOP_NAME) $(SIM_VSRCS) \
 		$(addprefix -CFLAGS , $(CXXFLAGS)) \
 		$(SIM_CSRCS) $(NVBOARD_ARCHIVE) \
 		$(addprefix -LDFLAGS , $(LDFLAGS)) \
-		--Mdir $(V2CXX_EMIT_DIR) --exe --quiet -o $(abspath $(SIM_BIN))
+		--Mdir $(V2CXX_EMIT_DIR) --exe -o $(abspath $(SIM_BIN))
 
 all: default
 
