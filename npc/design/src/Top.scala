@@ -36,7 +36,7 @@ class Top(word_width:Int=32) extends Module{
     w := 0.U.asTypeOf(gen)
     w
   }
-  val io = IO(zeroOf(new TopIO))
+  val io = zeroOf(IO(new TopIO))
   dontTouch(io)
  
   val pc = Output(UInt(word_width.W))
