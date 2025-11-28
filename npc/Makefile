@@ -88,7 +88,7 @@ idea:
 clean:
 	-rm -rf $(BUILD_DIR)
 
-.PHONY: test verilog help reformat checkformat clean
+.PHONY: test help reformat checkformat clean
 
 ARGS?=
 sim: $(SIM_BIN)
