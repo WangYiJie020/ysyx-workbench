@@ -12,7 +12,7 @@ CHISEL2V_EMIT_DIR = $(BUILD_DIR)/chisel2v
 
 # Verilator
 VERILATOR = verilator
-VERILATOR_CFLAGS += -MMD --build -cc -O3 --quiet\
+VERILATOR_CFLAGS += -MMD --build -cc -O3 \
 										--x-assign fast --x-initial fast --noassert
 
 V2CXX_EMIT_DIR = $(BUILD_DIR)/v2cxx
@@ -58,7 +58,7 @@ $(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) verilog
 		$(addprefix -CFLAGS , $(CXXFLAGS)) \
 		$(SIM_CSRCS) $(NVBOARD_ARCHIVE) \
 		$(addprefix -LDFLAGS , $(LDFLAGS)) \
-		--Mdir $(V2CXX_EMIT_DIR) --exe -o $(abspath $(SIM_BIN))
+		--Mdir $(V2CXX_EMIT_DIR) --exe --quiet -o $(abspath $(SIM_BIN))
 
 all: default
 
