@@ -67,7 +67,7 @@ test:
 
 verilog: $(CHISEL_SRCS)
 	$(call git_commit, "generate verilog")
-	mkdir -p $(BUILD_DIR)
+	echo $(CHISEL_SRCS)
 	mill -i $(CHISEL_DESIGN).runMain Elaborate --target-dir $(CHISEL2V_EMIT_DIR)
 
 help:
