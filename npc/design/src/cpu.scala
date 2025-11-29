@@ -11,10 +11,7 @@ class Inst extends Bundle {
   val code = Output(UInt(32.W))
   val pc   = Output(UInt(32.W))
 }
-
-class foo extends DPINonVoidFunctionImport[Uint]{
-
-}
+//class foo extends DPINonVoidFunctionImport[Uint]{ }
 
 class SIM_InstFetcher extends BlackBox with HasBlackBoxInline {
   val io = IO(new Bundle {

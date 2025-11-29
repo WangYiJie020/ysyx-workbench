@@ -42,6 +42,7 @@ class Top(word_width: Int = 32) extends Module {
     m
   }
 
+println(chisel3.ChiselVersion.current)
   val io = IO(new TopIO)
   dontTouch(io)
   io := DontCare
