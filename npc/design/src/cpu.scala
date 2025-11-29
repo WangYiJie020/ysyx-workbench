@@ -23,10 +23,6 @@ class SIM_InstFetcher extends BlackBox with HasBlackBoxInline {
     val inst = Output(UInt(32.W))
   })
 
-  class Foo extends Bundle{
-    val pc=UInt(32.W)
-  }
-  RawUnclockedNonVoidFunctionCall("issssss",new Foo,Some(Seq("pc")))(1.B,io.pc)
   setInline(
     "SimInstFetcher.v",
     s"""
@@ -52,6 +48,11 @@ class IFU extends Module {
     )
   )
   io.out.valid := 0.B
+  class Foo extends Bundle{
+    val pc=UInt(32.W)
+  }
+  RawUnclockedNonVoidFunctionCall("issssss",new Foo,Some(Seq("pc")))(1.B,io.out.bits.code)
+
 }
 
 object InstFmt     extends ChiselEnum {
