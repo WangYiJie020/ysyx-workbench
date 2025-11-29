@@ -87,10 +87,14 @@ class IDU extends Module {
   val iinfo_dec = Module(new IInfoDecoder())
   iinfo_dec.io.opcode                      := io.in.bits.code(6, 0)
   io.out.viewAsSupertype(new InstMetaInfo) := iinfo_dec.io.out
-  io.out.rs2                               := 0.U
+
+  val inst = io.in.bits.code
+
+  io.out.rd:=inst(11,7)
+  io.out.rs1:=inst(19,15)
+  io.out.rs2:=inst(24,20)
 
   // fetch IMM
-  val inst = io.in.bits.code
   val immI = Cat(Fill(21, inst(31)), inst(30, 20))
   val immS = Cat(immI(31, 5), inst(11, 8), inst(7))
   val immB = Cat(immI(31, 12), inst(7), immS(10, 1), 0.U(1.W))
