@@ -67,11 +67,11 @@ class IInfoDecoder extends Module {
   io.out := MuxLookup(opcu, 0.U.asTypeOf(new InstMetaInfo()))(lut)
 }
 
-class DecodedInst(reg_addr_width:Int=5) extends InstMetaInfo{
-  val imm=UInt(32.W)
-  val rd=UInt(reg_addr_width.W)
-  val rs1=UInt(reg_addr_width.W)
-  val rs2=UInt(reg_addr_width.W)
+class DecodedInst(reg_addr_width: Int = 5) extends InstMetaInfo {
+  val imm = UInt(32.W)
+  val rd  = UInt(reg_addr_width.W)
+  val rs1 = UInt(reg_addr_width.W)
+  val rs2 = UInt(reg_addr_width.W)
 }
 
 class IDU extends Module {
@@ -84,8 +84,8 @@ class IDU extends Module {
   io.in.ready := 0.B
 
   val iinfo_dec = Module(new IInfoDecoder())
-  iinfo_dec.io.opcode := io.in.bits.code(6, 0)
-  io.out              <> iinfo_dec.io.out
-  io.out.rs2:=0.U
+  iinfo_dec.io.opcode                      := io.in.bits.code(6, 0)
+  io.out.viewAsSupertype(new InstMetaInfo) := iinfo_dec.io.out
+  io.out.rs2                               := 0.U
 
 }
