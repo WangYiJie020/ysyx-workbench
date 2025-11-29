@@ -160,7 +160,7 @@ class ALU extends Module {
 
   val shift_res = Wire(UInt(WORD_WIDTH.W))
   when(inbits.func7t === "b0100000".U) { // sra/srai
-    shift_res := s_src1 >> shamt
+    shift_res := (s_src1 >> shamt).asUInt
   }.otherwise { // srl/srli
     shift_res := src1 >> shamt
   }
