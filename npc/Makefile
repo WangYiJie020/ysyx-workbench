@@ -24,7 +24,8 @@ $(CHISEL2V_DONE): $(CHISEL_SRCS)
 # Verilator
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc -O3 \
-										--x-assign fast --x-initial fast --noassert
+										--x-assign fast --x-initial fast --noassert \
+										-I$(CHISEL2V_EMIT_DIR)/verification
 
 V2CXX_EMIT_DIR = $(BUILD_DIR)/v2cxx
 

@@ -1,8 +1,18 @@
 package cpu
 
 import chisel3._
-import chisel3.util.{Cat, Decoupled, Enum, Fill}
-import chisel3.util.MuxLookup
+import chisel3.util.{Cat, Decoupled, Enum, Fill, MuxLookup}
+import chisel3.util.HasBlackBoxInline
+
+// see https://www.chisel-lang.org/api/latest/chisel3/util/circt/dpi/index.html
+// chisel has native dpi interface since
+//  https://github.com/chipsalliance/chisel/pull/4158
+import chisel3.util.circt.dpi.{
+  RawClockedNonVoidFunctionCall,
+  RawClockedVoidFunctionCall,
+  RawUnclockedNonVoidFunctionCall
+}
+
 import chisel3.experimental.dataview._
 
 class Inst extends Bundle {
@@ -11,16 +21,23 @@ class Inst extends Bundle {
 }
 
 class IFU extends Module {
-  val io                            = IO(new Bundle { val out = Decoupled(new Inst) })
+  val io                            = IO(new Bundle {
+    val pc  = Input(UInt(32.W))
+    val out = Decoupled(new Inst)
+  })
   val s_idle :: s_wait_ready :: Nil = Enum(2)
   val state                         = RegInit(s_idle)
-  state        := MuxLookup(state, s_idle)(
+  state            := MuxLookup(state, s_idle)(
     List(
       s_idle       -> Mux(io.out.valid, s_wait_ready, s_idle),
       s_wait_ready -> Mux(io.out.ready, s_idle, s_wait_ready)
     )
   )
-  io.out.valid := 0.B
+  io.out.valid     := 1.B
+  // NOTICE: dpi function auto generated with void return
+  // see https://github.com/llvm/circt/blob/main/docs/Dialects/FIRRTL/FIRRTLIntrinsics.md#dpi-intrinsic-abi
+  io.out.bits.code := RawClockedNonVoidFunctionCall("fetch_inst", UInt(32.W))(clock, io.out.valid, io.pc)
+  io.out.bits.pc   := io.pc
 }
 
 object InstFmt     extends ChiselEnum {
@@ -139,8 +156,8 @@ class ALU extends Module {
   val BADCALL_RESVALUE = "hBAADCA11".U(32.W)
   val WORD_WIDTH       = 32
 
-  io.in.ready:=0.B
-  io.out.valid:=0.B
+  io.in.ready  := 0.B
+  io.out.valid := 0.B
 
   // alias
   val inbits = io.in.bits

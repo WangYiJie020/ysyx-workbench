@@ -4,23 +4,23 @@ import chisel3._
 
 import cpu._
 
-class TopIO extends Bundle{
-  val btn = Input(UInt(5.W))
-  val sw = Input(UInt(16.W))
-  val ps2_clk = Input(Bool())
+class TopIO extends Bundle {
+  val btn      = Input(UInt(5.W))
+  val sw       = Input(UInt(16.W))
+  val ps2_clk  = Input(Bool())
   val ps2_data = Input(Bool())
-  val uart_rx = Input(Bool())
-  val uart_tx = Output(Bool())
-  val ledr = Output(UInt(16.W))
-  
-  val VGA_CLK = Output(Bool())
-  val VGA_HSYNC = Output(Bool())
-  val VGA_VSYNC = Output(Bool())
+  val uart_rx  = Input(Bool())
+  val uart_tx  = Output(Bool())
+  val ledr     = Output(UInt(16.W))
+
+  val VGA_CLK     = Output(Bool())
+  val VGA_HSYNC   = Output(Bool())
+  val VGA_VSYNC   = Output(Bool())
   val VGA_BLANK_N = Output(Bool())
-  val VGA_R = Output(UInt(8.W))
-  val VGA_G = Output(UInt(8.W))
-  val VGA_B = Output(UInt(8.W))
-  
+  val VGA_R       = Output(UInt(8.W))
+  val VGA_G       = Output(UInt(8.W))
+  val VGA_B       = Output(UInt(8.W))
+
   val seg0 = Output(UInt(8.W))
   val seg1 = Output(UInt(8.W))
   val seg2 = Output(UInt(8.W))
@@ -31,22 +31,26 @@ class TopIO extends Bundle{
   val seg7 = Output(UInt(8.W))
 }
 
+class Top(word_width: Int = 32) extends Module {
+  type HasIO = {
+    val io: Data
+  }
+  def instantiateForTest[M <: Module with HasIO](gen: => M): M = {
+    val m = Module(gen)
+    m.io := DontCare
+    dontTouch(m.io)
+    m
+  }
 
-class Top(word_width:Int=32) extends Module{
   val io = IO(new TopIO)
   dontTouch(io)
-  io:=DontCare
- 
-  val pc = Output(UInt(word_width.W))
+  io := DontCare
+
+  val pc     = Output(UInt(word_width.W))
   val nxt_pc = Output(UInt(word_width.W))
 
-  val idu=Module(new IDU())
-  idu.io:=DontCare
-  dontTouch(idu.io)
-
-
-  val alu=Module(new ALU())
-  alu.io:=DontCare
-  dontTouch(alu.io)
+  val ifu=instantiateForTest(new IFU)
+  val idu=instantiateForTest(new IDU)
+  val alu=instantiateForTest(new ALU)
 
 }
