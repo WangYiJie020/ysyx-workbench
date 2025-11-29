@@ -139,6 +139,10 @@ class ALU extends Module {
   val BADCALL_RESVALUE = "hBAADCA11".U(32.W)
   val WORD_WIDTH       = 32
 
+  io.in.ready:=0.B
+  io.out.valid:=0.B
+
+  // alias
   val inbits = io.in.bits
   val src1   = inbits.src1
   val src2   = inbits.src2
