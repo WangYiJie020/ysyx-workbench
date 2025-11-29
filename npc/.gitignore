@@ -18,6 +18,7 @@ build/
 !*.mill
 !.mill-version
 out/
+.metals/
 .bsp/
 .idea/
 .idea_modules/
