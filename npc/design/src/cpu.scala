@@ -3,7 +3,11 @@ package cpu
 import chisel3._
 import chisel3.util.{Cat, Decoupled, Enum, Fill, MuxLookup}
 import chisel3.util.HasBlackBoxInline
-import chisel3.util.circt.dpi
+import chisel3.util.circt.dpi.{
+  RawClockedNonVoidFunctionCall,
+  RawClockedVoidFunctionCall,
+  RawUnclockedNonVoidFunctionCall
+}
 
 import chisel3.experimental.dataview._
 
