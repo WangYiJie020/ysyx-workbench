@@ -3,6 +3,10 @@ package cpu
 import chisel3._
 import chisel3.util.{Cat, Decoupled, Enum, Fill, MuxLookup}
 import chisel3.util.HasBlackBoxInline
+
+// see https://www.chisel-lang.org/api/latest/chisel3/util/circt/dpi/index.html
+// chisel has native dpi interface since
+//  https://github.com/chipsalliance/chisel/pull/4158
 import chisel3.util.circt.dpi.{
   RawClockedNonVoidFunctionCall,
   RawClockedVoidFunctionCall,
@@ -15,49 +19,23 @@ class Inst extends Bundle {
   val code = Output(UInt(32.W))
   val pc   = Output(UInt(32.W))
 }
-//class foo extends DPINonVoidFunctionImport[Uint]{ }
-
-class SIM_InstFetcher extends BlackBox with HasBlackBoxInline {
-  val io = IO(new Bundle {
-    val pc   = Input(UInt(32.W))
-    val inst = Output(UInt(32.W))
-  })
-
-  setInline(
-    "SimInstFetcher.v",
-    s"""
-    module SIM_InstFetcher(
-      input [31:0] pc,
-      output [31:0] inst
-    );
-      import "DPI-C" function int fetch_inst(int pc);
-      assign inst=fetch_inst(pc);
-    endmodule
-    """
-  )
-}
 
 class IFU extends Module {
-  val io                            = IO(new Bundle { val out = Decoupled(new Inst) })
+  val io                            = IO(new Bundle {
+    val pc  = Input(UInt(32.W))
+    val out = Decoupled(new Inst)
+  })
   val s_idle :: s_wait_ready :: Nil = Enum(2)
   val state                         = RegInit(s_idle)
-  state        := MuxLookup(state, s_idle)(
+  state            := MuxLookup(state, s_idle)(
     List(
       s_idle       -> Mux(io.out.valid, s_wait_ready, s_idle),
       s_wait_ready -> Mux(io.out.ready, s_idle, s_wait_ready)
     )
   )
-  io.out.valid := 0.B
-
-  io.out.bits:=DontCare
-
-  class Foo extends Bundle{
-    val pc=UInt(32.W)
-  }
-  val fooitem=Wire(UInt(32.W))
-  fooitem:=0.U
-  val res = RawUnclockedNonVoidFunctionCall("foosdhkjh",UInt(32.W))(1.B,fooitem)
-
+  io.out.valid     := 1.B
+  io.out.bits.code := RawClockedNonVoidFunctionCall("fetch_inst", UInt(32.W))(clock, io.out.valid, io.pc)
+  io.out.bits.pc   := io.pc
 }
 
 object InstFmt     extends ChiselEnum {
