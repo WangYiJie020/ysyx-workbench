@@ -42,7 +42,6 @@ class Top(word_width: Int = 32) extends Module {
     m
   }
 
-println(chisel3.ChiselVersion.current)
   val io = IO(new TopIO)
   dontTouch(io)
   io := DontCare
@@ -53,6 +52,5 @@ println(chisel3.ChiselVersion.current)
   val idu=instantiateForTest(new IDU)
   val alu=instantiateForTest(new ALU)
   val simif=Module(new SIM_InstFetcher)
-  simif.io:=DontCare
 
 }
