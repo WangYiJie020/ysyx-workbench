@@ -52,5 +52,6 @@ class Top(word_width: Int = 32) extends Module {
   val idu=instantiateForTest(new IDU)
   val alu=instantiateForTest(new ALU)
   val simif=Module(new SIM_InstFetcher)
+  simif.io:=DontCare
 
 }
