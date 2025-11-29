@@ -1,13 +1,32 @@
 package cpu
 
 import chisel3._
-import chisel3.util.{Cat, Decoupled, Enum, Fill}
-import chisel3.util.MuxLookup
+import chisel3.util.{Cat, Decoupled, Enum, Fill, MuxLookup}
+import chisel3.util.HasBlackBoxInline
 import chisel3.experimental.dataview._
 
 class Inst extends Bundle {
   val code = Output(UInt(32.W))
   val pc   = Output(UInt(32.W))
+}
+
+class SIM_InstFetcher extends BlackBox with HasBlackBoxInline {
+  val io = IO(new Bundle {
+    val pc   = Input(UInt(32.W))
+    val inst = Output(UInt(32.W))
+  })
+  setInline(
+    "SimInstFetcher.v",
+    s"""
+    module SIM_InstFetcher(
+      input [31:0] pc,
+      output [31:0] inst
+    );
+      import "DPI-C" function int fetch_inst(pc);
+      assign inst=fetch_inst(pc);
+    endmodule
+    """
+  )
 }
 
 class IFU extends Module {
@@ -139,8 +158,8 @@ class ALU extends Module {
   val BADCALL_RESVALUE = "hBAADCA11".U(32.W)
   val WORD_WIDTH       = 32
 
-  io.in.ready:=0.B
-  io.out.valid:=0.B
+  io.in.ready  := 0.B
+  io.out.valid := 0.B
 
   // alias
   val inbits = io.in.bits
