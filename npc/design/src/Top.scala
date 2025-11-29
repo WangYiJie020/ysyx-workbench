@@ -41,6 +41,7 @@ class Top(word_width:Int=32) extends Module{
   val nxt_pc = Output(UInt(word_width.W))
 
   val idu=Module(new IDU())
+  idu.io:=DontCare
   dontTouch(idu.io)
 
 }
