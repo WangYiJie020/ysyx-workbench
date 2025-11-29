@@ -34,6 +34,8 @@ class IFU extends Module {
     )
   )
   io.out.valid     := 1.B
+  // NOTICE: dpi function auto generated with void return
+  // see https://github.com/llvm/circt/blob/main/docs/Dialects/FIRRTL/FIRRTLIntrinsics.md#dpi-intrinsic-abi
   io.out.bits.code := RawClockedNonVoidFunctionCall("fetch_inst", UInt(32.W))(clock, io.out.valid, io.pc)
   io.out.bits.pc   := io.pc
 }
