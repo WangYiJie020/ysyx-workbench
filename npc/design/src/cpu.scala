@@ -3,6 +3,7 @@ package cpu
 import chisel3._
 import chisel3.util.{Decoupled, Enum}
 import chisel3.util.MuxLookup
+import chisel3.experimental.dataview._
 
 class Inst extends Bundle {
   val code = Output(UInt(32.W))
