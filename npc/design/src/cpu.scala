@@ -79,7 +79,6 @@ class IDU extends Module {
   val io = IO(new Bundle {
     val in  = Flipped(Decoupled(new Inst))
     val out = Output(Decoupled(new DecodedInst()))
-
   })
 
   io.in.ready := 0.B
@@ -116,4 +115,4 @@ class IDU extends Module {
 }
 
 class ALU extends Module{
-
+}
