@@ -10,7 +10,6 @@ class Inst extends Bundle {
   val pc   = Output(UInt(32.W))
 }
 
-
 class IFU extends Module {
   val io                            = IO(new Bundle { val out = Decoupled(new Inst) })
   val s_idle :: s_wait_ready :: Nil = Enum(2)
@@ -90,11 +89,11 @@ class IDU extends Module {
       s_wait_ready -> Mux(io.out.ready, s_idle, s_wait_ready)
     )
   )
-  io.in.ready :=(state===s_idle)
-  io.out.valid:=(state===s_wait_ready)
+  io.in.ready  := (state === s_idle)
+  io.out.valid := (state === s_wait_ready)
 
   // alias
-  val res = io.out.bits
+  val res  = io.out.bits
   val inst = io.in.bits.code
 
   val iinfo_dec = Module(new IInfoDecoder())
@@ -124,4 +123,58 @@ class IDU extends Module {
 
 }
 
-class ALU extends Module {}
+class ALUInput(word_width: Int = 32) extends Bundle {
+  val is_imm = Bool()
+  val func3t = UInt(3.W)
+  val func7t = UInt(7.W)
+  val src1   = UInt(word_width.W)
+  val src2   = UInt(word_width.W)
+}
+
+class ALU extends Module {
+  val io               = IO(new Bundle {
+    val in  = Flipped(Decoupled(new ALUInput))
+    val out = Decoupled(UInt(32.W))
+  })
+  val BADCALL_RESVALUE = "hBAADCA11".U(32.W)
+  val WORD_WIDTH       = 32
+
+  val inbits = io.in.bits
+  val src1   = inbits.src1
+  val src2   = inbits.src2
+
+  val s_src1 = src1.asSInt
+  val s_src2 = src2.asSInt
+
+  val shamt = src2(4, 0)
+
+  val add_sub_res = Wire(UInt(WORD_WIDTH.W))
+  when(inbits.is_imm || inbits.func7t === 0.U) {
+    add_sub_res := src1 + src2
+  }.elsewhen(inbits.func7t === "b0100000".U) {
+    add_sub_res := src1 - src2
+  }.otherwise {
+    add_sub_res := BADCALL_RESVALUE
+    printf("(alu) UNKNOWN func7t %d", inbits.func7t)
+  }
+
+  val shift_res = Wire(UInt(WORD_WIDTH.W))
+  when(inbits.func7t === "b0100000".U) { // sra/srai
+    shift_res := s_src1 >> shamt
+  }.otherwise { // srl/srli
+    shift_res := src1 >> shamt
+  }
+
+  io.out.bits := MuxLookup(inbits.func3t, BADCALL_RESVALUE)(
+    Seq(
+      0.U -> add_sub_res,                    // 000: add/sub/addi
+      1.U -> (src1 << shamt),                // 001: sll/slli
+      2.U -> Mux(s_src1 < s_src2, 1.U, 0.U), // 010: slt/slti
+      3.U -> Mux(src1 < src2, 1.U, 0.U),     // 011: sltu/sltui
+      4.U -> (src1 ^ src2),                  // 100: xor/xori
+      5.U -> shift_res,                      // 101: srl/srli/sra/srai
+      6.U -> (src1 | src2),                  // 110: or/ori
+      7.U -> (src1 & src2)                   // 111: and/andi
+    )
+  )
+}
