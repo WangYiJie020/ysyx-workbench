@@ -2,6 +2,8 @@ package top
 
 import chisel3._
 
+import cpu._
+
 class TopIO extends Bundle{
   val btn = Input(UInt(5.W))
   val sw = Input(UInt(16.W))
@@ -37,5 +39,7 @@ class Top(word_width:Int=32) extends Module{
  
   val pc = Output(UInt(word_width.W))
   val nxt_pc = Output(UInt(word_width.W))
+
+  val idu=Module(new IDU())
 
 }
