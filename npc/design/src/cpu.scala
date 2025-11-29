@@ -64,7 +64,7 @@ class IInfoDecoder extends Module {
     }
   }
 
-  io.out := MuxLookup(opcu, Wire(new InstInfo()))(lut)
+  io.out := MuxLookup(opcu, 0.U.asTypeOf(new InstInfo()))(lut)
 }
 
 class IDU extends Module {
