@@ -22,6 +22,11 @@ class SIM_InstFetcher extends BlackBox with HasBlackBoxInline {
     val pc   = Input(UInt(32.W))
     val inst = Output(UInt(32.W))
   })
+
+  class Foo extends Bundle{
+    val pc=UInt(32.W)
+  }
+  RawUnclockedNonVoidFunctionCall("issssss",new Foo,Some(Seq("pc")))(1.B,io.pc)
   setInline(
     "SimInstFetcher.v",
     s"""
