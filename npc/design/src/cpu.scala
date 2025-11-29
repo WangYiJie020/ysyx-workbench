@@ -78,21 +78,23 @@ class DecodedInst(reg_addr_width: Int = 5) extends InstMetaInfo {
 class IDU extends Module {
   val io = IO(new Bundle {
     val in  = Flipped(Decoupled(new Inst))
-    val out = Output(new DecodedInst())
+    val out = Output(Decoupled(new DecodedInst()))
 
   })
 
   io.in.ready := 0.B
 
+  val res =io.out.bits
+
   val iinfo_dec = Module(new IInfoDecoder())
   iinfo_dec.io.opcode                      := io.in.bits.code(6, 0)
-  io.out.viewAsSupertype(new InstMetaInfo) := iinfo_dec.io.out
+  res.viewAsSupertype(new InstMetaInfo) := iinfo_dec.io.out
 
   val inst = io.in.bits.code
 
-  io.out.rd:=inst(11,7)
-  io.out.rs1:=inst(19,15)
-  io.out.rs2:=inst(24,20)
+  res.rd  := inst(11, 7)
+  res.rs1 := inst(19, 15)
+  res.rs2 := inst(24, 20)
 
   // fetch IMM
   val immI = Cat(Fill(21, inst(31)), inst(30, 20))
@@ -101,7 +103,7 @@ class IDU extends Module {
   val immU = Cat(inst(31, 12), 0.U(12.W))
   val immJ = Cat(immI(31, 20), inst(19, 12), inst(20), inst(30, 21), 0.U(1.W))
 
-  io.out.imm := MuxLookup(iinfo_dec.io.out.fmt, "hBAADF00D".U)(
+  res.imm := MuxLookup(iinfo_dec.io.out.fmt, "hBAADF00D".U)(
     Seq(
       InstFmt.imm    -> immI,
       InstFmt.jump   -> immJ,
@@ -112,3 +114,6 @@ class IDU extends Module {
   )
 
 }
+
+class ALU extends Module{
+
