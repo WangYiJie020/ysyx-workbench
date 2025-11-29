@@ -24,7 +24,7 @@ class SIM_InstFetcher extends BlackBox with HasBlackBoxInline {
       input [31:0] pc,
       output [31:0] inst
     );
-      import "DPI-C" function int fetch_inst(pc);
+      import "DPI-C" function int fetch_inst(int pc);
       assign inst=fetch_inst(pc);
     endmodule
     """
