@@ -42,5 +42,6 @@ class Top(word_width:Int=32) extends Module{
 
   val idu=Module(new IDU())
   idu.io:=DontCare
+  dontTouch(idu.io)
 
 }
