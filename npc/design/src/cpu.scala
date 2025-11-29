@@ -86,5 +86,6 @@ class IDU extends Module {
   val iinfo_dec = Module(new IInfoDecoder())
   iinfo_dec.io.opcode := io.in.bits.code(6, 0)
   io.out              := iinfo_dec.io.out
+  io.out.rs2:=0.U
 
 }
