@@ -48,6 +48,9 @@ class IFU extends Module {
     )
   )
   io.out.valid := 0.B
+
+  io.out.bits:=DontCare
+
   class Foo extends Bundle{
     val pc=UInt(32.W)
   }
