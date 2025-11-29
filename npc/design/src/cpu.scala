@@ -32,5 +32,8 @@ class IDU extends Module {
     val out = Output(InstType())
 
   })
-  // ...
+
+  io.in.ready:=0.B
+  io.out:=InstType.imm
+
 }
