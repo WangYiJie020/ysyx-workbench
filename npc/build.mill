@@ -37,7 +37,7 @@ object design extends ScalaModule
     override def mvnDeps = m.mvnDeps() ++ Seq(
       mvn"org.scalatest::scalatest::3.2.19",
       // for formal flow in future
-//      mvn"edu.berkeley.cs::chiseltest:6.0.0"
+      mvn"edu.berkeley.cs::chiseltest:6.0.0"
     )
   }
 
