@@ -22,18 +22,62 @@ class IFU extends Module {
   io.out.valid := 0.B
 }
 
+object InstFmt  extends ChiselEnum {
+  val imm, reg, store, upper, jump, branch = Value
+}
 object InstType extends ChiselEnum {
-  val imm, reg, store, u, jump, branch = Value
+  val none, arithmetic, load, jalr, lui, auipc, system = Value
+}
+class InstInfo  extends Bundle     {
+  val fmt = InstFmt()
+  val typ = InstType()
+}
+
+class IInfoDecoder extends Module {
+  val io = IO(new Bundle {
+    val opcode = Input(UInt(7.W))
+    val valid  = Output(Bool())
+    val out    = Output(new InstInfo())
+  })
+
+  // opcode[1:0] should always be 11 for 32bit
+  io.valid := io.opcode(1, 0).andR
+  val opcu = io.opcode(6, 2)
+
+  val lut = Seq(
+    "b00000".U -> (InstFmt.imm, InstType.load),
+    "b00100".U -> (InstFmt.imm, InstType.arithmetic),
+    "b11001".U -> (InstFmt.imm, InstType.jalr),
+    "b11100".U -> (InstFmt.imm, InstType.system),
+    "b01100".U -> (InstFmt.reg, InstType.none),
+    "b01000".U -> (InstFmt.store, InstType.none),
+    "b01101".U -> (InstFmt.upper, InstType.lui),
+    "b00101".U -> (InstFmt.upper, InstType.auipc),
+    "b11011".U -> (InstFmt.jump, InstType.none),
+    "b11000".U -> (InstFmt.branch, InstType.none)
+  ).map { case (key, (fmt, typ)) =>
+    key -> {
+      val info = Wire(new InstInfo)
+      info.fmt := fmt
+      info.typ := typ
+      info
+    }
+  }
+
+  io.out := MuxLookup(opcu, new InstInfo())(lut)
 }
 
 class IDU extends Module {
   val io = IO(new Bundle {
     val in  = Flipped(Decoupled(new Inst))
-    val out = Output(InstType())
+    val out = Output(new InstInfo())
 
   })
 
-  io.in.ready:=0.B
-  io.out:=InstType.imm
+  io.in.ready := 0.B
+
+  val iinfo_dec=Module(new IInfoDecoder())
+  iinfo_dec.io.opcode:=io.in.bits.code(6,0)
+  io.out:=iinfo_dec.io.out
 
 }
