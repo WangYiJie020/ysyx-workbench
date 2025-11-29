@@ -54,7 +54,8 @@ class IFU extends Module {
   class Foo extends Bundle{
     val pc=UInt(32.W)
   }
-  val fooitem=UInt(32.W)
+  val fooitem=Wire(UInt(32.W))
+  fooitem:=0.U
   val res = RawUnclockedNonVoidFunctionCall("issssss",new Foo,Some(Seq("pc")))(1.B,fooitem)
 
 }
