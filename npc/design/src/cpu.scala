@@ -10,6 +10,7 @@ class Inst extends Bundle {
   val pc   = Output(UInt(32.W))
 }
 
+
 class IFU extends Module {
   val io                            = IO(new Bundle { val out = Decoupled(new Inst) })
   val s_idle :: s_wait_ready :: Nil = Enum(2)
@@ -78,18 +79,18 @@ class DecodedInst(reg_addr_width: Int = 5) extends InstMetaInfo {
 class IDU extends Module {
   val io = IO(new Bundle {
     val in  = Flipped(Decoupled(new Inst))
-    val out = Output(Decoupled(new DecodedInst()))
+    val out = Decoupled(new DecodedInst)
   })
 
   io.in.ready := 0.B
 
-  val res =io.out.bits
+  // alias
+  val res = io.out.bits
+  val inst = io.in.bits.code
 
   val iinfo_dec = Module(new IInfoDecoder())
-  iinfo_dec.io.opcode                      := io.in.bits.code(6, 0)
+  iinfo_dec.io.opcode                   := io.in.bits.code(6, 0)
   res.viewAsSupertype(new InstMetaInfo) := iinfo_dec.io.out
-
-  val inst = io.in.bits.code
 
   res.rd  := inst(11, 7)
   res.rs1 := inst(19, 15)
@@ -114,5 +115,4 @@ class IDU extends Module {
 
 }
 
-class ALU extends Module{
-}
+class ALU extends Module {}
