@@ -49,6 +49,7 @@ class Top(word_width: Int = 32) extends Module {
   val pc     = Output(UInt(word_width.W))
   val nxt_pc = Output(UInt(word_width.W))
 
+  val ifu=instantiateForTest(new IFU)
   val idu=instantiateForTest(new IDU)
   val alu=instantiateForTest(new ALU)
   val simif=Module(new SIM_InstFetcher)
