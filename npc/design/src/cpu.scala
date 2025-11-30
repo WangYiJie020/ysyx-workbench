@@ -15,40 +15,13 @@ import chisel3.util.circt.dpi.{
 
 import chisel3.experimental.dataview._
 
+import regfile._
+
 object BitWidth {
   val addr = 5
   val word = 32
 }
 
-class RegReadBundle(N: Int) extends Bundle {
-  require((1 << BitWidth.addr) >= N)
-  val addr = Input(Vec(N, UInt(BitWidth.addr.W)))
-  val data = Output(Vec(N, UInt(BitWidth.addr.W)))
-}
-
-class RegisterFile(READ_PORTS: Int = 2) extends Module {
-  val N_REG = 1 << BitWidth.addr
-
-  val io  = IO(new Bundle {
-    val wen   = Input(Bool())
-    val waddr = Input(UInt(BitWidth.addr.W))
-    val wdata = Input(UInt(BitWidth.word.W))
-
-    val rvec = new RegReadBundle(READ_PORTS)
-  })
-  val reg = RegInit(VecInit(Seq.fill(N_REG)(0.U(BitWidth.word.W))))
-
-  when(io.wen) {
-    reg(io.waddr) := io.wdata
-  }
-  for (i <- 0 until READ_PORTS) {
-    when(io.rvec.addr(i) === 0.U) {
-      io.rvec.data(i) := 0.U
-    }.otherwise {
-      io.rvec.data(i) := reg(io.rvec.addr(i))
-    }
-  }
-}
 
 class Inst extends Bundle {
   val code = Output(UInt(32.W))
