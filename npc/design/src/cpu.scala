@@ -120,7 +120,7 @@ class IDU extends Module {
   io.in.ready  := (state === s_idle)
   io.out.valid := (state === s_wait_ready)
 
-  io.out.bits.viewAsSupertype(new Inst) := io.in
+  io.out.bits.viewAsSupertype(new Inst) := io.in.bits
 
   // alias
   val res  = io.out.bits.info
