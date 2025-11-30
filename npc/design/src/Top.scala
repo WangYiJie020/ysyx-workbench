@@ -48,7 +48,7 @@ class Top(word_width: Int = 32) extends Module {
   dontTouch(io)
   io := DontCare
 
-  val regs = Module(new RegisterFile)
+  val regs = instantiateForTest(new RegisterFile)
 
   val pc     = Output(UInt(word_width.W))
   val nxt_pc = Output(UInt(word_width.W))
