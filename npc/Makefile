@@ -1,83 +1,106 @@
-TOPNAME = top
-NXDC_FILES = constr/top.nxdc
-INC_PATH ?=
-
-VERILATOR = verilator
-VERILATOR_CFLAGS += -MMD --build -cc \
-				-O3 \
-			   	--x-assign fast --x-initial fast --noassert
-
 BUILD_DIR = ./build
-OBJ_DIR = $(BUILD_DIR)/obj_dir
-BIN = $(BUILD_DIR)/$(TOPNAME)
+TOP_NAME = Top # case sensitive
 
-ARGS?=
+SIM_CSRC_DIR = ./csrc
+SIM_BIN = $(BUILD_DIR)/$(TOP_NAME)
 
-default: $(BIN)
+SIM_IMG ?=
 
+
+default: $(SIM_BIN)
+	
+
+# Chisel
+CHISEL_DESIGN = design
+CHISEL_SRCS = $(shell find $(abspath $(CHISEL_DESIGN)) -name "*.scala")
+CHISEL_SRCS += build.mill
+CHISEL2V_EMIT_DIR = $(BUILD_DIR)/chisel2v
+CHISEL2V_DONE = $(BUILD_DIR)/verilog.done
+$(CHISEL2V_DONE): $(CHISEL_SRCS)
+	$(call git_commit, "generate verilog")
+	mill -i $(CHISEL_DESIGN).runMain Elaborate --target-dir $(CHISEL2V_EMIT_DIR)
+	touch $(CHISEL2V_DONE)
+
+# Verilator
+VERILATOR = verilator
+VERILATOR_CFLAGS += -MMD --build -cc -O3 \
+										--x-assign fast --x-initial fast --noassert \
+										-I$(CHISEL2V_EMIT_DIR)/verification
+
+V2CXX_EMIT_DIR = $(BUILD_DIR)/v2cxx
+
+SIM_VSRCS = $(shell find $(abspath $(CHISEL2V_EMIT_DIR)) -name "*.v" -or -name "*.sv")
+SIM_CSRCS = $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
+
+# sdb
+INC_PATH += $(abspath ../sdb/include)
+LDFLAGS += $(SAN_FLAGS) -L$(abspath ../sdb/build) -lsdb
+ARCHIVES += $(NVBOARD_ARCHIVE) $(abspath ../sdb/build/libsdb.a)
+
+# dirs
 $(shell mkdir -p $(BUILD_DIR))
-$(shell mkdir -p $(BUILD_DIR)/syn)
+$(shell mkdir -p $(V2CXX_EMIT_DIR))
+$(shell mkdir -p $(CHISEL2V_EMIT_DIR))
 
-# constraint file
-SRC_AUTO_BIND = $(abspath $(BUILD_DIR)/auto_bind.cpp)
-$(SRC_AUTO_BIND): $(NXDC_FILES)
+
+# NVBOARD
+NXDC_FILES = $(addprefix $(BUILD_DIR)/,$(shell find . -maxdepth 1 -name "*.nxdc"))
+$(BUILD_DIR)/%.nxdc: %.nxdc
+	@sed 's/top=.*/top=$(TOP_NAME)/g' $< > $@
+NVB_AUTOBIND_SRC = $(abspath $(BUILD_DIR)/auto_bind.cpp)
+$(NVB_AUTOBIND_SRC): $(NXDC_FILES)
 	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
-
-# project source
-VSRCS = $(shell find $(abspath ./vsrc) -name "*.v")
-CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
-CSRCS += $(SRC_AUTO_BIND)
-
-INCHEADERS = $(shell find $(abspath ./csrc) -name "*.h" -or -name "*.hpp")
+SIM_CSRCS += $(NVB_AUTOBIND_SRC)
 
 # rules for NVBoard
 include $(NVBOARD_HOME)/scripts/nvboard.mk
 
 # rules for verilator
-
-INC_PATH += $(abspath ../sdb/include)
-
 INCFLAGS = $(addprefix -I, $(INC_PATH))
-CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
-
-SAN_FLAGS?=
-#SAN_FLAGS+=-fsanitize=address
-
+CXXFLAGS += $(INCFLAGS) -DTOP_NAME=V$(TOP_NAME)
+SAN_FLAGS?= #SAN_FLAGS+=-fsanitize=address
 CXXFLAGS += $(SAN_FLAGS) -std=c++20
-LDFLAGS += $(SAN_FLAGS) -L$(abspath ../sdb/build) -lsdb
-ARCHIVES += $(NVBOARD_ARCHIVE) $(abspath ../sdb/build/libsdb.a)
 
-
-$(BIN): $(VSRCS) $(INCHEADERS) $(CSRCS) $(ARCHIVES)
-	@rm -rf $(OBJ_DIR)
+$(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) verilog
+	@rm -rf $(V2CXX_EMIT_DIR)
 	$(VERILATOR) $(VERILATOR_CFLAGS) \
-		--top-module $(TOPNAME) $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE) \
-		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
-		--Mdir $(OBJ_DIR) --exe -o $(abspath $(BIN))
+		$(SIM_CSRCS) $(NVBOARD_ARCHIVE) \
+		--top-module $(TOP_NAME) $(SIM_VSRCS) \
+		$(addprefix -CFLAGS , $(CXXFLAGS)) \
+		$(addprefix -LDFLAGS , $(LDFLAGS)) \
+		--Mdir $(V2CXX_EMIT_DIR) --exe -o $(abspath $(SIM_BIN))
 
 all: default
 
-SIM_IMG ?=
+test:
+	mill -i $(CHISEL_DESIGN).test
 
-sim: $(BIN)
-	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-	@echo "Run the simulation."
-	@$^ $(ARGS) $(SIM_IMG)
-#	./obj_dir/$(TOPNAME)
+verilog: $(CHISEL2V_DONE)
+
+help:
+	mill -i $(CHISEL_DESIGN).runMain Elaborate --help
+
+reformat:
+	mill -i __.reformat
+
+checkformat:
+	mill -i __.checkFormat
+
+bsp:
+	mill -i mill.bsp.BSP/install
+
+idea:
+	mill -i mill.idea.GenIdea/idea
 
 clean:
-	rm -rf $(BUILD_DIR)
+	-rm -rf $(BUILD_DIR)
 
-.PHONY: default all clean run
+.PHONY: test help reformat checkformat clean
 
-# for PROJ_PATH: yosys-sta makefile get scripts tool from PROJ_PATH, default is pwd, which is not correct here
-mysyn:
-	make -f $(HOME)/yosys-sta/Makefile syn \
-		-C $(BUILD_DIR)/syn \
-		PROJ_PATH=$(HOME)/yosys-sta \
-	   	DESIGN=$(TOPNAME) \
-	   	CLK_FREQ=100 CLK_PORT_NAME=clk \
-	   	O=./output \
-		RTL_FILES="$(VSRCS)"
+ARGS?=
+sim: $(SIM_BIN)
+	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
+	@echo "Run the simulation"
+	@$^ $(ARGS) $(SIM_IMG)
 
-include ../Makefile
+-include ../Makefile
