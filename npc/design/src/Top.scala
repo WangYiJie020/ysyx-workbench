@@ -2,6 +2,8 @@ package top
 
 import chisel3._
 
+import regfile._
+
 import cpu._
 
 class TopIO extends Bundle {
