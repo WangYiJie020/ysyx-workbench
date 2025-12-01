@@ -8,24 +8,27 @@ import chisel3.util.MuxLookup
 
 class RegReadBundle(N: Int) extends Bundle {
   require((1 << Types.BitWidth.reg_addr) >= N)
+  val en   = Input(Bool())
   val addr = Input(Vec(N, Types.RegAddr))
   val data = Output(Vec(N, Types.RegAddr))
+}
+class RegWriteBundle        extends Bundle {
+  val en   = Input(Bool())
+  val addr = Input(Types.RegAddr)
+  val data = Input(Types.UWord)
 }
 
 class RegisterFile(READ_PORTS: Int = 2) extends Module {
   val N_REG = 1 << Types.BitWidth.reg_addr
 
   val io  = IO(new Bundle {
-    val wen   = Input(Bool())
-    val waddr = Input(Types.RegAddr)
-    val wdata = Input(Types.UWord)
-
-    val rvec = new RegReadBundle(READ_PORTS)
+    val write = new RegWriteBundle()
+    val rvec  = new RegReadBundle(READ_PORTS)
   })
   val reg = RegInit(VecInit(Seq.fill(N_REG)(0.UWord)))
 
-  when(io.wen) {
-    reg(io.waddr) := io.wdata
+  when(io.write.en) {
+    reg(io.write.addr) := io.write.data
   }
   for (i <- 0 until READ_PORTS) {
     when(io.rvec.addr(i) === 0.U) {
@@ -34,6 +37,15 @@ class RegisterFile(READ_PORTS: Int = 2) extends Module {
       io.rvec.data(i) := reg(io.rvec.addr(i))
     }
   }
+}
+
+object CSRAddr {
+  val mstatus = "h300".U(12.W)
+  val mtvec   = "h305".U(12.W)
+  val mepc    = "h341".U(12.W)
+  val mcause  = "h342".U(12.W)
+  val mcycle  = "hB00".U(12.W)
+  val mcycleh = "hB80".U(12.W)
 }
 
 class ControlStatusRegisterFile extends Module {
@@ -60,12 +72,12 @@ class ControlStatusRegisterFile extends Module {
   when(io.ren) {
     io.rdata := MuxLookup(io.addr, 0.U)(
       Seq(
-        "hB00".U -> mcycle64(31, 0),  // mcycle
-        "hB80".U -> mcycle64(63, 32), // mcycleh
-        "h300".U -> mstatus,
-        "h341".U -> mepc,
-        "h342".U -> mcause,
-        "h305".U -> mtvec
+        CSRAddr.mcycle  -> mcycle64(31, 0),  
+        CSRAddr.mcycleh -> mcycle64(63, 32), 
+        CSRAddr.mstatus -> mstatus,
+        CSRAddr.mepc    -> mepc,
+        CSRAddr.mcause  -> mcause,
+        CSRAddr.mtvec   -> mtvec
       )
     )
 
