@@ -6,6 +6,7 @@ import regfile._
 
 import cpu._
 
+// For NVBoard
 class TopIO extends Bundle {
   val btn      = Input(UInt(5.W))
   val sw       = Input(UInt(16.W))

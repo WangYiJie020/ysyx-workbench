@@ -6,17 +6,17 @@ import cpu.BitWidth
 import chisel3.util.MuxLookup
 
 class RegReadBundle(N: Int) extends Bundle {
-  require((1 << BitWidth.addr) >= N)
-  val addr = Input(Vec(N, UInt(BitWidth.addr.W)))
-  val data = Output(Vec(N, UInt(BitWidth.addr.W)))
+  require((1 << BitWidth.reg_addr) >= N)
+  val addr = Input(Vec(N, UInt(BitWidth.reg_addr.W)))
+  val data = Output(Vec(N, UInt(BitWidth.reg_addr.W)))
 }
 
 class RegisterFile(READ_PORTS: Int = 2) extends Module {
-  val N_REG = 1 << BitWidth.addr
+  val N_REG = 1 << BitWidth.reg_addr
 
   val io  = IO(new Bundle {
     val wen   = Input(Bool())
-    val waddr = Input(UInt(BitWidth.addr.W))
+    val waddr = Input(UInt(BitWidth.reg_addr.W))
     val wdata = Input(UInt(BitWidth.word.W))
 
     val rvec = new RegReadBundle(READ_PORTS)
