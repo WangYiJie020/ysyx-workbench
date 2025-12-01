@@ -350,11 +350,16 @@ class EXU extends Module {
     when(is_ecall) {
       csrren   := true.B
       csrwen   := false.B
-      csr_addr := CSRAddr.mcause
+      csr_addr := CSRAddr.mtvec
+      // ecall: set mepc to pc
+      // although wen = falase
+      // is_ecall flag make csr to write wdata to mepc
+      csr_wdata := dinst.pc
     }.elsewhen(is_mret) {
       csrren   := true.B
       csrwen   := false.B
       csr_addr := CSRAddr.mepc
+      csr_wdata := 0.U
     }.otherwise {
       csrren   := MuxLookup(func3t, false.B)(
         Seq(
@@ -369,11 +374,18 @@ class EXU extends Module {
         )
       )
       csr_addr := dinst.code(31, 20)
+      csr_wdata := MuxLookup(func3t, GARBAGE_UNINIT_VALUE)(
+        Seq(
+          CSROp.csrrw -> reg_v1,
+          CSROp.csrrs -> (csr_rdata | reg_v1)
+        )
+      )
     }
   }.otherwise {
     csrren   := false.B
     csrwen   := false.B
     csr_addr := 0.U
+    csr_wdata := 0.U
   }
 
   // wdata
