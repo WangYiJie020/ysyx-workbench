@@ -286,6 +286,14 @@ class EXU extends Module {
     val csr_rvec = Flipped(new RegReadBundle(1))
     val out      = Decoupled(new WriteBackInfo)
   })
+
+  val recv_fsm = Module(new BusSlaveFSM)
+  val send_fsm = Module(new BusMasterFSM)
+  recv_fsm.connectMaster(io.dinst)
+  recv_fsm.io.want_recv := io.out.ready
+  send_fsm.connectSlave(io.out)
+  send_fsm.io.want_send := io.dinst.valid
+
   val GARBAGE_UNINIT_VALUE = "hDEADBEEF".U
 
   val alu = Module(new ALU)
