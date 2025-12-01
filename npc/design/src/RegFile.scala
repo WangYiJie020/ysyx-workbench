@@ -3,6 +3,7 @@ package regfile
 import chisel3._
 import chisel3.util.Counter
 import cpu.Types
+import cpu.Types.Ops._
 import chisel3.util.MuxLookup
 
 class RegReadBundle(N: Int) extends Bundle {
@@ -21,7 +22,7 @@ class RegisterFile(READ_PORTS: Int = 2) extends Module {
 
     val rvec = new RegReadBundle(READ_PORTS)
   })
-  val reg = RegInit(VecInit(Seq.fill(N_REG)(Types.UWord)))
+  val reg = RegInit(VecInit(Seq.fill(N_REG)(0.UWord)))
 
   when(io.wen) {
     reg(io.waddr) := io.wdata

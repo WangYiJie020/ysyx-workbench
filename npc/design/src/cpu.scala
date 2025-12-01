@@ -25,11 +25,16 @@ object Types {
   def UWord = UInt(BitWidth.word.W)
   def RegAddr = UInt(BitWidth.reg_addr.W)
 
-  implicit class StringOps(val s: String) extends AnyVal {
-    def UWord = s.U(BitWidth.word.W)
+  object Ops {
+    implicit class StringOps(val s: String) extends AnyVal {
+      def UWord = s.U(BitWidth.word.W)
+    }
+    implicit class IntOps(val s: Int)       extends AnyVal {
+      def UWord = s.U(BitWidth.word.W)
+    }
   }
 }
-import Types.StringOps
+import Types.Ops._
 
 class Inst extends Bundle {
   val code = Output(Types.UWord)
