@@ -298,6 +298,13 @@ class EXU extends Module {
 
   val alu = Module(new ALU)
 
+  val alu_recv_fsm = Module(new BusSlaveFSM)
+  val alu_send_fsm = Module(new BusMasterFSM)
+  alu_recv_fsm.connectMaster(alu.io.in)
+  alu_recv_fsm.io.want_recv := io.dinst.valid
+  alu_send_fsm.connectSlave(alu.io.out)
+  alu_send_fsm.io.want_send := io.dinst.valid
+
   val alu_in = alu.io.in.bits
   val dinst  = io.dinst.bits
   val func3t = dinst.code(14, 12)
