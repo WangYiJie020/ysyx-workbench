@@ -1,7 +1,7 @@
 package cpu
 
 import chisel3._
-import chisel3.util.{Cat, Decoupled, Enum, Fill, MuxLookup}
+import chisel3.util.{Cat, Decoupled, DecoupledIO, Enum, Fill, MuxLookup}
 import chisel3.util.HasBlackBoxInline
 
 // see https://www.chisel-lang.org/api/latest/chisel3/util/circt/dpi/index.html
@@ -41,20 +41,64 @@ class Inst extends Bundle {
   val pc   = Output(Types.UWord)
 }
 
+class BusMasterFSM extends Module {
+  val io = IO(new Bundle {
+    val want_send   = Input(Bool())
+    val slave_ready = Input(Bool())
+    val valid       = Output(Bool())
+  })
+
+  val s_idle :: s_wait_ready :: Nil = Enum(2)
+
+  val state = RegInit(s_idle)
+  state    := MuxLookup(state, s_idle)(
+    List(
+      s_idle       -> Mux(io.want_send, s_wait_ready, s_idle),
+      s_wait_ready -> Mux(io.slave_ready, s_idle, s_wait_ready)
+    )
+  )
+  io.valid := (state === s_idle)
+
+  def connectSlave[T <: Data](slave: DecoupledIO[T]): Unit = {
+    io.slave_ready := slave.ready
+    slave.valid    := io.valid
+  }
+}
+class BusSlaveFSM  extends Module {
+  val io = IO(new Bundle {
+    val want_recv    = Input(Bool())
+    val master_valid = Input(Bool())
+    // ready to recv
+    val ready        = Output(Bool())
+  })
+
+  val s_idle :: s_wait_data :: Nil = Enum(2)
+
+  val state = RegInit(s_idle)
+  state    := MuxLookup(state, s_idle)(
+    List(
+      s_idle      -> Mux(io.want_recv, s_wait_data, s_idle),
+      s_wait_data -> Mux(io.master_valid, s_idle, s_wait_data)
+    )
+  )
+  io.ready := (state === s_idle)
+
+  def connectMaster[T <: Data](master: DecoupledIO[T]): Unit = {
+    io.master_valid := master.valid
+    master.ready    := io.ready
+  }
+}
+
 class IFU extends Module {
-  val io                            = IO(new Bundle {
+  val io = IO(new Bundle {
     val pc  = Input(Types.UWord)
     val out = Decoupled(new Inst)
   })
-  val s_idle :: s_wait_ready :: Nil = Enum(2)
-  val state                         = RegInit(s_idle)
-  state            := MuxLookup(state, s_idle)(
-    List(
-      s_idle       -> Mux(io.out.valid, s_wait_ready, s_idle),
-      s_wait_ready -> Mux(io.out.ready, s_idle, s_wait_ready)
-    )
-  )
-  io.out.valid     := 1.B
+
+  val send_fsm = Module(new BusMasterFSM)
+  send_fsm.io.want_send := 1.B
+  send_fsm.connectSlave(io.out)
+
   // NOTICE: dpi function auto generated with void return
   // see https://github.com/llvm/circt/blob/main/docs/Dialects/FIRRTL/FIRRTLIntrinsics.md#dpi-intrinsic-abi
   io.out.bits.code := RawClockedNonVoidFunctionCall("fetch_inst", Types.UWord)(clock, io.out.valid, io.pc)
@@ -65,7 +109,7 @@ object InstFmt     extends ChiselEnum {
   val imm, reg, store, upper, jump, branch = Value
 }
 object InstType    extends ChiselEnum {
-  val none, arithmetic, load, jalr, lui, auipc, system = Value
+  val none, arithmetic, load, jalr, jal, lui, auipc, system = Value
 }
 class InstMetaInfo extends Bundle     {
   val fmt = InstFmt()
@@ -88,11 +132,11 @@ class InstInfoDecoder extends Module {
     "b00100".U -> (InstFmt.imm, InstType.arithmetic),
     "b11001".U -> (InstFmt.imm, InstType.jalr),
     "b11100".U -> (InstFmt.imm, InstType.system),
-    "b01100".U -> (InstFmt.reg, InstType.none),
+    "b01100".U -> (InstFmt.reg, InstType.arithmetic),
     "b01000".U -> (InstFmt.store, InstType.none),
     "b01101".U -> (InstFmt.upper, InstType.lui),
     "b00101".U -> (InstFmt.upper, InstType.auipc),
-    "b11011".U -> (InstFmt.jump, InstType.none),
+    "b11011".U -> (InstFmt.jump, InstType.jal),
     "b11000".U -> (InstFmt.branch, InstType.none)
   ).map { case (key, (fmt, typ)) =>
     key -> {
@@ -122,16 +166,14 @@ class IDU extends Module {
     val out = Decoupled(new DecodedInst)
   })
 
-  val s_idle :: s_wait_ready :: Nil = Enum(2)
-  val state                         = RegInit(s_idle)
-  state        := MuxLookup(state, s_idle)(
-    List(
-      s_idle       -> Mux(io.in.valid, s_wait_ready, s_idle),
-      s_wait_ready -> Mux(io.out.ready, s_idle, s_wait_ready)
-    )
-  )
-  io.in.ready  := (state === s_idle)
-  io.out.valid := (state === s_wait_ready)
+  val recv_fsm = Module(new BusSlaveFSM)
+  val send_fsm = Module(new BusMasterFSM)
+
+  recv_fsm.connectMaster(io.in)
+  recv_fsm.io.want_recv := io.out.ready
+
+  send_fsm.connectSlave(io.out)
+  send_fsm.io.want_send := io.in.valid
 
   io.out.bits.viewAsSupertype(new Inst) := io.in.bits
 
@@ -179,7 +221,7 @@ class ALU extends Module {
     val in  = Flipped(Decoupled(new ALUInput))
     val out = Decoupled(Types.UWord)
   })
-  val BADCALL_RESVALUE = "hBAADCA11".UWord
+  val BADCALL_RESVALUE = "hBAADCA11".U
 
   io.in.ready  := 0.B
   io.out.valid := 0.B
@@ -226,26 +268,55 @@ class ALU extends Module {
 }
 
 class WriteBackInfo extends Bundle {
+  val wen  = Bool()
   val addr = Types.RegAddr
   val data = Types.UWord
+
+  val csr_wen  = Bool()
+  val csr_addr = UInt(12.W)
+  val csr_data = Types.UWord
+
+  val nxt_pc = Types.UWord
 }
 
 class EXU extends Module {
-  val io = IO(new Bundle {
-    val dinst = Flipped(Decoupled(new DecodedInst))
-    val rvec  = Flipped(new RegReadBundle(2))
-    val out   = Decoupled(new WriteBackInfo)
+  val io                   = IO(new Bundle {
+    val dinst    = Flipped(Decoupled(new DecodedInst))
+    val rvec     = Flipped(new RegReadBundle(2))
+    val csr_rvec = Flipped(new RegReadBundle(1))
+    val out      = Decoupled(new WriteBackInfo)
   })
+
+  val recv_fsm = Module(new BusSlaveFSM)
+  val send_fsm = Module(new BusMasterFSM)
+  recv_fsm.connectMaster(io.dinst)
+  recv_fsm.io.want_recv := io.out.ready
+  send_fsm.connectSlave(io.out)
+  send_fsm.io.want_send := io.dinst.valid
+
+  val GARBAGE_UNINIT_VALUE = "hDEADBEEF".U
 
   val alu = Module(new ALU)
 
+  val alu_recv_fsm = Module(new BusSlaveFSM)
+  val alu_send_fsm = Module(new BusMasterFSM)
+  alu_recv_fsm.connectMaster(alu.io.out)
+  alu_recv_fsm.io.want_recv := io.dinst.valid
+  alu_send_fsm.connectSlave(alu.io.in)
+  alu_send_fsm.io.want_send := io.dinst.valid
+
   val alu_in = alu.io.in.bits
   val dinst  = io.dinst.bits
+  val func3t = dinst.code(14, 12)
+  val func7t = dinst.code(31, 25)
+
   alu_in.is_imm := (dinst.info.fmt === InstFmt.imm)
-  alu_in.func3t := dinst.code(14, 12)
-  alu_in.func7t := dinst.code(31, 25)
+  alu_in.func3t := func3t
+  alu_in.func7t := func7t
 
   // reg
+
+  io.rvec.en      := true.B
   io.rvec.addr(0) := dinst.info.rs1
   io.rvec.addr(1) := dinst.info.rs2
   val reg_v1 = io.rvec.data(0)
@@ -254,4 +325,130 @@ class EXU extends Module {
   alu_in.src1 := reg_v1
   alu_in.src2 := Mux(dinst.info.fmt === InstFmt.reg, reg_v2, dinst.info.imm)
 
+  // csr
+
+  val is_mret  = dinst.code === "h30200073".U
+  val is_ecall = dinst.code === "h73".U
+
+  val csrren    = io.csr_rvec.en
+  val csr_addr  = io.csr_rvec.addr(0)
+  val csr_rdata = io.csr_rvec.data(0)
+
+  val csrwen    = io.out.bits.csr_wen
+  val csr_wdata = io.out.bits.csr_data
+
+  io.out.bits.csr_addr := csr_addr
+
+  object CSROp {
+    val _val_beg = 1.U
+    val csrrw    = 1.U
+    val csrrs    = 2.U
+    val _val_end = 3.U
+  }
+
+  when(dinst.info.typ === InstType.system) {
+    when(is_ecall) {
+      csrren   := true.B
+      csrwen   := false.B
+      csr_addr := CSRAddr.mtvec
+      // ecall: set mepc to pc
+      // although wen = falase
+      // is_ecall flag make csr to write wdata to mepc
+      csr_wdata := dinst.pc
+    }.elsewhen(is_mret) {
+      csrren   := true.B
+      csrwen   := false.B
+      csr_addr := CSRAddr.mepc
+      csr_wdata := 0.U
+    }.otherwise {
+      csrren   := MuxLookup(func3t, false.B)(
+        Seq(
+          CSROp.csrrw -> (dinst.info.rd =/= 0.U),
+          CSROp.csrrs -> true.B
+        )
+      )
+      csrwen   := MuxLookup(func3t, false.B)(
+        Seq(
+          CSROp.csrrw -> true.B,
+          CSROp.csrrs -> (reg_v1 =/= 0.U)
+        )
+      )
+      csr_addr := dinst.code(31, 20)
+      csr_wdata := MuxLookup(func3t, GARBAGE_UNINIT_VALUE)(
+        Seq(
+          CSROp.csrrw -> reg_v1,
+          CSROp.csrrs -> (csr_rdata | reg_v1)
+        )
+      )
+    }
+  }.otherwise {
+    csrren   := false.B
+    csrwen   := false.B
+    csr_addr := 0.U
+    csr_wdata := 0.U
+  }
+
+  // wdata
+
+  // for now, system inst, ecall and mret has rd == 0
+  // TODO: handle rd != 0 case
+  io.out.bits.wen := (dinst.info.rd =/= 0.U) && (dinst.info.typ =/= InstType.none)
+
+  io.out.bits.addr := dinst.info.rd
+  io.out.bits.data := MuxLookup(dinst.info.typ, GARBAGE_UNINIT_VALUE)(
+    Seq(
+      InstType.arithmetic -> alu.io.out.bits,
+      InstType.lui        -> dinst.info.imm,
+      InstType.auipc      -> (dinst.pc + dinst.info.imm),
+      InstType.jalr       -> (dinst.pc + 4.U),
+      InstType.jal        -> (dinst.pc + 4.U),
+      InstType.load       -> 0.U, // TODO: load from memory
+      InstType.system     -> Mux(
+        is_ecall || is_mret,
+        GARBAGE_UNINIT_VALUE,
+        MuxLookup(func3t, GARBAGE_UNINIT_VALUE)(
+          Seq(
+            CSROp.csrrw -> csr_rdata,
+            CSROp.csrrs -> csr_rdata
+          )
+        )
+      )
+    )
+  )
+  when(dinst.info.typ === InstType.system) {
+    when(!(is_ecall || is_mret)) {
+      when(func3t < CSROp._val_beg || func3t >= CSROp._val_end) {
+        printf("(exu) UNKNOWN SYSTEM func3t %d\n", func3t)
+      }
+    }
+  }
+
+  // nxt_pc
+
+  val nxt_pc = io.out.bits.nxt_pc
+  val snpc   = dinst.pc + 4.U
+  when(is_ecall || is_mret) {
+    nxt_pc := csr_rdata
+  }.otherwise {
+    when(dinst.info.typ === InstType.jalr) {
+      nxt_pc := (reg_v1 + dinst.info.imm) &
+        Cat(Fill(Types.BitWidth.word - 1, 1.U), 0.U(1.W))
+    }.elsewhen(dinst.info.typ === InstType.jal) {
+      nxt_pc := dinst.pc + dinst.info.imm
+    }.elsewhen(dinst.info.fmt === InstFmt.branch) {
+      val take_branch = MuxLookup(func3t, false.B)(
+        Seq(
+          0.U -> (reg_v1 === reg_v2),              // beq
+          1.U -> (reg_v1 =/= reg_v2),              // bne
+          4.U -> (reg_v1.asSInt < reg_v2.asSInt),  // blt
+          5.U -> (reg_v1.asSInt >= reg_v2.asSInt), // bge
+          6.U -> (reg_v1 < reg_v2),                // bltu
+          7.U -> (reg_v1 >= reg_v2)                // bgeu
+        )
+      )
+      nxt_pc := Mux(take_branch, dinst.pc + dinst.info.imm, snpc)
+    }.otherwise {
+      nxt_pc := snpc
+    }
+  }
 }
