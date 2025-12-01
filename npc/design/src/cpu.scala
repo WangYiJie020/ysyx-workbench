@@ -312,8 +312,8 @@ class EXU extends Module {
 
   // csr
 
-  val is_mret  = Wire(dinst.code === "h30200073".U)
-  val is_ecall = Wire(dinst.code === "h73".U)
+  val is_mret  = dinst.code === "h30200073".U
+  val is_ecall = dinst.code === "h73".U
 
   val csrren    = io.csr_rvec.en
   val csr_addr  = io.csr_rvec.addr(0)
