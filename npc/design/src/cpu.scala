@@ -262,6 +262,8 @@ object MemReqIO {
     val addr = Input(Types.UWord)
     val data = Output(Types.UWord)
     val en   = Input(Bool())
+
+    val respValid = Output(Bool())
   }
 // Mem always write begin at addr & ~3.U 4 bytes
 // Mask bits indicate which byte to write
@@ -294,7 +296,7 @@ class EXU           extends Module {
     val dinst    = Flipped(Decoupled(new DecodedInst))
     val rvec     = GPRegReqIO.TX.VecRead(2)
     val csr_rvec = CSRegReqIO.TX.SingleRead
-    val mem_rreq = Decoupled(MemReqIO.ReadTX)
+    val mem_rreq = MemReqIO.ReadTX
     val out      = Decoupled(new WriteBackInfo)
   })
 
@@ -317,7 +319,7 @@ class EXU           extends Module {
   val MS_fsm = Module(new OneMasterOneSlaveFSM)
   MS_fsm.connectMaster(io.dinst)
   MS_fsm.connectSlave(io.out)
-  MS_fsm.io.self_finished := alu.io.out.valid && io.mem_rreq.ready
+  MS_fsm.io.self_finished := alu.io.out.valid && io.mem_rreq.respValid
 
   // reg
 
@@ -420,11 +422,9 @@ class EXU           extends Module {
   val mem_addr_unalign_part        = mem_addr(1, 0)
   val mem_addr_unalign_part_bitlen = mem_addr_unalign_part << 3
 
-  io.mem_rreq.valid := true.B
-
-  val mem_raddr     = io.mem_rreq.bits.addr
-  val mem_raw_rdata = io.mem_rreq.bits.data
-  val mem_ren       = io.mem_rreq.bits.en
+  val mem_raddr     = io.mem_rreq.addr
+  val mem_raw_rdata = io.mem_rreq.data
+  val mem_ren       = io.mem_rreq.en
 
   val mem_data = mem_raw_rdata >> mem_addr_unalign_part_bitlen
 
