@@ -16,6 +16,7 @@ import chisel3.util.circt.dpi.{
 import chisel3.experimental.dataview._
 
 import regfile._
+import memory._
 
 object Types {
   object BitWidth {
@@ -254,31 +255,6 @@ class ALU extends Module {
   )
 }
 
-object MemReqIO {
-
-// Mem always return 4 bytes at addr & ~3.U
-  class _ReadRX  extends Bundle {
-    val addr = Input(Types.UWord)
-    val data = Output(Types.UWord)
-    val en   = Input(Bool())
-
-    val respValid = Output(Bool())
-  }
-// Mem always write begin at addr & ~3.U 4 bytes
-// Mask bits indicate which byte to write
-  class _WriteRX extends Bundle {
-    val addr = Input(Types.UWord)
-    val data = Input(Types.UWord)
-    val mask = Input(UInt(4.W))
-    val en   = Input(Bool())
-  }
-
-  def ReadRX  = new _ReadRX
-  def ReadTX  = Flipped(ReadRX)
-  def WriteRX = new _WriteRX
-  def WriteTX = Flipped(WriteRX)
-
-}
 
 class WriteBackInfo extends Bundle {
   val gpr = GPRegReqIO.TX.Write
