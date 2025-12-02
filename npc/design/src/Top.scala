@@ -49,13 +49,13 @@ class Top(word_width: Int = 32) extends Module {
   dontTouch(io)
   io := DontCare
 
-  val regs = instantiateForTest(new RegisterFile)
+  val gprs = new RegisterFile(READ_PORTS = 2)
+  val csrs = new ControlStatusRegisterFile()
 
-  val pc     = Output(UInt(word_width.W))
-  val nxt_pc = Output(UInt(word_width.W))
+  val ifu = new IFU;
+  val idu = new IDU;
+  val exu = new EXU;
 
-  val ifu = instantiateForTest(new IFU)
-  val idu = instantiateForTest(new IDU)
-  val exu = instantiateForTest(new EXU)
+  ifu.io.out <> idu.io.in
 
 }

@@ -86,15 +86,15 @@ class ControlStatusRegisterFile extends Module {
   // Writable CSRs
   // 0: None
   // 1: mstatus
-  val waregs = RegInit(VecInit(0.U+:"h00001800".U(32.W)+:Seq.fill(3)(0.U(32.W))))
-  val walut = Seq(
-    CSRAddr.mstatus   -> 1.U,
-    CSRAddr.mepc      -> 2.U,
-    CSRAddr.mcause    -> 3.U,
-    CSRAddr.mtvec     -> 4.U,
+  val waregs = RegInit(VecInit(0.U +: "h00001800".U(32.W) +: Seq.fill(3)(0.U(32.W))))
+  val walut  = Seq(
+    CSRAddr.mstatus -> 1.U,
+    CSRAddr.mepc    -> 2.U,
+    CSRAddr.mcause  -> 3.U,
+    CSRAddr.mtvec   -> 4.U
   )
-  val widx = MuxLookup(io.write.addr, 0.U)(walut)
-  val ridx = MuxLookup(io.read.addr, 0.U)(walut)
+  val widx   = MuxLookup(io.write.addr, 0.U)(walut)
+  val ridx   = MuxLookup(io.read.addr, 0.U)(walut)
 
   when(io.read.en) {
     io.read.data := MuxLookup(io.read.addr, waregs(ridx))(
@@ -102,8 +102,8 @@ class ControlStatusRegisterFile extends Module {
         CSRAddr.mcycle    -> mcycle64(31, 0),
         CSRAddr.mcycleh   -> mcycle64(63, 32),
         CSRAddr.mvendorid -> mvendor_id,
-        CSRAddr.marchid   -> march_id,
-     )
+        CSRAddr.marchid   -> march_id
+      )
     )
   }.otherwise {
     io.read.data := 0.U
@@ -111,7 +111,7 @@ class ControlStatusRegisterFile extends Module {
 
   when(io.write.en && (widx =/= 0.U)) {
     waregs(widx) := io.write.data
-    when(io.is_ecall && (io.write.addr === CSRAddr.mepc)){
+    when(io.is_ecall && (io.write.addr === CSRAddr.mepc)) {
       waregs(3) := 11.U // mcause = 11 for ecall from M-mode
     }
   }

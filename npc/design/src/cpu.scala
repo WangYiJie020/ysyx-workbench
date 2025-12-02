@@ -43,22 +43,22 @@ class Inst extends Bundle {
 }
 
 class OneMasterOneSlaveFSM extends Module {
-  val io = IO(new Bundle {
+  val io                                      = IO(new Bundle {
     val master_valid = Input(Bool())
     val master_ready = Output(Bool())
 
     val self_finished = Input(Bool())
 
-    val slave_valid  = Output(Bool())
-    val slave_ready  = Input(Bool())
+    val slave_valid = Output(Bool())
+    val slave_ready = Input(Bool())
   })
   val s_idle :: s_busy :: s_wait_slave :: Nil = Enum(3)
-  val state = RegInit(s_idle)
+  val state                                   = RegInit(s_idle)
 
   state := MuxLookup(state, s_idle)(
     Seq(
-      s_idle -> Mux(io.master_valid, s_busy, s_idle),
-      s_busy -> Mux(io.self_finished, s_wait_slave, s_busy),
+      s_idle       -> Mux(io.master_valid, s_busy, s_idle),
+      s_busy       -> Mux(io.self_finished, s_wait_slave, s_busy),
       s_wait_slave -> Mux(io.slave_ready, s_idle, s_wait_slave)
     )
   )
@@ -67,11 +67,11 @@ class OneMasterOneSlaveFSM extends Module {
   io.slave_valid  := (state === s_wait_slave)
 
   def connectMaster[T <: Data](master: DecoupledIO[T]): Unit = {
-    master.ready := io.master_ready
+    master.ready    := io.master_ready
     io.master_valid := master.valid
   }
-  def connectSlave[T <: Data](slave: DecoupledIO[T]): Unit = {
-    slave.valid := io.slave_valid
+  def connectSlave[T <: Data](slave: DecoupledIO[T]):   Unit = {
+    slave.valid    := io.slave_valid
     io.slave_ready := slave.ready
   }
 
@@ -83,15 +83,14 @@ class IFU extends Module {
     val out = Decoupled(new Inst)
   })
 
-  val fsm= Module(new OneMasterOneSlaveFSM)
+  val fsm = Module(new OneMasterOneSlaveFSM)
   fsm.connectMaster(io.pc)
   fsm.connectSlave(io.out)
   fsm.io.self_finished := true.B
 
   // NOTICE: dpi function auto generated with void return
   // see https://github.com/llvm/circt/blob/main/docs/Dialects/FIRRTL/FIRRTLIntrinsics.md#dpi-intrinsic-abi
-  io.out.bits.code := RawClockedNonVoidFunctionCall("fetch_inst", Types.UWord)(clock,
-    io.pc.valid, io.pc.bits)
+  io.out.bits.code := RawClockedNonVoidFunctionCall("fetch_inst", Types.UWord)(clock, io.pc.valid, io.pc.bits)
   io.out.bits.pc   := io.pc.bits
 }
 
@@ -284,7 +283,7 @@ object MemReqIO {
 class WriteBackInfo extends Bundle {
   val gpr = GPRegReqIO.TX.Write
 
-  val csr = CSRegReqIO.TX.Write
+  val csr           = CSRegReqIO.TX.Write
   val csr_ecallflag = Bool()
 
   val mem = MemReqIO.WriteTX
@@ -305,7 +304,7 @@ class EXU           extends Module {
   val alu = Module(new ALU)
 
   alu.io.out.ready := io.out.ready
-  alu.io.in.valid := io.dinst.valid
+  alu.io.in.valid  := io.dinst.valid
 
   val alu_in = alu.io.in.bits
   val dinst  = io.dinst.bits
@@ -340,20 +339,20 @@ class EXU           extends Module {
   io.out.bits.csr_ecallflag := is_ecall
 
   val csrren    = io.csr_rvec.en
-  val csr_raddr  = io.csr_rvec.addr
+  val csr_raddr = io.csr_rvec.addr
   val csr_rdata = io.csr_rvec.data(0)
 
   val csrwen    = io.out.bits.csr.en
   val csr_wdata = io.out.bits.csr.data
 
-  val csr_addr  = Wire(UInt(Types.BitWidth.csr_addr.W))
+  val csr_addr = Wire(UInt(Types.BitWidth.csr_addr.W))
 
   io.out.bits.csr.addr := csr_addr
-  io.csr_rvec.addr := csr_addr
+  io.csr_rvec.addr     := csr_addr
 
   object CSROp {
-    val csrrw    = 1.U
-    val csrrs    = 2.U
+    val csrrw = 1.U
+    val csrrs = 2.U
     def isValidCSRop(op: UInt): Bool = {
       (op === csrrw) || (op === csrrs)
     }
@@ -428,7 +427,7 @@ class EXU           extends Module {
 
   val mem_data = mem_raw_rdata >> mem_addr_unalign_part_bitlen
 
-  mem_ren := dinst.info.typ === InstType.load
+  mem_ren   := dinst.info.typ === InstType.load
   mem_raddr := mem_addr
 
   // wdata
@@ -548,4 +547,3 @@ class EXU           extends Module {
     }
   }
 }
-
