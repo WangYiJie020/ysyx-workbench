@@ -347,6 +347,7 @@ class EXU           extends Module {
   val csr_addr  = Wire(UInt(Types.BitWidth.csr_addr.W))
 
   io.out.bits.csr.addr := csr_addr
+  io.csr_rvec.addr := csr_addr
 
   object CSROp {
     val csrrw    = 1.U
