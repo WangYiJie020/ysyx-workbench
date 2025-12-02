@@ -357,11 +357,13 @@ class EXU           extends Module {
   io.out.bits.csr_ecallflag := is_ecall
 
   val csrren    = io.csr_rvec.en
-  val csr_addr  = io.csr_rvec.addr(0)
+  val csr_raddr  = io.csr_rvec.addr(0)
   val csr_rdata = io.csr_rvec.data(0)
 
   val csrwen    = io.out.bits.csr.en
   val csr_wdata = io.out.bits.csr.data
+
+  val csr_addr  = Wire(UInt(Types.BitWidth.csr_addr.W))
 
   io.out.bits.csr.addr := csr_addr
 
