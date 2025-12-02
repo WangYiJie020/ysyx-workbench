@@ -52,7 +52,7 @@ class MemUnit extends Module {
     io.write.en,
     io.write.addr,
     io.write.data,
-    io.write.mask
+    io.write.mask.pad(32)
   )
 
 }
