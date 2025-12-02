@@ -305,7 +305,7 @@ class EXU           extends Module {
     val dinst    = Flipped(Decoupled(new DecodedInst))
     val rvec     = Flipped(new RegReadBundle(2))
     val csr_rvec = Flipped(new RegReadBundle(1))
-    val mem_rreq = Flipped(Decoupled(new MemReadBundle))
+    val mem_rreq = Decoupled(Flipped(new MemReadBundle))
     val out      = Decoupled(new WriteBackInfo)
   })
 
