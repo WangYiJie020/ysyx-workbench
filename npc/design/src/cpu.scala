@@ -337,7 +337,7 @@ class EXU           extends Module {
   io.out.bits.csr_ecallflag := is_ecall
 
   val csrren    = io.csr_rvec.en
-  val csr_raddr  = io.csr_rvec.addr(0)
+  val csr_raddr  = io.csr_rvec.addr
   val csr_rdata = io.csr_rvec.data(0)
 
   val csrwen    = io.out.bits.csr.en
