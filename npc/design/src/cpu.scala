@@ -42,63 +42,51 @@ class Inst extends Bundle {
   val pc   = Output(Types.UWord)
 }
 
-class BusMasterFSM extends Module {
+class OneMasterOneSlaveFSM extends Module {
   val io = IO(new Bundle {
-    val want_send   = Input(Bool())
-    val slave_ready = Input(Bool())
-    val valid       = Output(Bool())
-  })
-
-  val s_idle :: s_wait_ready :: Nil = Enum(2)
-
-  val state = RegInit(s_idle)
-  state    := MuxLookup(state, s_idle)(
-    List(
-      s_idle       -> Mux(io.want_send, s_wait_ready, s_idle),
-      s_wait_ready -> Mux(io.slave_ready, s_idle, s_wait_ready)
-    )
-  )
-  io.valid := (state === s_idle)
-
-  def connectSlave[T <: Data](slave: DecoupledIO[T]): Unit = {
-    io.slave_ready := slave.ready
-    slave.valid    := io.valid
-  }
-}
-class BusSlaveFSM  extends Module {
-  val io = IO(new Bundle {
-    val want_recv    = Input(Bool())
     val master_valid = Input(Bool())
-    // ready to recv
-    val ready        = Output(Bool())
+    val master_ready = Output(Bool())
+
+    val self_finished = Input(Bool())
+
+    val slave_valid  = Output(Bool())
+    val slave_ready  = Input(Bool())
   })
-
-  val s_idle :: s_wait_data :: Nil = Enum(2)
-
+  val s_idle :: s_busy :: s_wait_slave :: Nil = Enum(3)
   val state = RegInit(s_idle)
-  state    := MuxLookup(state, s_idle)(
-    List(
-      s_idle      -> Mux(io.want_recv, s_wait_data, s_idle),
-      s_wait_data -> Mux(io.master_valid, s_idle, s_wait_data)
+
+  state := MuxLookup(state, s_idle)(
+    Seq(
+      s_idle -> Mux(io.master_valid, s_busy, s_idle),
+      s_busy -> Mux(io.self_finished, s_wait_slave, s_busy),
+      s_wait_slave -> Mux(io.slave_ready, s_idle, s_wait_slave)
     )
   )
-  io.ready := (state === s_idle)
+
+  io.master_ready := (state === s_idle)
+  io.slave_valid  := (state === s_wait_slave)
 
   def connectMaster[T <: Data](master: DecoupledIO[T]): Unit = {
+    master.ready := io.master_ready
     io.master_valid := master.valid
-    master.ready    := io.ready
   }
+  def connectSlave[T <: Data](slave: DecoupledIO[T]): Unit = {
+    slave.valid := io.slave_valid
+    io.slave_ready := slave.ready
+  }
+
 }
 
 class IFU extends Module {
   val io = IO(new Bundle {
-    val pc  = Input(Types.UWord)
+    val pc  = Flipped(Decoupled(Input(Types.UWord)))
     val out = Decoupled(new Inst)
   })
 
-  val send_fsm = Module(new BusMasterFSM)
-  send_fsm.io.want_send := 1.B
-  send_fsm.connectSlave(io.out)
+  val fsm= Module(new OneMasterOneSlaveFSM)
+  fsm.connectMaster(io.pc)
+  fsm.connectSlave(io.out)
+  fsm.io.self_finished := true.B
 
   // NOTICE: dpi function auto generated with void return
   // see https://github.com/llvm/circt/blob/main/docs/Dialects/FIRRTL/FIRRTLIntrinsics.md#dpi-intrinsic-abi
@@ -224,8 +212,10 @@ class ALU extends Module {
   })
   val BADCALL_RESVALUE = "hBAADCA11".U
 
-  io.in.ready  := 0.B
-  io.out.valid := 0.B
+  val fsm = Module(new OneMasterOneSlaveFSM)
+  fsm.connectMaster(io.in)
+  fsm.connectSlave(io.out)
+  fsm.io.self_finished := true.B
 
   // alias
   val inbits = io.in.bits
@@ -311,23 +301,16 @@ class EXU           extends Module {
     val out      = Decoupled(new WriteBackInfo)
   })
 
-  val recv_fsm = Module(new BusSlaveFSM)
-  val send_fsm = Module(new BusMasterFSM)
-  recv_fsm.connectMaster(io.dinst)
-  recv_fsm.io.want_recv := io.out.ready
-  send_fsm.connectSlave(io.out)
-  send_fsm.io.want_send := io.dinst.valid
-
   val GARBAGE_UNINIT_VALUE = "hDEADBEEF".U
+
+  val MS_fsm = Module(new OneMasterOneSlaveFSM)
+  MS_fsm.connectMaster(io.dinst)
+  MS_fsm.connectSlave(io.out)
 
   val alu = Module(new ALU)
 
-  val alu_recv_fsm = Module(new BusSlaveFSM)
-  val alu_send_fsm = Module(new BusMasterFSM)
-  alu_recv_fsm.connectMaster(alu.io.out)
-  alu_recv_fsm.io.want_recv := io.dinst.valid
-  alu_send_fsm.connectSlave(alu.io.in)
-  alu_send_fsm.io.want_send := io.dinst.valid
+  MS_fsm.io.self_finished := alu.io.out.valid && io.mem_rreq.ready
+  alu.io.out.ready := io.out.ready
 
   val alu_in = alu.io.in.bits
   val dinst  = io.dinst.bits
