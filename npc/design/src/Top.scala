@@ -67,6 +67,8 @@ class Top(word_width: Int = 32) extends Module {
   pc := Mux(exu.io.out.valid, wbinfo.nxt_pc,pc)
 
   ifu.io.pc.bits := pc
+  ifu.io.pc.valid := exu.io.out.valid
+
   ifu.io.out <> idu.io.in
   idu.io.out <> exu.io.dinst
 
@@ -82,6 +84,8 @@ class Top(word_width: Int = 32) extends Module {
   csrs.io.is_ecall := wbinfo.csr_ecallflag
 
   mem.io.write <> wbinfo.mem
+
+  exu.io.out.ready := ifu.io.pc.ready
 
 
 }
