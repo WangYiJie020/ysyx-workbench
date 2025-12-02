@@ -155,14 +155,10 @@ class IDU extends Module {
     val out = Decoupled(new DecodedInst)
   })
 
-  val recv_fsm = Module(new BusSlaveFSM)
-  val send_fsm = Module(new BusMasterFSM)
-
-  recv_fsm.connectMaster(io.in)
-  recv_fsm.io.want_recv := io.out.ready
-
-  send_fsm.connectSlave(io.out)
-  send_fsm.io.want_send := io.in.valid
+  val fsm = Module(new OneMasterOneSlaveFSM)
+  fsm.connectMaster(io.in)
+  fsm.connectSlave(io.out)
+  fsm.io.self_finished := true.B
 
   io.out.bits.viewAsSupertype(new Inst) := io.in.bits
 
