@@ -20,6 +20,7 @@ import regfile._
 object Types {
   object BitWidth {
     val reg_addr = 5
+    val csr_addr = 12
     val word     = 32
   }
   def UWord = UInt(BitWidth.word.W)
@@ -270,35 +271,31 @@ class ALU extends Module {
 object MemReqIO {
 
 // Mem always return 4 bytes at addr & ~3.U
-class _ReadRX extends Bundle {
-  val addr = Input(Types.UWord)
-  val data = Output(Types.UWord)
-  val en   = Input(Bool())
-}
+  class _ReadRX  extends Bundle {
+    val addr = Input(Types.UWord)
+    val data = Output(Types.UWord)
+    val en   = Input(Bool())
+  }
 // Mem always write begin at addr & ~3.U 4 bytes
 // Mask bits indicate which byte to write
-class _WriteRX extends Bundle {
-  val addr = Input(Types.UWord)
-  val data = Input(Types.UWord)
-  val mask = Input(UInt(4.W))
-  val en   = Input(Bool())
-}
+  class _WriteRX extends Bundle {
+    val addr = Input(Types.UWord)
+    val data = Input(Types.UWord)
+    val mask = Input(UInt(4.W))
+    val en   = Input(Bool())
+  }
 
-def ReadRX = new _ReadRX
-def ReadTX = Flipped(ReadRX)
-def WriteRX = new _WriteRX
-def WriteTX = Flipped(WriteRX)
+  def ReadRX  = new _ReadRX
+  def ReadTX  = Flipped(ReadRX)
+  def WriteRX = new _WriteRX
+  def WriteTX = Flipped(WriteRX)
 
 }
 
 class WriteBackInfo extends Bundle {
-  val wen  = Bool()
-  val addr = Types.RegAddr
-  val data = Types.UWord
+  val gpr = GPRegReqIO.TX.Write
 
-  val csr_wen       = Bool()
-  val csr_addr      = UInt(12.W)
-  val csr_data      = Types.UWord
+  val csr = CSRegReqIO.TX.Write
   val csr_ecallflag = Bool()
 
   val mem = MemReqIO.WriteTX
@@ -308,8 +305,8 @@ class WriteBackInfo extends Bundle {
 class EXU           extends Module {
   val io = IO(new Bundle {
     val dinst    = Flipped(Decoupled(new DecodedInst))
-    val rvec     = Flipped(new RegReadBundle(2))
-    val csr_rvec = Flipped(new RegReadBundle(1))
+    val rvec     = GPRegReqIO.TX.VecRead(2)
+    val csr_rvec = CSRegReqIO.TX.SingleRead
     val mem_rreq = Decoupled(MemReqIO.ReadTX)
     val out      = Decoupled(new WriteBackInfo)
   })
@@ -363,16 +360,17 @@ class EXU           extends Module {
   val csr_addr  = io.csr_rvec.addr(0)
   val csr_rdata = io.csr_rvec.data(0)
 
-  val csrwen    = io.out.bits.csr_wen
-  val csr_wdata = io.out.bits.csr_data
+  val csrwen    = io.out.bits.csr.en
+  val csr_wdata = io.out.bits.csr.data
 
-  io.out.bits.csr_addr := csr_addr
+  io.out.bits.csr.addr := csr_addr
 
   object CSROp {
-    val _val_beg = 1.U
     val csrrw    = 1.U
     val csrrs    = 2.U
-    val _val_end = 3.U
+    def isValidCSRop(op: UInt): Bool = {
+      (op === csrrw) || (op === csrrs)
+    }
   }
 
   when(dinst.info.typ === InstType.system) {
@@ -426,7 +424,7 @@ class EXU           extends Module {
     val lbu      = 4.U
     val lhu      = 5.U
 
-    def isValidLoadOp(op: UInt): Bool = {
+    def isValidLoadOp(op: UInt):  Bool = {
       (op === byte) || (op === halfword) || (op === word) || (op === lbu) || (op === lhu)
     }
     def isValidStoreOp(op: UInt): Bool = {
@@ -450,11 +448,11 @@ class EXU           extends Module {
 
   // for now, system inst, ecall and mret has rd == 0
   // TODO: handle rd != 0 case
-  io.out.bits.wen := (dinst.info.rd =/= 0.U) && (dinst.info.typ =/= InstType.none) &&
+  io.out.bits.gpr.en := (dinst.info.rd =/= 0.U) && (dinst.info.typ =/= InstType.none) &&
     (dinst.info.typ =/= InstType.store)
 
-  io.out.bits.addr := dinst.info.rd
-  io.out.bits.data := MuxLookup(dinst.info.typ, GARBAGE_UNINIT_VALUE)(
+  io.out.bits.gpr.addr := dinst.info.rd
+  io.out.bits.gpr.data := MuxLookup(dinst.info.typ, GARBAGE_UNINIT_VALUE)(
     Seq(
       InstType.arithmetic -> alu.io.out.bits,
       InstType.lui        -> dinst.info.imm,
@@ -484,7 +482,7 @@ class EXU           extends Module {
   )
   when(dinst.info.typ === InstType.system) {
     when(!(is_ecall || is_mret)) {
-      when(func3t < CSROp._val_beg || func3t >= CSROp._val_end) {
+      when(!CSROp.isValidCSRop(func3t)) {
         printf("(exu) UNKNOWN SYSTEM func3t %d\n", func3t)
       }
     }
@@ -506,7 +504,7 @@ class EXU           extends Module {
   mem_wdata := reg_v2 << mem_addr_unalign_part_bitlen
   mem_waddr := mem_addr
   mem_wen   := dinst.info.typ === InstType.store
-  mem_wmask := MuxLookup(func3t,0.U)(
+  mem_wmask := MuxLookup(func3t, 0.U)(
     Seq(
       MemOp.byte     -> (1.U(4.W) << mem_addr_unalign_part),
       MemOp.halfword -> (3.U(4.W) << mem_addr_unalign_part),
@@ -522,12 +520,12 @@ class EXU           extends Module {
   // nxt_pc
 
   object BranchOp {
-    val beq      = 0.U
-    val bne      = 1.U
-    val blt      = 4.U
-    val bge      = 5.U
-    val bltu     = 6.U
-    val bgeu     = 7.U
+    val beq  = 0.U
+    val bne  = 1.U
+    val blt  = 4.U
+    val bge  = 5.U
+    val bltu = 6.U
+    val bgeu = 7.U
     def isValidBranchOp(op: UInt): Bool = {
       (op === beq) || (op === bne) || (op === blt) || (op === bge) || (op === bltu) || (op === bgeu)
     }
@@ -563,3 +561,4 @@ class EXU           extends Module {
     }
   }
 }
+
