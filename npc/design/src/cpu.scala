@@ -267,23 +267,28 @@ class ALU extends Module {
   )
 }
 
+object MemReqIO {
+
 // Mem always return 4 bytes at addr & ~3.U
-class MemReadBundle  extends Bundle {
+class _ReadRX extends Bundle {
   val addr = Input(Types.UWord)
   val data = Output(Types.UWord)
   val en   = Input(Bool())
 }
 // Mem always write begin at addr & ~3.U 4 bytes
 // Mask bits indicate which byte to write
-class MemWriteBundle extends Bundle {
+class _WriteRX extends Bundle {
   val addr = Input(Types.UWord)
   val data = Input(Types.UWord)
   val mask = Input(UInt(4.W))
   val en   = Input(Bool())
 }
-class MemIO          extends Bundle {
-  val read  = Decoupled(new MemReadBundle)
-  val write = Decoupled(new MemWriteBundle)
+
+def ReadRX = new _ReadRX
+def ReadTX = Flipped(ReadRX)
+def WriteRX = new _WriteRX
+def WriteTX = Flipped(WriteRX)
+
 }
 
 class WriteBackInfo extends Bundle {
@@ -296,7 +301,7 @@ class WriteBackInfo extends Bundle {
   val csr_data      = Types.UWord
   val csr_ecallflag = Bool()
 
-  val mem = new MemWriteBundle
+  val mem = MemReqIO.WriteTX
 
   val nxt_pc = Types.UWord
 }
@@ -305,7 +310,7 @@ class EXU           extends Module {
     val dinst    = Flipped(Decoupled(new DecodedInst))
     val rvec     = Flipped(new RegReadBundle(2))
     val csr_rvec = Flipped(new RegReadBundle(1))
-    val mem_rreq = Decoupled(Flipped(new MemReadBundle))
+    val mem_rreq = Decoupled(MemReqIO.ReadTX)
     val out      = Decoupled(new WriteBackInfo)
   })
 
