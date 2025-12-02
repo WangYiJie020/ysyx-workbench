@@ -300,14 +300,10 @@ class EXU           extends Module {
 
   val GARBAGE_UNINIT_VALUE = "hDEADBEEF".U
 
-  val MS_fsm = Module(new OneMasterOneSlaveFSM)
-  MS_fsm.connectMaster(io.dinst)
-  MS_fsm.connectSlave(io.out)
-
   val alu = Module(new ALU)
 
-  MS_fsm.io.self_finished := alu.io.out.valid && io.mem_rreq.ready
   alu.io.out.ready := io.out.ready
+  alu.io.in.valid := io.dinst.valid
 
   val alu_in = alu.io.in.bits
   val dinst  = io.dinst.bits
@@ -317,6 +313,11 @@ class EXU           extends Module {
   alu_in.is_imm := (dinst.info.fmt === InstFmt.imm)
   alu_in.func3t := func3t
   alu_in.func7t := func7t
+
+  val MS_fsm = Module(new OneMasterOneSlaveFSM)
+  MS_fsm.connectMaster(io.dinst)
+  MS_fsm.connectSlave(io.out)
+  MS_fsm.io.self_finished := alu.io.out.valid && io.mem_rreq.ready
 
   // reg
 
@@ -418,6 +419,8 @@ class EXU           extends Module {
   val mem_addr_unalign_part        = mem_addr(1, 0)
   val mem_addr_unalign_part_bitlen = mem_addr_unalign_part << 3
 
+  io.mem_rreq.valid := true.B
+
   val mem_raddr     = io.mem_rreq.bits.addr
   val mem_raw_rdata = io.mem_rreq.bits.data
   val mem_ren       = io.mem_rreq.bits.en
@@ -425,6 +428,7 @@ class EXU           extends Module {
   val mem_data = mem_raw_rdata >> mem_addr_unalign_part_bitlen
 
   mem_ren := dinst.info.typ === InstType.load
+  mem_raddr := mem_addr
 
   // wdata
 
