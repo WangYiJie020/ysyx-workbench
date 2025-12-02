@@ -91,7 +91,7 @@ class IFU extends Module {
   // NOTICE: dpi function auto generated with void return
   // see https://github.com/llvm/circt/blob/main/docs/Dialects/FIRRTL/FIRRTLIntrinsics.md#dpi-intrinsic-abi
   io.out.bits.code := RawClockedNonVoidFunctionCall("fetch_inst", Types.UWord)(clock, io.out.valid, io.pc)
-  io.out.bits.pc   := io.pc
+  io.out.bits.pc   := io.pc.bits
 }
 
 object InstFmt     extends ChiselEnum {
