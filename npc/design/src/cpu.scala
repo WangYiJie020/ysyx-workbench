@@ -109,7 +109,7 @@ object InstFmt     extends ChiselEnum {
   val imm, reg, store, upper, jump, branch = Value
 }
 object InstType    extends ChiselEnum {
-  val none, arithmetic, load, jalr, jal, lui, auipc, system = Value
+  val none, arithmetic, load, store, jalr, jal, lui, auipc, system = Value
 }
 class InstMetaInfo extends Bundle     {
   val fmt = InstFmt()
@@ -267,23 +267,45 @@ class ALU extends Module {
   )
 }
 
+// Mem always return 4 bytes at addr & ~3.U
+class MemReadBundle  extends Bundle {
+  val addr = Input(Types.UWord)
+  val data = Output(Types.UWord)
+  val en   = Input(Bool())
+}
+// Mem always write begin at addr & ~3.U 4 bytes
+// Mask bits indicate which byte to write
+class MemWriteBundle extends Bundle {
+  val addr = Input(Types.UWord)
+  val data = Input(Types.UWord)
+  val mask = Input(UInt(4.W))
+  val en   = Input(Bool())
+}
+class MemIO          extends Bundle {
+  val read  = Decoupled(new MemReadBundle)
+  val write = Decoupled(new MemWriteBundle)
+}
+
 class WriteBackInfo extends Bundle {
   val wen  = Bool()
   val addr = Types.RegAddr
   val data = Types.UWord
 
-  val csr_wen  = Bool()
-  val csr_addr = UInt(12.W)
-  val csr_data = Types.UWord
+  val csr_wen       = Bool()
+  val csr_addr      = UInt(12.W)
+  val csr_data      = Types.UWord
+  val csr_ecallflag = Bool()
+
+  val mem = new MemWriteBundle
 
   val nxt_pc = Types.UWord
 }
-
-class EXU extends Module {
-  val io                   = IO(new Bundle {
+class EXU           extends Module {
+  val io = IO(new Bundle {
     val dinst    = Flipped(Decoupled(new DecodedInst))
     val rvec     = Flipped(new RegReadBundle(2))
     val csr_rvec = Flipped(new RegReadBundle(1))
+    val mem_rreq = Flipped(Decoupled(new MemReadBundle))
     val out      = Decoupled(new WriteBackInfo)
   })
 
@@ -330,6 +352,8 @@ class EXU extends Module {
   val is_mret  = dinst.code === "h30200073".U
   val is_ecall = dinst.code === "h73".U
 
+  io.out.bits.csr_ecallflag := is_ecall
+
   val csrren    = io.csr_rvec.en
   val csr_addr  = io.csr_rvec.addr(0)
   val csr_rdata = io.csr_rvec.data(0)
@@ -348,32 +372,32 @@ class EXU extends Module {
 
   when(dinst.info.typ === InstType.system) {
     when(is_ecall) {
-      csrren   := true.B
-      csrwen   := false.B
-      csr_addr := CSRAddr.mtvec
+      csrren    := true.B
+      csrwen    := false.B
+      csr_addr  := CSRAddr.mtvec
       // ecall: set mepc to pc
       // although wen = falase
       // is_ecall flag make csr to write wdata to mepc
       csr_wdata := dinst.pc
     }.elsewhen(is_mret) {
-      csrren   := true.B
-      csrwen   := false.B
-      csr_addr := CSRAddr.mepc
+      csrren    := true.B
+      csrwen    := false.B
+      csr_addr  := CSRAddr.mepc
       csr_wdata := 0.U
     }.otherwise {
-      csrren   := MuxLookup(func3t, false.B)(
+      csrren    := MuxLookup(func3t, false.B)(
         Seq(
           CSROp.csrrw -> (dinst.info.rd =/= 0.U),
           CSROp.csrrs -> true.B
         )
       )
-      csrwen   := MuxLookup(func3t, false.B)(
+      csrwen    := MuxLookup(func3t, false.B)(
         Seq(
           CSROp.csrrw -> true.B,
           CSROp.csrrs -> (reg_v1 =/= 0.U)
         )
       )
-      csr_addr := dinst.code(31, 20)
+      csr_addr  := dinst.code(31, 20)
       csr_wdata := MuxLookup(func3t, GARBAGE_UNINIT_VALUE)(
         Seq(
           CSROp.csrrw -> reg_v1,
@@ -382,17 +406,47 @@ class EXU extends Module {
       )
     }
   }.otherwise {
-    csrren   := false.B
-    csrwen   := false.B
-    csr_addr := 0.U
+    csrren    := false.B
+    csrwen    := false.B
+    csr_addr  := 0.U
     csr_wdata := 0.U
   }
+
+  // mem
+
+  object MemOp {
+    val byte     = 0.U
+    val halfword = 1.U
+    val word     = 2.U
+    val lbu      = 4.U
+    val lhu      = 5.U
+
+    def isValidLoadOp(op: UInt): Bool = {
+      (op === byte) || (op === halfword) || (op === word) || (op === lbu) || (op === lhu)
+    }
+    def isValidStoreOp(op: UInt): Bool = {
+      (op === byte) || (op === halfword) || (op === word)
+    }
+  }
+
+  val mem_addr                     = reg_v1 + dinst.info.imm
+  val mem_addr_unalign_part        = mem_addr(1, 0)
+  val mem_addr_unalign_part_bitlen = mem_addr_unalign_part << 3
+
+  val mem_raddr     = io.mem_rreq.bits.addr
+  val mem_raw_rdata = io.mem_rreq.bits.data
+  val mem_ren       = io.mem_rreq.bits.en
+
+  val mem_data = mem_raw_rdata >> mem_addr_unalign_part_bitlen
+
+  mem_ren := dinst.info.typ === InstType.load
 
   // wdata
 
   // for now, system inst, ecall and mret has rd == 0
   // TODO: handle rd != 0 case
-  io.out.bits.wen := (dinst.info.rd =/= 0.U) && (dinst.info.typ =/= InstType.none)
+  io.out.bits.wen := (dinst.info.rd =/= 0.U) && (dinst.info.typ =/= InstType.none) &&
+    (dinst.info.typ =/= InstType.store)
 
   io.out.bits.addr := dinst.info.rd
   io.out.bits.data := MuxLookup(dinst.info.typ, GARBAGE_UNINIT_VALUE)(
@@ -402,7 +456,15 @@ class EXU extends Module {
       InstType.auipc      -> (dinst.pc + dinst.info.imm),
       InstType.jalr       -> (dinst.pc + 4.U),
       InstType.jal        -> (dinst.pc + 4.U),
-      InstType.load       -> 0.U, // TODO: load from memory
+      InstType.load       -> MuxLookup(func3t, GARBAGE_UNINIT_VALUE)(
+        Seq(
+          MemOp.byte     -> Cat(Fill(24, mem_data(7)), mem_data(7, 0)),
+          MemOp.halfword -> Cat(Fill(16, mem_data(15)), mem_data(15, 0)),
+          MemOp.word     -> mem_data,
+          MemOp.lbu      -> Cat(Fill(24, 0.U), mem_data(7, 0)),
+          MemOp.lhu      -> Cat(Fill(16, 0.U), mem_data(15, 0))
+        )
+      ),
       InstType.system     -> Mux(
         is_ecall || is_mret,
         GARBAGE_UNINIT_VALUE,
@@ -422,8 +484,49 @@ class EXU extends Module {
       }
     }
   }
+  when(dinst.info.typ === InstType.load) {
+    when(!MemOp.isValidLoadOp(func3t)) {
+      printf("(exu) UNKNOWN LOAD func3t %d\n", func3t)
+    }
+  }
+
+  // mem write
+
+  // for now sw only consider align addr
+
+  val mem_wdata = io.out.bits.mem.data
+  val mem_waddr = io.out.bits.mem.addr
+  val mem_wen   = io.out.bits.mem.en
+  val mem_wmask = io.out.bits.mem.mask
+  mem_wdata := reg_v2 << mem_addr_unalign_part_bitlen
+  mem_waddr := mem_addr
+  mem_wen   := dinst.info.typ === InstType.store
+  mem_wmask := MuxLookup(func3t,0.U)(
+    Seq(
+      MemOp.byte     -> (1.U(4.W) << mem_addr_unalign_part),
+      MemOp.halfword -> (3.U(4.W) << mem_addr_unalign_part),
+      MemOp.word     -> 15.U(4.W)
+    )
+  )
+  when(dinst.info.typ === InstType.store) {
+    when(!MemOp.isValidStoreOp(func3t)) {
+      printf("(exu) UNKNOWN STORE func3t %d\n", func3t)
+    }
+  }
 
   // nxt_pc
+
+  object BranchOp {
+    val beq      = 0.U
+    val bne      = 1.U
+    val blt      = 4.U
+    val bge      = 5.U
+    val bltu     = 6.U
+    val bgeu     = 7.U
+    def isValidBranchOp(op: UInt): Bool = {
+      (op === beq) || (op === bne) || (op === blt) || (op === bge) || (op === bltu) || (op === bgeu)
+    }
+  }
 
   val nxt_pc = io.out.bits.nxt_pc
   val snpc   = dinst.pc + 4.U
@@ -432,21 +535,24 @@ class EXU extends Module {
   }.otherwise {
     when(dinst.info.typ === InstType.jalr) {
       nxt_pc := (reg_v1 + dinst.info.imm) &
-        Cat(Fill(Types.BitWidth.word - 1, 1.U), 0.U(1.W))
+        Cat(Fill(Types.BitWidth.word - 1, 1.U), 0.U(1.W)) // set bit0 to 0
     }.elsewhen(dinst.info.typ === InstType.jal) {
       nxt_pc := dinst.pc + dinst.info.imm
     }.elsewhen(dinst.info.fmt === InstFmt.branch) {
       val take_branch = MuxLookup(func3t, false.B)(
         Seq(
-          0.U -> (reg_v1 === reg_v2),              // beq
-          1.U -> (reg_v1 =/= reg_v2),              // bne
-          4.U -> (reg_v1.asSInt < reg_v2.asSInt),  // blt
-          5.U -> (reg_v1.asSInt >= reg_v2.asSInt), // bge
-          6.U -> (reg_v1 < reg_v2),                // bltu
-          7.U -> (reg_v1 >= reg_v2)                // bgeu
+          BranchOp.beq  -> (reg_v1 === reg_v2),
+          BranchOp.bne  -> (reg_v1 =/= reg_v2),
+          BranchOp.blt  -> (reg_v1.asSInt < reg_v2.asSInt),
+          BranchOp.bge  -> (reg_v1.asSInt >= reg_v2.asSInt),
+          BranchOp.bltu -> (reg_v1 < reg_v2),
+          BranchOp.bgeu -> (reg_v1 >= reg_v2)
         )
       )
       nxt_pc := Mux(take_branch, dinst.pc + dinst.info.imm, snpc)
+      when(!BranchOp.isValidBranchOp(func3t)) {
+        printf("(exu) UNKNOWN BRANCH func3t %d\n", func3t)
+      }
     }.otherwise {
       nxt_pc := snpc
     }
