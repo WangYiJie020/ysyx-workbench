@@ -456,7 +456,7 @@ class EXU           extends Module {
     )
   )
 
-  printf("(exu) mem_read_state %d\n", mem_read_state)
+  printf("(exu) mem_read_state %d selve rdy %d\n", mem_read_state, MS_fsm.io.slave_ready)
 
   val mem_data = mem_raw_rdata >> mem_addr_unalign_part_bitlen
 
