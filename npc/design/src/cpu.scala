@@ -319,7 +319,7 @@ class EXU           extends Module {
   MS_fsm.connectMaster(io.dinst)
   MS_fsm.connectSlave(io.out)
 
-  printf("(exu) inst 0x%x at pc 0x%x\n", dinst.code, dinst.pc)
+  // printf("(exu) inst 0x%x at pc 0x%x\n", dinst.code, dinst.pc)
 
   /*
   printf("(exu) fsm st %d alu.valid %b mem_rreq.respValid %b\n",MS_fsm.io._state, alu.io.out.valid, io.mem_rreq.respValid)
