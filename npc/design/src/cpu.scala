@@ -456,6 +456,8 @@ class EXU           extends Module {
     )
   )
 
+  printf("(exu) mem_read_state %d\n", mem_read_state)
+
   val mem_data = mem_raw_rdata >> mem_addr_unalign_part_bitlen
 
 
