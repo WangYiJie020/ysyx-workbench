@@ -305,7 +305,7 @@ int main(int argc, char **argv) {
       std::vector<std::string_view>(reg_names.begin(), reg_names.end()),
       sdbwrap::inst_fetcher);
 
-  // dbg->enable_inst_trace = true;
+  dbg->enable_inst_trace = true;
 
   size_t inst_show_limit;
 #ifdef TRACE_SHOW_ALL_INST
