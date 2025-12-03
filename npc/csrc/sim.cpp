@@ -11,16 +11,14 @@ TOP_NAME dut;
 void nvboard_bind_all_pins(TOP_NAME *top);
 
 static void step_cycle() {
-	printf("-----step-----\n");
+//	printf("-----step-----\n");
 	dut.clock = 0;
-	printf("clock=%d\n",dut.clock);
 	dut.eval();
 
 	dut.clock = 1;
-	printf("clock=%d\n",dut.clock);
 	dut.eval();
 
-	printf("-------------\n");
+//	printf("-------------\n");
 }
 static void reset(int n) {
 	dut.reset = 1;

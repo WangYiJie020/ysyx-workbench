@@ -182,6 +182,9 @@ class IDU extends Module {
   when(!iinfo_dec.io.valid) {
     printf("(idu) UNKNOWN instruction with opcode 0b%b\n", inst(6, 0))
   }
+  when(io.out.valid) {
+    printf("(idu) decoded finished fmt %d type %d\n", res.fmt.asUInt, res.typ.asUInt)
+  }
 
   res.rd  := inst(11, 7)
   res.rs1 := inst(19, 15)
