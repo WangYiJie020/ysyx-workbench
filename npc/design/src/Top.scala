@@ -96,7 +96,7 @@ class Top(word_width: Int = 32) extends Module {
 
   mem.io.write <> wbinfo.mem
 
-  exu.io.out.ready := ifu.io.pc.ready
+  exu.io.out.ready := true.B
 
 
 }
