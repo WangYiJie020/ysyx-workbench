@@ -1,6 +1,7 @@
 #include <VTop.h>
 #include <VTop__Dpi.h>
 #include <cstdint>
+#include <cstdio>
 #include <iostream>
 #include <nvboard.h>
 
@@ -10,10 +11,16 @@ TOP_NAME dut;
 void nvboard_bind_all_pins(TOP_NAME *top);
 
 static void step_cycle() {
+	printf("-----step-----\n");
 	dut.clock = 0;
+	printf("clock=%d\n",dut.clock);
 	dut.eval();
+
 	dut.clock = 1;
+	printf("clock=%d\n",dut.clock);
 	dut.eval();
+
+	printf("-------------\n");
 }
 static void reset(int n) {
 	dut.reset = 1;
