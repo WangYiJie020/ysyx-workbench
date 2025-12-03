@@ -72,7 +72,7 @@ class OneMasterOneSlaveFSM extends Module {
   )
 
   io.master_ready := (state === s_wait_slave) && (io.self_finished)
-  io.slave_valid  := (state === s_wait_slave) && (io.self_finished)
+  io.slave_valid  := (state === s_wait_slave)
 
   def connectMaster[T <: Data](master: DecoupledIO[T]): Unit = {
     master.ready    := io.master_ready
@@ -446,7 +446,13 @@ class EXU           extends Module {
   val mem_addr_unalign_part_bitlen = mem_addr_unalign_part << 3
 
   val mem_raddr     = io.mem_rreq.addr
-  val mem_raw_rdata = io.mem_rreq.data
+
+  val mem_raw_rdata = Reg(Types.UWord)
+
+  when(io.mem_rreq.respValid) {
+    printf("(exu) MEM read respValid data 0x%x for inst at pc 0x%x\n", io.mem_rreq.data, dinst.pc)
+    mem_raw_rdata := io.mem_rreq.data
+  }
 
   val mem_ren = io.mem_rreq.en
   mem_ren := (dinst.info.typ === InstType.load)
