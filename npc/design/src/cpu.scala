@@ -94,7 +94,7 @@ class IFU extends Module {
   val fsm = Module(new OneMasterOneSlaveFSM)
   fsm.connectMaster(io.pc)
   fsm.connectSlave(io.out)
-  fsm.io.self_finished := io.pc.valid
+  fsm.io.self_finished := true.B
 
   // printf("(ifu) fetch inst at pc 0x%x\n", io.pc.bits)
   // printf("(ifu) enable: %b\n", io.pc.valid)
@@ -108,6 +108,8 @@ class IFU extends Module {
   // see https://github.com/llvm/circt/blob/main/docs/Dialects/FIRRTL/FIRRTLIntrinsics.md#dpi-intrinsic-abi
   io.out.bits.code := RawClockedNonVoidFunctionCall("fetch_inst", Types.UWord)(clock, io.pc.valid, io.pc.bits)
   io.out.bits.pc   := io.pc.bits
+
+  printf("(ifu) fetched inst 0x%x at pc 0x%x\n", io.out.bits.code, io.out.bits.pc)
 }
 
 object InstFmt     extends ChiselEnum {
