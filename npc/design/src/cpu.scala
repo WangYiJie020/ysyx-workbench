@@ -561,7 +561,7 @@ class EXU           extends Module {
 
   when(dinst.info.typ === InstType.store) {
     when(!MemOp.isValidStoreOp(func3t)) {
-      //     printf("(exu) UNKNOWN STORE func3t %d\n", func3t)
+       printf("(exu) UNKNOWN STORE func3t %d\n", func3t)
     }
   }
 
