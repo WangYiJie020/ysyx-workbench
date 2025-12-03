@@ -400,7 +400,7 @@ class EXU           extends Module {
         )
       )
       csr_addr  := dinst.code(31, 20)
-      printf("(exu) CSR access addr 0x%x\n", csr_addr)
+      //printf("(exu) CSR access addr 0x%x\n", csr_addr)
       csr_wdata := MuxLookup(func3t, GARBAGE_UNINIT_VALUE)(
         Seq(
           CSROp.csrrw -> reg_v1,
@@ -432,8 +432,8 @@ class EXU           extends Module {
     }
   }
 
-  printf("(exu) reg(%d) 0x%x reg(%d) 0x%x\n", dinst.info.rs1,reg_v1,dinst.info.rs2, reg_v2)
-  printf("(exu) imm 0x%x\n", dinst.info.imm)
+  //printf("(exu) reg(%d) 0x%x reg(%d) 0x%x\n", dinst.info.rs1,reg_v1,dinst.info.rs2, reg_v2)
+  //printf("(exu) imm 0x%x\n", dinst.info.imm)
 
   val mem_addr                     = reg_v1 + dinst.info.imm
   val mem_addr_unalign_part        = mem_addr(1, 0)
@@ -532,9 +532,9 @@ class EXU           extends Module {
       printf("(exu) UNKNOWN STORE func3t %d\n", func3t)
     }
   }
-  when(mem_wen) {
-    printf("(exu) STORE to addr 0x%x data 0x%x mask 0b%b\n", mem_waddr, mem_wdata, mem_wmask)
-  }
+//  when(mem_wen) {
+//    printf("(exu) STORE to addr 0x%x data 0x%x mask 0b%b\n", mem_waddr, mem_wdata, mem_wmask)
+//  }
 
   // nxt_pc
 
