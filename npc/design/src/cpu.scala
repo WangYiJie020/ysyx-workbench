@@ -105,7 +105,7 @@ class IFU extends Module {
   fsm.io.self_finished := valid_pc
 
   printf("(ifu) fetch inst %x at pc 0x%x\n", io.out.bits.code,io.pc.bits)
-  printf("(ifu) enable: %b\n", io.pc.valid)
+  printf("(ifu) enable: %b\n", valid_pc)
 
   val code= RawClockedNonVoidFunctionCall("fetch_inst", Types.UWord)(clock, valid_pc, io.pc.bits)
 
