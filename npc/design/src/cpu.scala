@@ -418,6 +418,10 @@ class EXU           extends Module {
   mem_ren   := dinst.info.typ === InstType.load
   mem_raddr := mem_addr
 
+  when(mem_ren) {
+    printf("(exu) LOAD from addr 0x%x\n", mem_raddr)
+  }
+
   // wdata
 
   // for now, system inst, ecall and mret has rd == 0
