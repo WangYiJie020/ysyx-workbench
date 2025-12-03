@@ -122,6 +122,12 @@ void fetch_inst(int pc, int *out_inst) {
 #define MMIO_RTC_ADDR 0x10000048u
 
 void pmem_read(int addr, int *out_data) {
+	if(!is_running){
+		printf("warn: pmem_read when not running\n");
+		*out_data=0;
+		return;
+	}
+
   if (addr == MMIO_RTC_ADDR || addr == MMIO_RTC_ADDR + 4) {
     skip_difftest_ref();
     static uint64_t time_in_us;
