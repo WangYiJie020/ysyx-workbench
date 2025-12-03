@@ -94,7 +94,10 @@ class IFU extends Module {
   val fsm = Module(new OneMasterOneSlaveFSM)
   fsm.connectMaster(io.pc)
   fsm.connectSlave(io.out)
-  fsm.io.self_finished := true.B
+
+  val inst=Reg(Types.UWord)
+  val finished=Reg(Bool())
+  fsm.io.self_finished := finished
 
   // printf("(ifu) fetch inst at pc 0x%x\n", io.pc.bits)
   // printf("(ifu) enable: %b\n", io.pc.valid)
@@ -106,8 +109,12 @@ class IFU extends Module {
 
   // NOTICE: dpi function auto generated with void return
   // see https://github.com/llvm/circt/blob/main/docs/Dialects/FIRRTL/FIRRTLIntrinsics.md#dpi-intrinsic-abi
-  val inst=Reg(Types.UWord)
-  inst:=RawClockedNonVoidFunctionCall("fetch_inst", Types.UWord)(clock, io.pc.valid, io.pc.bits)
+  when(io.pc.valid){
+    inst := RawClockedNonVoidFunctionCall("fetch_inst", Types.UWord)(clock, io.pc.valid, io.pc.bits)
+    valid:= true.B
+  }.otherwise{
+    valid:= false.B
+  }
 
   io.out.bits.code := inst
   io.out.bits.pc   := io.pc.bits
