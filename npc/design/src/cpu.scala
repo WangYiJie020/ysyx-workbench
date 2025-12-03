@@ -476,6 +476,7 @@ class EXU           extends Module {
   }
 
   printf("(exu) mem read req respValid %b\n", io.mem_rreq.respValid)
+  printf("(exu) out.valid %b\n", io.out.valid)
 
   when(MS_fsm.io.self_finished) {
     printf("(exu) EXU finished for inst at pc 0x%x\n", dinst.pc)
