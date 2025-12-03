@@ -99,7 +99,7 @@ std::array<std::string_view, 32> reg_names = {
 
 bool pc_changed = false;
 void pc_upd(int pc, int npc) {
-  //	printf("pc upd pc=%08x npc=%08x\n",pc,npc);
+  printf("pc upd pc=%08x npc=%08x\n",pc,npc);
   pc_changed = true;
   current_pc = npc;
 }
