@@ -74,8 +74,11 @@ class Top(word_width: Int = 32) extends Module {
 
   pc := Mux(exu.io.out.valid, wbinfo.nxt_pc,pc)
 
+  val pc_valid_reg= RegInit(true.B)
+  pc_valid_reg := exu.io.out.valid
+
   ifu.io.pc.bits := pc
-  ifu.io.pc.valid := exu.io.out.valid
+  ifu.io.pc.valid := pc_valid_reg
 
   ifu.io.out <> idu.io.in
   idu.io.out <> exu.io.dinst
