@@ -94,7 +94,10 @@ class IFU extends Module {
   val fsm = Module(new OneMasterOneSlaveFSM)
   fsm.connectMaster(io.pc)
   fsm.connectSlave(io.out)
-  fsm.io.self_finished := true.B
+
+  val inst=Reg(Types.UWord)
+  val finished=Reg(Bool())
+  fsm.io.self_finished := finished
 
   // printf("(ifu) fetch inst at pc 0x%x\n", io.pc.bits)
   // printf("(ifu) enable: %b\n", io.pc.valid)
@@ -106,8 +109,18 @@ class IFU extends Module {
 
   // NOTICE: dpi function auto generated with void return
   // see https://github.com/llvm/circt/blob/main/docs/Dialects/FIRRTL/FIRRTLIntrinsics.md#dpi-intrinsic-abi
-  io.out.bits.code := RawClockedNonVoidFunctionCall("fetch_inst", Types.UWord)(clock, io.pc.valid, io.pc.bits)
+  when(io.pc.valid){
+    inst := RawUnclockedNonVoidFunctionCall("fetch_inst", Types.UWord)(true.B, io.pc.bits)
+    finished:= true.B
+  }.otherwise{
+    finished:= false.B
+  }
+
+  io.out.bits.code := inst
   io.out.bits.pc   := io.pc.bits
+
+  printf("(ifu) dpi fetch_inst return 0x%x\n", inst)
+  printf("(ifu) fetched inst 0x%x at pc 0x%x\n", io.out.bits.code, io.out.bits.pc)
 }
 
 object InstFmt     extends ChiselEnum {
@@ -440,9 +453,16 @@ class EXU           extends Module {
   val mem_addr_unalign_part_bitlen = mem_addr_unalign_part << 3
 
   val mem_raddr     = io.mem_rreq.addr
-  val mem_raw_rdata = io.mem_rreq.data
 
-  io.mem_rreq.en := (dinst.info.typ === InstType.load)
+  val mem_raw_rdata = Reg(Types.UWord)
+
+  when(io.mem_rreq.respValid) {
+    printf("(exu) MEM read respValid data 0x%x for inst at pc 0x%x\n", io.mem_rreq.data, dinst.pc)
+    mem_raw_rdata := io.mem_rreq.data
+  }
+
+  val mem_ren = io.mem_rreq.en
+  mem_ren := (dinst.info.typ === InstType.load)
 
   when(dinst.info.typ === InstType.load) {
     // printf("(exu) LOAD en since inst=%x\n", dinst.code)
@@ -455,10 +475,20 @@ class EXU           extends Module {
   )
   mem_raddr               := mem_addr
 
-//when(mem_ren) {
-//  printf("(exu) @pc 0x%x\n", dinst.pc)
-//  printf("(exu) LOAD from addr 0x%x\n", mem_raddr)
-//}
+  when(mem_ren) {
+    printf("(exu) LOAD en for inst 0x%x at pc 0x%x\n", dinst.code, dinst.pc)
+    printf("(exu) dinst.valid %b\n", io.dinst.valid)
+    printf("(exu) @pc 0x%x\n", dinst.pc)
+    printf("(exu) LOAD get %x from addr 0x%x\n",mem_data, mem_raddr)
+  }
+
+  printf("(exu) mem read req respValid %b\n", io.mem_rreq.respValid)
+  printf("(exu) out.valid %b self.finished %b\n", io.out.valid, MS_fsm.io.self_finished)
+  printf("(exu) state %d\n", MS_fsm.io._state)
+
+  when(MS_fsm.io.self_finished) {
+    printf("(exu) EXU finished for inst at pc 0x%x\n", dinst.pc)
+  }
 
   // wdata
 

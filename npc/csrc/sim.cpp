@@ -28,14 +28,14 @@ std::shared_ptr<sdb::debuger> dbg;
 sdb::difftest_trace_handler_ptr diff_handler;
 
 static void step_cycle() {
-  //	printf("-----step-----\n");
+  printf("-----cycle-----\n");
   dut.clock = 0;
   dut.eval();
 
   dut.clock = 1;
   dut.eval();
 
-  //	printf("-------------\n");
+	printf("-------------\n");
 }
 static void reset(int n) {
   dut.reset = 1;
@@ -99,7 +99,7 @@ std::array<std::string_view, 32> reg_names = {
 
 bool pc_changed = false;
 void pc_upd(int pc, int npc) {
-  //	printf("pc upd pc=%08x npc=%08x\n",pc,npc);
+  printf("pc upd pc=%08x npc=%08x\n",pc,npc);
   pc_changed = true;
   current_pc = npc;
 }
@@ -110,8 +110,8 @@ void skip_difftest_ref() {
 }
 
 void fetch_inst(int pc, int *out_inst) {
-  //  printf("fetch pc=%08x\n", pc);
   *out_inst = mem[guest_to_host(pc) / 4];
+  printf("fetch pc=%08x get %08X\n", pc, *out_inst);
 }
 
 #define MMIO_SERIAL_PORT 0x10000000u
@@ -133,13 +133,13 @@ void pmem_read(int addr, int *out_data) {
   }
   uint32_t host_aligned = guest_to_host(addr) & (~0x3);
 
-  if (host_aligned >= sizeof(mem)) {
-    *out_data = 0;
-    return;
-  }
+//  if (host_aligned >= sizeof(mem)) {
+//    *out_data = 0;
+//    return;
+//  }
 
   *out_data = mem[host_aligned / 4];
-  //  printf("pmem read addr=%08x get %08X\n", addr, *out_data);
+  printf("pmem read addr=%08x get %08X\n", addr, *out_data);
 }
 void pmem_write(int addr, int data, int mask) {
 
@@ -289,7 +289,7 @@ int main(int argc, char **argv) {
 
   dbg->enable_inst_trace = true;
 
-  dbg->add_trace(sdb::make_disasm_trace_handler(sdb::default_inst_disasm, 16));
+  dbg->add_trace(sdb::make_disasm_trace_handler(sdb::default_inst_disasm, -1));
   dbg->add_trace(sdb::make_etrace_handler());
   dbg->add_trace(sdb::make_iringbuf_trace_handler());
 

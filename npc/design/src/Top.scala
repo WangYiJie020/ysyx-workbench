@@ -79,7 +79,7 @@ class Top(word_width: Int = 32) extends Module {
   pc := Mux(exu.io.out.valid, wbinfo.nxt_pc,pc)
 
   when(exu.io.out.valid){
-    //printf(p"(Top) PC: 0x${Hexadecimal(pc)} -> 0x${Hexadecimal(wbinfo.nxt_pc)}\n")
+    printf(p"(Top) PC: 0x${Hexadecimal(pc)} -> 0x${Hexadecimal(wbinfo.nxt_pc)}\n")
     RawClockedVoidFunctionCall("pc_upd")(
       clock,
       exu.io.out.valid,
