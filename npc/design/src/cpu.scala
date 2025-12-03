@@ -53,6 +53,9 @@ class OneMasterOneSlaveFSM extends Module {
     val slave_valid = Output(Bool())
     val slave_ready = Input(Bool())
   })
+
+  val SINGLE_CYCLE_CPU = true
+
   val s_idle :: s_busy :: s_wait_slave :: Nil = Enum(3)
   val state                                   = RegInit(s_idle)
 
@@ -68,10 +71,20 @@ class OneMasterOneSlaveFSM extends Module {
   io.slave_valid  := (state === s_wait_slave)
 
   def connectMaster[T <: Data](master: DecoupledIO[T]): Unit = {
+    if(SINGLE_CYCLE_CPU) {
+      master.ready := true.B
+      io.master_valid := true.B
+      return
+    }
     master.ready    := io.master_ready
     io.master_valid := master.valid
   }
   def connectSlave[T <: Data](slave: DecoupledIO[T]):   Unit = {
+    if(SINGLE_CYCLE_CPU) {
+      slave.valid := true.B
+      io.slave_ready := true.B
+      return
+    }
     slave.valid    := io.slave_valid
     io.slave_ready := slave.ready
   }
@@ -254,7 +267,6 @@ class ALU extends Module {
     )
   )
 }
-
 
 class WriteBackInfo extends Bundle {
   val gpr = GPRegReqIO.TX.Write

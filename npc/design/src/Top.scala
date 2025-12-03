@@ -64,6 +64,14 @@ class Top(word_width: Int = 32) extends Module {
   val pc = RegInit(INIT_PC)
   val wbinfo = exu.io.out.bits
 
+  val is_ebreak = (ifu.io.out.valid)&&(ifu.io.out.bits.code === "h00100073".U)
+
+  when(is_ebreak){
+    printf(p"EBREAK at PC = 0x${Hexadecimal(ifu.io.out.bits.pc)}\n")
+    stop()
+  }
+  
+
   pc := Mux(exu.io.out.valid, wbinfo.nxt_pc,pc)
 
   ifu.io.pc.bits := pc
