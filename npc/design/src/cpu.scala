@@ -382,7 +382,7 @@ class EXU           extends Module {
     when(is_ecall) {
       csrren    := true.B
       csrwen    := false.B
-      csr_addr  := CSRAddr.mtvec
+      csr_addr  := CSRAddr.mepc
       // ecall: set mepc to pc
       // although wen = falase
       // is_ecall flag make csr to write wdata to mepc
