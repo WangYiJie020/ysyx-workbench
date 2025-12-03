@@ -161,7 +161,6 @@ class IDU extends Module {
 
   val fsm = Module(new OneMasterOneSlaveFSM)
   fsm.connectMaster(io.in)
-  // fsm.connectSlave(io.out)
   fsm.connectSlave(io.out)
 
   io.out.bits.viewAsSupertype(new Inst) := io.in.bits
@@ -175,6 +174,11 @@ class IDU extends Module {
   res.viewAsSupertype(new InstMetaInfo) := iinfo_dec.io.out
 
   fsm.io.self_finished := iinfo_dec.io.valid
+
+  printf("(idu) inst 0x%x at pc 0x%x\n", inst, io.in.bits.pc)
+  when(!iinfo_dec.io.valid) {
+    printf("(idu) UNKNOWN instruction with opcode 0b%b\n", inst(6, 0))
+  }
 
   res.rd  := inst(11, 7)
   res.rs1 := inst(19, 15)
