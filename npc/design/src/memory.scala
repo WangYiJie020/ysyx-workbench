@@ -64,18 +64,27 @@ class MemUnit extends Module {
     io.read.addr
   )
 
+  val s_wr_idle :: s_wr_wait :: Nil = Enum(2)
+  val wr_state = RegInit(s_wr_idle)
+  wr_state := MuxLookup(wr_state,s_wr_idle)(Seq(
+    (wr_state === s_wr_idle && io.write.en) -> s_wr_wait,
+    (wr_state === s_wr_wait)                 -> s_wr_idle
+  ))
+
+  io.write.done := (wr_state === s_wr_wait)
+  val en_write_call = io.write.en && (wr_state === s_wr_idle)
+
   when(io.write.en){
    printf("(MemUnit) write enabled addr: 0x%x data: 0x%x mask: 0b%b\n", io.write.addr, io.write.data, io.write.mask)
   }
 
   RawClockedVoidFunctionCall("pmem_write")(
     clock,
-    io.write.en,
+    en_write_call&&(!reset.asBool),
     io.write.addr,
     io.write.data,
     io.write.mask.pad(32)
   )
 
-  io.write.done := io.write.en
 
 }
