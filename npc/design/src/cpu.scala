@@ -95,19 +95,12 @@ class IFU extends Module {
   fsm.connectMaster(io.pc)
   fsm.connectSlave(io.out)
 
-  val valid_pc = RegInit(false.B)
-  when(fsm.io.master_valid) {
-    valid_pc := true.B
-  }.elsewhen(fsm.io.slave_ready) {
-    valid_pc := false.B
-  }
-
-  fsm.io.self_finished := valid_pc
+  fsm.io.self_finished := true.B
 
   printf("(ifu) fetch inst %x at pc 0x%x\n", io.out.bits.code,io.pc.bits)
-  printf("(ifu) enable: %b\n", valid_pc)
+  printf("(ifu) pc.valid: %b\n", io.pc.valid)
 
-  val code= RawClockedNonVoidFunctionCall("fetch_inst", Types.UWord)(clock, valid_pc, io.pc.bits)
+  val code = RawClockedNonVoidFunctionCall("fetch_inst", Types.UWord)(clock, io.pc.valid, io.pc.bits)
 
   // NOTICE: dpi function auto generated with void return
   // see https://github.com/llvm/circt/blob/main/docs/Dialects/FIRRTL/FIRRTLIntrinsics.md#dpi-intrinsic-abi
