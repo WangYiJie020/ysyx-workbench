@@ -6,7 +6,7 @@ SIM_BIN = $(BUILD_DIR)/$(TOP_NAME)
 
 SIM_IMG ?=
 
-SAN_FLAGS?= -fsanitize=address
+SAN_FLAGS?= #-fsanitize=address
 
 default: $(SIM_BIN)
 	
