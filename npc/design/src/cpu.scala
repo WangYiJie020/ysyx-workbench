@@ -322,6 +322,7 @@ class EXU           extends Module {
     io.mem_rreq.respValid || (dinst.info.typ =/= InstType.load)
   )
   
+  /*
   printf("(exu) fsm st %d alu.valid %b mem_rreq.respValid %b\n",MS_fsm.io._state, alu.io.out.valid, io.mem_rreq.respValid)
   when(io.mem_rreq.respValid){
     printf("(exu) MEM read data 0x%x for inst at pc 0x%x\n", io.mem_rreq.data, dinst.pc)
@@ -332,6 +333,7 @@ class EXU           extends Module {
   when(io.out.valid) {
     printf("(exu) finish exu for inst at pc 0x%x\n", dinst.pc)
   }
+  */
 
   // reg
 
@@ -446,10 +448,10 @@ class EXU           extends Module {
   mem_ren   := dinst.info.typ === InstType.load
   mem_raddr := mem_addr
 
-  when(mem_ren) {
-    printf("(exu) @pc 0x%x\n", dinst.pc)
-    printf("(exu) LOAD from addr 0x%x\n", mem_raddr)
-  }
+//when(mem_ren) {
+//  printf("(exu) @pc 0x%x\n", dinst.pc)
+//  printf("(exu) LOAD from addr 0x%x\n", mem_raddr)
+//}
 
   // wdata
 
