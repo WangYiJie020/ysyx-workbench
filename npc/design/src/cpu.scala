@@ -546,6 +546,7 @@ class EXU           extends Module {
     )
   )
 
+   printf("(exu) STORE to addr 0x%x data 0x%x mask 0b%b\n", mem_waddr, mem_wdata, mem_wmask)
   val s_wmem_noneed :: s_wmem_wait :: s_wmem_ok :: Nil = Enum(3)
   val mem_write_state = RegInit(s_wmem_noneed)
   mem_write_state := MuxLookup(mem_write_state, s_wmem_noneed)(
@@ -563,9 +564,6 @@ class EXU           extends Module {
       //     printf("(exu) UNKNOWN STORE func3t %d\n", func3t)
     }
   }
- when(mem_wen) {
-   printf("(exu) STORE to addr 0x%x data 0x%x mask 0b%b\n", mem_waddr, mem_wdata, mem_wmask)
- }
 
   // nxt_pc
 
