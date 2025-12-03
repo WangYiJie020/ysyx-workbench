@@ -620,5 +620,6 @@ class WBU extends Module {
   io.csr.addr := wbinfo.csr.addr
   io.csr.data := wbinfo.csr.data
   io.is_ecall := wbinfo.csr_ecallflag && valid
-  
+
+  io.done := valid
 }
