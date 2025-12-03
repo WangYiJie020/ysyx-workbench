@@ -430,6 +430,9 @@ class EXU           extends Module {
     }
   }
 
+  printf("(exu) reg_v1 0x%x reg_v2 0x%x\n", reg_v1, reg_v2)
+  printf("(exu) imm 0x%x\n", dinst.info.imm)
+
   val mem_addr                     = reg_v1 + dinst.info.imm
   val mem_addr_unalign_part        = mem_addr(1, 0)
   val mem_addr_unalign_part_bitlen = mem_addr_unalign_part << 3
