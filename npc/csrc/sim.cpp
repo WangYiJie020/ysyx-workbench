@@ -133,10 +133,10 @@ void pmem_read(int addr, int *out_data) {
   }
   uint32_t host_aligned = guest_to_host(addr) & (~0x3);
 
-  if (host_aligned >= sizeof(mem)) {
-    *out_data = 0;
-    return;
-  }
+//  if (host_aligned >= sizeof(mem)) {
+//    *out_data = 0;
+//    return;
+//  }
 
   *out_data = mem[host_aligned / 4];
   //  printf("pmem read addr=%08x get %08X\n", addr, *out_data);
