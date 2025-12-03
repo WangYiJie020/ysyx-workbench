@@ -106,5 +106,6 @@ class Top(word_width: Int = 32) extends Module {
   csrs.io.is_ecall := wbu.io.is_ecall
   mem.io.write <> wbu.io.mem
 
+  wbu.io.nxt_pc.ready := true.B
 
 }
