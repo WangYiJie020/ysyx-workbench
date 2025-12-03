@@ -34,8 +34,8 @@ object MemReqIO {
 }
 
 class MemUnitIO extends Bundle {
-  val read  = MemReqIO.ReadTX
-  val write = MemReqIO.WriteTX
+  val read  = MemReqIO.ReadRX
+  val write = MemReqIO.WriteRX
 }
 class MemUnit extends Module {
   val io = IO(new MemUnitIO)
