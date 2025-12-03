@@ -419,6 +419,7 @@ class EXU           extends Module {
   mem_raddr := mem_addr
 
   when(mem_ren) {
+    printf("(exu) @pc 0x%x\n", dinst.pc)
     printf("(exu) LOAD from addr 0x%x\n", mem_raddr)
   }
 
