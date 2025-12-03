@@ -138,7 +138,7 @@ class InstInfoDecoder extends Module {
     "b11001".U -> (InstFmt.imm, InstType.jalr),
     "b11100".U -> (InstFmt.imm, InstType.system),
     "b01100".U -> (InstFmt.reg, InstType.arithmetic),
-    "b01000".U -> (InstFmt.store, InstType.none),
+    "b01000".U -> (InstFmt.store, InstType.store),
     "b01101".U -> (InstFmt.upper, InstType.lui),
     "b00101".U -> (InstFmt.upper, InstType.auipc),
     "b11011".U -> (InstFmt.jump, InstType.jal),
