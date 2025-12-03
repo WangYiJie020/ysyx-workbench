@@ -132,7 +132,7 @@ class ControlStatusRegisterFile extends Module {
 
   val en_wrtie= (io.write.en && (widx =/= 0.U))||(io.is_ecall && (io.write.addr === CSRAddr.mepc))
 
-  when(io.write.en && (widx =/= 0.U)) {
+  when(en_wrtie) {
     waregs(widx) := io.write.data
     when(io.is_ecall && (io.write.addr === CSRAddr.mepc)) {
       printf("(CSR) ecall detected")
