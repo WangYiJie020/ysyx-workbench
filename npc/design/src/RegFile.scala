@@ -9,21 +9,25 @@ import chisel3.util.MuxLookup
 import chisel3.util.circt.dpi._
 
 class MetaRegReqIO(addr_width: Int = Types.BitWidth.reg_addr, data_width: Int = Types.BitWidth.word) {
+
+  def _AddrT = UInt(addr_width.W)
+  def _DataT = UInt(data_width.W)
+
   class _VecReadRX(N: Int) extends Bundle {
     require((1 << addr_width) >= N)
     val en   = Input(Bool())
-    val addr = Input(Vec(N, Types.RegAddr))
-    val data = Output(Vec(N, Types.UWord))
+    val addr = Input(Vec(N, _AddrT))
+    val data = Output(Vec(N, _DataT))
   }
   class _SingleReadRX      extends Bundle {
     val en   = Input(Bool())
-    val addr = Input(Types.RegAddr)
-    val data = Output(Types.UWord)
+    val addr = Input(_AddrT)
+    val data = Output(_DataT)
   }
   class _WriteRX           extends Bundle {
     val en   = Input(Bool())
-    val addr = Input(Types.RegAddr)
-    val data = Input(Types.UWord)
+    val addr = Input(_AddrT)
+    val data = Input(_DataT)
   }
   object RX {
     def VecRead(N: Int) = new _VecReadRX(N)
@@ -63,7 +67,7 @@ class RegisterFile(READ_PORTS: Int = 2) extends Module {
       io.write.data
     )
 
-//    printf("(RegFile) write reg[%d] <= 0x%x\n", io.write.addr, io.write.data)
+    printf("(RegFile) write reg[%d] <= 0x%x\n", io.write.addr, io.write.data)
   }
   for (i <- 0 until READ_PORTS) {
     when(io.rvec.addr(i) === 0.U) {
@@ -113,6 +117,14 @@ class ControlStatusRegisterFile extends Module {
   val ridx   = MuxLookup(io.read.addr, 0.U)(walut)
 
   when(io.read.en) {
+    printf("(CSRFile) read CSR[0x%x] => 0x%x\n", io.read.addr, MuxLookup(io.read.addr, waregs(ridx))(
+      Seq(
+        CSRAddr.mcycle    -> mcycle64(31, 0),
+        CSRAddr.mcycleh   -> mcycle64(63, 32),
+        CSRAddr.mvendorid -> mvendor_id,
+        CSRAddr.marchid   -> march_id
+      )
+    ))
     io.read.data := MuxLookup(io.read.addr, waregs(ridx))(
       Seq(
         CSRAddr.mcycle    -> mcycle64(31, 0),
