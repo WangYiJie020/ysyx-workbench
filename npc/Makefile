@@ -6,6 +6,7 @@ SIM_BIN = $(BUILD_DIR)/$(TOP_NAME)
 
 SIM_IMG ?=
 
+SAN_FLAGS?= -fsanitize=address
 
 default: $(SIM_BIN)
 	
@@ -59,7 +60,6 @@ include $(NVBOARD_HOME)/scripts/nvboard.mk
 # rules for verilator
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME=V$(TOP_NAME)
-SAN_FLAGS?= #SAN_FLAGS+=-fsanitize=address
 CXXFLAGS += $(SAN_FLAGS) -std=c++20
 
 $(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) verilog
