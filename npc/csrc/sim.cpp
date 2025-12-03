@@ -24,6 +24,8 @@ typedef uint32_t addr_t;
 #define MADDR_BASE 0x80000000u
 #define INITIAL_PC MADDR_BASE
 
+#define TRACE_PMEM_CALL 1
+
 std::shared_ptr<sdb::debuger> dbg;
 sdb::difftest_trace_handler_ptr diff_handler;
 
@@ -149,7 +151,9 @@ void pmem_read(int addr, int *out_data) {
   //  }
 
   *out_data = mem[host_aligned / 4];
+#ifdef TRACE_PMEM_CALL
   printf("pmem read addr=%08x get %08X\n", addr, *out_data);
+#endif
 }
 void pmem_write(int addr, int data, int mask) {
 
@@ -161,7 +165,10 @@ void pmem_write(int addr, int data, int mask) {
     return;
   }
 
-  //  printf("pmem write addr=%08x data=%08x mask=%02x\n", addr, data, mask);
+#ifdef TRACE_PMEM_CALL
+  printf("pmem write addr=%08x data=%08x mask=%02x\n", addr, data, mask);
+#endif
+
   uint32_t host_aligned = guest_to_host(addr) & (~0x3);
 
   uint8_t *p = (uint8_t *)(&mem[host_aligned >> 2]);
@@ -299,7 +306,7 @@ int main(int argc, char **argv) {
 
   dbg->enable_inst_trace = true;
 
-  dbg->add_trace(sdb::make_disasm_trace_handler(sdb::default_inst_disasm, -1));
+  dbg->add_trace(sdb::make_disasm_trace_handler(sdb::default_inst_disasm, 16));
   dbg->add_trace(sdb::make_etrace_handler());
   dbg->add_trace(sdb::make_iringbuf_trace_handler());
 
