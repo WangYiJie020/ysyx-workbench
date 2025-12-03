@@ -110,7 +110,7 @@ class IFU extends Module {
   // NOTICE: dpi function auto generated with void return
   // see https://github.com/llvm/circt/blob/main/docs/Dialects/FIRRTL/FIRRTLIntrinsics.md#dpi-intrinsic-abi
   when(io.pc.valid){
-    inst := RawClockedNonVoidFunctionCall("fetch_inst", Types.UWord)(clock, true.B, io.pc.bits)
+    inst := RawUnclockedNonVoidFunctionCall("fetch_inst", Types.UWord)(true.B, io.pc.bits)
     finished:= true.B
   }.otherwise{
     finished:= false.B
