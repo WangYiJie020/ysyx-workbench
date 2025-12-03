@@ -42,7 +42,7 @@ class MemUnit extends Module {
   when(io.read.en){
     printf("(MemUnit) read enabled addr: 0x%x\n", io.read.addr)
   }
-  printf("(MemUnit) write en: %b addr: 0x%x data: 0x%x mask: 0b%b\n", io.write.en, io.write.addr, io.write.data, io.write.mask)
+  //printf("(MemUnit) write en: %b addr: 0x%x data: 0x%x mask: 0b%b\n", io.write.en, io.write.addr, io.write.data, io.write.mask)
 
 
   io.read.data := RawClockedNonVoidFunctionCall("pmem_read", Types.UWord)(
