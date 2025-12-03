@@ -24,6 +24,7 @@ object MemReqIO {
     val mask = Input(UInt(4.W))
     val en   = Input(Bool())
 
+
   }
 
   def ReadRX  = new _ReadRX
@@ -38,22 +39,19 @@ class MemUnit extends Module {
     val write = MemReqIO.WriteRX
   })
 
-  when(io.read.en) {
-    // printf("(MemUnit) read enabled addr: 0x%x\n", io.read.addr)
+  when(io.read.en){
+    //printf("(MemUnit) read enabled addr: 0x%x\n", io.read.addr)
   }
-  // printf("(MemUnit) write en: %b addr: 0x%x data: 0x%x mask: 0b%b\n", io.write.en, io.write.addr, io.write.data, io.write.mask)
+  //printf("(MemUnit) write en: %b addr: 0x%x data: 0x%x mask: 0b%b\n", io.write.en, io.write.addr, io.write.data, io.write.mask)
 
-  val data = Reg(Types.UWord)
-  data := RawClockedNonVoidFunctionCall("pmem_read", Types.UWord)(
+
+  io.read.data := RawClockedNonVoidFunctionCall("pmem_read", Types.UWord)(
     clock,
-    io.read.en && (!reset.asBool),
+    io.read.en&&(!reset.asBool),
     io.read.addr
   )
-  val restpValid = Reg(Bool())
-  restpValid := io.read.en && (!reset.asBool)
 
-  io.read.data      := data
-  io.read.respValid := restpValid
+  io.read.respValid := io.read.en
 
   RawClockedVoidFunctionCall("pmem_write")(
     clock,
