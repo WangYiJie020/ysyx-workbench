@@ -352,7 +352,7 @@ class EXU           extends Module {
 
   val csrren    = io.csr_rvec.en
   val csr_raddr = io.csr_rvec.addr
-  val csr_rdata = io.csr_rvec.data(0)
+  val csr_rdata = io.csr_rvec.data
 
   val csrwen    = io.out.bits.csr.en
   val csr_wdata = io.out.bits.csr.data
