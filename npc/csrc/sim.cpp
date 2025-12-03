@@ -138,7 +138,7 @@ void pmem_read(int addr, int *out_data) {
 		return;}
 
   *out_data = mem[host_aligned / 4];
-  printf("pmem read addr=%08x get %08X\n", addr, *out_data);
+//  printf("pmem read addr=%08x get %08X\n", addr, *out_data);
 }
 void pmem_write(int addr, int data, int mask) {
 
@@ -150,7 +150,7 @@ void pmem_write(int addr, int data, int mask) {
     return;
   }
 
-  printf("pmem write addr=%08x data=%08x mask=%02x\n", addr, data, mask);
+//  printf("pmem write addr=%08x data=%08x mask=%02x\n", addr, data, mask);
   uint32_t host_aligned = guest_to_host(addr) & (~0x3);
 
   uint8_t *p = (uint8_t *)(&mem[host_aligned >> 2]);

@@ -499,13 +499,13 @@ class EXU           extends Module {
   when(dinst.info.typ === InstType.system) {
     when(!(is_ecall || is_mret)) {
       when(!CSROp.isValidCSRop(func3t)) {
-        printf("(exu) UNKNOWN SYSTEM func3t %d\n", func3t)
+       // printf("(exu) UNKNOWN SYSTEM func3t %d\n", func3t)
       }
     }
   }
   when(dinst.info.typ === InstType.load) {
     when(!MemOp.isValidLoadOp(func3t)) {
-      printf("(exu) UNKNOWN LOAD func3t %d\n", func3t)
+//      printf("(exu) UNKNOWN LOAD func3t %d\n", func3t)
     }
   }
 
@@ -529,7 +529,7 @@ class EXU           extends Module {
   )
   when(dinst.info.typ === InstType.store) {
     when(!MemOp.isValidStoreOp(func3t)) {
-      printf("(exu) UNKNOWN STORE func3t %d\n", func3t)
+ //     printf("(exu) UNKNOWN STORE func3t %d\n", func3t)
     }
   }
 //  when(mem_wen) {
