@@ -76,7 +76,7 @@ class Top(word_width: Int = 32) extends Module {
   pc := Mux(wbu.io.nxt_pc.valid, wbu.io.nxt_pc.bits, pc)
 
   when(wbu.io.nxt_pc.valid) {
-    // printf(p"(Top) PC: 0x${Hexadecimal(pc)} -> 0x${Hexadecimal(wbinfo.nxt_pc)}\n")
+    printf(p"(Top) PC: 0x${Hexadecimal(pc)} -> 0x${Hexadecimal(wbu.io.nxt_pc.bits)}\n")
     RawClockedVoidFunctionCall("pc_upd")(
       clock,
       wbu.io.nxt_pc.valid,
