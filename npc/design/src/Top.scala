@@ -7,6 +7,8 @@ import memory._
 
 import cpu._
 
+import chisel3.util.circt.dpi._
+
 // For NVBoard
 class TopIO extends Bundle {
   val btn      = Input(UInt(5.W))
@@ -68,6 +70,9 @@ class Top(word_width: Int = 32) extends Module {
 
   when(is_ebreak){
     printf(p"EBREAK at PC = 0x${Hexadecimal(ifu.io.out.bits.pc)}\n")
+    RawClockedVoidFunctionCall("raise_ebreak")(clock,
+      is_ebreak
+    )
     stop()
   }
   
