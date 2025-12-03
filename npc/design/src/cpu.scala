@@ -96,8 +96,8 @@ class IFU extends Module {
   fsm.connectSlave(io.out)
   fsm.io.self_finished := true.B
 
-  //printf("(ifu) fetch inst at pc 0x%x\n", io.pc.bits)
-  //printf("(ifu) enable: %b\n", io.pc.valid)
+  // printf("(ifu) fetch inst at pc 0x%x\n", io.pc.bits)
+  // printf("(ifu) enable: %b\n", io.pc.valid)
 
 //  printf("(ifu) fsm st %d out.valid %b\n",fsm.io._state, io.out.valid)
 //  when(io.out.ready){
@@ -196,7 +196,7 @@ class IDU extends Module {
     printf("(idu) decoded finished fmt %d type %d\n", res.fmt.asUInt, res.typ.asUInt)
   }
   printf("(idu) fsm st %d in.valid %b\n",fsm.io._state, io.in.valid)
-  */
+   */
 
   res.rd  := inst(11, 7)
   res.rs1 := inst(19, 15)
@@ -320,7 +320,7 @@ class EXU           extends Module {
   val MS_fsm = Module(new OneMasterOneSlaveFSM)
   MS_fsm.connectMaster(io.dinst)
   MS_fsm.connectSlave(io.out)
-  
+
   /*
   printf("(exu) fsm st %d alu.valid %b mem_rreq.respValid %b\n",MS_fsm.io._state, alu.io.out.valid, io.mem_rreq.respValid)
   when(io.mem_rreq.respValid){
@@ -332,7 +332,7 @@ class EXU           extends Module {
   when(io.out.valid) {
     printf("(exu) finish exu for inst at pc 0x%x\n", dinst.pc)
   }
-  */
+   */
 
   // reg
 
@@ -363,12 +363,8 @@ class EXU           extends Module {
   val csr_rdata = io.csr_rvec.data
 
   val csrwen    = io.out.bits.csr.en
+  val csr_waddr = io.out.bits.csr.addr
   val csr_wdata = io.out.bits.csr.data
-
-  val csr_addr = Wire(UInt(Types.BitWidth.csr_addr.W))
-
-  io.out.bits.csr.addr := csr_addr
-  io.csr_rvec.addr     := csr_addr
 
   object CSROp {
     val csrrw = 1.U
@@ -382,7 +378,8 @@ class EXU           extends Module {
     when(is_ecall) {
       csrren    := true.B
       csrwen    := false.B
-      csr_addr  := CSRAddr.mepc
+      csr_waddr := CSRAddr.mepc
+      csr_raddr := CSRAddr.mtvec
       // ecall: set mepc to pc
       // although wen = falase
       // is_ecall flag make csr to write wdata to mepc
@@ -390,7 +387,8 @@ class EXU           extends Module {
     }.elsewhen(is_mret) {
       csrren    := true.B
       csrwen    := false.B
-      csr_addr  := CSRAddr.mepc
+      csr_raddr := CSRAddr.mepc
+      csr_waddr := 0.U
       csr_wdata := 0.U
     }.otherwise {
       csrren    := MuxLookup(func3t, false.B)(
@@ -405,8 +403,9 @@ class EXU           extends Module {
           CSROp.csrrs -> (reg_v1 =/= 0.U)
         )
       )
-      csr_addr  := dinst.code(31, 20)
-      //printf("(exu) CSR access addr 0x%x\n", csr_addr)
+      csr_raddr := dinst.code(31, 20)
+      csr_waddr := csr_raddr
+      // printf("(exu) CSR access addr 0x%x\n", csr_addr)
       csr_wdata := MuxLookup(func3t, GARBAGE_UNINIT_VALUE)(
         Seq(
           CSROp.csrrw -> reg_v1,
@@ -417,7 +416,8 @@ class EXU           extends Module {
   }.otherwise {
     csrren    := false.B
     csrwen    := false.B
-    csr_addr  := 0.U
+    csr_raddr := 0.U
+    csr_waddr := 0.U
     csr_wdata := 0.U
   }
 
@@ -438,8 +438,8 @@ class EXU           extends Module {
     }
   }
 
-  //printf("(exu) reg(%d) 0x%x reg(%d) 0x%x\n", dinst.info.rs1,reg_v1,dinst.info.rs2, reg_v2)
-  //printf("(exu) imm 0x%x\n", dinst.info.imm)
+  // printf("(exu) reg(%d) 0x%x reg(%d) 0x%x\n", dinst.info.rs1,reg_v1,dinst.info.rs2, reg_v2)
+  // printf("(exu) imm 0x%x\n", dinst.info.imm)
 
   val mem_addr                     = reg_v1 + dinst.info.imm
   val mem_addr_unalign_part        = mem_addr(1, 0)
@@ -447,11 +447,11 @@ class EXU           extends Module {
 
   val mem_raddr     = io.mem_rreq.addr
   val mem_raw_rdata = io.mem_rreq.data
-  
-  io.mem_rreq.en := (dinst.info.typ === InstType.load) 
+
+  io.mem_rreq.en := (dinst.info.typ === InstType.load)
 
   when(dinst.info.typ === InstType.load) {
-   // printf("(exu) LOAD en since inst=%x\n", dinst.code)
+    // printf("(exu) LOAD en since inst=%x\n", dinst.code)
   }
 
   val mem_data = mem_raw_rdata >> mem_addr_unalign_part_bitlen
@@ -459,7 +459,7 @@ class EXU           extends Module {
   MS_fsm.io.self_finished := alu.io.out.valid && (
     (dinst.info.typ =/= InstType.load) || io.mem_rreq.respValid
   )
-  mem_raddr := mem_addr
+  mem_raddr               := mem_addr
 
 //when(mem_ren) {
 //  printf("(exu) @pc 0x%x\n", dinst.pc)
@@ -505,7 +505,7 @@ class EXU           extends Module {
   when(dinst.info.typ === InstType.system) {
     when(!(is_ecall || is_mret)) {
       when(!CSROp.isValidCSRop(func3t)) {
-       // printf("(exu) UNKNOWN SYSTEM func3t %d\n", func3t)
+        // printf("(exu) UNKNOWN SYSTEM func3t %d\n", func3t)
       }
     }
   }
@@ -535,7 +535,7 @@ class EXU           extends Module {
   )
   when(dinst.info.typ === InstType.store) {
     when(!MemOp.isValidStoreOp(func3t)) {
- //     printf("(exu) UNKNOWN STORE func3t %d\n", func3t)
+      //     printf("(exu) UNKNOWN STORE func3t %d\n", func3t)
     }
   }
 //  when(mem_wen) {
