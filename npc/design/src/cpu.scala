@@ -442,7 +442,8 @@ class EXU           extends Module {
   val mem_raddr     = io.mem_rreq.addr
   val mem_raw_rdata = io.mem_rreq.data
 
-  io.mem_rreq.en := (dinst.info.typ === InstType.load)
+  val mem_ren = io.mem_rreq.en
+  mem_ren := (dinst.info.typ === InstType.load)
 
   when(dinst.info.typ === InstType.load) {
     // printf("(exu) LOAD en since inst=%x\n", dinst.code)
@@ -455,10 +456,12 @@ class EXU           extends Module {
   )
   mem_raddr               := mem_addr
 
-//when(mem_ren) {
-//  printf("(exu) @pc 0x%x\n", dinst.pc)
-//  printf("(exu) LOAD from addr 0x%x\n", mem_raddr)
-//}
+  when(mem_ren) {
+    printf("(exu) LOAD en for inst 0x%x at pc 0x%x\n", dinst.code, dinst.pc)
+    printf("(exu) dinst.valid %b\n", io.dinst.valid)
+    printf("(exu) @pc 0x%x\n", dinst.pc)
+    printf("(exu) LOAD from addr 0x%x\n", mem_raddr)
+  }
 
   // wdata
 
