@@ -102,7 +102,10 @@ class Top(word_width: Int = 32) extends Module {
   csrs.io.write <> wbinfo.csr
   csrs.io.is_ecall := wbinfo.csr_ecallflag
 
-  mem.io.write <> wbinfo.mem
+  mem.io.write.en := wbinfo.mem.en && exu.io.out.valid
+  mem.io.write.addr := wbinfo.mem.addr
+  mem.io.write.data := wbinfo.mem.data
+  mem.io.write.mask := wbinfo.mem.mask
 
   exu.io.out.ready := true.B
 
