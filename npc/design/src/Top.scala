@@ -60,59 +60,50 @@ class Top(word_width: Int = 32) extends Module {
   val ifu = Module(new IFU)
   val idu = Module(new IDU)
   val exu = Module(new EXU)
+  val wbu = Module(new WBU)
 
   val INIT_PC = "h80000000".U(32.W)
 
-  val pc = RegInit(INIT_PC)
+  val pc     = RegInit(INIT_PC)
   val wbinfo = exu.io.out.bits
 
-  val is_ebreak = (ifu.io.out.valid)&&(ifu.io.out.bits.code === "h00100073".U)
+  val is_ebreak = (ifu.io.out.valid) && (ifu.io.out.bits.code === "h00100073".U)
 
-  when(is_ebreak){
+  when(is_ebreak) {
     printf(p"EBREAK at PC = 0x${Hexadecimal(ifu.io.out.bits.pc)} a0 = 0x${Hexadecimal(gprs.io.a0)}\n")
-    RawClockedVoidFunctionCall("raise_ebreak")(clock,
-      is_ebreak,gprs.io.a0
-    )
+    RawClockedVoidFunctionCall("raise_ebreak")(clock, is_ebreak, gprs.io.a0)
     stop()
   }
 
-  pc := Mux(exu.io.out.valid, wbinfo.nxt_pc,pc)
+  pc := Mux(wbu.io.nxt_pc.valid, wbu.io.nxt_pc.bits, pc)
 
-  when(exu.io.out.valid){
-    //printf(p"(Top) PC: 0x${Hexadecimal(pc)} -> 0x${Hexadecimal(wbinfo.nxt_pc)}\n")
+  when(exu.io.out.valid) {
+    // printf(p"(Top) PC: 0x${Hexadecimal(pc)} -> 0x${Hexadecimal(wbinfo.nxt_pc)}\n")
     RawClockedVoidFunctionCall("pc_upd")(
       clock,
       exu.io.out.valid,
-      pc,wbinfo.nxt_pc
+      pc,
+      wbinfo.nxt_pc
     )
   }
 
-  ifu.io.pc.bits := pc
+  ifu.io.pc.bits  := pc
   ifu.io.pc.valid := true.B
 
   ifu.io.out <> idu.io.in
   idu.io.out <> exu.io.dinst
 
-  exu.io.rvec <> gprs.io.rvec
+  exu.io.rvec <> gprs.io.read
   exu.io.csr_rvec <> csrs.io.read
 
   mem.io.read <> exu.io.mem_rreq
 
   // Write back
 
-  gprs.io.write.en := wbinfo.gpr.en && exu.io.out.valid
-  gprs.io.write.addr := wbinfo.gpr.addr
-  gprs.io.write.data := wbinfo.gpr.data
-
-  csrs.io.write <> wbinfo.csr
-  csrs.io.is_ecall := wbinfo.csr_ecallflag && exu.io.out.valid
-
-  mem.io.write.en := wbinfo.mem.en && exu.io.out.valid
-  mem.io.write.addr := wbinfo.mem.addr
-  mem.io.write.data := wbinfo.mem.data
-  mem.io.write.mask := wbinfo.mem.mask
-
-  exu.io.out.ready := true.B
+  wbu.io.data <> exu.io.out
+  gprs.io.write <> wbu.io.gpr
+  csrs.io <> wbu.io.csrio
+  mem.io.write <> wbu.io.mem
 
 
 }

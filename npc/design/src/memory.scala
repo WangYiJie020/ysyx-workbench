@@ -24,7 +24,7 @@ object MemReqIO {
     val mask = Input(UInt(4.W))
     val en   = Input(Bool())
 
-
+    val done = Output(Bool())
   }
 
   def ReadRX  = new _ReadRX
@@ -59,5 +59,7 @@ class MemUnit extends Module {
     io.write.data,
     io.write.mask.pad(32)
   )
+
+  io.write.done := io.write.en
 
 }

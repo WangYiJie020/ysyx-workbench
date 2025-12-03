@@ -80,7 +80,7 @@ class OneMasterOneSlaveFSM extends Module {
   }
   def connectSlave[T <: Data](slave: DecoupledIO[T]):   Unit = {
     slave.valid    := io.slave_valid
-    io.slave_ready := slave.ready
+io.slave_ready := slave.ready
   }
 
 }
@@ -592,4 +592,40 @@ class EXU           extends Module {
       nxt_pc := snpc
     }
   }
+}
+
+class WBU extends Module {
+  val io = IO(new Bundle {
+    val data  = Flipped(Decoupled(new WriteBackInfo))
+    val gpr = Flipped(GPRegReqIO.TX.Write)
+    val csrio = Flipped(new CSRIO)
+    val mem = Flipped(MemReqIO.WriteTX)
+    val nxt_pc = Decoupled(Types.UWord)
+  })
+
+  val fsm = Module(new OneMasterOneSlaveFSM)
+  fsm.connectMaster(io.data)
+  fsm.connectSlave(io.nxt_pc)
+
+  val wbinfo = io.data.bits
+  val valid  = io.data.valid
+
+  fsm.io.self_finished := io.mem.done && valid
+
+  io.gpr.en   := wbinfo.gpr.en && valid
+  io.gpr.addr := wbinfo.gpr.addr
+  io.gpr.data := wbinfo.gpr.data
+
+  io.csrio.write.en   := wbinfo.csr.en && valid
+  io.csrio.write.addr := wbinfo.csr.addr
+  io.csrio.write.data := wbinfo.csr.data
+  io.csrio.is_ecall := wbinfo.csr_ecallflag && valid
+
+  io.mem.en   := wbinfo.mem.en && valid
+  io.mem.addr := wbinfo.mem.addr
+  io.mem.data := wbinfo.mem.data
+  io.mem.mask := wbinfo.mem.mask
+
+  io.nxt_pc.bits := wbinfo.nxt_pc
+  
 }
