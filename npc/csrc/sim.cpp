@@ -76,9 +76,9 @@ void fetch_inst(int pc, int *out_inst) {
 	*out_inst= mem[guest_to_host(pc) / 4];
 }
 void pmem_read(int addr, int *out_data) {
-	printf("pmem read addr=%08x\n",addr);
 	uint32_t host_aligned = guest_to_host(addr)&(~0x3);
 	*out_data = mem[host_aligned/4];
+	printf("pmem read addr=%08x get %08X\n",addr,*out_data);
 }
 void pmem_write(int addr, int data, int mask) {
 	printf("pmem write addr=%08x data=%08x mask=%02x\n",addr,data,mask);
