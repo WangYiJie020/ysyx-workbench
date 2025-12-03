@@ -56,6 +56,7 @@ class RegisterFile(READ_PORTS: Int = 2) extends Module {
       io.rvec.data(i) := 0.U
     }.otherwise {
       io.rvec.data(i) := reg(io.rvec.addr(i))
+      printf("(RegFile) read reg[%d] => 0x%x\n", io.rvec.addr(i), io.rvec.data(i))
     }
   }
 }
