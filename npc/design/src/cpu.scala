@@ -600,12 +600,10 @@ class WBU extends Module {
     val gpr = GPRegReqIO.TX.Write
     val csr = CSRegReqIO.TX.Write
     val is_ecall = Output(Bool())
-    val nxt_pc = Decoupled(Types.UWord)
+    val done = Output(Bool())
   })
 
-  val fsm = Module(new OneMasterOneSlaveFSM)
-  fsm.connectMaster(io.data)
-  fsm.connectSlave(io.nxt_pc)
+  io.data.ready := true.B
 
   val wbinfo = io.data.bits
   val valid  = io.data.valid
@@ -613,7 +611,6 @@ class WBU extends Module {
   printf("(wbu) write back gpr en %b addr %d data 0x%x\n", wbinfo.gpr.en, wbinfo.gpr.addr, wbinfo.gpr.data)
   printf("(wbu) valid %b\n", valid)
 
-  fsm.io.self_finished := true.B
 
   io.gpr.en   := wbinfo.gpr.en && valid
   io.gpr.addr := wbinfo.gpr.addr
@@ -623,7 +620,5 @@ class WBU extends Module {
   io.csr.addr := wbinfo.csr.addr
   io.csr.data := wbinfo.csr.data
   io.is_ecall := wbinfo.csr_ecallflag && valid
-
-  io.nxt_pc.bits := wbinfo.nxt_pc
   
 }

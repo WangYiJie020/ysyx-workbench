@@ -68,20 +68,22 @@ class Top(word_width: Int = 32) extends Module {
 
   val is_ebreak = (ifu.io.out.valid) && (ifu.io.out.bits.code === "h00100073".U)
 
+  val nxt_pc = exu.io.out.bits.nxt_pc
+  val nxt_pc_valid = wbu.io.done
+
   when(is_ebreak) {
     printf(p"EBREAK at PC = 0x${Hexadecimal(ifu.io.out.bits.pc)} a0 = 0x${Hexadecimal(gprs.io.a0)}\n")
     RawClockedVoidFunctionCall("raise_ebreak")(clock, is_ebreak, gprs.io.a0)
   }
 
-  pc := Mux(wbu.io.nxt_pc.valid, wbu.io.nxt_pc.bits, pc)
+  pc := Mux(wbu.io.done, nxt_pc, pc)
 
-  when(wbu.io.nxt_pc.valid) {
-    printf(p"(Top) PC: 0x${Hexadecimal(pc)} -> 0x${Hexadecimal(wbu.io.nxt_pc.bits)}\n")
+  when(nxt_pc_valid){ 
+    printf(p"(Top) PC: 0x${Hexadecimal(pc)} -> 0x${Hexadecimal(nxt_pc)}\n")
     RawClockedVoidFunctionCall("pc_upd")(
       clock,
-      wbu.io.nxt_pc.valid,
-      pc,
-      wbu.io.nxt_pc.bits
+      nxt_pc_valid,
+      pc,nxt_pc
     )
   }
 
@@ -103,7 +105,5 @@ class Top(word_width: Int = 32) extends Module {
   gprs.io.write <> wbu.io.gpr
   csrs.io.write <> wbu.io.csr
   csrs.io.is_ecall := wbu.io.is_ecall
-
-  wbu.io.nxt_pc.ready := true.B
 
 }
