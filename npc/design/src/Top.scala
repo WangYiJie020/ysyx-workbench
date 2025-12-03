@@ -69,7 +69,7 @@ class Top(word_width: Int = 32) extends Module {
   val is_ebreak = (ifu.io.out.valid) && (ifu.io.out.bits.code === "h00100073".U)
 
   val nxt_pc = exu.io.out.bits.nxt_pc
-  val nxt_pc_valid = exu.io.out.valid
+  val nxt_pc_valid = wbu.io.done
 
   when(is_ebreak) {
     printf(p"EBREAK at PC = 0x${Hexadecimal(ifu.io.out.bits.pc)} a0 = 0x${Hexadecimal(gprs.io.a0)}\n")
