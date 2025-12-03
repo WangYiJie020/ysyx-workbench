@@ -540,6 +540,8 @@ class EXU           extends Module {
       MemOp.word     -> 15.U(4.W)
     )
   )
+  io.out.bits.mem.done := false.B // unused
+
   when(dinst.info.typ === InstType.store) {
     when(!MemOp.isValidStoreOp(func3t)) {
       //     printf("(exu) UNKNOWN STORE func3t %d\n", func3t)
