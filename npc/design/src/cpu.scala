@@ -398,6 +398,7 @@ class EXU           extends Module {
         )
       )
       csr_addr  := dinst.code(31, 20)
+      printf("(exu) CSR access addr 0x%x\n", csr_addr)
       csr_wdata := MuxLookup(func3t, GARBAGE_UNINIT_VALUE)(
         Seq(
           CSROp.csrrw -> reg_v1,
