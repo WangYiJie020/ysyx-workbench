@@ -96,7 +96,7 @@ class IFU extends Module {
   fsm.connectSlave(io.out)
   fsm.io.self_finished := true.B
 
- printf("(ifu) fetch inst at pc 0x%x\n", io.pc.bits)
+ printf("(ifu) fetch inst %x at pc 0x%x\n", io.out.bits.code,io.pc.bits)
  printf("(ifu) enable: %b\n", io.pc.valid)
 
 
