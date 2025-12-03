@@ -67,7 +67,7 @@ class RegisterFile(READ_PORTS: Int = 2) extends Module {
       io.write.data
     )
 
-    //printf("(RegFile) write reg[%d] <= 0x%x\n", io.write.addr, io.write.data)
+    printf("(RegFile) write reg[%d] <= 0x%x\n", io.write.addr, io.write.data)
   }
   for (i <- 0 until READ_PORTS) {
     when(io.rvec.addr(i) === 0.U) {
