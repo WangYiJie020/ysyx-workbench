@@ -313,11 +313,11 @@ int main(int argc, char **argv) {
 #else
   inst_show_limit = 16;
 #endif
-  //
-  // dbg->add_trace(sdb::make_disasm_trace_handler(sdb::default_inst_disasm,
-  //                                               inst_show_limit));
-  // dbg->add_trace(sdb::make_etrace_handler());
-  // dbg->add_trace(sdb::make_iringbuf_trace_handler());
+
+  dbg->add_trace(sdb::make_disasm_trace_handler(sdb::default_inst_disasm,
+                                                inst_show_limit));
+  dbg->add_trace(sdb::make_etrace_handler());
+  dbg->add_trace(sdb::make_iringbuf_trace_handler());
 
   // diff_handler = sdb::make_difftest_trace_handler(
   //     "../nemu/build/riscv32-nemu-interpreter-so", 0);
