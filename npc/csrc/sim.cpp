@@ -146,7 +146,7 @@ int main() {
   nvboard_bind_all_pins(&dut);
   // nvboard_init();
 
-  size_t img_size = sizeof(mem);
+  size_t img_size = 100;
 
   dbg = std::make_shared<sdb::debuger>(
       INITIAL_PC, INITIAL_PC, img_size, sdbwrap::cpu_exec, sdbwrap::loadmem,
