@@ -33,11 +33,12 @@ object MemReqIO {
   def WriteTX = Flipped(WriteRX)
 }
 
+class MemUnitIO extends Bundle {
+  val read  = MemReqIO.ReadTX
+  val write = MemReqIO.WriteTX
+}
 class MemUnit extends Module {
-  val io = IO(new Bundle {
-    val read  = MemReqIO.ReadRX
-    val write = MemReqIO.WriteRX
-  })
+  val io = IO(new MemUnitIO)
 
   when(io.read.en){
     //printf("(MemUnit) read enabled addr: 0x%x\n", io.read.addr)

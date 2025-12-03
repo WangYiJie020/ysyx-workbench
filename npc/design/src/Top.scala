@@ -97,6 +97,7 @@ class Top(word_width: Int = 32) extends Module {
   exu.io.csr_rvec <> csrs.io.read
 
   mem.io.read <> exu.io.mem_rreq
+  mem.io.write <> exu.io.mem_wreq
 
   // Write back
 
@@ -104,7 +105,6 @@ class Top(word_width: Int = 32) extends Module {
   gprs.io.write <> wbu.io.gpr
   csrs.io.write <> wbu.io.csr
   csrs.io.is_ecall := wbu.io.is_ecall
-  mem.io.write <> wbu.io.mem
 
   wbu.io.nxt_pc.ready := true.B
 

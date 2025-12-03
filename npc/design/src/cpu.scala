@@ -286,8 +286,6 @@ class WriteBackInfo extends Bundle {
   val csr           = CSRegReqIO.TX.Write
   val csr_ecallflag = Bool()
 
-  val mem = MemReqIO.WriteTX
-
   val nxt_pc = Types.UWord
 }
 class EXU           extends Module {
@@ -296,6 +294,7 @@ class EXU           extends Module {
     val rvec     = GPRegReqIO.TX.VecRead(2)
     val csr_rvec = CSRegReqIO.TX.SingleRead
     val mem_rreq = MemReqIO.ReadTX
+    val mem_wreq = MemReqIO.WriteTX
     val out      = Decoupled(new WriteBackInfo)
   })
 
@@ -526,10 +525,10 @@ class EXU           extends Module {
 
   // for now sw only consider align addr
 
-  val mem_wdata = io.out.bits.mem.data
-  val mem_waddr = io.out.bits.mem.addr
-  val mem_wen   = io.out.bits.mem.en
-  val mem_wmask = io.out.bits.mem.mask
+  val mem_wdata = io.mem_wreq.data
+  val mem_waddr = io.mem_wreq.addr
+  val mem_wen   = io.mem_wreq.en
+  val mem_wmask = io.mem_wreq.mask
   mem_wdata := reg_v2 << mem_addr_unalign_part_bitlen
   mem_waddr := mem_addr
   mem_wen   := dinst.info.typ === InstType.store
@@ -540,7 +539,6 @@ class EXU           extends Module {
       MemOp.word     -> 15.U(4.W)
     )
   )
-  io.out.bits.mem.done := false.B // unused
 
   when(dinst.info.typ === InstType.store) {
     when(!MemOp.isValidStoreOp(func3t)) {
@@ -602,7 +600,6 @@ class WBU extends Module {
     val gpr = GPRegReqIO.TX.Write
     val csr = CSRegReqIO.TX.Write
     val is_ecall = Output(Bool())
-    val mem = MemReqIO.WriteTX
     val nxt_pc = Decoupled(Types.UWord)
   })
 
@@ -613,7 +610,7 @@ class WBU extends Module {
   val wbinfo = io.data.bits
   val valid  = io.data.valid
 
-  fsm.io.self_finished := io.mem.done && valid
+  fsm.io.self_finished := true.B
 
   io.gpr.en   := wbinfo.gpr.en && valid
   io.gpr.addr := wbinfo.gpr.addr
@@ -623,11 +620,6 @@ class WBU extends Module {
   io.csr.addr := wbinfo.csr.addr
   io.csr.data := wbinfo.csr.data
   io.is_ecall := wbinfo.csr_ecallflag && valid
-
-  io.mem.en   := wbinfo.mem.en && valid
-  io.mem.addr := wbinfo.mem.addr
-  io.mem.data := wbinfo.mem.data
-  io.mem.mask := wbinfo.mem.mask
 
   io.nxt_pc.bits := wbinfo.nxt_pc
   
