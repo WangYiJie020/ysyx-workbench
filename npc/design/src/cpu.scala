@@ -189,7 +189,7 @@ class IDU extends Module {
   when(io.out.valid) {
     printf("(idu) decoded finished fmt %d type %d\n", res.fmt.asUInt, res.typ.asUInt)
   }
-  printf("(idu) fsm st %d\n",fsm.io._state)
+  printf("(idu) fsm st %d in.valid %b\n",fsm.io._state, io.in.valid)
 
   res.rd  := inst(11, 7)
   res.rs1 := inst(19, 15)
