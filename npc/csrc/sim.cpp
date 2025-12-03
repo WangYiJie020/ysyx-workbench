@@ -63,6 +63,12 @@ void gpr_upd(int regno, int data) {
 	gpr_snap[regno] = data;
 }
 
+bool pc_changed = false;
+void pc_upd(int pc, int npc) {
+//	printf("pc upd pc=%08x npc=%08x\n",pc,npc);
+	pc_changed = true;
+}
+
 void fetch_inst(int pc, int *out_inst) {
 	printf("fetch pc=%08x\n",pc);
 	*out_inst= mem[guest_to_host(pc) / 4];
@@ -97,6 +103,15 @@ int main() {
 
   while (is_running) {
 		step_cycle();
+		if(pc_changed){
+			printf("inst finished execution, after pc changed, gprs:\n");
+			pc_changed=false;
+			printf("gpr snapshot:\n");
+			for(int i=0;i<32;i++){
+				printf("x%02d=%08x ",i,gpr_snap[i]);
+				if(i%8==7)printf("\n");
+			}
+		}
     //nvboard_update();
   }
   return 0;
