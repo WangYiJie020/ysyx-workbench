@@ -45,6 +45,7 @@ word_t mem[600 * 1024 * 1024 / 4] = {
     0x0102c503, // lbu a0,16(t0)
     0x00100073, // ebreak
     0xdeadbeef, // some data
+		0x12345678,
 };
 uint8_t *mem_atguest(size_t addr) {
   assert(addr >= MADDR_BASE);
