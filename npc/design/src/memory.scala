@@ -46,7 +46,8 @@ class MemUnit extends Module {
   //printf("(MemUnit) write en: %b addr: 0x%x data: 0x%x mask: 0b%b\n", io.write.en, io.write.addr, io.write.data, io.write.mask)
 
 
-  io.read.data := RawUnclockedNonVoidFunctionCall("pmem_read", Types.UWord)(
+  io.read.data := RawClockedNonVoidFunctionCall("pmem_read", Types.UWord)(
+    clock,
     io.read.en&&(!reset.asBool),
     io.read.addr
   )
