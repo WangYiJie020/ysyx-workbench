@@ -610,6 +610,8 @@ class WBU extends Module {
   val wbinfo = io.data.bits
   val valid  = io.data.valid
 
+  printf("(wbu) write back gpr en %b addr %d data 0x%x\n", wbinfo.gpr.en, wbinfo.gpr.addr, wbinfo.gpr.data)
+
   fsm.io.self_finished := true.B
 
   io.gpr.en   := wbinfo.gpr.en && valid
