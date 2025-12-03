@@ -46,11 +46,6 @@ class MemUnit extends Module {
   //printf("(MemUnit) write en: %b addr: 0x%x data: 0x%x mask: 0b%b\n", io.write.en, io.write.addr, io.write.data, io.write.mask)
 
 
-  io.read.data := RawClockedNonVoidFunctionCall("pmem_read", Types.UWord)(
-    clock,
-    io.read.en&&(!reset.asBool),
-    io.read.addr
-  )
 
   val s_rd_idle :: s_rd_wait :: Nil = Enum(2)
   val rd_state = RegInit(s_rd_idle)
@@ -60,6 +55,15 @@ class MemUnit extends Module {
   ))
 
   io.read.respValid := (rd_state === s_rd_wait)
+
+  val en_call = io.read.en && (rd_state === s_rd_idle)
+
+  io.read.data := RawClockedNonVoidFunctionCall("pmem_read", Types.UWord)(
+    clock,
+    en_call&&(!reset.asBool),
+    io.read.addr
+  )
+
 
   RawClockedVoidFunctionCall("pmem_write")(
     clock,
