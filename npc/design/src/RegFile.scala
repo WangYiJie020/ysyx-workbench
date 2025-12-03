@@ -6,6 +6,8 @@ import cpu.Types
 import cpu.Types.Ops._
 import chisel3.util.MuxLookup
 
+import chisel3.util.circt.dpi._
+
 class MetaRegReqIO(addr_width: Int = Types.BitWidth.reg_addr, data_width: Int = Types.BitWidth.word) {
   class _VecReadRX(N: Int) extends Bundle {
     require((1 << addr_width) >= N)
@@ -49,6 +51,14 @@ class RegisterFile(READ_PORTS: Int = 2) extends Module {
 
   when(io.write.en) {
     reg(io.write.addr) := io.write.data
+
+      RawClockedVoidFunctionCall("gpr_upd")(
+        clock,
+        io.write.en,
+        io.write.addr,
+        io.write.data
+      )
+
 //    printf("(RegFile) write reg[%d] <= 0x%x\n", io.write.addr, io.write.data)
   }
   for (i <- 0 until READ_PORTS) {
