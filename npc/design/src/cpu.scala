@@ -443,7 +443,7 @@ class EXU           extends Module {
   io.mem_rreq.en := (dinst.info.typ === InstType.load) 
 
   when(dinst.info.typ === InstType.load) {
-    printf("(exu) LOAD en from addr 0x%x\n", mem_raddr)
+    printf("(exu) LOAD en since inst=%08X\n", dinst.code)
   }
 
   val mem_data = mem_raw_rdata >> mem_addr_unalign_part_bitlen
