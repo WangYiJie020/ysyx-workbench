@@ -185,6 +185,7 @@ class IDU extends Module {
   when(io.out.valid) {
     printf("(idu) decoded finished fmt %d type %d\n", res.fmt.asUInt, res.typ.asUInt)
   }
+  printf("(idu) fsm st %d\n",fsm.state)
 
   res.rd  := inst(11, 7)
   res.rs1 := inst(19, 15)
