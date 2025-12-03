@@ -67,8 +67,8 @@ class MemUnit extends Module {
   val s_wr_idle :: s_wr_wait :: Nil = Enum(2)
   val wr_state = RegInit(s_wr_idle)
   wr_state := MuxLookup(wr_state,s_wr_idle)(Seq(
-    s_wr_idle -> s_wr_wait,
-    s_wr_wait                 -> s_wr_idle
+    s_wr_idle -> Mux(io.write.en, s_wr_wait, s_wr_idle),
+    s_wr_wait -> s_wr_idle
   ))
 
   io.write.done := (wr_state === s_wr_wait)
