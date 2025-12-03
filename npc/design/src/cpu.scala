@@ -557,7 +557,7 @@ class EXU           extends Module {
     )
   )
 
-  mem_wen := is_store && (mem_write_state === s_wmem_noneed)
+  mem_wen := is_store && (mem_write_state === s_wmem_wait)
 
   when(dinst.info.typ === InstType.store) {
     when(!MemOp.isValidStoreOp(func3t)) {
