@@ -28,6 +28,12 @@ static void reset(int n) {
 	dut.reset = 0;
 }
 
+static bool is_running = true;
+void raise_ebreak() {
+	printf("ebreak raised, stop sim\n");
+	is_running = false;
+}
+
 typedef uint32_t word_t;
 typedef uint32_t addr_t;
 
@@ -82,7 +88,7 @@ int main() {
 	
 	reset(10);
 
-  while (1) {
+  while (is_running) {
 		step_cycle();
     //nvboard_update();
   }
