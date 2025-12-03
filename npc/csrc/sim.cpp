@@ -139,7 +139,7 @@ void pmem_read(int addr, int *out_data) {
 //  }
 
   *out_data = mem[host_aligned / 4];
-  //  printf("pmem read addr=%08x get %08X\n", addr, *out_data);
+  printf("pmem read addr=%08x get %08X\n", addr, *out_data);
 }
 void pmem_write(int addr, int data, int mask) {
 
