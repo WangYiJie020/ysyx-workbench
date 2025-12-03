@@ -351,12 +351,6 @@ class EXU           extends Module {
   val is_ecall = dinst.code === "h73".U
 
   io.out.bits.csr_ecallflag := is_ecall
-  when(is_ecall) {
-    printf("(exu) ECALL at pc 0x%x\n", dinst.pc)
-  }
-  when(is_mret) {
-    printf("(exu) MRET at pc 0x%x\n", dinst.pc)
-  }
 
   val csrren    = io.csr_rvec.en
   val csr_raddr = io.csr_rvec.addr

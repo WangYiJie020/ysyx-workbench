@@ -125,7 +125,7 @@ class ControlStatusRegisterFile extends Module {
         CSRAddr.marchid   -> march_id
       )
     )
-    printf("(CSR) read CSR[0x%x] => 0x%x\n", io.read.addr, io.read.data)
+ //   printf("(CSR) read CSR[0x%x] => 0x%x\n", io.read.addr, io.read.data)
   }.otherwise {
     io.read.data := 0.U
   }
@@ -135,7 +135,7 @@ class ControlStatusRegisterFile extends Module {
   when(en_wrtie) {
     waregs(widx) := io.write.data
     when(io.is_ecall && (io.write.addr === CSRAddr.mepc)) {
-      printf("(CSR) ecall detected")
+//      printf("(CSR) ecall detected")
       waregs(3) := 11.U // mcause = 11 for ecall from M-mode
     }
   }
