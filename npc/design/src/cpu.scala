@@ -94,19 +94,17 @@ class IFU extends Module {
   val fsm = Module(new OneMasterOneSlaveFSM)
   fsm.connectMaster(io.pc)
   fsm.connectSlave(io.out)
+
   fsm.io.self_finished := true.B
 
-  // printf("(ifu) fetch inst at pc 0x%x\n", io.pc.bits)
-  // printf("(ifu) enable: %b\n", io.pc.valid)
+  // printf("(ifu) fetch inst %x at pc 0x%x\n", io.out.bits.code,io.pc.bits)
+  // printf("(ifu) pc.valid: %b\n", io.pc.valid)
 
-//  printf("(ifu) fsm st %d out.valid %b\n",fsm.io._state, io.out.valid)
-//  when(io.out.ready){
-//    stop()
-//  }
+  val code = RawUnclockedNonVoidFunctionCall("fetch_inst", Types.UWord)(io.pc.valid, io.pc.bits)
 
   // NOTICE: dpi function auto generated with void return
   // see https://github.com/llvm/circt/blob/main/docs/Dialects/FIRRTL/FIRRTLIntrinsics.md#dpi-intrinsic-abi
-  io.out.bits.code := RawClockedNonVoidFunctionCall("fetch_inst", Types.UWord)(clock, io.pc.valid, io.pc.bits)
+  io.out.bits.code := code
   io.out.bits.pc   := io.pc.bits
 }
 
@@ -320,6 +318,8 @@ class EXU           extends Module {
   val MS_fsm = Module(new OneMasterOneSlaveFSM)
   MS_fsm.connectMaster(io.dinst)
   MS_fsm.connectSlave(io.out)
+
+  // printf("(exu) inst 0x%x at pc 0x%x\n", dinst.code, dinst.pc)
 
   /*
   printf("(exu) fsm st %d alu.valid %b mem_rreq.respValid %b\n",MS_fsm.io._state, alu.io.out.valid, io.mem_rreq.respValid)
