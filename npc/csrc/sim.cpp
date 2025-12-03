@@ -28,14 +28,14 @@ std::shared_ptr<sdb::debuger> dbg;
 sdb::difftest_trace_handler_ptr diff_handler;
 
 static void step_cycle() {
-  //	printf("-----step-----\n");
+  printf("-----cycle-----\n");
   dut.clock = 0;
   dut.eval();
 
   dut.clock = 1;
   dut.eval();
 
-  //	printf("-------------\n");
+	printf("-------------\n");
 }
 static void reset(int n) {
   dut.reset = 1;
