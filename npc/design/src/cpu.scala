@@ -44,7 +44,7 @@ class Inst extends Bundle {
 }
 
 class OneMasterOneSlaveFSM extends Module {
-  val io                                      = IO(new Bundle {
+  val io = IO(new Bundle {
     val master_valid = Input(Bool())
     val master_ready = Output(Bool())
 
@@ -71,20 +71,10 @@ class OneMasterOneSlaveFSM extends Module {
   io.slave_valid  := (state === s_wait_slave)
 
   def connectMaster[T <: Data](master: DecoupledIO[T]): Unit = {
-    if(SINGLE_CYCLE_CPU) {
-      master.ready := true.B
-      io.master_valid := true.B
-      return
-    }
     master.ready    := io.master_ready
     io.master_valid := master.valid
   }
   def connectSlave[T <: Data](slave: DecoupledIO[T]):   Unit = {
-    if(SINGLE_CYCLE_CPU) {
-      slave.valid := true.B
-      io.slave_ready := true.B
-      return
-    }
     slave.valid    := io.slave_valid
     io.slave_ready := slave.ready
   }
@@ -171,8 +161,8 @@ class IDU extends Module {
 
   val fsm = Module(new OneMasterOneSlaveFSM)
   fsm.connectMaster(io.in)
+  // fsm.connectSlave(io.out)
   fsm.connectSlave(io.out)
-  fsm.io.self_finished := true.B
 
   io.out.bits.viewAsSupertype(new Inst) := io.in.bits
 
@@ -183,6 +173,8 @@ class IDU extends Module {
   val iinfo_dec = Module(new InstInfoDecoder())
   iinfo_dec.io.opcode                   := io.in.bits.code(6, 0)
   res.viewAsSupertype(new InstMetaInfo) := iinfo_dec.io.out
+
+  fsm.io.self_finished := iinfo_dec.io.valid
 
   res.rd  := inst(11, 7)
   res.rs1 := inst(19, 15)
