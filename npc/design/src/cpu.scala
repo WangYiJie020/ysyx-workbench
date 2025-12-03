@@ -93,6 +93,7 @@ class IFU extends Module {
   fsm.io.self_finished := true.B
 
   printf("(ifu) fetch inst at pc 0x%x\n", io.pc.bits)
+  printf("(ifu) enable: %b\n", io.pc.valid)
 
   // NOTICE: dpi function auto generated with void return
   // see https://github.com/llvm/circt/blob/main/docs/Dialects/FIRRTL/FIRRTLIntrinsics.md#dpi-intrinsic-abi
