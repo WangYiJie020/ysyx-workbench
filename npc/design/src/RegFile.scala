@@ -46,18 +46,22 @@ class RegisterFile(READ_PORTS: Int = 2) extends Module {
   val io  = IO(new Bundle {
     val write = GPRegReqIO.RX.Write
     val rvec  = GPRegReqIO.RX.VecRead(READ_PORTS)
+
+    val a0 = Output(Types.UWord)
   })
   val reg = RegInit(VecInit(Seq.fill(N_REG)(0.UWord)))
+
+  io.a0 := reg(10.U)
 
   when(io.write.en) {
     reg(io.write.addr) := io.write.data
 
-      RawClockedVoidFunctionCall("gpr_upd")(
-        clock,
-        io.write.en,
-        io.write.addr.pad(32),
-        io.write.data
-      )
+    RawClockedVoidFunctionCall("gpr_upd")(
+      clock,
+      io.write.en,
+      io.write.addr.pad(32),
+      io.write.data
+    )
 
 //    printf("(RegFile) write reg[%d] <= 0x%x\n", io.write.addr, io.write.data)
   }
@@ -66,7 +70,7 @@ class RegisterFile(READ_PORTS: Int = 2) extends Module {
       io.rvec.data(i) := 0.U
     }.otherwise {
       io.rvec.data(i) := reg(io.rvec.addr(i))
- //     printf("(RegFile) read reg[%d] => 0x%x\n", io.rvec.addr(i), io.rvec.data(i))
+      //     printf("(RegFile) read reg[%d] => 0x%x\n", io.rvec.addr(i), io.rvec.data(i))
     }
   }
 }

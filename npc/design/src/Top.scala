@@ -69,9 +69,9 @@ class Top(word_width: Int = 32) extends Module {
   val is_ebreak = (ifu.io.out.valid)&&(ifu.io.out.bits.code === "h00100073".U)
 
   when(is_ebreak){
-    printf(p"EBREAK at PC = 0x${Hexadecimal(ifu.io.out.bits.pc)}\n")
+    printf(p"EBREAK at PC = 0x${Hexadecimal(ifu.io.out.bits.pc)} a0 = 0x${Hexadecimal(gprs.io.a0)}\n")
     RawClockedVoidFunctionCall("raise_ebreak")(clock,
-      is_ebreak
+      is_ebreak,gprs.io.a0
     )
     stop()
   }
