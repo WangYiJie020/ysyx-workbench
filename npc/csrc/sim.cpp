@@ -104,20 +104,47 @@ void pc_upd(int pc, int npc) {
   current_pc = npc;
 }
 
-void skip_difftest_ref(){
-	if(diff_handler)diff_handler->skip_ref();
+void skip_difftest_ref() {
+  if (diff_handler)
+    diff_handler->skip_ref();
 }
 
 void fetch_inst(int pc, int *out_inst) {
   printf("fetch pc=%08x\n", pc);
   *out_inst = mem[guest_to_host(pc) / 4];
 }
+
+#define MMIO_SERIAL_PORT 0x10000000u
+#define MMIO_RTC_ADDR 0x10000048u
+
 void pmem_read(int addr, int *out_data) {
+  if (addr == MMIO_RTC_ADDR || addr == MMIO_RTC_ADDR + 4) {
+    skip_difftest_ref();
+    static uint64_t time_in_us;
+    if (addr == MMIO_RTC_ADDR) {
+      struct timespec ts;
+      clock_gettime(CLOCK_MONOTONIC_COARSE, &ts);
+      time_in_us = ts.tv_sec * 1000000 + ts.tv_nsec / 1000;
+      *out_data = (uint32_t)(time_in_us & 0xffffffffu);
+    } else {
+      *out_data = time_in_us >> 32;
+    }
+		return;
+  }
   uint32_t host_aligned = guest_to_host(addr) & (~0x3);
   *out_data = mem[host_aligned / 4];
   printf("pmem read addr=%08x get %08X\n", addr, *out_data);
 }
 void pmem_write(int addr, int data, int mask) {
+
+  if (addr == MMIO_SERIAL_PORT) {
+    // printf("pmem_write to serial port: %c\n",wdata&0xff);
+    skip_difftest_ref();
+    putchar(data & 0xff);
+    //		fflush(stdout);
+    return;
+  }
+
   printf("pmem write addr=%08x data=%08x mask=%02x\n", addr, data, mask);
   uint32_t host_aligned = guest_to_host(addr) & (~0x3);
 
