@@ -94,7 +94,7 @@ class IFU extends Module {
   val fsm = Module(new OneMasterOneSlaveFSM)
   fsm.connectMaster(io.pc)
   fsm.connectSlave(io.out)
-  fsm.io.self_finished := true.B
+  fsm.io.self_finished := io.pc.valid
 
   // printf("(ifu) fetch inst at pc 0x%x\n", io.pc.bits)
   // printf("(ifu) enable: %b\n", io.pc.valid)
