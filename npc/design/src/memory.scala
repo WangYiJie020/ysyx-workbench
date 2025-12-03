@@ -40,8 +40,9 @@ class MemUnit extends Module {
   })
 
   when(io.read.en){
-    printf(p"Mem Read Addr: 0x${Hexadecimal(io.read.addr)}")
+    printf("(MemUnit) read enabled addr: 0x%x\n", io.read.addr)
   }
+
 
   io.read.data := RawClockedNonVoidFunctionCall("pmem_read", Types.UWord)(
     clock,
