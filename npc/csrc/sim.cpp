@@ -56,6 +56,13 @@ word_t guest_to_host(word_t addr) {
   return res;
 }
 
+word_t gpr_snap[32];
+void gpr_upd(int regno, int data) {
+	if (regno == 0)
+		return;
+	gpr_snap[regno] = data;
+}
+
 void fetch_inst(int pc, int *out_inst) {
 	printf("fetch pc=%08x\n",pc);
 	*out_inst= mem[guest_to_host(pc) / 4];
