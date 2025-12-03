@@ -319,9 +319,9 @@ int main(int argc, char **argv) {
   dbg->add_trace(sdb::make_etrace_handler());
   dbg->add_trace(sdb::make_iringbuf_trace_handler());
 
-  diff_handler = sdb::make_difftest_trace_handler(
-      "../nemu/build/riscv32-nemu-interpreter-so", 0);
-  dbg->add_trace(diff_handler);
+  // diff_handler = sdb::make_difftest_trace_handler(
+  //     "../nemu/build/riscv32-nemu-interpreter-so", 0);
+  // dbg->add_trace(diff_handler);
   reset(10);
 
   if (batch_mode) {
