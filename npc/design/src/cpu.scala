@@ -466,7 +466,11 @@ class EXU           extends Module {
     printf("(exu) LOAD en for inst 0x%x at pc 0x%x\n", dinst.code, dinst.pc)
     printf("(exu) dinst.valid %b\n", io.dinst.valid)
     printf("(exu) @pc 0x%x\n", dinst.pc)
-    printf("(exu) LOAD from addr 0x%x\n", mem_raddr)
+    printf("(exu) LOAD get %x from addr 0x%x\n",mem_data, mem_raddr)
+  }
+
+  when(MS_fsm.io.self_finished) {
+    printf("(exu) EXU finished for inst at pc 0x%x\n", dinst.pc)
   }
 
   // wdata
