@@ -187,6 +187,7 @@ class IDU extends Module {
 
   fsm.io.self_finished := iinfo_dec.io.valid
 
+  /*
   printf("(idu) inst 0x%x at pc 0x%x\n", inst, io.in.bits.pc)
   when(!iinfo_dec.io.valid) {
     printf("(idu) UNKNOWN instruction with opcode 0b%b\n", inst(6, 0))
@@ -195,6 +196,7 @@ class IDU extends Module {
     printf("(idu) decoded finished fmt %d type %d\n", res.fmt.asUInt, res.typ.asUInt)
   }
   printf("(idu) fsm st %d in.valid %b\n",fsm.io._state, io.in.valid)
+  */
 
   res.rd  := inst(11, 7)
   res.rs1 := inst(19, 15)
