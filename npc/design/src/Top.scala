@@ -95,7 +95,10 @@ class Top(word_width: Int = 32) extends Module {
 
   // Write back
 
-  gprs.io.write <> wbinfo.gpr
+  gprs.io.write.en := wbinfo.gpr.en && exu.io.out.valid
+  gprs.io.write.addr := wbinfo.gpr.addr
+  gprs.io.write.data := wbinfo.gpr.data
+
   csrs.io.write <> wbinfo.csr
   csrs.io.is_ecall := wbinfo.csr_ecallflag
 
