@@ -293,7 +293,7 @@ int main(int argc, char **argv) {
 
   dbg->enable_inst_trace = true;
 
-  dbg->add_trace(sdb::make_disasm_trace_handler(sdb::default_inst_disasm, -1));
+  dbg->add_trace(sdb::make_disasm_trace_handler(sdb::default_inst_disasm, 16));
   dbg->add_trace(sdb::make_etrace_handler());
   dbg->add_trace(sdb::make_iringbuf_trace_handler());
 
