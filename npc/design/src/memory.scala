@@ -49,9 +49,11 @@ class MemUnit extends Module {
     io.read.en && (!reset.asBool),
     io.read.addr
   )
+  val restpValid = Reg(Bool())
+  restpValid := io.read.en && (!reset.asBool)
 
   io.read.data      := data
-  io.read.respValid := io.read.en
+  io.read.respValid := restpValid
 
   RawClockedVoidFunctionCall("pmem_write")(
     clock,
