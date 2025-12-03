@@ -14,6 +14,16 @@
 TOP_NAME dut;
 void nvboard_bind_all_pins(TOP_NAME *top);
 
+
+typedef uint32_t word_t;
+typedef uint32_t addr_t;
+
+#define MADDR_BASE 0x80000000u
+#define INITIAL_PC MADDR_BASE
+
+std::shared_ptr<sdb::debuger> dbg;
+sdb::difftest_trace_handler_ptr diff_handler;
+
 static void step_cycle() {
   //	printf("-----step-----\n");
   dut.clock = 0;
@@ -33,16 +43,28 @@ static void reset(int n) {
 }
 
 static bool is_running = true;
-void raise_ebreak() {
-  printf("ebreak raised, stop sim\n");
+static bool is_good_trap = false;
+
+word_t current_pc = INITIAL_PC;
+void raise_ebreak(int a0) {
   is_running = false;
+
+	dbg->state().halt(a0);
+
+#define ANSI_FG_RED     "\33[1;31m"
+#define ANSI_FG_GREEN   "\33[1;32m"
+#define ANSI_NONE       "\33[0m"
+
+	if(a0==0){
+		printf(ANSI_FG_GREEN "HIT GOOD TRAP" ANSI_NONE);
+		is_good_trap=true;
+	}
+	else{
+		printf(ANSI_FG_RED "HIT BAD TRAP" ANSI_NONE);
+	}
+	printf(" at pc = 0x%08x\n",current_pc);
 }
 
-typedef uint32_t word_t;
-typedef uint32_t addr_t;
-
-#define MADDR_BASE 0x80000000u
-#define INITIAL_PC MADDR_BASE
 
 word_t mem[600 * 1024 * 1024 / 4] = {
     0x00000297, // auipc t0,0
@@ -76,7 +98,6 @@ std::array<std::string_view, 32> reg_names = {
     "s6", "s7", "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"};
 
 bool pc_changed = false;
-word_t current_pc = INITIAL_PC;
 void pc_upd(int pc, int npc) {
   //	printf("pc upd pc=%08x npc=%08x\n",pc,npc);
   pc_changed = true;
@@ -139,8 +160,6 @@ sdb::vlen_inst_code inst_fetcher(sdb::paddr_t pc) {
 uint8_t *loadmem(sdb::paddr_t addr, size_t nbyte) { return mem_atguest(addr); }
 } // namespace sdbwrap
 
-std::shared_ptr<sdb::debuger> dbg;
-sdb::difftest_trace_handler_ptr diff_handler;
 
 int main() {
   nvboard_bind_all_pins(&dut);
