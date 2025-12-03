@@ -97,8 +97,8 @@ class IFU extends Module {
 
   fsm.io.self_finished := true.B
 
-  printf("(ifu) fetch inst %x at pc 0x%x\n", io.out.bits.code,io.pc.bits)
-  printf("(ifu) pc.valid: %b\n", io.pc.valid)
+  // printf("(ifu) fetch inst %x at pc 0x%x\n", io.out.bits.code,io.pc.bits)
+  // printf("(ifu) pc.valid: %b\n", io.pc.valid)
 
   val code = RawUnclockedNonVoidFunctionCall("fetch_inst", Types.UWord)(io.pc.valid, io.pc.bits)
 
