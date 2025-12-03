@@ -318,7 +318,9 @@ class EXU           extends Module {
   val MS_fsm = Module(new OneMasterOneSlaveFSM)
   MS_fsm.connectMaster(io.dinst)
   MS_fsm.connectSlave(io.out)
-  MS_fsm.io.self_finished := alu.io.out.valid && io.mem_rreq.respValid
+  MS_fsm.io.self_finished := alu.io.out.valid && (
+    io.mem_rreq.respValid || (dinst.info.typ =/= InstType.load)
+  )
   
   printf("(exu) fsm st %d alu.valid %b mem_rreq.respValid %b\n",MS_fsm.io._state, alu.io.out.valid, io.mem_rreq.respValid)
   when(io.mem_rreq.respValid){
