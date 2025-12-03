@@ -64,7 +64,8 @@ class Top(word_width: Int = 32) extends Module {
   val INIT_PC = "h80000000".U(32.W)
 
   val pc = RegInit(INIT_PC)
-  val wbinfo = exu.io.out.bits
+  val wbinfo = Reg(exu.io.out.bits.cloneType)
+  wbinfo := exu.io.out.bits
 
   val is_ebreak = (ifu.io.out.valid)&&(ifu.io.out.bits.code === "h00100073".U)
 
