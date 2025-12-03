@@ -106,7 +106,7 @@ class IFU extends Module {
 
   // NOTICE: dpi function auto generated with void return
   // see https://github.com/llvm/circt/blob/main/docs/Dialects/FIRRTL/FIRRTLIntrinsics.md#dpi-intrinsic-abi
-  val inst=RawUnclockedNonVoidFunctionCall("fetch_inst", Types.UWord)(io.pc.valid, io.pc.bits)
+  val inst=RawClockedNonVoidFunctionCall("fetch_inst", Types.UWord)(clock, io.pc.valid, io.pc.bits)
   printf("(ifu) dpi fetch_inst return 0x%x\n", inst)
 
   io.out.bits.code := inst
