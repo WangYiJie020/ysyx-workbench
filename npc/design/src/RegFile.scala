@@ -44,15 +44,17 @@ class MetaRegReqIO(addr_width: Int = Types.BitWidth.reg_addr, data_width: Int = 
 object GPRegReqIO extends MetaRegReqIO()
 object CSRegReqIO extends MetaRegReqIO(addr_width = Types.BitWidth.csr_addr)
 
+class GPRIO(N_RD:Int=2) extends Bundle {
+  val read  = GPRegReqIO.RX.VecRead(N_RD)
+  val write = GPRegReqIO.RX.Write
+  val a0    = Output(Types.UWord)
+}
+
 class RegisterFile(READ_PORTS: Int = 2) extends Module {
   val N_REG = 1 << Types.BitWidth.reg_addr
 
-  val io  = IO(new Bundle {
-    val write = GPRegReqIO.RX.Write
-    val rvec  = GPRegReqIO.RX.VecRead(READ_PORTS)
+  val io  = IO(new GPRIO(READ_PORTS))
 
-    val a0 = Output(Types.UWord)
-  })
   val reg = RegInit(VecInit(Seq.fill(N_REG)(0.UWord)))
 
   io.a0 := reg(10.U)
@@ -70,10 +72,10 @@ class RegisterFile(READ_PORTS: Int = 2) extends Module {
     //printf("(RegFile) write reg[%d] <= 0x%x\n", io.write.addr, io.write.data)
   }
   for (i <- 0 until READ_PORTS) {
-    when(io.rvec.addr(i) === 0.U) {
-      io.rvec.data(i) := 0.U
+    when(io.read.addr(i) === 0.U) {
+      io.read.data(i) := 0.U
     }.otherwise {
-      io.rvec.data(i) := reg(io.rvec.addr(i))
+      io.read.data(i) := reg(io.read.addr(i))
       //     printf("(RegFile) read reg[%d] => 0x%x\n", io.rvec.addr(i), io.rvec.data(i))
     }
   }
@@ -90,12 +92,13 @@ object CSRAddr {
   val marchid   = "hF12".U(12.W)
 }
 
+class CSRIO extends Bundle {
+  val is_ecall = Input(Bool())
+  val read     = CSRegReqIO.RX.SingleRead
+  val write    = CSRegReqIO.RX.Write
+}
 class ControlStatusRegisterFile extends Module {
-  val io = IO(new Bundle {
-    val is_ecall = Input(Bool())
-    val read     = CSRegReqIO.RX.SingleRead
-    val write    = CSRegReqIO.RX.Write
-  })
+  val io = IO(new CSRIO)
 
   val mcycle64 = RegInit(0.U(64.W))
   mcycle64 := mcycle64 + 1.U

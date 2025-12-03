@@ -24,7 +24,7 @@ object MemReqIO {
     val mask = Input(UInt(4.W))
     val en   = Input(Bool())
 
-
+    val done = Output(Bool())
   }
 
   def ReadRX  = new _ReadRX
@@ -33,24 +33,37 @@ object MemReqIO {
   def WriteTX = Flipped(WriteRX)
 }
 
+class MemUnitIO extends Bundle {
+  val read  = MemReqIO.ReadRX
+  val write = MemReqIO.WriteRX
+}
 class MemUnit extends Module {
-  val io = IO(new Bundle {
-    val read  = MemReqIO.ReadRX
-    val write = MemReqIO.WriteRX
-  })
+  val io = IO(new MemUnitIO)
 
   when(io.read.en){
-    //printf("(MemUnit) read enabled addr: 0x%x\n", io.read.addr)
+//    printf("(MemUnit) read enabled addr: 0x%x\n", io.read.addr)
   }
   //printf("(MemUnit) write en: %b addr: 0x%x data: 0x%x mask: 0b%b\n", io.write.en, io.write.addr, io.write.data, io.write.mask)
 
 
-  io.read.data := RawUnclockedNonVoidFunctionCall("pmem_read", Types.UWord)(
-    io.read.en&&(!reset.asBool),
+
+  val s_rd_idle :: s_rd_wait :: Nil = Enum(2)
+  val rd_state = RegInit(s_rd_idle)
+  rd_state := MuxCase(rd_state, Seq(
+    (rd_state === s_rd_idle && io.read.en) -> s_rd_wait,
+    (rd_state === s_rd_wait)                -> s_rd_idle
+  ))
+
+  io.read.respValid := (rd_state === s_rd_wait)
+
+  val en_call = io.read.en && (rd_state === s_rd_idle)
+
+  io.read.data := RawClockedNonVoidFunctionCall("pmem_read", Types.UWord)(
+    clock,
+    en_call&&(!reset.asBool),
     io.read.addr
   )
 
-  io.read.respValid := io.read.en
 
   RawClockedVoidFunctionCall("pmem_write")(
     clock,
@@ -59,5 +72,7 @@ class MemUnit extends Module {
     io.write.data,
     io.write.mask.pad(32)
   )
+
+  io.write.done := io.write.en
 
 }

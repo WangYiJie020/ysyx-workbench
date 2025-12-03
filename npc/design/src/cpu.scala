@@ -80,7 +80,7 @@ class OneMasterOneSlaveFSM extends Module {
   }
   def connectSlave[T <: Data](slave: DecoupledIO[T]):   Unit = {
     slave.valid    := io.slave_valid
-    io.slave_ready := slave.ready
+io.slave_ready := slave.ready
   }
 
 }
@@ -286,8 +286,6 @@ class WriteBackInfo extends Bundle {
   val csr           = CSRegReqIO.TX.Write
   val csr_ecallflag = Bool()
 
-  val mem = MemReqIO.WriteTX
-
   val nxt_pc = Types.UWord
 }
 class EXU           extends Module {
@@ -296,6 +294,7 @@ class EXU           extends Module {
     val rvec     = GPRegReqIO.TX.VecRead(2)
     val csr_rvec = CSRegReqIO.TX.SingleRead
     val mem_rreq = MemReqIO.ReadTX
+    val mem_wreq = MemReqIO.WriteTX
     val out      = Decoupled(new WriteBackInfo)
   })
 
@@ -432,28 +431,45 @@ class EXU           extends Module {
     }
   }
 
-  // printf("(exu) reg(%d) 0x%x reg(%d) 0x%x\n", dinst.info.rs1,reg_v1,dinst.info.rs2, reg_v2)
-  // printf("(exu) imm 0x%x\n", dinst.info.imm)
+//  printf("(exu) reg(%d) 0x%x reg(%d) 0x%x\n", dinst.info.rs1,reg_v1,dinst.info.rs2, reg_v2)
+//  printf("(exu) imm 0x%x\n", dinst.info.imm)
 
   val mem_addr                     = reg_v1 + dinst.info.imm
   val mem_addr_unalign_part        = mem_addr(1, 0)
   val mem_addr_unalign_part_bitlen = mem_addr_unalign_part << 3
 
   val mem_raddr     = io.mem_rreq.addr
-  val mem_raw_rdata = io.mem_rreq.data
 
-  io.mem_rreq.en := (dinst.info.typ === InstType.load)
+  val mem_raw_rdata = Reg(Types.UWord)
 
-  when(dinst.info.typ === InstType.load) {
-    // printf("(exu) LOAD en since inst=%x\n", dinst.code)
+  val s_rmem_noneed :: s_rmem_wait :: s_rmem_ok :: Nil = Enum(3)
+
+  val mem_read_state = RegInit(s_rmem_noneed)
+  val is_load        = dinst.info.typ === InstType.load
+
+  when(io.mem_rreq.respValid) {
+    mem_raw_rdata := io.mem_rreq.data
   }
+
+  mem_read_state := MuxLookup(mem_read_state, s_rmem_noneed)(
+    Seq(
+      s_rmem_noneed -> Mux(is_load, s_rmem_wait, s_rmem_noneed),
+      s_rmem_wait   -> Mux(io.mem_rreq.respValid, s_rmem_ok, s_rmem_wait),
+      s_rmem_ok     -> Mux(MS_fsm.io.slave_ready, s_rmem_noneed, s_rmem_ok)
+    )
+  )
+
+//  printf("(exu) mem_read_state %d selve rdy %d\n", mem_read_state, MS_fsm.io.slave_ready)
 
   val mem_data = mem_raw_rdata >> mem_addr_unalign_part_bitlen
 
+
+  io.mem_rreq.en := is_load && (mem_read_state === s_rmem_wait)
   MS_fsm.io.self_finished := alu.io.out.valid && (
-    (dinst.info.typ =/= InstType.load) || io.mem_rreq.respValid
+    (!is_load) || (mem_read_state === s_rmem_ok)
   )
-  mem_raddr               := mem_addr
+
+  mem_raddr := mem_addr
 
 //when(mem_ren) {
 //  printf("(exu) @pc 0x%x\n", dinst.pc)
@@ -513,10 +529,10 @@ class EXU           extends Module {
 
   // for now sw only consider align addr
 
-  val mem_wdata = io.out.bits.mem.data
-  val mem_waddr = io.out.bits.mem.addr
-  val mem_wen   = io.out.bits.mem.en
-  val mem_wmask = io.out.bits.mem.mask
+  val mem_wdata = io.mem_wreq.data
+  val mem_waddr = io.mem_wreq.addr
+  val mem_wen   = io.mem_wreq.en
+  val mem_wmask = io.mem_wreq.mask
   mem_wdata := reg_v2 << mem_addr_unalign_part_bitlen
   mem_waddr := mem_addr
   mem_wen   := dinst.info.typ === InstType.store
@@ -527,6 +543,7 @@ class EXU           extends Module {
       MemOp.word     -> 15.U(4.W)
     )
   )
+
   when(dinst.info.typ === InstType.store) {
     when(!MemOp.isValidStoreOp(func3t)) {
       //     printf("(exu) UNKNOWN STORE func3t %d\n", func3t)
@@ -579,4 +596,35 @@ class EXU           extends Module {
       nxt_pc := snpc
     }
   }
+}
+
+class WBU extends Module {
+  val io = IO(new Bundle {
+    val data  = Flipped(Decoupled(new WriteBackInfo))
+    val gpr = GPRegReqIO.TX.Write
+    val csr = CSRegReqIO.TX.Write
+    val is_ecall = Output(Bool())
+    val done = Output(Bool())
+  })
+
+
+  val wbinfo = io.data.bits
+  val valid  = io.data.valid
+
+  io.data.ready := valid
+
+  // printf("(wbu) write back gpr en %b addr %d data 0x%x\n", wbinfo.gpr.en, wbinfo.gpr.addr, wbinfo.gpr.data)
+  // printf("(wbu) valid %b\n", valid)
+
+
+  io.gpr.en   := wbinfo.gpr.en && valid
+  io.gpr.addr := wbinfo.gpr.addr
+  io.gpr.data := wbinfo.gpr.data
+
+  io.csr.en   := wbinfo.csr.en && valid
+  io.csr.addr := wbinfo.csr.addr
+  io.csr.data := wbinfo.csr.data
+  io.is_ecall := wbinfo.csr_ecallflag && valid
+
+  io.done := valid
 }
