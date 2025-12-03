@@ -110,8 +110,8 @@ void skip_difftest_ref() {
 }
 
 void fetch_inst(int pc, int *out_inst) {
-  printf("fetch pc=%08x\n", pc);
   *out_inst = mem[guest_to_host(pc) / 4];
+  printf("fetch pc=%08x get %08X\n", pc, *out_inst);
 }
 
 #define MMIO_SERIAL_PORT 0x10000000u
