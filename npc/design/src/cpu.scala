@@ -319,7 +319,14 @@ class EXU           extends Module {
   MS_fsm.connectMaster(io.dinst)
   MS_fsm.connectSlave(io.out)
   MS_fsm.io.self_finished := alu.io.out.valid && io.mem_rreq.respValid
-
+  
+  printf("(exu) fsm st %d alu.valid %b mem_rreq.respValid %b\n",MS_fsm.io._state, alu.io.out.valid, io.mem_rreq.respValid)
+  when(io.mem_rreq.respValid){
+    printf("(exu) MEM read data 0x%x for inst at pc 0x%x\n", io.mem_rreq.data, dinst.pc)
+  }
+  when(alu.io.out.valid) {
+    printf("(exu) ALU result 0x%x for inst at pc 0x%x\n", alu.io.out.bits, dinst.pc)
+  }
   when(io.out.valid) {
     printf("(exu) finish exu for inst at pc 0x%x\n", dinst.pc)
   }
