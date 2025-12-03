@@ -161,11 +161,18 @@ void pmem_write(int addr, int data, int mask) {
   }
 }
 
+void dump_regs() {
+	for (int i = 0; i < 32; i++) {
+		printf("%s: %08x\n", reg_names[i].data(), gpr_snap[i]);
+	}
+}
 void step_inst() {
   while (!pc_changed) {
     step_cycle();
   }
   pc_changed = false;
+	dump_regs();
+	
 }
 
 // IMG
