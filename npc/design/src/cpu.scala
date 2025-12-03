@@ -442,6 +442,10 @@ class EXU           extends Module {
   
   io.mem_rreq.en := (dinst.info.typ === InstType.load) 
 
+  when(dinst.info.typ === InstType.load) {
+    printf("(exu) LOAD en from addr 0x%x\n", mem_raddr)
+  }
+
   val mem_data = mem_raw_rdata >> mem_addr_unalign_part_bitlen
 
   MS_fsm.io.self_finished := alu.io.out.valid && (
