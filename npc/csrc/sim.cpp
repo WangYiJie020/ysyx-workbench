@@ -176,7 +176,7 @@ void step_inst() {
     step_cycle();
   }
   pc_changed = false;
-	dump_regs();
+//	dump_regs();
 	
 }
 
