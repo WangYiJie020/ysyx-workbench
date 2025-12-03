@@ -24,7 +24,8 @@ typedef uint32_t addr_t;
 #define MADDR_BASE 0x80000000u
 #define INITIAL_PC MADDR_BASE
 
-#define TRACE_PMEM_CALL 1
+#define TRACE_PMEM_CALL
+#define TRACE_SHOW_ALL_INST
 
 std::shared_ptr<sdb::debuger> dbg;
 sdb::difftest_trace_handler_ptr diff_handler;
@@ -124,11 +125,11 @@ void fetch_inst(int pc, int *out_inst) {
 #define MMIO_RTC_ADDR 0x10000048u
 
 void pmem_read(int addr, int *out_data) {
-	if(!is_running){
-		printf("warn: pmem_read when not running\n");
-		*out_data=0;
-		return;
-	}
+  if (!is_running) {
+    printf("warn: pmem_read when not running\n");
+    *out_data = 0;
+    return;
+  }
 
   if (addr == MMIO_RTC_ADDR || addr == MMIO_RTC_ADDR + 4) {
     skip_difftest_ref();
@@ -306,7 +307,15 @@ int main(int argc, char **argv) {
 
   dbg->enable_inst_trace = true;
 
-  dbg->add_trace(sdb::make_disasm_trace_handler(sdb::default_inst_disasm, 16));
+  size_t inst_show_limit;
+#ifdef TRACE_SHOW_ALL_INST
+  inst_show_limit = -1;
+#else
+  inst_show_limit = 16;
+#endif
+
+  dbg->add_trace(sdb::make_disasm_trace_handler(sdb::default_inst_disasm,
+                                                inst_show_limit));
   dbg->add_trace(sdb::make_etrace_handler());
   dbg->add_trace(sdb::make_iringbuf_trace_handler());
 
