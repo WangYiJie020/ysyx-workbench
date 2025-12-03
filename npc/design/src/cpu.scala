@@ -444,16 +444,26 @@ class EXU           extends Module {
 
   io.mem_rreq.en := (dinst.info.typ === InstType.load)
 
-  when(dinst.info.typ === InstType.load) {
-    // printf("(exu) LOAD en since inst=%x\n", dinst.code)
-  }
+  val s_rmem_noneed :: s_rmem_wait :: s_rmem_ok :: Nil = Enum(3)
+
+  val mem_read_state = RegInit(s_rmem_noneed)
+  val is_load        = dinst.info.typ === InstType.load
+
+  mem_read_state := MuxLookup(mem_read_state, s_rmem_noneed)(
+    Seq(
+      s_rmem_noneed -> Mux(is_load && io.mem_rreq.en, s_rmem_wait, s_rmem_noneed),
+      s_rmem_wait   -> Mux(io.mem_rreq.respValid, s_rmem_ok, s_rmem_wait),
+      s_rmem_ok     -> Mux(MS_fsm.io.slave_ready, s_rmem_noneed, s_rmem_ok)
+    )
+  )
 
   val mem_data = mem_raw_rdata >> mem_addr_unalign_part_bitlen
 
   MS_fsm.io.self_finished := alu.io.out.valid && (
-    (dinst.info.typ =/= InstType.load) || io.mem_rreq.respValid
+    (!is_load) || (mem_read_state === s_rmem_ok)
   )
-  mem_raddr               := mem_addr
+
+  mem_raddr := mem_addr
 
 //when(mem_ren) {
 //  printf("(exu) @pc 0x%x\n", dinst.pc)
