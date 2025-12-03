@@ -431,8 +431,8 @@ class EXU           extends Module {
     }
   }
 
-  // printf("(exu) reg(%d) 0x%x reg(%d) 0x%x\n", dinst.info.rs1,reg_v1,dinst.info.rs2, reg_v2)
-  // printf("(exu) imm 0x%x\n", dinst.info.imm)
+  printf("(exu) reg(%d) 0x%x reg(%d) 0x%x\n", dinst.info.rs1,reg_v1,dinst.info.rs2, reg_v2)
+  printf("(exu) imm 0x%x\n", dinst.info.imm)
 
   val mem_addr                     = reg_v1 + dinst.info.imm
   val mem_addr_unalign_part        = mem_addr(1, 0)
