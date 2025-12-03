@@ -102,7 +102,8 @@ class Top(word_width: Int = 32) extends Module {
 
   wbu.io.data <> exu.io.out
   gprs.io.write <> wbu.io.gpr
-  csrs.io <> wbu.io.csrio
+  csrs.io.write <> wbu.io.csr
+  csrs.io.is_ecall := wbu.io.is_ecall
   mem.io.write <> wbu.io.mem
 
 

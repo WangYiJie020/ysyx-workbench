@@ -598,7 +598,8 @@ class WBU extends Module {
   val io = IO(new Bundle {
     val data  = Flipped(Decoupled(new WriteBackInfo))
     val gpr = GPRegReqIO.TX.Write
-    val csrio = Flipped(new CSRIO)
+    val csr = CSRegReqIO.TX.Write
+    val is_ecall = Output(Bool())
     val mem = MemReqIO.WriteTX
     val nxt_pc = Decoupled(Types.UWord)
   })
@@ -616,10 +617,10 @@ class WBU extends Module {
   io.gpr.addr := wbinfo.gpr.addr
   io.gpr.data := wbinfo.gpr.data
 
-  io.csrio.write.en   := wbinfo.csr.en && valid
-  io.csrio.write.addr := wbinfo.csr.addr
-  io.csrio.write.data := wbinfo.csr.data
-  io.csrio.is_ecall := wbinfo.csr_ecallflag && valid
+  io.csr.en   := wbinfo.csr.en && valid
+  io.csr.addr := wbinfo.csr.addr
+  io.csr.data := wbinfo.csr.data
+  io.is_ecall := wbinfo.csr_ecallflag && valid
 
   io.mem.en   := wbinfo.mem.en && valid
   io.mem.addr := wbinfo.mem.addr
