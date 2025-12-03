@@ -52,12 +52,16 @@ class OneMasterOneSlaveFSM extends Module {
 
     val slave_valid = Output(Bool())
     val slave_ready = Input(Bool())
+
+    val _state = Output(UInt(2.W))
   })
 
   val SINGLE_CYCLE_CPU = true
 
   val s_idle :: s_busy :: s_wait_slave :: Nil = Enum(3)
   val state                                   = RegInit(s_idle)
+
+  io._state := state
 
   state := MuxLookup(state, s_idle)(
     Seq(
@@ -185,7 +189,7 @@ class IDU extends Module {
   when(io.out.valid) {
     printf("(idu) decoded finished fmt %d type %d\n", res.fmt.asUInt, res.typ.asUInt)
   }
-  printf("(idu) fsm st %d\n",fsm.state)
+  printf("(idu) fsm st %d\n",fsm.io._state)
 
   res.rd  := inst(11, 7)
   res.rs1 := inst(19, 15)
