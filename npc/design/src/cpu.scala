@@ -597,9 +597,9 @@ class EXU           extends Module {
 class WBU extends Module {
   val io = IO(new Bundle {
     val data  = Flipped(Decoupled(new WriteBackInfo))
-    val gpr = Flipped(GPRegReqIO.TX.Write)
+    val gpr = GPRegReqIO.TX.Write
     val csrio = Flipped(new CSRIO)
-    val mem = Flipped(MemReqIO.WriteTX)
+    val mem = MemReqIO.WriteTX
     val nxt_pc = Decoupled(Types.UWord)
   })
 
