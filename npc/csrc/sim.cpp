@@ -28,14 +28,14 @@ std::shared_ptr<sdb::debuger> dbg;
 sdb::difftest_trace_handler_ptr diff_handler;
 
 static void step_cycle() {
-  //	printf("-----step-----\n");
+  	printf("-----step-----\n");
   dut.clock = 0;
   dut.eval();
 
   dut.clock = 1;
   dut.eval();
 
-  //	printf("-------------\n");
+  	printf("-------------\n");
 }
 static void reset(int n) {
   dut.reset = 1;
@@ -110,11 +110,11 @@ void skip_difftest_ref() {
 }
 
 void fetch_inst(int pc, int *out_inst) {
+  printf("fetch pc=%08x\n", pc);
 	if(pc==0){
 		*out_inst=0;
 		return;
 	}
-  printf("fetch pc=%08x\n", pc);
   *out_inst = mem[guest_to_host(pc) / 4];
 }
 
