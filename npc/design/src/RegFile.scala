@@ -55,7 +55,7 @@ class RegisterFile(READ_PORTS: Int = 2) extends Module {
       RawClockedVoidFunctionCall("gpr_upd")(
         clock,
         io.write.en,
-        io.write.addr,
+        io.write.addr.pad(32),
         io.write.data
       )
 
