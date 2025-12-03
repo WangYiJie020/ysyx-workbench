@@ -320,6 +320,10 @@ class EXU           extends Module {
   MS_fsm.connectSlave(io.out)
   MS_fsm.io.self_finished := alu.io.out.valid && io.mem_rreq.respValid
 
+  when(io.out.valid) {
+    printf("(exu) finish exu for inst at pc 0x%x\n", dinst.pc)
+  }
+
   // reg
 
   io.rvec.en      := true.B
