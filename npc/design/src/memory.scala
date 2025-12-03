@@ -64,6 +64,9 @@ class MemUnit extends Module {
     io.read.addr
   )
 
+  when(io.write.en){
+   printf("(MemUnit) write enabled addr: 0x%x data: 0x mask: 0b%b\n", io.write.addr, io.write.data, io.write.mask)
+  }
 
   RawClockedVoidFunctionCall("pmem_write")(
     clock,
