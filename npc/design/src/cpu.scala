@@ -439,13 +439,17 @@ class EXU           extends Module {
   val mem_addr_unalign_part_bitlen = mem_addr_unalign_part << 3
 
   val mem_raddr     = io.mem_rreq.addr
-  val mem_raw_rdata = io.mem_rreq.data
 
+  val mem_raw_rdata = Reg(Types.UWord)
 
   val s_rmem_noneed :: s_rmem_wait :: s_rmem_ok :: Nil = Enum(3)
 
   val mem_read_state = RegInit(s_rmem_noneed)
   val is_load        = dinst.info.typ === InstType.load
+
+  when(io.mem_rreq.respValid) {
+    mem_raw_rdata := io.mem_rreq.data
+  }
 
   mem_read_state := MuxLookup(mem_read_state, s_rmem_noneed)(
     Seq(
