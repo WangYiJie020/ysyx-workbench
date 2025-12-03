@@ -111,9 +111,9 @@ class IFU extends Module {
   // see https://github.com/llvm/circt/blob/main/docs/Dialects/FIRRTL/FIRRTLIntrinsics.md#dpi-intrinsic-abi
   when(io.pc.valid){
     inst := RawClockedNonVoidFunctionCall("fetch_inst", Types.UWord)(clock, io.pc.valid, io.pc.bits)
-    valid:= true.B
+    finished:= true.B
   }.otherwise{
-    valid:= false.B
+    finished:= false.B
   }
 
   io.out.bits.code := inst
