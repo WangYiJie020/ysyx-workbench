@@ -563,9 +563,9 @@ class EXU           extends Module {
       //     printf("(exu) UNKNOWN STORE func3t %d\n", func3t)
     }
   }
-//  when(mem_wen) {
-//    printf("(exu) STORE to addr 0x%x data 0x%x mask 0b%b\n", mem_waddr, mem_wdata, mem_wmask)
-//  }
+ when(mem_wen) {
+   printf("(exu) STORE to addr 0x%x data 0x%x mask 0b%b\n", mem_waddr, mem_wdata, mem_wmask)
+ }
 
   // nxt_pc
 
