@@ -110,6 +110,10 @@ void skip_difftest_ref() {
 }
 
 void fetch_inst(int pc, int *out_inst) {
+	if(pc==0){
+		*out_inst=0;
+		return;
+	}
   printf("fetch pc=%08x\n", pc);
   *out_inst = mem[guest_to_host(pc) / 4];
 }
