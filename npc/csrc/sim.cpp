@@ -305,7 +305,7 @@ int main(int argc, char **argv) {
       std::vector<std::string_view>(reg_names.begin(), reg_names.end()),
       sdbwrap::inst_fetcher);
 
-  // dbg->enable_inst_trace = true;
+  dbg->enable_inst_trace = true;
 
   size_t inst_show_limit;
 #ifdef TRACE_SHOW_ALL_INST
@@ -313,11 +313,11 @@ int main(int argc, char **argv) {
 #else
   inst_show_limit = 16;
 #endif
-
-  dbg->add_trace(sdb::make_disasm_trace_handler(sdb::default_inst_disasm,
-                                                inst_show_limit));
-  dbg->add_trace(sdb::make_etrace_handler());
-  dbg->add_trace(sdb::make_iringbuf_trace_handler());
+  //
+  // dbg->add_trace(sdb::make_disasm_trace_handler(sdb::default_inst_disasm,
+  //                                               inst_show_limit));
+  // dbg->add_trace(sdb::make_etrace_handler());
+  // dbg->add_trace(sdb::make_iringbuf_trace_handler());
 
   // diff_handler = sdb::make_difftest_trace_handler(
   //     "../nemu/build/riscv32-nemu-interpreter-so", 0);
