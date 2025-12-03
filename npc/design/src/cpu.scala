@@ -459,7 +459,7 @@ class EXU           extends Module {
     )
   )
 
-  printf("(exu) mem_read_state %d selve rdy %d\n", mem_read_state, MS_fsm.io.slave_ready)
+//  printf("(exu) mem_read_state %d selve rdy %d\n", mem_read_state, MS_fsm.io.slave_ready)
 
   val mem_data = mem_raw_rdata >> mem_addr_unalign_part_bitlen
 
@@ -613,8 +613,8 @@ class WBU extends Module {
 
   io.data.ready := valid
 
-  printf("(wbu) write back gpr en %b addr %d data 0x%x\n", wbinfo.gpr.en, wbinfo.gpr.addr, wbinfo.gpr.data)
-  printf("(wbu) valid %b\n", valid)
+  // printf("(wbu) write back gpr en %b addr %d data 0x%x\n", wbinfo.gpr.en, wbinfo.gpr.addr, wbinfo.gpr.data)
+  // printf("(wbu) valid %b\n", valid)
 
 
   io.gpr.en   := wbinfo.gpr.en && valid

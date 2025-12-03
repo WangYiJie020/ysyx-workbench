@@ -71,15 +71,18 @@ class Top(word_width: Int = 32) extends Module {
   val nxt_pc = exu.io.out.bits.nxt_pc
   val nxt_pc_valid = wbu.io.done
 
-  when(is_ebreak) {
+  val halted = RegInit(false.B)
+
+  when(is_ebreak && !halted){
     printf(p"EBREAK at PC = 0x${Hexadecimal(ifu.io.out.bits.pc)} a0 = 0x${Hexadecimal(gprs.io.a0)}\n")
     RawClockedVoidFunctionCall("raise_ebreak")(clock, is_ebreak, gprs.io.a0)
+    halted := true.B
   }
 
   pc := Mux(wbu.io.done, nxt_pc, pc)
 
   when(nxt_pc_valid){ 
-    printf(p"(Top) PC: 0x${Hexadecimal(pc)} -> 0x${Hexadecimal(nxt_pc)}\n")
+//    printf(p"(Top) PC: 0x${Hexadecimal(pc)} -> 0x${Hexadecimal(nxt_pc)}\n")
     RawClockedVoidFunctionCall("pc_upd")(
       clock,
       nxt_pc_valid,
