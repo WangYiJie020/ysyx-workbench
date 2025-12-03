@@ -442,7 +442,6 @@ class EXU           extends Module {
   val mem_raddr     = io.mem_rreq.addr
   val mem_raw_rdata = io.mem_rreq.data
 
-  io.mem_rreq.en := (dinst.info.typ === InstType.load)
 
   val s_rmem_noneed :: s_rmem_wait :: s_rmem_ok :: Nil = Enum(3)
 
@@ -451,7 +450,7 @@ class EXU           extends Module {
 
   mem_read_state := MuxLookup(mem_read_state, s_rmem_noneed)(
     Seq(
-      s_rmem_noneed -> Mux(is_load && io.mem_rreq.en, s_rmem_wait, s_rmem_noneed),
+      s_rmem_noneed -> Mux(is_load, s_rmem_wait, s_rmem_noneed),
       s_rmem_wait   -> Mux(io.mem_rreq.respValid, s_rmem_ok, s_rmem_wait),
       s_rmem_ok     -> Mux(MS_fsm.io.slave_ready, s_rmem_noneed, s_rmem_ok)
     )
@@ -459,6 +458,8 @@ class EXU           extends Module {
 
   val mem_data = mem_raw_rdata >> mem_addr_unalign_part_bitlen
 
+
+  io.mem_rreq.en := is_load && (mem_read_state === s_rmem_wait)
   MS_fsm.io.self_finished := alu.io.out.valid && (
     (!is_load) || (mem_read_state === s_rmem_ok)
   )
