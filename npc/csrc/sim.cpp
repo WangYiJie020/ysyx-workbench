@@ -352,10 +352,9 @@ int main(int argc, char **argv) {
     return dbg->state().is_badexit();
   }
 
-  const std::unique_ptr<VerilatedContext> contextp{new VerilatedContext};
-  const std::unique_ptr<TOP_NAME> top{new TOP_NAME{contextp.get()}};
 
-  contextp->internalsDump(); // See scopes to help debug
+
+  dut.contextp()->internalsDump(); // See scopes to help debug
 
   std::string cmd;
   while (true) {
