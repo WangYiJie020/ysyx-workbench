@@ -96,7 +96,7 @@ class IFU extends Module {
   fsm.io.self_finished := (state === s_wait)
 
   when(io.out.ready){
-    printf("ifu downstream ready\n")
+    // printf("ifu downstream ready\n")
   }
   
   // NOTICE: dpi function auto generated with void return
