@@ -77,6 +77,8 @@ public:
 
     bool is_first = true;
 
+    std::cout << ANSIFMT_COMMENT << " // poke result beg" << ANSIFMT_NONE;
+
     for (auto &h : _watched_handles) {
       s_vpi_value v;
       v.format = vpiIntVal;
@@ -97,6 +99,8 @@ public:
 
       if (!is_first) {
         std::cout << std::endl;
+      } else {
+        is_first = false;
       }
 
       std::cout << std::format(
@@ -106,11 +110,6 @@ public:
                        "{:0{}x}" ANSIFMT_NONE,
           sig_width, type, notop_name, (uint32_t)v.value.integer,
           val_out_width);
-
-      if (is_first) {
-        is_first = false;
-        std::cout << ANSIFMT_COMMENT << " // poke result beg" << ANSIFMT_NONE;
-      }
     }
     std::cout << ANSIFMT_COMMENT " // end" ANSIFMT_NONE << std::endl;
   }
