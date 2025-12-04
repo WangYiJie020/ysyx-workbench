@@ -258,10 +258,13 @@ static void parse_args(int argc, char **argv) {
   }
 }
 
-void read_and_check() {
-  vpiHandle vh1 = vpi_handle_by_name((PLI_BYTE8 *)("Top.pc"), NULL);
-  if (!vh1)
-    vl_fatal(__FILE__, __LINE__, "sim_main", "No handle found");
+void read_and_check(const char* sig_name) {
+  vpiHandle vh1 = vpi_handle_by_name((PLI_BYTE8 *)(sig_name), NULL);
+  if (!vh1){
+		printf("No handle found for %s\n", sig_name);
+		return;
+    //vl_fatal(__FILE__, __LINE__, "sim_main", "No handle found");
+	}
   const char *name = vpi_get_str(vpiName, vh1);
   const char *type = vpi_get_str(vpiType, vh1);
   const int size = vpi_get(vpiSize, vh1);
@@ -343,7 +346,6 @@ int main(int argc, char **argv) {
   reset(10);
 
   VerilatedVpi::callValueCbs();
-  read_and_check();
 
   if (batch_mode) {
     dbg->exec_command("c");
@@ -359,7 +361,8 @@ int main(int argc, char **argv) {
   while (true) {
     std::cout << "(sdb) ";
     std::getline(std::cin, cmd);
-    dbg->exec_command(cmd);
+		read_and_check(cmd.c_str());
+    // dbg->exec_command(cmd);
     if (dbg->state().state == sdb::run_state::quit) {
       break;
     }
