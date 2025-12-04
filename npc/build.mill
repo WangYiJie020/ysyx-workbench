@@ -1,3 +1,6 @@
+//| scalaVersion: 2.13.18
+//| mvnDeps: ["com.lihaoyi::mill-contrib-bloop:0.12.16"]
+//
 package build
 
 // import Mill dependency
@@ -11,6 +14,8 @@ import mill.javalib.bsp.BspModule
 
 // support BSP
 // import mill.bsp._
+
+//import mill.contrib.bloop.BloopModule
 
 object design extends ScalaModule
   with ScalafmtModule
@@ -37,7 +42,7 @@ object design extends ScalaModule
     // 
     override def mvnDeps             = Seq(
       mvn"org.chipsalliance::chisel:$chiselVersion",
-      mvn"com.lihaoyi::mill-contrib-bloop:0.12.16"
+     // mvn"com.lihaoyi::mill-contrib-bloop:0.12.16"
     )
     override def scalacPluginMvnDeps = Seq(mvn"org.chipsalliance:::chisel-plugin:$chiselVersion")
 
