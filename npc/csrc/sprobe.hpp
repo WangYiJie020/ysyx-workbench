@@ -53,12 +53,13 @@ public:
                 << std::endl;
       return false;
     }
-		auto type = vpi_get(vpiType, vh1);
-		if(type==vpiModule){
-			std::cout<<"SProbe add_watch cannot watch module "<<sig_name<<std::endl;
-			vpi_release_handle(vh1);
-			return false;
-		}
+    auto type = vpi_get(vpiType, vh1);
+    if (type == vpiModule) {
+      std::cout << "SProbe add_watch cannot watch module " << sig_name
+                << std::endl;
+      vpi_release_handle(vh1);
+      return false;
+    }
     _watched_handles.push_back(vh1);
     return true;
   }
@@ -80,24 +81,25 @@ public:
       vpi_get_value(h, &v);
       std::string_view fullname = vpi_get_str(vpiFullName, h);
       std::string_view type = vpi_get_str(vpiType, h);
-			auto sig_width = vpi_get(vpiSize, h);
+      auto sig_width = vpi_get(vpiSize, h);
       if (type.starts_with("vpi")) {
         type = type.substr(3);
       }
       // Remove the "TOP."
       auto notop_name = fullname.substr(4);
-      auto first_modname = notop_name.substr(0, notop_name.find('.'));
-      notop_name = notop_name.substr(first_modname.size() + 1);
+      if (notop_name.starts_with("Top.")) {
+        notop_name = notop_name.substr(4);
+      }
 
-			auto val_out_width=(sig_width+3)/4+2; // 0x + (8bits per 2hex) upceil
+      auto val_out_width =
+          (sig_width + 3) / 4 + 2; // 0x + (8bits per 2hex) upceil
 
-      std::cout << std::format(
-          ANSIFMT_SIGNAL_TYPE "{} " ANSIFMT_SIGNAL_WIDTH "{:2}.W " ANSIFMT_GRAY
-                              "{}." ANSIFMT_SIGNAL_NAME "{}" ANSIFMT_NONE
-                              " = {:#0{}x}\n",
-          type, sig_width, first_modname,notop_name, (uint32_t)v.value.integer,
-					val_out_width
-					);
+      std::cout << std::format(ANSIFMT_GRAY "Signal " ANSIFMT_SIGNAL_TYPE
+                                            "{} " ANSIFMT_SIGNAL_WIDTH
+                                            "{:2}W " ANSIFMT_SIGNAL_NAME
+                                            "{}" ANSIFMT_NONE " = {:#0{}x}\n",
+                               type, sig_width, notop_name,
+                               (uint32_t)v.value.integer, val_out_width);
     }
   }
 };
