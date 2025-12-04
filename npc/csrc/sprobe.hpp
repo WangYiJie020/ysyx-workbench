@@ -71,7 +71,7 @@ public:
 #define ANSIFMT_NONE "\e[0m"
 #define ANSIFMT_GRAY "\e[38;2;90;90;90m"
 #define ANSIFMT_SIGNAL_NAME "\e[38;2;156;220;254m"
-#define ANSIFMT_SIGNAL_WIDTH "\e[38;2;181;206;168m"
+#define ANSIFMT_NUM "\e[38;2;181;206;168m"
 #define ANSIFMT_SIGNAL_TYPE "\e[38;2;78;201;176m"
 
     // std::cout << "===== SProbe Watched Signals =====" << std::endl;
@@ -93,12 +93,12 @@ public:
 
       auto val_out_width = (sig_width + 3) / 4; // (8bits per 2hex) upceil
 
-      std::cout << std::format(ANSIFMT_GRAY "Signal " ANSIFMT_SIGNAL_WIDTH
-                                            "{:2}W " ANSIFMT_SIGNAL_TYPE
-                                            "{} " ANSIFMT_SIGNAL_NAME
-                                            "{}" ANSIFMT_NONE " = h{:0{}x}\n",
-                               sig_width, type, notop_name,
-                               (uint32_t)v.value.integer, val_out_width);
+      std::cout << std::format(
+          ANSIFMT_GRAY "Signal " ANSIFMT_NUM "{:2}W " ANSIFMT_SIGNAL_TYPE
+                       "{} " ANSIFMT_SIGNAL_NAME "{}" ANSIFMT_NONE
+                       " = h" ANSIFMT_NUM "{:0{}x}\n" ANSIFMT_NONE,
+          sig_width, type, notop_name, (uint32_t)v.value.integer,
+          val_out_width);
     }
   }
 };
