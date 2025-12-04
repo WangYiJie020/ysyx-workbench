@@ -33,7 +33,7 @@ VERILATOR_CFLAGS += -MMD --build -cc -O3 \
 V2CXX_EMIT_DIR = $(BUILD_DIR)/gened/cxx
 
 SIM_VSRCS = $(shell find $(abspath $(CHISEL2V_EMIT_DIR)) -name "*.v" -or -name "*.sv")
-SIM_CSRCS = $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp" -name "*.hpp")
+SIM_CSRCS = $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 
 # Insert verilog public modifier for VPI
 #   see https://verilator.org/guide/latest/extensions.html#cmdoption-verilator-public_-flat-flat_rd-flat_rw-_on
