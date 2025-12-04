@@ -21,7 +21,7 @@ endif
 CHISEL_DESIGN = design
 CHISEL_SRCS = $(shell find $(abspath $(CHISEL_DESIGN)) -name "*.scala")
 CHISEL_SRCS += build.mill
-CHISEL2V_EMIT_DIR = $(BUILD_DIR)/chisel2v
+CHISEL2V_EMIT_DIR = $(BUILD_DIR)/gened/verilog
 CHISEL2V_DONE = $(BUILD_DIR)/verilog.done
 
 # Verilator
@@ -30,7 +30,7 @@ VERILATOR_CFLAGS += -MMD --build -cc -O3 \
 										--x-assign fast --x-initial fast --noassert \
 										-I$(CHISEL2V_EMIT_DIR)/verification
 
-V2CXX_EMIT_DIR = $(BUILD_DIR)/v2cxx
+V2CXX_EMIT_DIR = $(BUILD_DIR)/gened/cxx
 
 SIM_VSRCS = $(shell find $(abspath $(CHISEL2V_EMIT_DIR)) -name "*.v" -or -name "*.sv")
 SIM_CSRCS = $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
@@ -41,6 +41,9 @@ SIM_CSRCS = $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.c" -or -name "*.cc"
 
 VPI_DONE := $(BUILD_DIR)/vpi.done
 
+# use VPI_DONE as a dependency to avoid repeated insertion
+# since the sed command modifies the source files
+# the real modification only needs when CHISEL2V_DONE is updated
 $(VPI_DONE): $(CHISEL2V_DONE)
 ifeq ($(ENABLE_VPI), 1)
 	@echo "VPI enabled: inserting verilator public modifier"
