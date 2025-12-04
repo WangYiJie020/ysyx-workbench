@@ -96,6 +96,10 @@ class IFU extends Module {
     io.pc.bits
   )
 
+  when(io.out.ready){
+    printf("ifu downstream ready")
+  }
+  
   // NOTICE: dpi function auto generated with void return
   // see https://github.com/llvm/circt/blob/main/docs/Dialects/FIRRTL/FIRRTLIntrinsics.md#dpi-intrinsic-abi
   io.out.bits.code := code
