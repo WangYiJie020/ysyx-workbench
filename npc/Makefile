@@ -38,6 +38,7 @@ SIM_CSRCS = $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.c" -or -name "*.cc"
 
 vpi: $(SIM_VSRCS)
 ifeq ($(ENABLE_VPI), 1)
+	@echo "VPI enabled: inserting verilator public modifier"
 	$(foreach src,$(SIM_VSRCS),\
 	sed -i '1i /*verilator public_on*/' $(src); \
 	sed -i -e '$$a /*verilator public_off*/' $(src);)
