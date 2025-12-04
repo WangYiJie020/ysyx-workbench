@@ -40,7 +40,7 @@ object design extends SbtModule { m =>
       ivy"org.chipsalliance::chisel:$chiselVersion",
       ivy"com.lihaoyi::mill-contrib-bloop:0.12.16"
     )
-    override def scalacPluginMvnDeps = Agg(ivy"org.chipsalliance:::chisel-plugin:$chiselVersion")
+    override def scalacPluginIvyDeps = Agg(ivy"org.chipsalliance:::chisel-plugin:$chiselVersion")
 
     object test extends ScalaTests with TestModule.ScalaTest with ScalafmtModule {
       override def ivyDeps = m.ivyDeps() ++ Agg(
