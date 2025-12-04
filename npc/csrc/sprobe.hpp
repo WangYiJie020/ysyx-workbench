@@ -75,7 +75,7 @@ public:
 #define ANSIFMT_COMMENT "\e[38;2;106;153;85m"
 #define ANSIFMT_SIGNAL_TYPE "\e[38;2;78;201;176m"
 
-    std::cout << ANSIFMT_COMMENT << "Signal probe result"<<ANSIFMT_NONE << std::endl;
+    bool is_first = true;
 
     for (auto &h : _watched_handles) {
       s_vpi_value v;
@@ -102,6 +102,13 @@ public:
                        "{:0{}x}\n" ANSIFMT_NONE,
           sig_width, type, notop_name, (uint32_t)v.value.integer,
           val_out_width);
+
+      if (is_first) {
+        is_first = false;
+        std::cout << ANSIFMT_COMMENT << "// poke result beg" << ANSIFMT_NONE
+                  << std::endl;
+      }
     }
+		std::cout << ANSIFMT_COMMENT << "// end" ANSIFMT_NONE << std::endl;
   }
 };
