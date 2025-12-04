@@ -62,6 +62,7 @@ public:
       return;
 
 #define ANSIFMT_NONE "\e[0m"
+#define ANSIFMT_GRAY "\e[38;2;90;90;90m"
 #define ANSIFMT_SIGNAL_NAME "\e[38;2;156;220;254m"
 #define ANSIFMT_SIGNAL_WIDTH "\e[38;2;181;206;168m"
 #define ANSIFMT_SIGNAL_TYPE "\e[38;2;78;201;176m"
@@ -78,7 +79,7 @@ public:
 			}
 			// Remove the "TOP."
 			auto notop_name = fullname.substr(4);
-      std::cout << std::format("{} " ANSIFMT_SIGNAL_WIDTH "{:2}.W " ANSIFMT_SIGNAL_NAME "{:10}" ANSIFMT_NONE " = {:#08x}\n",
+      std::cout << std::format(ANSIFMT_SIGNAL_TYPE "{} " ANSIFMT_SIGNAL_WIDTH "{:2}.W " ANSIFMT_SIGNAL_NAME "{:10}" ANSIFMT_NONE " = {:#08x}\n",
                                type, vpi_get(vpiSize, h),
                                notop_name, (uint32_t)v.value.integer);
     }
