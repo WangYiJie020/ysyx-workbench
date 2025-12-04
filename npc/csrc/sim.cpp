@@ -53,6 +53,9 @@ static void step_cycle() {
   if (sim_settings.trace_clock_cycle) {
     printf("[Clock Cycle End]\n");
   }
+	if(sim_settings.cycle_finish_cb){
+		sim_settings.cycle_finish_cb();
+	}
 }
 static void reset(int n) {
   dut.reset = 1;

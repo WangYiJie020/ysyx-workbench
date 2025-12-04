@@ -8,6 +8,7 @@
 !*.[cSh]
 !*.v
 !*.cpp
+!*.hpp
 !*.cc
 !.gitignore
 !.scalafmt.conf
