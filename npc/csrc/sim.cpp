@@ -1,5 +1,9 @@
 #include <VTop.h>
 #include <VTop__Dpi.h>
+
+#include <verilated.h>
+#include <verilated_vpi.h>
+
 #include <array>
 #include <cstdint>
 #include <cstdio>
@@ -13,8 +17,6 @@
 #include <getopt.h>
 #include <unistd.h>
 
-#ifndef TOP_NAME
-#endif
 TOP_NAME dut;
 void nvboard_bind_all_pins(TOP_NAME *top);
 
@@ -256,6 +258,20 @@ static void parse_args(int argc, char **argv) {
   }
 }
 
+void read_and_check() {
+		vpiHandle vh1 = vpi_handle_by_name((PLI_BYTE8*) ("TOP.Top._wbu_io_data_ready"), NULL);
+		if (!vh1) vl_fatal(__FILE__, __LINE__, "sim_main", "No handle found");
+		const char* name = vpi_get_str(vpiName, vh1);
+		const char* type = vpi_get_str(vpiType, vh1);
+		const int size = vpi_get(vpiSize, vh1);
+		printf("register name: %s, type: %s, size: %d\n", name, type, size);
+
+		s_vpi_value v;
+		v.format = vpiIntVal;
+		vpi_get_value(vh1, &v);
+		printf("Value of %s: %d\n", name, v.value.integer);  // Prints "Value of readme: 0"
+}
+
 // SDB
 
 namespace sdbwrap {
@@ -334,6 +350,7 @@ int main(int argc, char **argv) {
     std::cout << "(sdb) ";
     std::getline(std::cin, cmd);
     dbg->exec_command(cmd);
+		read_and_check();
     if (dbg->state().state == sdb::run_state::quit) {
       break;
     }
