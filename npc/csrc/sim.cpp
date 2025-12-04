@@ -260,7 +260,7 @@ static void parse_args(int argc, char **argv) {
 }
 
 void read_and_check(const char* sig_name) {
-  vpiHandle vh1 = vpi_handle_by_name((PLI_BYTE8 *)(sig_name),vpi_handle_by_name((PLI_BYTE8*)"TOP", NULL));
+  vpiHandle vh1 = vpi_handle_by_name((PLI_BYTE8 *)(sig_name),NULL);
   if (!vh1){
 		printf("No handle found for %s\n", sig_name);
 		return;
@@ -269,8 +269,9 @@ void read_and_check(const char* sig_name) {
   const char *name = vpi_get_str(vpiName, vh1);
   const char *type = vpi_get_str(vpiType, vh1);
   const int size = vpi_get(vpiSize, vh1);
-  printf("register name: %s, type: %s, size: %d\n", name, type, size);
+  printf("name: %s, type: %s, size: %d\n", name, type, size);
 
+	return;
   s_vpi_value v;
   v.format = vpiIntVal;
   vpi_get_value(vh1, &v);
