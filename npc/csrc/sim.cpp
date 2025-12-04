@@ -13,6 +13,7 @@
 #include "elf_tool.hpp"
 #include "sdb.hpp"
 #include "tracers.hpp"
+#include "vpi_user.h"
 
 #include <getopt.h>
 #include <unistd.h>
@@ -259,7 +260,7 @@ static void parse_args(int argc, char **argv) {
 }
 
 void read_and_check(const char* sig_name) {
-  vpiHandle vh1 = vpi_handle_by_name((PLI_BYTE8 *)(sig_name), NULL);
+  vpiHandle vh1 = vpi_handle_by_name((PLI_BYTE8 *)(sig_name),vpi_handle_by_name((PLI_BYTE8*)"TOP", NULL));
   if (!vh1){
 		printf("No handle found for %s\n", sig_name);
 		return;
