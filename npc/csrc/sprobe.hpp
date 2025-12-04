@@ -13,11 +13,11 @@ public:
 
   std::vector<vpiHandle> _watched_handles;
 
-	~SProbe() {
-		for (auto &h : _watched_handles) {
-			vpi_release_handle(h);
-		}
-	}
+  ~SProbe() {
+    for (auto &h : _watched_handles) {
+      vpi_release_handle(h);
+    }
+  }
 
   void load_inside(vpiHandle top) {
     // std::cout<<"SProbe load inside
@@ -57,12 +57,18 @@ public:
   }
 
   void dump_watched() {
+    if (_watched_handles.empty())
+      return;
+    std::cout << "===== SProbe Watched Signals =====" << std::endl;
     for (auto &h : _watched_handles) {
       s_vpi_value v;
       v.format = vpiIntVal;
       vpi_get_value(h, &v);
-      std::cout << std::format("[{}] Value: {}\n", vpi_get_str(vpiFullName, h),
-                               v.value.integer);
+      std::string fullname = vpi_get_str(vpiFullName, h);
+      std::cout << std::format("{} ` {} [{}] = {:08X}\n",
+					vpi_get_str(vpiType, h), fullname,
+					vpi_get(vpiSize, h)
+					, v.value.integer);
     }
   }
 };

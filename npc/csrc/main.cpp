@@ -29,7 +29,6 @@ void read_and_check(std::string sig_name) {
 
 SProbe sprobe;
 void cyc_callback() {
-	printf("=== Cycle Callback ===\n");
 	sprobe.dump_watched();
 }
 
