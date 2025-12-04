@@ -32,11 +32,12 @@ int main(int argc, char **argv) {
 
   // get_dut()->contextp()->internalsDump(); // See scopes to help debug
 
-  //vpiHandle top = vpi_handle_by_name((PLI_BYTE8 *)"TOP.Top", NULL);
-  // assert(top);
+  vpiHandle top = vpi_handle_by_name((PLI_BYTE8 *)"TOP.Top", NULL);
+  assert(top);
 
   SProbe sprobe;
-//  sprobe.load_inside(top);
+  sprobe.load_inside(top);
+	vpi_release_handle(top);
 
   std::cout << "===== All Signal Probed =====" << std::endl;
   for (auto &n : sprobe._fullnames) {
@@ -57,8 +58,6 @@ int main(int argc, char **argv) {
     }
     sim_exec_sdbcmd(cmd, quit);
   }
-
-	get_dut()->final();
 
   return sim_hit_good_trap() ? 0 : 1;
 }
