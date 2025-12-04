@@ -95,20 +95,23 @@ public:
 
       auto val_out_width = (sig_width + 3) / 4; // (8bits per 2hex) upceil
 
+      if (!is_first) {
+        std::cout << std::endl;
+      }
+
       std::cout << std::format(
           ANSIFMT_GRAY "Signal " ANSIFMT_NUM "{:2}W " ANSIFMT_SIGNAL_TYPE
                        "{} " ANSIFMT_SIGNAL_NAME "{}" ANSIFMT_NONE
                        " = " ANSIFMT_GRAY "h'" ANSIFMT_NUM
-                       "{:0{}x}\n" ANSIFMT_NONE,
+                       "{:0{}x}" ANSIFMT_NONE,
           sig_width, type, notop_name, (uint32_t)v.value.integer,
           val_out_width);
 
       if (is_first) {
         is_first = false;
-        std::cout << ANSIFMT_COMMENT << "// poke result beg" << ANSIFMT_NONE
-                  << std::endl;
+        std::cout << ANSIFMT_COMMENT << "// poke result beg" << ANSIFMT_NONE;
       }
     }
-		std::cout << ANSIFMT_COMMENT << "// end" ANSIFMT_NONE << std::endl;
+    std::cout << ANSIFMT_COMMENT << "// end" ANSIFMT_NONE << std::endl;
   }
 };
