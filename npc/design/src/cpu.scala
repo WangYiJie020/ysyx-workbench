@@ -75,7 +75,6 @@ class IFU extends Module {
   fsm.connectMaster(io.pc)
   fsm.connectSlave(io.out)
 
-  fsm.io.self_finished := true.B
 
   // printf("(ifu) fetch inst %x at pc 0x%x\n", io.out.bits.code,io.pc.bits)
   // printf("(ifu) pc.valid: %b\n", io.pc.valid)
@@ -95,6 +94,8 @@ class IFU extends Module {
     en_call,
     io.pc.bits
   )
+
+  fsm.io.self_finished := (state === s_wait)
 
   when(io.out.ready){
     printf("ifu downstream ready\n")
