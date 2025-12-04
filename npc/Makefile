@@ -11,12 +11,8 @@ SAN_FLAGS?= -fsanitize=address
 VERILATOR_CFLAGS ?=
 ENABLE_VPI ?= 1
 ifeq ($(ENABLE_VPI), 1)
-	VERILATOR_CFLAGS += --vpi
+VERILATOR_CFLAGS += --vpi
 endif
-
-
-default: $(SIM_BIN)
-	
 
 # Chisel
 CHISEL_DESIGN = design
@@ -24,16 +20,6 @@ CHISEL_SRCS = $(shell find $(abspath $(CHISEL_DESIGN)) -name "*.scala")
 CHISEL_SRCS += build.mill
 CHISEL2V_EMIT_DIR = $(BUILD_DIR)/chisel2v
 CHISEL2V_DONE = $(BUILD_DIR)/verilog.done
-$(CHISEL2V_DONE): $(CHISEL_SRCS)
-	$(call git_commit, "generate verilog")
-	@rm -rf $(CHISEL2V_EMIT_DIR)
-	mill -i $(CHISEL_DESIGN).runMain Elaborate --target-dir $(CHISEL2V_EMIT_DIR)
-	touch $(CHISEL2V_DONE)
-
-# Insert verilog public extensions
-#   see https://verilator.org/guide/latest/extensions.html#cmdoption-verilator-public_-flat-flat_rd-flat_rw-_on
-# to enable VPI work (make signal accessible from C++ side)
-
 
 # Verilator
 VERILATOR = verilator
@@ -46,6 +32,17 @@ V2CXX_EMIT_DIR = $(BUILD_DIR)/v2cxx
 SIM_VSRCS = $(shell find $(abspath $(CHISEL2V_EMIT_DIR)) -name "*.v" -or -name "*.sv")
 SIM_CSRCS = $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 
+# Insert verilog public extensions
+#   see https://verilator.org/guide/latest/extensions.html#cmdoption-verilator-public_-flat-flat_rd-flat_rw-_on
+# to enable VPI work (make signal accessible from C++ side)
+
+vpi:
+ifeq ($(ENABLE_VPI), 1)
+	$(foreach src,$(SIM_VSRCS),@echo "Adding verilator public extension to $(src)"; \
+	@sed -i '1i /*verilator public_on*/' $(src); \
+	@sed -i -e '$$a /*verilator public_off*/' $(src);)
+endif
+
 # sdb
 INC_PATH += $(abspath ../sdb/include)
 LDFLAGS += $(SAN_FLAGS) -L$(abspath ../sdb/build) -lsdb
@@ -55,6 +52,15 @@ ARCHIVES += $(NVBOARD_ARCHIVE) $(abspath ../sdb/build/libsdb.a)
 $(shell mkdir -p $(BUILD_DIR))
 $(shell mkdir -p $(V2CXX_EMIT_DIR))
 $(shell mkdir -p $(CHISEL2V_EMIT_DIR))
+
+default: $(SIM_BIN)
+
+# Chisel
+$(CHISEL2V_DONE): $(CHISEL_SRCS)
+	$(call git_commit, "generate verilog")
+	@rm -rf $(CHISEL2V_EMIT_DIR)
+	mill -i $(CHISEL_DESIGN).runMain Elaborate --target-dir $(CHISEL2V_EMIT_DIR)
+	touch $(CHISEL2V_DONE)
 
 
 # NVBOARD
