@@ -259,8 +259,7 @@ static void parse_args(int argc, char **argv) {
 }
 
 void read_and_check() {
-  vpiHandle vh1 =
-      vpi_handle_by_name((PLI_BYTE8 *)("TOP.Top.pc"), NULL);
+  vpiHandle vh1 = vpi_handle_by_name((PLI_BYTE8 *)("Top.pc"), NULL);
   if (!vh1)
     vl_fatal(__FILE__, __LINE__, "sim_main", "No handle found");
   const char *name = vpi_get_str(vpiName, vh1);
@@ -343,6 +342,9 @@ int main(int argc, char **argv) {
   dbg->add_trace(diff_handler);
   reset(10);
 
+  VerilatedVpi::callValueCbs();
+  read_and_check();
+
   if (batch_mode) {
     dbg->exec_command("c");
     return dbg->state().is_badexit();
@@ -352,14 +354,12 @@ int main(int argc, char **argv) {
   const std::unique_ptr<TOP_NAME> top{new TOP_NAME{contextp.get()}};
 
   contextp->internalsDump(); // See scopes to help debug
-														 
+
   std::string cmd;
   while (true) {
     std::cout << "(sdb) ";
     std::getline(std::cin, cmd);
     dbg->exec_command(cmd);
-          VerilatedVpi::callValueCbs();
-    read_and_check();
     if (dbg->state().state == sdb::run_state::quit) {
       break;
     }
