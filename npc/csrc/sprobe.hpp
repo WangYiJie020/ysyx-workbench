@@ -60,6 +60,10 @@ public:
   void dump_watched() {
     if (_watched_handles.empty())
       return;
+
+#define ANSI_FMT_NONE "\e[0m"
+#define ANSI_FMT_VARIABLE_NAME "\e[38;2;156;220;254m"
+
     // std::cout << "===== SProbe Watched Signals =====" << std::endl;
     for (auto &h : _watched_handles) {
       s_vpi_value v;
@@ -68,9 +72,9 @@ public:
       std::string_view fullname = vpi_get_str(vpiFullName, h);
 			// Remove the "TOP."
 			auto notop_name = fullname.substr(4);
-      std::cout << std::format("{}`{}.W ` {} = {:08X}\n",
+      std::cout << std::format("{}`{}.W " ANSI_FMT_VARIABLE_NAME "{}" ANSI_FMT_NONE " = {:08X}\n",
                                vpi_get_str(vpiType, h), vpi_get(vpiSize, h),
-                               fullname, (uint32_t)v.value.integer);
+                               notop_name, (uint32_t)v.value.integer);
     }
   }
 };
