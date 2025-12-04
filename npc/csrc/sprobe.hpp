@@ -75,7 +75,7 @@ public:
 #define ANSIFMT_COMMENT "\e[38;2;106;153;85m"
 #define ANSIFMT_SIGNAL_TYPE "\e[38;2;78;201;176m"
 
-    std::cout << ANSIFMT_COMMENT << "Signal Probe"<<ANSIFMT_NONE << std::endl;
+    std::cout << ANSIFMT_COMMENT << "Signal probe result"<<ANSIFMT_NONE << std::endl;
 
     for (auto &h : _watched_handles) {
       s_vpi_value v;
