@@ -2,20 +2,19 @@ package build
 
 // import Mill dependency
 import mill._
-import mill.define.Sources
-import mill.modules.Util
+//import mill.define.Sources
+//import mill.modules.Util
 import mill.scalalib.scalafmt.ScalafmtModule
 import mill.scalalib.TestModule.ScalaTest
 import mill.scalalib._
-// import mill.javalib.bsp.BspModule
+import mill.javalib.bsp.BspModule
 
 // support BSP
-import mill.bsp._
+//import mill.bsp._
 
-//import mill.*, scalalib.*
-//import mill.contrib.bloop.BloopModule
-
-object design extends SbtModule { m =>
+object design extends ScalaModule
+  with ScalafmtModule
+  with BspModule { m =>
     // see https://www.chisel-lang.org/docs/installation
     // Scala/Java compatibility table said: 
     //   Chisel | Scala   | Java
@@ -36,17 +35,14 @@ object design extends SbtModule { m =>
     // 
     // from: https://users.scala-lang.org/t/need-help-getting-started-with-scalafx-mill/11972
     // 
-    override def ivyDeps             = Agg(
-      ivy"org.chipsalliance::chisel:$chiselVersion",
-      ivy"com.lihaoyi::mill-contrib-bloop:0.12.16"
-    )
-    override def scalacPluginIvyDeps = Agg(ivy"org.chipsalliance:::chisel-plugin:$chiselVersion")
+    override def mvnDeps             = Seq(mvn"org.chipsalliance::chisel:$chiselVersion")
+    override def scalacPluginMvnDeps = Seq(mvn"org.chipsalliance:::chisel-plugin:$chiselVersion")
 
     object test extends ScalaTests with TestModule.ScalaTest with ScalafmtModule {
-      override def ivyDeps = m.ivyDeps() ++ Agg(
-        ivy"org.scalatest::scalatest::3.2.19",
+      override def mvnDeps = m.mvnDeps() ++ Seq(
+        mvn"org.scalatest::scalatest::3.2.19",
         // for formal flow in future
-        //mvn"edu.berkeley.cs::chiseltest:6.0.0"
+        mvn"edu.berkeley.cs::chiseltest:6.0.0"
       )
     }
 

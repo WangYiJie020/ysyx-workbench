@@ -45,6 +45,8 @@ class MemUnit extends Module {
   }
   //printf("(MemUnit) write en: %b addr: 0x%x data: 0x%x mask: 0b%b\n", io.write.en, io.write.addr, io.write.data, io.write.mask)
 
+
+
   val s_rd_idle :: s_rd_wait :: Nil = Enum(2)
   val rd_state = RegInit(s_rd_idle)
   rd_state := MuxCase(rd_state, Seq(
