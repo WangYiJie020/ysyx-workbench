@@ -11,7 +11,7 @@ SAN_FLAGS?= -fsanitize=address
 VERILATOR_CFLAGS ?=
 ENABLE_VPI ?= 1
 ifeq ($(ENABLE_VPI), 1)
-	VERILATOR_CFLAGS += --vpi --public
+	VERILATOR_CFLAGS += --vpi
 endif
 
 
@@ -29,6 +29,11 @@ $(CHISEL2V_DONE): $(CHISEL_SRCS)
 	@rm -rf $(CHISEL2V_EMIT_DIR)
 	mill -i $(CHISEL_DESIGN).runMain Elaborate --target-dir $(CHISEL2V_EMIT_DIR)
 	touch $(CHISEL2V_DONE)
+
+# Insert verilog public extensions
+#   see https://verilator.org/guide/latest/extensions.html#cmdoption-verilator-public_-flat-flat_rd-flat_rw-_on
+# to enable VPI work (make signal accessible from C++ side)
+
 
 # Verilator
 VERILATOR = verilator
