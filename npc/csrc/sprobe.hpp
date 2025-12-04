@@ -73,15 +73,20 @@ public:
       v.format = vpiIntVal;
       vpi_get_value(h, &v);
       std::string_view fullname = vpi_get_str(vpiFullName, h);
-			std::string_view type = vpi_get_str(vpiType, h);
-			if(type.starts_with("vpi")) {
-				type = type.substr(3);
-			}
-			// Remove the "TOP."
-			auto notop_name = fullname.substr(4);
-      std::cout << std::format(ANSIFMT_SIGNAL_TYPE "{} " ANSIFMT_SIGNAL_WIDTH "{:2}.W " ANSIFMT_SIGNAL_NAME "{:>20}" ANSIFMT_NONE " = {:#010x}\n",
-                               type, vpi_get(vpiSize, h),
-                               notop_name, (uint32_t)v.value.integer);
+      std::string_view type = vpi_get_str(vpiType, h);
+      if (type.starts_with("vpi")) {
+        type = type.substr(3);
+      }
+      // Remove the "TOP."
+      auto notop_name = fullname.substr(4);
+      auto first_modname = notop_name.substr(0, notop_name.find('.'));
+      notop_name = notop_name.substr(first_modname.size() + 1);
+
+      std::cout << std::format(
+          ANSIFMT_SIGNAL_TYPE "{} " ANSIFMT_SIGNAL_WIDTH "{:2}.W " ANSIFMT_GRAY
+                              "{}." ANSIFMT_SIGNAL_NAME "{}" ANSIFMT_NONE
+                              " = {:#010x}\n",
+          type, vpi_get(vpiSize, h), first_modname,notop_name, (uint32_t)v.value.integer);
     }
   }
 };
