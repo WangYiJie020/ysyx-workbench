@@ -7,7 +7,6 @@
 
 #include "sprobe.hpp"
 
-
 void read_and_check(std::string sig_name) {
   vpiHandle vh1 = vpi_handle_by_name((PLI_BYTE8 *)(sig_name.c_str()), NULL);
   if (!vh1) {
@@ -31,27 +30,33 @@ void read_and_check(std::string sig_name) {
 int main(int argc, char **argv) {
   sim_init(argc, argv);
 
-  get_dut()->contextp()->internalsDump(); // See scopes to help debug
+  // get_dut()->contextp()->internalsDump(); // See scopes to help debug
 
   vpiHandle top = vpi_handle_by_name((PLI_BYTE8 *)"TOP.Top", NULL);
   assert(top);
 
-	SProbe sprobe;
-	sprobe.load_inside(top);
+  SProbe sprobe;
+  sprobe.load_inside(top);
+	vpi_release_handle(top);
 
-	std::cout<<"===== All Signal Probed ====="<<std::endl;
-	for(auto& n:sprobe._fullnames){
-		std::cout<<n<<std::endl;
-	}
-
+  // std::cout << "===== All Signal Probed =====" << std::endl;
+  // for (auto &n : sprobe._fullnames) {
+  //   std::cout << n << std::endl;
+  // }
 
   std::string cmd;
   bool quit = false;
   while (!sim_halted() && !quit) {
     std::cout << "(sdb) ";
     std::getline(std::cin, cmd);
-    read_and_check(("TOP." + cmd).c_str());
-    //		sim_exec_sdbcmd(cmd, quit);
+    if (cmd.size()>3 && cmd.substr(0, 2) == "ps") {
+      std::string sig_name = cmd.substr(3);
+			auto fullname = "TOP.Top." + sig_name;
+      if (sprobe.add_watch(fullname))
+        printf("Added watch for '%s'\n", fullname.c_str());
+      continue;
+    }
+    sim_exec_sdbcmd(cmd, quit);
   }
 
   return sim_hit_good_trap() ? 0 : 1;
