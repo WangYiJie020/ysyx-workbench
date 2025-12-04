@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
   while (!sim_halted() && !quit) {
     std::cout << "(sdb) ";
     std::getline(std::cin, cmd);
-    if (cmd.substr(0, 2) == "ps") {
+    if (cmd.size()>3 && cmd.substr(0, 2) == "ps") {
       std::string sig_name = cmd.substr(3);
 			auto fullname = "TOP.Top." + sig_name;
       if (sprobe.add_watch(fullname))
