@@ -109,9 +109,9 @@ public:
 
       if (is_first) {
         is_first = false;
-        std::cout << ANSIFMT_COMMENT << "// poke result beg" << ANSIFMT_NONE;
+        std::cout << ANSIFMT_COMMENT << " // poke result beg" << ANSIFMT_NONE;
       }
     }
-    std::cout << ANSIFMT_COMMENT "// end" ANSIFMT_NONE << std::endl;
+    std::cout << ANSIFMT_COMMENT " // end" ANSIFMT_NONE << std::endl;
   }
 };
