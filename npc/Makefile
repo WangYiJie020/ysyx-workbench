@@ -20,7 +20,7 @@ CHISEL2V_DONE = $(BUILD_DIR)/verilog.done
 $(CHISEL2V_DONE): $(CHISEL_SRCS)
 	$(call git_commit, "generate verilog")
 	@rm -rf $(CHISEL2V_EMIT_DIR)
-	mill -i $(CHISEL_DESIGN).runMain Elaborate --target-dir $(CHISEL2V_EMIT_DIR)
+	./mill -i $(CHISEL_DESIGN).runMain Elaborate --target-dir $(CHISEL2V_EMIT_DIR)
 	touch $(CHISEL2V_DONE)
 
 # Verilator
