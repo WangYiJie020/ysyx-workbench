@@ -7,7 +7,6 @@
 
 #include "sprobe.hpp"
 
-
 void read_and_check(std::string sig_name) {
   vpiHandle vh1 = vpi_handle_by_name((PLI_BYTE8 *)(sig_name.c_str()), NULL);
   if (!vh1) {
@@ -36,22 +35,26 @@ int main(int argc, char **argv) {
   vpiHandle top = vpi_handle_by_name((PLI_BYTE8 *)"TOP.Top", NULL);
   assert(top);
 
-	SProbe sprobe;
-	sprobe.load_inside(top);
+  SProbe sprobe;
+  sprobe.load_inside(top);
 
-	std::cout<<"===== All Signal Probed ====="<<std::endl;
-	for(auto& n:sprobe._fullnames){
-		std::cout<<n<<std::endl;
-	}
-
+  std::cout << "===== All Signal Probed =====" << std::endl;
+  for (auto &n : sprobe._fullnames) {
+    std::cout << n << std::endl;
+  }
 
   std::string cmd;
   bool quit = false;
   while (!sim_halted() && !quit) {
     std::cout << "(sdb) ";
     std::getline(std::cin, cmd);
-    read_and_check(("TOP." + cmd).c_str());
-    //		sim_exec_sdbcmd(cmd, quit);
+    if (cmd.substr(0, 2) == "ps") {
+      std::string sig_name = cmd.substr(3);
+      if (sprobe.add_watch(sig_name))
+        printf("Added watch for '%s'\n", sig_name.c_str());
+      continue;
+    }
+    sim_exec_sdbcmd(cmd, quit);
   }
 
   return sim_hit_good_trap() ? 0 : 1;
