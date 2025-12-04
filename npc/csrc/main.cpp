@@ -39,6 +39,12 @@ int main(int argc, char **argv) {
 	SProbe sprobe;
 	sprobe.load_inside(top);
 
+	std::cout<<"===== All Signal Probed ====="<<std::endl;
+	for(auto& n:sprobe._fullnames){
+		std::cout<<n<<std::endl;
+	}
+
+
   std::string cmd;
   bool quit = false;
   while (!sim_halted() && !quit) {
