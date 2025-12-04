@@ -1,5 +1,9 @@
 #include <VTop.h>
 #include <VTop__Dpi.h>
+
+#include <verilated.h>
+#include <verilated_vpi.h>
+
 #include <array>
 #include <cstdint>
 #include <cstdio>
@@ -9,12 +13,11 @@
 #include "elf_tool.hpp"
 #include "sdb.hpp"
 #include "tracers.hpp"
+#include "vpi_user.h"
 
 #include <getopt.h>
 #include <unistd.h>
 
-#ifndef TOP_NAME
-#endif
 TOP_NAME dut;
 void nvboard_bind_all_pins(TOP_NAME *top);
 
@@ -256,6 +259,26 @@ static void parse_args(int argc, char **argv) {
   }
 }
 
+void read_and_check(const char* sig_name) {
+  vpiHandle vh1 = vpi_handle_by_name((PLI_BYTE8 *)(sig_name),NULL);
+  if (!vh1){
+		printf("No handle found for %s\n", sig_name);
+		return;
+    //vl_fatal(__FILE__, __LINE__, "sim_main", "No handle found");
+	}
+  const char *name = vpi_get_str(vpiName, vh1);
+  const char *type = vpi_get_str(vpiType, vh1);
+  const int size = vpi_get(vpiSize, vh1);
+  printf("name: %s, type: %s, size: %d\n", name, type, size);
+
+	return;
+  s_vpi_value v;
+  v.format = vpiIntVal;
+  vpi_get_value(vh1, &v);
+  printf("Value of %s: %d\n", name,
+         v.value.integer); // Prints "Value of readme: 0"
+}
+
 // SDB
 
 namespace sdbwrap {
@@ -324,16 +347,31 @@ int main(int argc, char **argv) {
   dbg->add_trace(diff_handler);
   reset(10);
 
+  VerilatedVpi::callValueCbs();
+
   if (batch_mode) {
     dbg->exec_command("c");
     return dbg->state().is_badexit();
   }
 
+
+
+  dut.contextp()->internalsDump(); // See scopes to help debug
+
+vpiHandle top = vpi_handle_by_name((PLI_BYTE8*)"TOP.Top", NULL);
+vpiHandle iter = vpi_iterate(vpiNet, top);
+vpiHandle net;
+while ((net = vpi_scan(iter)) != NULL) {
+    const char* name = vpi_get_str(vpiName, net);
+    vpi_printf("Net: %s\n", name);
+}
+
   std::string cmd;
   while (true) {
     std::cout << "(sdb) ";
     std::getline(std::cin, cmd);
-    dbg->exec_command(cmd);
+		read_and_check(cmd.c_str());
+    // dbg->exec_command(cmd);
     if (dbg->state().state == sdb::run_state::quit) {
       break;
     }
