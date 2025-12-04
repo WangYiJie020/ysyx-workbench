@@ -8,6 +8,13 @@ SIM_IMG ?=
 
 SAN_FLAGS?= -fsanitize=address
 
+VERILATOR_CFLAGS ?=
+ENABLE_VPI ?= 1
+ifeq ($(ENABLE_VPI), 1)
+	VERILATOR_CFLAGS += --vpi
+endif
+
+
 default: $(SIM_BIN)
 	
 
