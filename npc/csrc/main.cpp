@@ -37,7 +37,6 @@ int main(int argc, char **argv) {
     iter = vpi_iterate(type, top);
     if (iter != NULL) {
       vpi_printf("TYPE %d success\n", type);
-      break;
     }
   }
   vpiHandle it;
