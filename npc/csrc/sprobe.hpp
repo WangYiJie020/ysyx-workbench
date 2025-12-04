@@ -65,11 +65,12 @@ public:
       s_vpi_value v;
       v.format = vpiIntVal;
       vpi_get_value(h, &v);
-      std::string fullname = vpi_get_str(vpiFullName, h);
-      std::cout << std::format("{} ` {} [{}] = {:08X}\n",
-					vpi_get_str(vpiType, h), fullname,
-					vpi_get(vpiSize, h)
-					, (uint32_t)v.value.integer);
+      std::string_view fullname = vpi_get_str(vpiFullName, h);
+			// Remove the "TOP."
+			auto notop_name = fullname.substr(4);
+      std::cout << std::format("{}`{}.W ` {} = {:08X}\n",
+                               vpi_get_str(vpiType, h), vpi_get(vpiSize, h),
+                               fullname, (uint32_t)v.value.integer);
     }
   }
 };
