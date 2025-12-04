@@ -2,11 +2,12 @@ package regfile
 
 import chisel3._
 import chisel3.util.Counter
-import cpu.Types
-import cpu.Types.Ops._
 import chisel3.util.MuxLookup
 
 import chisel3.util.circt.dpi._
+
+import common_def._
+import Types.Ops._
 
 class MetaRegReqIO(addr_width: Int = Types.BitWidth.reg_addr, data_width: Int = Types.BitWidth.word) {
 

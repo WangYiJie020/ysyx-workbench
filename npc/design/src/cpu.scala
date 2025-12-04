@@ -2,7 +2,6 @@ package cpu
 
 import chisel3._
 import chisel3.util.{Cat, Decoupled, DecoupledIO, Enum, Fill, MuxLookup}
-import chisel3.util.HasBlackBoxInline
 
 // see https://www.chisel-lang.org/api/latest/chisel3/util/circt/dpi/index.html
 // chisel has native dpi interface since
@@ -17,26 +16,7 @@ import chisel3.experimental.dataview._
 
 import regfile._
 import memory._
-
-object Types {
-  object BitWidth {
-    val reg_addr = 5
-    val csr_addr = 12
-    val word     = 32
-  }
-  def UWord = UInt(BitWidth.word.W)
-  def RegAddr = UInt(BitWidth.reg_addr.W)
-
-  object Ops {
-    implicit class StringOps(val s: String) extends AnyVal {
-      def UWord = s.U(BitWidth.word.W)
-    }
-    implicit class IntOps(val s: Int)       extends AnyVal {
-      def UWord = s.U(BitWidth.word.W)
-    }
-  }
-}
-import Types.Ops._
+import common_def._
 
 class Inst extends Bundle {
   val code = Output(Types.UWord)
