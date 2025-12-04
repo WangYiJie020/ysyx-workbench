@@ -1,5 +1,6 @@
 #pragma once
 #include "vpi_user.h"
+#include <cstdint>
 #include <format>
 #include <iostream>
 #include <string>
@@ -59,7 +60,7 @@ public:
   void dump_watched() {
     if (_watched_handles.empty())
       return;
-    std::cout << "===== SProbe Watched Signals =====" << std::endl;
+    // std::cout << "===== SProbe Watched Signals =====" << std::endl;
     for (auto &h : _watched_handles) {
       s_vpi_value v;
       v.format = vpiIntVal;
@@ -68,7 +69,7 @@ public:
       std::cout << std::format("{} ` {} [{}] = {:08X}\n",
 					vpi_get_str(vpiType, h), fullname,
 					vpi_get(vpiSize, h)
-					, v.value.integer);
+					, (uint32_t)v.value.integer);
     }
   }
 };

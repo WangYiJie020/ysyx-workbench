@@ -182,7 +182,7 @@ class IDU extends Module {
 
   fsm.io.self_finished := iinfo_dec.io.valid
 
-  printf("S(idu) state %d in.valid %b in.ready %b\n", fsm.io._state, io.in.valid, io.in.ready)
+  // printf("S(idu) state %d in.valid %b in.ready %b\n", fsm.io._state, io.in.valid, io.in.ready)
   /*
   printf("(idu) inst 0x%x at pc 0x%x\n", inst, io.in.bits.pc)
   when(!iinfo_dec.io.valid) {
