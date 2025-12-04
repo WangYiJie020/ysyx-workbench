@@ -60,7 +60,7 @@ class OneMasterOneSlaveFSM extends Module {
   }
   def connectSlave[T <: Data](slave: DecoupledIO[T]):   Unit = {
     slave.valid    := io.slave_valid
-io.slave_ready := slave.ready
+    io.slave_ready := slave.ready
   }
 
 }
@@ -80,7 +80,21 @@ class IFU extends Module {
   // printf("(ifu) fetch inst %x at pc 0x%x\n", io.out.bits.code,io.pc.bits)
   // printf("(ifu) pc.valid: %b\n", io.pc.valid)
 
-  val code = RawUnclockedNonVoidFunctionCall("fetch_inst", Types.UWord)(io.pc.valid, io.pc.bits)
+  val s_idle :: s_wait :: Nil = Enum(2)
+  val state                   = RegInit(s_idle)
+  state := MuxLookup(state, s_idle)(
+    Seq(
+      s_idle -> Mux(io.pc.valid, s_wait, s_idle),
+      s_wait -> Mux(fsm.io.slave_ready, s_idle, s_wait)
+    )
+  )
+  val en_call = io.pc.valid && (state === s_idle)
+
+  val code = RawClockedNonVoidFunctionCall("fetch_inst", Types.UWord)(
+    clock,
+    en_call,
+    io.pc.bits
+  )
 
   // NOTICE: dpi function auto generated with void return
   // see https://github.com/llvm/circt/blob/main/docs/Dialects/FIRRTL/FIRRTLIntrinsics.md#dpi-intrinsic-abi
@@ -418,7 +432,7 @@ class EXU           extends Module {
   val mem_addr_unalign_part        = mem_addr(1, 0)
   val mem_addr_unalign_part_bitlen = mem_addr_unalign_part << 3
 
-  val mem_raddr     = io.mem_rreq.addr
+  val mem_raddr = io.mem_rreq.addr
 
   val mem_raw_rdata = Reg(Types.UWord)
 
@@ -443,8 +457,7 @@ class EXU           extends Module {
 
   val mem_data = mem_raw_rdata >> mem_addr_unalign_part_bitlen
 
-
-  io.mem_rreq.en := is_load && (mem_read_state === s_rmem_wait)
+  io.mem_rreq.en          := is_load && (mem_read_state === s_rmem_wait)
   MS_fsm.io.self_finished := alu.io.out.valid && (
     (!is_load) || (mem_read_state === s_rmem_ok)
   )
@@ -528,7 +541,7 @@ class EXU           extends Module {
 
 //   printf("(exu) STORE to addr 0x%x data 0x%x mask 0b%b\n", mem_waddr, mem_wdata, mem_wmask)
   val s_wmem_noneed :: s_wmem_wait :: s_wmem_ok :: Nil = Enum(3)
-  val mem_write_state = RegInit(s_wmem_noneed)
+  val mem_write_state                                  = RegInit(s_wmem_noneed)
   mem_write_state := MuxLookup(mem_write_state, s_wmem_noneed)(
     Seq(
       s_wmem_noneed -> Mux(is_store, s_wmem_wait, s_wmem_noneed),
@@ -541,7 +554,7 @@ class EXU           extends Module {
 
   when(dinst.info.typ === InstType.store) {
     when(!MemOp.isValidStoreOp(func3t)) {
-       printf("(exu) UNKNOWN STORE func3t %d\n", func3t)
+      printf("(exu) UNKNOWN STORE func3t %d\n", func3t)
     }
   }
 
@@ -592,13 +605,12 @@ class EXU           extends Module {
 
 class WBU extends Module {
   val io = IO(new Bundle {
-    val data  = Flipped(Decoupled(new WriteBackInfo))
-    val gpr = GPRegReqIO.TX.Write
-    val csr = CSRegReqIO.TX.Write
+    val data     = Flipped(Decoupled(new WriteBackInfo))
+    val gpr      = GPRegReqIO.TX.Write
+    val csr      = CSRegReqIO.TX.Write
     val is_ecall = Output(Bool())
-    val done = Output(Bool())
+    val done     = Output(Bool())
   })
-
 
   val wbinfo = io.data.bits
   val valid  = io.data.valid
@@ -607,7 +619,6 @@ class WBU extends Module {
 
   // printf("(wbu) write back gpr en %b addr %d data 0x%x\n", wbinfo.gpr.en, wbinfo.gpr.addr, wbinfo.gpr.data)
   // printf("(wbu) valid %b\n", valid)
-
 
   io.gpr.en   := wbinfo.gpr.en && valid
   io.gpr.addr := wbinfo.gpr.addr
