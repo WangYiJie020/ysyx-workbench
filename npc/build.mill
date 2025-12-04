@@ -10,7 +10,7 @@ import mill.scalalib._
 import mill.javalib.bsp.BspModule
 
 // support BSP
-import mill.bsp._
+// import mill.bsp._
 
 object design extends ScalaModule
   with ScalafmtModule
@@ -35,7 +35,10 @@ object design extends ScalaModule
     // 
     // from: https://users.scala-lang.org/t/need-help-getting-started-with-scalafx-mill/11972
     // 
-    override def mvnDeps             = Seq(mvn"org.chipsalliance::chisel:$chiselVersion")
+    override def mvnDeps             = Seq(
+      mvn"org.chipsalliance::chisel:$chiselVersion",
+      mvn"com.lihaoyi::mill-contrib-bloop_2"
+    )
     override def scalacPluginMvnDeps = Seq(mvn"org.chipsalliance:::chisel-plugin:$chiselVersion")
 
     object test extends ScalaTests with TestModule.ScalaTest with ScalafmtModule {
