@@ -77,7 +77,7 @@ public:
 
     bool is_first = true;
 
-    std::cout << ANSIFMT_COMMENT << "// poke result beg\n" << ANSIFMT_NONE;
+    std::cout << ANSIFMT_COMMENT << "-- poke beg\n" << ANSIFMT_NONE;
 
     for (auto &h : _watched_handles) {
       s_vpi_value v;
@@ -111,6 +111,6 @@ public:
           sig_width, type, notop_name, (uint32_t)v.value.integer,
           val_out_width);
     }
-    std::cout << ANSIFMT_COMMENT " // end" ANSIFMT_NONE << std::endl;
+    std::cout << ANSIFMT_COMMENT " -- end" ANSIFMT_NONE << std::endl;
   }
 };
