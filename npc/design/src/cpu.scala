@@ -66,7 +66,6 @@ class OneMasterOneSlaveFSM extends Module {
 class IFU extends Module {
   val io = IO(new Bundle {
     val pc  = Flipped(Decoupled(Input(Types.UWord)))
-    val mem = MemReqIO.ReadTX
     val out = Decoupled(new Inst)
   })
 
