@@ -91,8 +91,7 @@ public:
         notop_name = notop_name.substr(4);
       }
 
-      auto val_out_width =
-          (sig_width + 3) / 4 + 2; // 0x + (8bits per 2hex) upceil
+      auto val_out_width = (sig_width + 3) / 4; // (8bits per 2hex) upceil
 
       std::cout << std::format(ANSIFMT_GRAY "Signal " ANSIFMT_SIGNAL_TYPE
                                             "{} " ANSIFMT_SIGNAL_WIDTH
