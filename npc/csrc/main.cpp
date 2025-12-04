@@ -50,8 +50,9 @@ int main(int argc, char **argv) {
     std::getline(std::cin, cmd);
     if (cmd.substr(0, 2) == "ps") {
       std::string sig_name = cmd.substr(3);
-      if (sprobe.add_watch(sig_name))
-        printf("Added watch for '%s'\n", sig_name.c_str());
+			auto fullname = "TOP.Top." + sig_name;
+      if (sprobe.add_watch(fullname))
+        printf("Added watch for '%s'\n", fullname.c_str());
       continue;
     }
     sim_exec_sdbcmd(cmd, quit);
