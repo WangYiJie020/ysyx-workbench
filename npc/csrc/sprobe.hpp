@@ -13,6 +13,12 @@ public:
 
   std::vector<vpiHandle> _watched_handles;
 
+	~SProbe() {
+		for (auto &h : _watched_handles) {
+			vpi_release_handle(h);
+		}
+	}
+
   void load_inside(vpiHandle top) {
     // std::cout<<"SProbe load inside
     // "<<vpi_get_str(vpiFullName,top)<<std::endl;
@@ -26,7 +32,7 @@ public:
         // printf("SProbe scanning type %d\n",type);
         while ((it = vpi_scan(iter)) != NULL) {
           _fullnames.push_back(std::string(vpi_get_str(vpiFullName, it)));
-          printf("SProbe found %d  %s\n", type, _fullnames.back().c_str());
+          // printf("SProbe found %d  %s\n", type, _fullnames.back().c_str());
           if (type == vpiModule)
             load_inside(it);
           vpi_release_handle(it);
