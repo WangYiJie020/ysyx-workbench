@@ -29,10 +29,12 @@ int main(int argc, char **argv) {
 	sim_init(argc,argv);
 
 
-  // dut.contextp()->internalsDump(); // See scopes to help debug
+  get_dut()->contextp()->internalsDump(); // See scopes to help debug
 
   vpiHandle top = vpi_handle_by_name((PLI_BYTE8 *)"TOP.Top", NULL);
+	assert(top);
   vpiHandle iter = vpi_iterate(vpiVariables, top);
+	assert(iter);
   vpiHandle it;
   while ((it = vpi_scan(iter)) != NULL) {
     const char *name = vpi_get_str(vpiName, it);
@@ -43,7 +45,8 @@ int main(int argc, char **argv) {
   while (!sim_halted()&&!quit) {
     std::cout << "(sdb) ";
     std::getline(std::cin, cmd);
-		sim_exec_sdbcmd(cmd, quit);
+		read_and_check(("TOP."+cmd).c_str());
+//		sim_exec_sdbcmd(cmd, quit);
   }
 
 	return sim_hit_good_trap() ? 0 : 1;
