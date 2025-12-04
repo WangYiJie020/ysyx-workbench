@@ -32,17 +32,17 @@ int main(int argc, char **argv) {
   vpiHandle top = vpi_handle_by_name((PLI_BYTE8 *)"TOP.Top", NULL);
   assert(top);
   vpiHandle iter;
+  vpiHandle it;
 
   for (int type = 0; type < 150; type++) {
     iter = vpi_iterate(type, top);
     if (iter != NULL) {
       vpi_printf("TYPE %d success\n", type);
+      while ((it = vpi_scan(iter)) != NULL) {
+        const char *name = vpi_get_str(vpiName, it);
+        vpi_printf("- : %s\n", name);
+      }
     }
-  }
-  vpiHandle it;
-  while ((it = vpi_scan(iter)) != NULL) {
-    const char *name = vpi_get_str(vpiName, it);
-    vpi_printf("VAR: %s\n", name);
   }
   std::string cmd;
   bool quit = false;
