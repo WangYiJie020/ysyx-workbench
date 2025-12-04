@@ -36,8 +36,6 @@ class OneMasterOneSlaveFSM extends Module {
     val _state = Output(UInt(2.W))
   })
 
-  val SINGLE_CYCLE_CPU = true
-
   val s_idle :: s_busy :: s_wait_slave :: Nil = Enum(3)
   val state                                   = RegInit(s_idle)
 
@@ -51,7 +49,7 @@ class OneMasterOneSlaveFSM extends Module {
     )
   )
 
-  io.master_ready := (state === s_wait_slave) && (io.self_finished)
+  io.master_ready := (state === s_wait_slave) && (io.self_finished) &&(io.slave_ready)
   io.slave_valid  := (state === s_wait_slave)
 
   def connectMaster[T <: Data](master: DecoupledIO[T]): Unit = {
