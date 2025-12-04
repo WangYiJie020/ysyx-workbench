@@ -30,7 +30,7 @@ void read_and_check(std::string sig_name) {
 int main(int argc, char **argv) {
   sim_init(argc, argv);
 
-  get_dut()->contextp()->internalsDump(); // See scopes to help debug
+  // get_dut()->contextp()->internalsDump(); // See scopes to help debug
 
   vpiHandle top = vpi_handle_by_name((PLI_BYTE8 *)"TOP.Top", NULL);
   assert(top);
@@ -57,6 +57,8 @@ int main(int argc, char **argv) {
     }
     sim_exec_sdbcmd(cmd, quit);
   }
+
+	get_dut()->final();
 
   return sim_hit_good_trap() ? 0 : 1;
 }
