@@ -72,9 +72,10 @@ public:
 #define ANSIFMT_GRAY "\e[38;2;90;90;90m"
 #define ANSIFMT_SIGNAL_NAME "\e[38;2;156;220;254m"
 #define ANSIFMT_NUM "\e[38;2;181;206;168m"
+#define ANSIFMT_COMMENT "\e[38;2;106;153;85m"
 #define ANSIFMT_SIGNAL_TYPE "\e[38;2;78;201;176m"
 
-    std::cout << ANSIFMT_GRAY << "Signal Probe"<<ANSIFMT_NONE << std::endl;
+    std::cout << ANSIFMT_COMMENT << "Signal Probe"<<ANSIFMT_NONE << std::endl;
 
     for (auto &h : _watched_handles) {
       s_vpi_value v;
