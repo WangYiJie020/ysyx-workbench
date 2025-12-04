@@ -358,6 +358,14 @@ int main(int argc, char **argv) {
 
   dut.contextp()->internalsDump(); // See scopes to help debug
 
+vpiHandle top = vpi_handle_by_name((PLI_BYTE8*)"TOP.Top", NULL);
+vpiHandle iter = vpi_iterate(vpiNet, top);
+vpiHandle net;
+while ((net = vpi_scan(iter)) != NULL) {
+    const char* name = vpi_get_str(vpiName, net);
+    vpi_printf("Net: %s\n", name);
+}
+
   std::string cmd;
   while (true) {
     std::cout << "(sdb) ";
