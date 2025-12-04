@@ -36,7 +36,10 @@ SIM_CSRCS = $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.c" -or -name "*.cc"
 #   see https://verilator.org/guide/latest/extensions.html#cmdoption-verilator-public_-flat-flat_rd-flat_rw-_on
 # to enable VPI work (make signal accessible from C++ side)
 
-vpi: $(SIM_VSRCS)
+# this target may modify the verilog source files in place
+# resulting regeneration of CXX files which requires vpi again
+# so only regenerate when chisel done update
+vpi: $(CHISEL2V_DONE)
 ifeq ($(ENABLE_VPI), 1)
 	@echo "VPI enabled: inserting verilator public modifier"
 	$(foreach src,$(SIM_VSRCS),\
