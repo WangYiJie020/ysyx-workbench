@@ -64,6 +64,7 @@ public:
 #define ANSIFMT_NONE "\e[0m"
 #define ANSIFMT_SIGNAL_NAME "\e[38;2;156;220;254m"
 #define ANSIFMT_SIGNAL_WIDTH "\e[38;2;181;206;168m"
+#define ANSIFMT_SIGNAL_TYPE "\e[38;2;78;201;176m"
 
     // std::cout << "===== SProbe Watched Signals =====" << std::endl;
     for (auto &h : _watched_handles) {
