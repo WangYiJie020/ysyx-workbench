@@ -11,7 +11,7 @@ SAN_FLAGS?= -fsanitize=address
 VERILATOR_CFLAGS ?=
 ENABLE_VPI ?= 1
 ifeq ($(ENABLE_VPI), 1)
-	VERILATOR_CFLAGS += --vpi
+	VERILATOR_CFLAGS += --vpi --public
 endif
 
 
