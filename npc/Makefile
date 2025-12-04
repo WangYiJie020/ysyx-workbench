@@ -36,11 +36,11 @@ SIM_CSRCS = $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.c" -or -name "*.cc"
 #   see https://verilator.org/guide/latest/extensions.html#cmdoption-verilator-public_-flat-flat_rd-flat_rw-_on
 # to enable VPI work (make signal accessible from C++ side)
 
-vpi:
+vpi: $(SIM_VSRCS)
 ifeq ($(ENABLE_VPI), 1)
-	$(foreach src,$(SIM_VSRCS),@echo "Adding verilator public extension to $(src)"; \
-	@sed -i '1i /*verilator public_on*/' $(src); \
-	@sed -i -e '$$a /*verilator public_off*/' $(src);)
+	$(foreach src,$(SIM_VSRCS),echo "Adding verilator public extension to $(src)";)
+#	@sed -i '1i /*verilator public_on*/' $(src); \
+#	@sed -i -e '$$a /*verilator public_off*/' $(src);)
 endif
 
 # sdb
@@ -80,7 +80,7 @@ INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME=V$(TOP_NAME)
 CXXFLAGS += $(SAN_FLAGS) -std=c++20
 
-$(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) $(CHISEL2V_DONE)
+$(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) $(CHISEL2V_DONE) vpi
 	@rm -rf $(V2CXX_EMIT_DIR)
 	$(VERILATOR) $(VERILATOR_CFLAGS) \
 		$(SIM_CSRCS) $(NVBOARD_ARCHIVE) \
