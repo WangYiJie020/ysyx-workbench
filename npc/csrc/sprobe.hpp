@@ -79,7 +79,7 @@ public:
 			}
 			// Remove the "TOP."
 			auto notop_name = fullname.substr(4);
-      std::cout << std::format(ANSIFMT_SIGNAL_TYPE "{} " ANSIFMT_SIGNAL_WIDTH "{:2}.W " ANSIFMT_SIGNAL_NAME "{:10}" ANSIFMT_NONE " = {:#08x}\n",
+      std::cout << std::format(ANSIFMT_SIGNAL_TYPE "{} " ANSIFMT_SIGNAL_WIDTH "{:2}.W " ANSIFMT_SIGNAL_NAME "{:>20}" ANSIFMT_NONE " = {:#010x}\n",
                                type, vpi_get(vpiSize, h),
                                notop_name, (uint32_t)v.value.integer);
     }
