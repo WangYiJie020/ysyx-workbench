@@ -41,6 +41,7 @@ int main(int argc, char **argv) {
       while ((it = vpi_scan(iter)) != NULL) {
         const char *name = vpi_get_str(vpiName, it);
         vpi_printf("- : %s\n", name);
+				read_and_check(name);
       }
     }
   }
