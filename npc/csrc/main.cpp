@@ -29,6 +29,8 @@ void read_and_check(std::string sig_name) {
 
 SProbe sprobe;
 void cyc_callback() {
+	if(sim_halted())
+		return;
 	sprobe.dump_watched();
 }
 
