@@ -1,13 +1,14 @@
 #include <iostream>
+#include <string_view>
 #include <verilated.h>
 #include <verilated_vpi.h>
 
 #include "sim.hpp"
 
-void read_and_check(const char *sig_name) {
-  vpiHandle vh1 = vpi_handle_by_name((PLI_BYTE8 *)(sig_name), NULL);
+void read_and_check(std::string sig_name) {
+  vpiHandle vh1 = vpi_handle_by_name((PLI_BYTE8 *)(sig_name.c_str()), NULL);
   if (!vh1) {
-    printf("No handle found for %s\n", sig_name);
+    printf("No handle found for %s\n", sig_name.c_str());
     return;
     // vl_fatal(__FILE__, __LINE__, "sim_main", "No handle found");
   }
