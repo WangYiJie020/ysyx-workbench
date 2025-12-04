@@ -97,7 +97,7 @@ public:
       std::cout << std::format(ANSIFMT_GRAY "Signal " ANSIFMT_SIGNAL_TYPE
                                             "{} " ANSIFMT_SIGNAL_WIDTH
                                             "{:2}W " ANSIFMT_SIGNAL_NAME
-                                            "{}" ANSIFMT_NONE " = {:#0{}x}\n",
+                                            "{}" ANSIFMT_NONE " = h{:#0{}}\n",
                                type, sig_width, notop_name,
                                (uint32_t)v.value.integer, val_out_width);
     }
