@@ -26,7 +26,7 @@ CHISEL2V_DONE = $(BUILD_DIR)/verilog.done
 
 # Verilator
 VERILATOR = verilator
-VERILATOR_CFLAGS += -MMD --build -cc -O3 \
+VERILATOR_CFLAGS += -MMD --build -cc -O3 -g \
 										--x-assign fast --x-initial fast --noassert \
 										-I$(CHISEL2V_EMIT_DIR)/verification
 
