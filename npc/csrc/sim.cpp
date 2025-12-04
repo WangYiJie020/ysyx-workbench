@@ -358,6 +358,7 @@ int main(int argc, char **argv) {
     std::cout << "(sdb) ";
     std::getline(std::cin, cmd);
     dbg->exec_command(cmd);
+          VerilatedVpi::callValueCbs();
     read_and_check();
     if (dbg->state().state == sdb::run_state::quit) {
       break;
