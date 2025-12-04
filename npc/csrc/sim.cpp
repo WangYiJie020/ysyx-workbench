@@ -300,6 +300,7 @@ uint8_t *loadmem(sdb::paddr_t addr, size_t nbyte) { return mem_atguest(addr); }
 } // namespace sdbwrap
 
 bool sim_init(int argc, char **argv, sim_setting setting) {
+	sim_settings=setting;
   if (setting.nvboard) {
     nvboard_bind_all_pins(&dut);
     nvboard_init();
