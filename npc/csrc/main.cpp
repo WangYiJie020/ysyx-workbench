@@ -24,30 +24,35 @@ void read_and_check(const char *sig_name) {
          v.value.integer); // Prints "Value of readme: 0"
 }
 
-
 int main(int argc, char **argv) {
-	sim_init(argc,argv);
-
+  sim_init(argc, argv);
 
   get_dut()->contextp()->internalsDump(); // See scopes to help debug
 
   vpiHandle top = vpi_handle_by_name((PLI_BYTE8 *)"TOP.Top", NULL);
-	assert(top);
-  vpiHandle iter = vpi_iterate(vpiVariables, top);
-	assert(iter);
+  assert(top);
+  vpiHandle iter;
+
+  for (int type = 0; type < 150; type++) {
+    iter = vpi_iterate(type, top);
+    if (iter != NULL) {
+      vpi_printf("TYPE %d success\n", type);
+      break;
+    }
+  }
   vpiHandle it;
   while ((it = vpi_scan(iter)) != NULL) {
     const char *name = vpi_get_str(vpiName, it);
     vpi_printf("VAR: %s\n", name);
   }
   std::string cmd;
-	bool quit=false;
-  while (!sim_halted()&&!quit) {
+  bool quit = false;
+  while (!sim_halted() && !quit) {
     std::cout << "(sdb) ";
     std::getline(std::cin, cmd);
-		read_and_check(("TOP."+cmd).c_str());
-//		sim_exec_sdbcmd(cmd, quit);
+    read_and_check(("TOP." + cmd).c_str());
+    //		sim_exec_sdbcmd(cmd, quit);
   }
 
-	return sim_hit_good_trap() ? 0 : 1;
+  return sim_hit_good_trap() ? 0 : 1;
 }
