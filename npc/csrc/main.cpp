@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
   assert(top);
 
   SProbe sprobe;
-  sprobe.load_inside(top);
+//  sprobe.load_inside(top);
 
   std::cout << "===== All Signal Probed =====" << std::endl;
   for (auto &n : sprobe._fullnames) {
