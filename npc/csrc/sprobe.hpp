@@ -71,10 +71,14 @@ public:
       v.format = vpiIntVal;
       vpi_get_value(h, &v);
       std::string_view fullname = vpi_get_str(vpiFullName, h);
+			std::string_view type = vpi_get_str(vpiType, h);
+			if(type.starts_with("vpi")) {
+				type = type.substr(3);
+			}
 			// Remove the "TOP."
 			auto notop_name = fullname.substr(4);
       std::cout << std::format("{}`" ANSIFMT_SIGNAL_WIDTH "{}.W " ANSIFMT_SIGNAL_NAME "{}" ANSIFMT_NONE " = {:08X}\n",
-                               vpi_get_str(vpiType, h), vpi_get(vpiSize, h),
+                               type, vpi_get(vpiSize, h),
                                notop_name, (uint32_t)v.value.integer);
     }
   }
