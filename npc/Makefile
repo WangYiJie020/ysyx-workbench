@@ -38,9 +38,9 @@ SIM_CSRCS = $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.c" -or -name "*.cc"
 
 vpi: $(SIM_VSRCS)
 ifeq ($(ENABLE_VPI), 1)
-	$(foreach src,$(SIM_VSRCS),echo "Adding verilator public extension to $(src)";)
-#	@sed -i '1i /*verilator public_on*/' $(src); \
-#	@sed -i -e '$$a /*verilator public_off*/' $(src);)
+	$(foreach src,$(SIM_VSRCS),\
+	sed -i '1i /*verilator public_on*/' $(src); \
+	sed -i -e '$$a /*verilator public_off*/' $(src);)
 endif
 
 # sdb
