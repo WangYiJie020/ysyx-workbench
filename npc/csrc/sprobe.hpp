@@ -93,11 +93,11 @@ public:
 
       auto val_out_width = (sig_width + 3) / 4; // (8bits per 2hex) upceil
 
-      std::cout << std::format(ANSIFMT_GRAY "Signal " ANSIFMT_SIGNAL_TYPE
-                                            "{} " ANSIFMT_SIGNAL_WIDTH
-                                            "{:2}W " ANSIFMT_SIGNAL_NAME
-                                            "{}" ANSIFMT_NONE " = h{:#0{}}\n",
-                               type, sig_width, notop_name,
+      std::cout << std::format(ANSIFMT_GRAY "Signal " ANSIFMT_SIGNAL_WIDTH
+                                            "{:2}W " ANSIFMT_SIGNAL_TYPE
+                                            "{} " ANSIFMT_SIGNAL_NAME
+                                            "{}" ANSIFMT_NONE " = h{:0{}x}\n",
+                               sig_width, type, notop_name,
                                (uint32_t)v.value.integer, val_out_width);
     }
   }
