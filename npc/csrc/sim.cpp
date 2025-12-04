@@ -260,7 +260,7 @@ static void parse_args(int argc, char **argv) {
 
 void read_and_check() {
   vpiHandle vh1 =
-      vpi_handle_by_name((PLI_BYTE8 *)("TOP.Top._wbu_io_data_ready"), NULL);
+      vpi_handle_by_name((PLI_BYTE8 *)("TOP.Top.pc"), NULL);
   if (!vh1)
     vl_fatal(__FILE__, __LINE__, "sim_main", "No handle found");
   const char *name = vpi_get_str(vpiName, vh1);
