@@ -72,9 +72,13 @@ public:
 #define ANSIFMT_GRAY "\e[38;2;90;90;90m"
 #define ANSIFMT_SIGNAL_NAME "\e[38;2;156;220;254m"
 #define ANSIFMT_NUM "\e[38;2;181;206;168m"
+#define ANSIFMT_COMMENT "\e[38;2;106;153;85m"
 #define ANSIFMT_SIGNAL_TYPE "\e[38;2;78;201;176m"
 
-    // std::cout << "===== SProbe Watched Signals =====" << std::endl;
+    bool is_first = true;
+
+    std::cout << ANSIFMT_COMMENT << "-- poke beg\n" << ANSIFMT_NONE;
+
     for (auto &h : _watched_handles) {
       s_vpi_value v;
       v.format = vpiIntVal;
@@ -93,13 +97,20 @@ public:
 
       auto val_out_width = (sig_width + 3) / 4; // (8bits per 2hex) upceil
 
+      if (!is_first) {
+        std::cout << std::endl;
+      } else {
+        is_first = false;
+      }
+
       std::cout << std::format(
           ANSIFMT_GRAY "Signal " ANSIFMT_NUM "{:2}W " ANSIFMT_SIGNAL_TYPE
                        "{} " ANSIFMT_SIGNAL_NAME "{}" ANSIFMT_NONE
                        " = " ANSIFMT_GRAY "h'" ANSIFMT_NUM
-                       "{:0{}x}\n" ANSIFMT_NONE,
+                       "{:0{}x}" ANSIFMT_NONE,
           sig_width, type, notop_name, (uint32_t)v.value.integer,
           val_out_width);
     }
+    std::cout << ANSIFMT_COMMENT " -- end" ANSIFMT_NONE << std::endl;
   }
 };

@@ -29,11 +29,16 @@ void read_and_check(std::string sig_name) {
 
 SProbe sprobe;
 void cyc_callback() {
+	if(sim_halted())
+		return;
 	sprobe.dump_watched();
 }
 
 int main(int argc, char **argv) {
 	sim_setting setting;
+	// setting.trace_pmem_readcall=true;
+	// setting.trace_pmem_writecall=true;
+	// setting.trace_clock_cycle=true;
 	setting.cycle_finish_cb=cyc_callback;
   sim_init(argc, argv, setting);
 
