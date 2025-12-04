@@ -77,7 +77,7 @@ public:
 
     bool is_first = true;
 
-    std::cout << ANSIFMT_COMMENT << " // poke result beg" << ANSIFMT_NONE;
+    std::cout << ANSIFMT_COMMENT << "// poke result beg\n" << ANSIFMT_NONE;
 
     for (auto &h : _watched_handles) {
       s_vpi_value v;
