@@ -97,7 +97,7 @@ class IFU extends Module {
   )
 
   when(io.out.ready){
-    printf("ifu downstream ready")
+    printf("ifu downstream ready\n")
   }
   
   // NOTICE: dpi function auto generated with void return
