@@ -122,8 +122,6 @@ class LoadStoreFSM extends Module {
     val wmask     = Input(UInt(4.W))
     val rdata     = Output(Types.UWord)
     val respValid = Output(Bool())
-
-    val _state = Output(UInt(2.W))
   })
 
   val sNoneed :: sWaitMem :: sDone :: Nil = Enum(3)
@@ -135,8 +133,6 @@ class LoadStoreFSM extends Module {
       sDone    -> Mux(io.reqValid, sDone, sNoneed)
     )
   )
-  io._state := state
-
   val isLoad = !io.wen
   val isStore = io.wen
 
@@ -155,6 +151,6 @@ class LoadStoreFSM extends Module {
       isLoad  -> io.memRd.respValid,
       isStore -> io.memWr.done
     )
-  )
+  ) || (state === sDone)
 
 }
