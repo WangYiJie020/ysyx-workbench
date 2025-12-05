@@ -55,12 +55,17 @@ class EXUIFU_MemVisitArbiter extends Module {
   io.rreq.en   := io.exu_mem_rreq.en || io.ifu_mem_rreq.en
 
   val isExuReg = Reg(Bool())
+  val isIfuReg = Reg(Bool())
+
   val isExu = isExuReg||(io.exu_mem_rreq.en)
+  val isIfu = isIfuReg||(io.ifu_mem_rreq.en)
 
   when(io.exu_mem_rreq.en) {
     isExuReg := true.B
+    isIfuReg := false.B
   } .elsewhen(io.ifu_mem_rreq.en) {
     isExuReg := false.B
+    isIfuReg := true.B
   }
 
   val rreq= io.rreq
@@ -69,7 +74,7 @@ class EXUIFU_MemVisitArbiter extends Module {
   io.exu_mem_rreq.data := rreq.data
   io.ifu_mem_rreq.data := rreq.data
 
-  io.ifu_mem_rreq.respValid := !isExu && rreq.respValid
+  io.ifu_mem_rreq.respValid := isIfu && rreq.respValid
   io.exu_mem_rreq.respValid := isExu && rreq.respValid
 
   io.wreq <> io.exu_mem_wreq
