@@ -65,7 +65,9 @@ class EXUIFU_MemVisitArbiter extends Module {
 
   val rreq= io.rreq
   rreq.addr := Mux(isExu, io.exu_mem_rreq.addr, io.ifu_mem_rreq.addr)
-  rreq.data := Mux(isExu, io.exu_mem_rreq.data, io.ifu_mem_rreq.data)
+
+  io.exu_mem_rreq.data := rreq.data
+  io.ifu_mem_rreq.data := rreq.data
 
   io.ifu_mem_rreq.respValid := !isExu && rreq.respValid
   io.exu_mem_rreq.respValid := isExu && rreq.respValid
