@@ -74,6 +74,7 @@ public:
 #define ANSIFMT_SIGNAL_REPEATED_PARENT "\e[38;2;84;118;138m"
 #define ANSIFMT_SIGNAL_NAME "\e[38;2;156;220;254m"
 #define ANSIFMT_NUM "\e[38;2;181;206;168m"
+#define ANSIFMT_NUM_PREFIX "\e[38;2;68;77;63m"
 #define ANSIFMT_COMMENT "\e[38;2;106;153;85m"
 #define ANSIFMT_SIGNAL_TYPE "\e[38;2;78;201;176m"
 
@@ -127,7 +128,7 @@ public:
       std::cout << std::format(
           ANSIFMT_GRAY "Signal " ANSIFMT_NUM "{:2}W " ANSIFMT_SIGNAL_TYPE
                        "{} {}{}" ANSIFMT_SIGNAL_NAME ".{}" ANSIFMT_NONE
-                       " = " ANSIFMT_GRAY "h'" ANSIFMT_NUM
+                       " = " ANSIFMT_NUM_PREFIX "h'" ANSIFMT_NUM
                        "{:0{}x}" ANSIFMT_NONE,
           sig_width, type, parent_colfmt, parent, selfname,
           (uint32_t)v.value.integer, val_out_width);
