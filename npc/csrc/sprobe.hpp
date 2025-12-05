@@ -71,7 +71,7 @@ public:
 
 #define ANSIFMT_NONE "\e[0m"
 #define ANSIFMT_GRAY "\e[38;2;90;90;90m"
-#define ANSIFMT_SIGNAL_REPEATED_PARENT "\e[38;2;28;73;64m"
+#define ANSIFMT_SIGNAL_REPEATED_PARENT "\e[38;2;84;118;138m"
 #define ANSIFMT_SIGNAL_NAME "\e[38;2;156;220;254m"
 #define ANSIFMT_NUM "\e[38;2;181;206;168m"
 #define ANSIFMT_COMMENT "\e[38;2;106;153;85m"
@@ -105,11 +105,15 @@ public:
       std::string_view parent = notop_name.substr(0, parent_end);
       selfname = notop_name.substr(parent_end + 1);
 
+			if(selfname=="reset"||selfname=="clock"||selfname=="_RANDOM"){
+				continue;
+			}
+
       if (parent != last_parent) {
         last_parent = parent;
-        parent_colfmt = ANSIFMT_SIGNAL_REPEATED_PARENT;
+        parent_colfmt = ANSIFMT_SIGNAL_NAME;
       } else {
-        parent_colfmt = ANSIFMT_GRAY;
+        parent_colfmt = ANSIFMT_SIGNAL_REPEATED_PARENT;
       }
 
       auto val_out_width = (sig_width + 3) / 4; // (8bits per 2hex) upceil
