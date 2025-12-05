@@ -53,8 +53,12 @@ class EXUIFU_MemVisitArbiter extends Module {
 
   when(io.exu_mem_rreq.en) {
     io.rreq <> io.exu_mem_rreq
+    io.ifu_mem_rreq.data := 0.U
+    io.ifu_mem_rreq.respValid := false.B
   } .otherwise {
     io.rreq <> io.ifu_mem_rreq
+    io.exu_mem_rreq.data := 0.U
+    io.exu_mem_rreq.respValid := false.B
   }
 
   io.wreq <> io.exu_mem_wreq
