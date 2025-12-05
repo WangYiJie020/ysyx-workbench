@@ -41,7 +41,7 @@ public:
       }
     }
   };
-  std::vector<WatchItem> _watched_handles;
+  std::vector<WatchItem> _watched;
 
   void watch_inside(vpiHandle top, int max_depth = 1, int cur_depth = 0) {
     if (cur_depth >= max_depth)
@@ -55,14 +55,14 @@ public:
       if (iter != NULL) {
         // printf("SProbe scanning type %d\n",type);
         while ((it = vpi_scan(iter)) != NULL) {
-          // printf("SProbe found %d  %s\n", type, _fullnames.back().c_str());
+          printf("SProbe found %d  %s\n", type, vpi_get_str(vpiFullName, it));
           if (type == vpiModule) {
             watch_inside(it, max_depth, cur_depth + 1);
             vpi_release_handle(it);
           } else {
             std::cout << "add watch " << vpi_get_str(vpiType, it) << " "
                       << vpi_get_str(vpiFullName, it) << std::endl;
-            _watched_handles.push_back(it);
+            _watched.push_back(it);
           }
           // printf("SProbe back to %s\n",vpi_get_str(vpiFullName,top));
         }
@@ -86,12 +86,12 @@ public:
       vpi_release_handle(vh1);
       return true;
     }
-    _watched_handles.push_back(vh1);
+    _watched.push_back(vh1);
     return true;
   }
 
   void dump_watched() {
-    if (_watched_handles.empty())
+    if (_watched.empty())
       return;
 
     bool is_first = true;
@@ -103,7 +103,7 @@ public:
 
     std::string_view parent_colfmt;
 
-    for (auto &h : _watched_handles) {
+    for (auto &h : _watched) {
       auto fullname = h.getFullname();
       auto type = h.getType();
       auto sig_width = h.getSize();
