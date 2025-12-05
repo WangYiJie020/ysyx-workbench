@@ -37,7 +37,7 @@ public:
     WatchItem(vpiHandle h) : handle(h) { last_value = getValue(); }
     ~WatchItem() {
       if (handle) {
-//        vpi_release_handle(handle);
+        vpi_release_handle(handle);
       }
     }
   };
@@ -112,9 +112,6 @@ public:
         type = type.substr(3);
       }
 
-			std::cout<<type;
-			std::cout<<parent_colfmt;
-			std::cout<<selfname;
       // Remove the "TOP."
       auto notop_name = fullname.substr(4);
       if (notop_name.starts_with("Top.")) {
@@ -152,7 +149,7 @@ public:
           sig_width, type, parent_colfmt, parent, selfname, (uint32_t)sig_value,
           val_out_width);
       if (sig_value != h.last_value) {
-        std::cout << ANSIFMT_COMMENT " // * changed" ANSIFMT_NONE;
+        std::cout << ANSIFMT_COMMENT " *" ANSIFMT_NONE;
       }
 			h.updateLastValue();
     }
