@@ -121,7 +121,7 @@ public:
         notop_name = notop_name.substr(4);
       }
       auto parent_end = notop_name.rfind('.');
-      std::string_view parent = notop_name.substr(0, parent_end);
+      auto parent = notop_name.substr(0, parent_end);
 
 
 			std::cout<<type<<std::endl;
