@@ -16,7 +16,7 @@
 #define ANSIFMT_NUM "\e[38;2;181;206;168m"
 #define ANSIFMT_NUM_PREFIX "\e[38;2;113;129;105m"
 #define ANSIFMT_COMMENT "\e[38;2;106;153;85m"
-#define ANSIFMT_HINT "\e[38;2;86;156;214m"
+#define ANSIFMT_HINT "\e[38;2;156;179;255m"
 #define ANSIFMT_SIGNAL_TYPE "\e[38;2;78;201;176m"
 #define ANSIFMT_BOLD "\e[1m"
 
