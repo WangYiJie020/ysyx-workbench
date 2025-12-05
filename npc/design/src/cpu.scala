@@ -421,16 +421,15 @@ class EXU           extends Module {
 
   val isLoad = (dinst.info.typ === InstType.load) && MS_fsm.io.master_valid
   val isStore = (dinst.info.typ === InstType.store) && MS_fsm.io.master_valid
-
+  val isMemOp = isLoad || isStore
 
   val memFSM = Module(new LoadStoreFSM)
   
   io.mem_rreq <> memFSM.io.memRd
   io.mem_wreq <> memFSM.io.memWr
 
-  memFSM.io.reqValid := MS_fsm.io.master_valid && (!MS_fsm.io.slave_ready) && (isLoad || isStore)
+  memFSM.io.reqValid := isMemOp&& (!MS_fsm.io.slave_ready)
   memFSM.io.addr     := memAddr
-
 
   when(memFSM.io.respValid) {
     memRdRawData := memFSM.io.rdata
@@ -439,7 +438,7 @@ class EXU           extends Module {
   val memRdData = memRdRawData >> memAddrUnalignPartBitlen
 
   MS_fsm.io.self_finished := alu.io.out.valid && (
-    memFSM.io.respValid
+    (!isMemOp)|| memFSM.io.respValid
   )
 
   // wdata
