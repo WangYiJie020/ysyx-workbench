@@ -10,7 +10,6 @@
 
 class SProbe {
 public:
-
   std::vector<vpiHandle> _watched_handles;
 
   ~SProbe() {
@@ -19,8 +18,9 @@ public:
     }
   }
 
-  void watch_inside(vpiHandle top,int max_depth=1,int cur_depth=0) {
-		if (cur_depth>=max_depth)return;
+  void watch_inside(vpiHandle top, int max_depth = 1, int cur_depth = 0) {
+    if (cur_depth >= max_depth)
+      return;
 
     vpiHandle iter;
     vpiHandle it;
@@ -31,13 +31,14 @@ public:
         // printf("SProbe scanning type %d\n",type);
         while ((it = vpi_scan(iter)) != NULL) {
           // printf("SProbe found %d  %s\n", type, _fullnames.back().c_str());
-          if (type == vpiModule){
-            watch_inside(it,max_depth,cur_depth+1);
-						vpi_release_handle(it);
-					} else{
-						std::cout << "add watch "<< vpi_get_str(vpiType, it)<<" " << vpi_get_str(vpiFullName, it) << std::endl;
-						_watched_handles.push_back(it);
-					}
+          if (type == vpiModule) {
+            watch_inside(it, max_depth, cur_depth + 1);
+            vpi_release_handle(it);
+          } else {
+            std::cout << "add watch " << vpi_get_str(vpiType, it) << " "
+                      << vpi_get_str(vpiFullName, it) << std::endl;
+            _watched_handles.push_back(it);
+          }
           // printf("SProbe back to %s\n",vpi_get_str(vpiFullName,top));
         }
       }
@@ -56,7 +57,7 @@ public:
     }
     auto type = vpi_get(vpiType, vh1);
     if (type == vpiModule) {
-			watch_inside(vh1);
+      watch_inside(vh1);
       vpi_release_handle(vh1);
       return true;
     }
@@ -79,8 +80,10 @@ public:
 
     std::cout << ANSIFMT_COMMENT << "-- poke beg\n" << ANSIFMT_NONE;
 
-		std::string last_parent="";
-		std::string showed_name,selfname;
+    std::string last_parent = "";
+    std::string selfname;
+
+    std::string_view parent_colfmt;
 
     for (auto &h : _watched_handles) {
       s_vpi_value v;
@@ -97,16 +100,16 @@ public:
       if (notop_name.starts_with("Top.")) {
         notop_name = notop_name.substr(4);
       }
-			auto parent_end=notop_name.rfind('.');
-			std::string_view parent=notop_name.substr(0,parent_end);
-			selfname=notop_name.substr(parent_end+1);
+      auto parent_end = notop_name.rfind('.');
+      std::string_view parent = notop_name.substr(0, parent_end);
+      selfname = notop_name.substr(parent_end + 1);
 
-			if(parent!=last_parent){
-				last_parent=parent;
-				showed_name=notop_name;
-			} else{
-				showed_name=std::string(parent.length(),' ')+selfname;
-			}
+      if (parent != last_parent) {
+        last_parent = parent;
+        parent_colfmt = ANSIFMT_SIGNAL_NAME;
+      } else {
+        parent_colfmt = ANSIFMT_GRAY;
+      }
 
       auto val_out_width = (sig_width + 3) / 4; // (8bits per 2hex) upceil
 
@@ -118,11 +121,11 @@ public:
 
       std::cout << std::format(
           ANSIFMT_GRAY "Signal " ANSIFMT_NUM "{:2}W " ANSIFMT_SIGNAL_TYPE
-                       "{} " ANSIFMT_SIGNAL_NAME "{}" ANSIFMT_NONE
+                       "{} {}{}." ANSIFMT_SIGNAL_NAME "{}" ANSIFMT_NONE
                        " = " ANSIFMT_GRAY "h'" ANSIFMT_NUM
                        "{:0{}x}" ANSIFMT_NONE,
-          sig_width, type, showed_name, (uint32_t)v.value.integer,
-          val_out_width);
+          sig_width, type, parent_colfmt, parent, selfname,
+          (uint32_t)v.value.integer, val_out_width);
     }
     std::cout << ANSIFMT_COMMENT " -- end" ANSIFMT_NONE << std::endl;
   }
