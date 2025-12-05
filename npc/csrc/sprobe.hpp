@@ -107,6 +107,10 @@ public:
 			auto selfname = h.getName();
       auto type = h.getType();
       auto sig_width = h.getSize();
+
+			std::cout<<type;
+			std::cout<<parent_colfmt;
+			std::cout<<selfname;
       if (type.starts_with("vpi")) {
         type = type.substr(3);
       }
