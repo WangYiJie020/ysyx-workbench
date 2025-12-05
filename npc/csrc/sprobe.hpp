@@ -79,6 +79,9 @@ public:
 
     std::cout << ANSIFMT_COMMENT << "-- poke beg\n" << ANSIFMT_NONE;
 
+		std::string last_parent="";
+		std::string showed_name,selfname;
+
     for (auto &h : _watched_handles) {
       s_vpi_value v;
       v.format = vpiIntVal;
@@ -94,6 +97,16 @@ public:
       if (notop_name.starts_with("Top.")) {
         notop_name = notop_name.substr(4);
       }
+			auto parent_end=notop_name.rfind('.');
+			std::string_view parent=notop_name.substr(0,parent_end);
+			selfname=notop_name.substr(parent_end+1);
+
+			if(parent!=last_parent){
+				last_parent=parent;
+				showed_name=notop_name;
+			} else{
+				showed_name=std::string(parent.length(),' ')+selfname;
+			}
 
       auto val_out_width = (sig_width + 3) / 4; // (8bits per 2hex) upceil
 
@@ -108,7 +121,7 @@ public:
                        "{} " ANSIFMT_SIGNAL_NAME "{}" ANSIFMT_NONE
                        " = " ANSIFMT_GRAY "h'" ANSIFMT_NUM
                        "{:0{}x}" ANSIFMT_NONE,
-          sig_width, type, notop_name, (uint32_t)v.value.integer,
+          sig_width, type, showed_name, (uint32_t)v.value.integer,
           val_out_width);
     }
     std::cout << ANSIFMT_COMMENT " -- end" ANSIFMT_NONE << std::endl;
