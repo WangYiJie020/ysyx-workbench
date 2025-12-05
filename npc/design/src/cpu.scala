@@ -66,6 +66,7 @@ class OneMasterOneSlaveFSM extends Module {
 class IFU extends Module {
   val io = IO(new Bundle {
     val pc  = Flipped(Decoupled(Input(Types.UWord)))
+    val mem = MemReqIO.ReadTX
     val out = Decoupled(new Inst)
   })
 
@@ -73,34 +74,20 @@ class IFU extends Module {
   fsm.connectMaster(io.pc)
   fsm.connectSlave(io.out)
 
-  // printf("(ifu) fetch inst %x at pc 0x%x\n", io.out.bits.code,io.pc.bits)
-  // printf("(ifu) pc.valid: %b\n", io.pc.valid)
+  val loadFSM = Module(new LoadStoreFSM)
+  io.mem <> loadFSM.io.memRd
+  loadFSM.io.memWr := DontCare
 
-  val s_idle :: s_wait :: Nil = Enum(2)
-  val state                   = RegInit(s_idle)
-  state := MuxLookup(state, s_idle)(
-    Seq(
-      s_idle -> Mux(io.pc.valid, s_wait, s_idle),
-      s_wait -> Mux(fsm.io.slave_ready, s_idle, s_wait)
-    )
-  )
-  val en_call = io.pc.valid && (state === s_idle)
+  loadFSM.io.wen:= false.B
+  loadFSM.io.reqValid := fsm.io.master_valid && (!fsm.io.slave_ready)
+  loadFSM.io.addr     := io.pc.bits
 
-  val code = RawClockedNonVoidFunctionCall("fetch_inst", Types.UWord)(
-    clock,
-    en_call,
-    io.pc.bits
-  )
 
-  fsm.io.self_finished := (state === s_wait)
-
-  when(io.out.ready) {
-    // printf("ifu downstream ready\n")
-  }
+  fsm.io.self_finished := loadFSM.io.respValid
 
   // NOTICE: dpi function auto generated with void return
   // see https://github.com/llvm/circt/blob/main/docs/Dialects/FIRRTL/FIRRTLIntrinsics.md#dpi-intrinsic-abi
-  io.out.bits.code := code
+  io.out.bits.code := loadFSM.io.rdata
   io.out.bits.pc   := io.pc.bits
 }
 
@@ -180,18 +167,6 @@ class IDU extends Module {
   res.viewAsSupertype(new InstMetaInfo) := iinfo_dec.io.out
 
   fsm.io.self_finished := iinfo_dec.io.valid
-
-  // printf("S(idu) state %d in.valid %b in.ready %b\n", fsm.io._state, io.in.valid, io.in.ready)
-  /*
-  printf("(idu) inst 0x%x at pc 0x%x\n", inst, io.in.bits.pc)
-  when(!iinfo_dec.io.valid) {
-    printf("(idu) UNKNOWN instruction with opcode 0b%b\n", inst(6, 0))
-  }
-  when(io.out.valid) {
-    printf("(idu) decoded finished fmt %d type %d\n", res.fmt.asUInt, res.typ.asUInt)
-  }
-  printf("(idu) fsm st %d in.valid %b\n",fsm.io._state, io.in.valid)
-   */
 
   res.rd  := inst(11, 7)
   res.rs1 := inst(19, 15)
