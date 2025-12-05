@@ -16,6 +16,7 @@
 #define ANSIFMT_NUM "\e[38;2;181;206;168m"
 #define ANSIFMT_NUM_PREFIX "\e[38;2;113;129;105m"
 #define ANSIFMT_COMMENT "\e[38;2;106;153;85m"
+#define ANSIFMT_HINT "\e[38;2;220;220;170m"
 #define ANSIFMT_SIGNAL_TYPE "\e[38;2;78;201;176m"
 
 class SProbe {
@@ -107,6 +108,8 @@ public:
 
     std::string_view parent_colfmt;
 
+		auto val_upd_hint = ANSIFMT_HINT "*" ANSIFMT_NONE;
+
     for (auto &h : _watched) {
       auto fullname = h.getFullname();
       auto selfname = h.getName();
@@ -146,17 +149,16 @@ public:
       }
 
       auto sig_value = h.getValue();
+			bool value_changed = (sig_value != h.last_value);
 
       std::cout << std::format(
-          ANSIFMT_GRAY "Signal " ANSIFMT_NUM "{:2}W " ANSIFMT_SIGNAL_TYPE
+          ANSIFMT_GRAY "Signal {} " ANSIFMT_NUM "{:2}W " ANSIFMT_SIGNAL_TYPE
                        "{} {}{}" ANSIFMT_SIGNAL_NAME ".{}" ANSIFMT_NONE
                        " = " ANSIFMT_NUM_PREFIX "h'" ANSIFMT_NUM
                        "{:0{}x}" ANSIFMT_NONE,
-          sig_width, type, parent_colfmt, parent, selfname, (uint32_t)sig_value,
+											 value_changed ? val_upd_hint : " ",
+          sig_width, type[0], parent_colfmt, parent, selfname, (uint32_t)sig_value,
           val_out_width);
-      if (sig_value != h.last_value) {
-        std::cout << ANSIFMT_COMMENT " * " ANSIFMT_NONE;
-      }
       h.updateLastValue();
     }
     std::cout << ANSIFMT_COMMENT " -- end" ANSIFMT_NONE << std::endl;
