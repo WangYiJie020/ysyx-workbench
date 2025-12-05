@@ -76,7 +76,10 @@ class IFU extends Module {
 
   val loadFSM = Module(new LoadStoreFSM)
   io.mem <> loadFSM.io.memRd
+
   loadFSM.io.memWr := DontCare
+  loadFSM.io.wdata := 0.U
+  loadFSM.io.wmask := 0.U
 
   loadFSM.io.wen:= false.B
   loadFSM.io.reqValid := fsm.io.master_valid && (!fsm.io.slave_ready)

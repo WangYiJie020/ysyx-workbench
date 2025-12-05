@@ -37,6 +37,24 @@ class TopIO extends Bundle {
   val seg7 = Output(UInt(8.W))
 }
 
+// make exu and ifu access memory
+class EXUIFU_MemVisitArbiter extends Module {
+  val io = IO(new Bundle {
+    val exu_mem_rreq = MemReqIO.ReadRX
+    val exu_mem_wreq = MemReqIO.WriteRX
+
+    val ifu_mem_rreq = MemReqIO.ReadRX
+
+    val rreq = MemReqIO.ReadTX
+    val wreq = MemReqIO.WriteTX
+  })
+
+  // Simple arbiter, since IFU and EXU won't access memory at the same time
+  io.rreq <> Mux(io.exu_mem_rreq.en, io.exu_mem_rreq, io.ifu_mem_rreq)
+  io.wreq <> io.exu_mem_wreq
+  
+}
+
 class Top(word_width: Int = 32) extends Module {
   type HasIO = {
     val io: Data
@@ -100,8 +118,13 @@ class Top(word_width: Int = 32) extends Module {
   exu.io.rvec <> gprs.io.read
   exu.io.csr_rvec <> csrs.io.read
 
-  mem.io.read <> exu.io.mem_rreq
-  mem.io.write <> exu.io.mem_wreq
+  val memArbiter = Module(new EXUIFU_MemVisitArbiter)
+  memArbiter.io.exu_mem_rreq <> exu.io.mem_rreq
+  memArbiter.io.exu_mem_wreq <> exu.io.mem_wreq
+  memArbiter.io.ifu_mem_rreq <> ifu.io.mem
+
+  mem.io.read <> memArbiter.io.rreq
+  mem.io.write <> memArbiter.io.wreq
 
   // Write back
 
