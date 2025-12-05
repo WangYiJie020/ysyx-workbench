@@ -34,7 +34,10 @@ public:
     std::string getType() { return vpi_get_str(vpiType, handle); }
     std::string getName() { return vpi_get_str(vpiName, handle); }
     auto getSize() { return vpi_get(vpiSize, handle); }
-    WatchItem(vpiHandle h) : handle(h) { last_value = getValue(); }
+    WatchItem(vpiHandle h) {
+      handle = h;
+      last_value = getValue();
+    }
     ~WatchItem() {
       if (handle) {
         vpi_release_handle(handle);
@@ -55,14 +58,15 @@ public:
       if (iter != NULL) {
         // printf("SProbe scanning type %d\n",type);
         while ((it = vpi_scan(iter)) != NULL) {
-          // printf("SProbe found %d  %s\n", type, vpi_get_str(vpiFullName, it));
+          // printf("SProbe found %d  %s\n", type, vpi_get_str(vpiFullName,
+          // it));
           if (type == vpiModule) {
             watch_inside(it, max_depth, cur_depth + 1);
             vpi_release_handle(it);
           } else {
             std::cout << "add watch " << vpi_get_str(vpiType, it) << " "
                       << vpi_get_str(vpiFullName, it) << std::endl;
-            _watched.push_back(it);
+            _watched.emplace_back(it);
           }
           // printf("SProbe back to %s\n",vpi_get_str(vpiFullName,top));
         }
@@ -104,7 +108,7 @@ public:
 
     for (auto &h : _watched) {
       auto fullname = h.getFullname();
-			auto selfname = h.getName();
+      auto selfname = h.getName();
       auto type = h.getType();
       auto sig_width = h.getSize();
 
@@ -120,7 +124,8 @@ public:
       auto parent_end = notop_name.rfind('.');
       auto parent = notop_name.substr(0, parent_end);
 
-      // if (selfname == "reset" || selfname == "clock" || selfname == "_RANDOM") {
+      // if (selfname == "reset" || selfname == "clock" || selfname ==
+      // "_RANDOM") {
       //   continue;
       // }
 
@@ -149,9 +154,9 @@ public:
           sig_width, type, parent_colfmt, parent, selfname, (uint32_t)sig_value,
           val_out_width);
       if (sig_value != h.last_value) {
-        std::cout << ANSIFMT_COMMENT " *" ANSIFMT_NONE;
+        std::cout << ANSIFMT_COMMENT " * upd" ANSIFMT_NONE;
       }
-			h.updateLastValue();
+      h.updateLastValue();
     }
     std::cout << ANSIFMT_COMMENT " -- end" ANSIFMT_NONE << std::endl;
   }
