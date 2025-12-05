@@ -42,11 +42,11 @@ public:
   };
   std::vector<WatchItem> _watched;
 
-	~SProbe() {
-		for (auto &w : _watched) {
-			vpi_release_handle(w.handle);
-		}
-	}
+  ~SProbe() {
+    for (auto &w : _watched) {
+      vpi_release_handle(w.handle);
+    }
+  }
 
   void watch_inside(vpiHandle top, int max_depth = 1, int cur_depth = 0) {
     if (cur_depth >= max_depth)
@@ -108,7 +108,7 @@ public:
 
     std::string_view parent_colfmt;
 
-		auto val_upd_hint = ANSIFMT_HINT "*" ANSIFMT_NONE;
+    auto val_upd_hint = ANSIFMT_HINT "*" ANSIFMT_NONE;
 
     for (auto &h : _watched) {
       auto fullname = h.getFullname();
@@ -149,16 +149,15 @@ public:
       }
 
       auto sig_value = h.getValue();
-			bool value_changed = (sig_value != h.last_value);
+      bool value_changed = (sig_value != h.last_value);
 
       std::cout << std::format(
-          ANSIFMT_GRAY "sig {} " ANSIFMT_SIGNAL_TYPE "{}" ANSIFMT_NUM "{:2} " 
-                       "{}{}" ANSIFMT_SIGNAL_NAME ".{}" ANSIFMT_NONE
+          ANSIFMT_GRAY "sig " ANSIFMT_NUM "{:2} " ANSIFMT_SIGNAL_TYPE
+                       "{}{} {}{}" ANSIFMT_SIGNAL_NAME ".{}" ANSIFMT_NONE
                        " = " ANSIFMT_NUM_PREFIX "h'" ANSIFMT_NUM
                        "{:0{}x}" ANSIFMT_NONE,
-											 value_changed ? val_upd_hint : " ",
-          type[0],sig_width,  parent_colfmt, parent, selfname, (uint32_t)sig_value,
-          val_out_width);
+          sig_width, type[0], value_changed ? val_upd_hint : " ", parent_colfmt,
+          parent, selfname, (uint32_t)sig_value, val_out_width);
       h.updateLastValue();
     }
     std::cout << ANSIFMT_COMMENT " -- end" ANSIFMT_NONE << std::endl;
