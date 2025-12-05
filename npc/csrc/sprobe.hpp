@@ -155,7 +155,7 @@ public:
           sig_width, type, parent_colfmt, parent, selfname, (uint32_t)sig_value,
           val_out_width);
       if (sig_value != h.last_value) {
-        std::cout << ANSIFMT_COMMENT " * upd" ANSIFMT_NONE;
+        std::cout << ANSIFMT_COMMENT " * " ANSIFMT_NONE;
       }
       h.updateLastValue();
     }
