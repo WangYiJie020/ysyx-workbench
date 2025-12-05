@@ -122,6 +122,6 @@ class LoadStoreFSM extends Module {
       isLoad  -> io.memRd.respValid,
       isStore -> io.memWr.done
     )
-  ) || (state === sDone)
+  ) 
 
 }
