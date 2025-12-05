@@ -31,7 +31,7 @@ public:
     }
     void updateLastValue() { last_value = getValue(); }
     std::string_view getFullname() { return vpi_get_str(vpiFullName, handle); }
-    std::string_view getType() { return vpi_get_str(vpiType, handle); }
+    std::string getType() { return vpi_get_str(vpiType, handle); }
     std::string_view getName() { return vpi_get_str(vpiName, handle); }
     auto getSize() { return vpi_get(vpiSize, handle); }
     WatchItem(vpiHandle h) : handle(h) { last_value = getValue(); }
