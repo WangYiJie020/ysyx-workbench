@@ -139,6 +139,11 @@ public:
 
       auto sig_value = h.getValue();
 			puts("--");
+			std::cout<<type;
+			std::cout<<parent_colfmt;
+			std::cout<<parent;
+			std::cout<<selfname;
+
 
       std::cout << std::format(
           ANSIFMT_GRAY "Signal " ANSIFMT_NUM "{:2}W " ANSIFMT_SIGNAL_TYPE
