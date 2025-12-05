@@ -71,6 +71,7 @@ public:
 
 #define ANSIFMT_NONE "\e[0m"
 #define ANSIFMT_GRAY "\e[38;2;90;90;90m"
+#define ANSIFMT_SIGNAL_REPEATED_PARENT "\e[38;2;28;73;64m"
 #define ANSIFMT_SIGNAL_NAME "\e[38;2;156;220;254m"
 #define ANSIFMT_NUM "\e[38;2;181;206;168m"
 #define ANSIFMT_COMMENT "\e[38;2;106;153;85m"
@@ -106,7 +107,7 @@ public:
 
       if (parent != last_parent) {
         last_parent = parent;
-        parent_colfmt = ANSIFMT_SIGNAL_NAME;
+        parent_colfmt = ANSIFMT_SIGNAL_REPEATED_PARENT;
       } else {
         parent_colfmt = ANSIFMT_GRAY;
       }
@@ -121,7 +122,7 @@ public:
 
       std::cout << std::format(
           ANSIFMT_GRAY "Signal " ANSIFMT_NUM "{:2}W " ANSIFMT_SIGNAL_TYPE
-                       "{} {}{}." ANSIFMT_SIGNAL_NAME "{}" ANSIFMT_NONE
+                       "{} {}{}" ANSIFMT_SIGNAL_NAME ".{}" ANSIFMT_NONE
                        " = " ANSIFMT_GRAY "h'" ANSIFMT_NUM
                        "{:0{}x}" ANSIFMT_NONE,
           sig_width, type, parent_colfmt, parent, selfname,
