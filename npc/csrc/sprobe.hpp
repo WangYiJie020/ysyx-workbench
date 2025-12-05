@@ -108,12 +108,13 @@ public:
       auto type = h.getType();
       auto sig_width = h.getSize();
 
-			std::cout<<type;
-			std::cout<<parent_colfmt;
-			std::cout<<selfname;
       if (type.starts_with("vpi")) {
         type = type.substr(3);
       }
+
+			std::cout<<type;
+			std::cout<<parent_colfmt;
+			std::cout<<selfname;
       // Remove the "TOP."
       auto notop_name = fullname.substr(4);
       if (notop_name.starts_with("Top.")) {
