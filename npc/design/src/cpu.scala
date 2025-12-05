@@ -435,6 +435,7 @@ class EXU           extends Module {
   val rdFSM = Module(new MemReadFSM)
   io.mem_rreq <> rdFSM.io.memTX
   rdFSM.io.need := needRdMem
+  rdFSM.io.addr := mem_addr
 
   val mem_data = mem_raw_rdata >> mem_addr_unalign_part_bitlen
 
