@@ -37,7 +37,7 @@ public:
     WatchItem(vpiHandle h) : handle(h) { last_value = getValue(); }
     ~WatchItem() {
       if (handle) {
-        vpi_release_handle(handle);
+//        vpi_release_handle(handle);
       }
     }
   };
@@ -55,7 +55,7 @@ public:
       if (iter != NULL) {
         // printf("SProbe scanning type %d\n",type);
         while ((it = vpi_scan(iter)) != NULL) {
-          printf("SProbe found %d  %s\n", type, vpi_get_str(vpiFullName, it));
+          // printf("SProbe found %d  %s\n", type, vpi_get_str(vpiFullName, it));
           if (type == vpiModule) {
             watch_inside(it, max_depth, cur_depth + 1);
             vpi_release_handle(it);
