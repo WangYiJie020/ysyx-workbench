@@ -90,7 +90,7 @@ public:
       vpi_release_handle(vh1);
       return true;
     }
-    _watched.push_back(vh1);
+    _watched.emplace_back(vh1);
     return true;
   }
 
