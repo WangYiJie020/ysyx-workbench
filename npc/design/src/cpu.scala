@@ -49,7 +49,7 @@ class OneMasterOneSlaveFSM extends Module {
     )
   )
 
-  io.master_ready := (state === s_wait_slave) && (io.self_finished) &&(io.slave_ready)
+  io.master_ready := (state === s_wait_slave) && (io.self_finished) && (io.slave_ready)
   io.slave_valid  := (state === s_wait_slave)
 
   def connectMaster[T <: Data](master: DecoupledIO[T]): Unit = {
@@ -73,7 +73,6 @@ class IFU extends Module {
   fsm.connectMaster(io.pc)
   fsm.connectSlave(io.out)
 
-
   // printf("(ifu) fetch inst %x at pc 0x%x\n", io.out.bits.code,io.pc.bits)
   // printf("(ifu) pc.valid: %b\n", io.pc.valid)
 
@@ -95,10 +94,10 @@ class IFU extends Module {
 
   fsm.io.self_finished := (state === s_wait)
 
-  when(io.out.ready){
+  when(io.out.ready) {
     // printf("ifu downstream ready\n")
   }
-  
+
   // NOTICE: dpi function auto generated with void return
   // see https://github.com/llvm/circt/blob/main/docs/Dialects/FIRRTL/FIRRTLIntrinsics.md#dpi-intrinsic-abi
   io.out.bits.code := code
@@ -425,7 +424,7 @@ class EXU           extends Module {
 
   val mem_raw_rdata = Reg(Types.UWord)
 
-  val is_load        = dinst.info.typ === InstType.load
+  val is_load   = dinst.info.typ === InstType.load
   val needRdMem = is_load && (!MS_fsm.io.slave_ready)
 
   when(io.mem_rreq.respValid) {
