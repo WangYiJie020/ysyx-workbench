@@ -8,6 +8,7 @@ import memory._
 import cpu._
 
 import chisel3.util.circt.dpi._
+import chisel3.util._
 
 // For NVBoard
 class TopIO extends Bundle {
@@ -51,18 +52,40 @@ class EXUIFU_MemVisitArbiter extends Module {
 
   // Simple arbiter, since IFU and EXU won't access memory at the same time
 
-  when(io.exu_mem_rreq.en) {
+  val sIdle :: sExu :: sIfu :: Nil = Enum(3)
+
+  val state = RegInit(sIdle)
+  state := MuxLookup(state, sIdle)(
+    Seq(
+      sIdle -> MuxCase(
+        sIdle,
+        Seq(
+          io.exu_mem_rreq.en -> sExu,
+          io.ifu_mem_rreq.en -> sIfu
+        )
+      ),
+      sExu  -> Mux(io.rreq.respValid, sIdle, sExu),
+      sIfu  -> Mux(io.rreq.respValid, sIdle, sIfu)
+    )
+  )
+
+  when(state === sExu) {
     io.rreq <> io.exu_mem_rreq
-    io.ifu_mem_rreq.data := 0.U
+    io.ifu_mem_rreq.data      := 0.U
     io.ifu_mem_rreq.respValid := false.B
-  } .otherwise {
+  }.elsewhen(state === sIfu) {
     io.rreq <> io.ifu_mem_rreq
-    io.exu_mem_rreq.data := 0.U
+    io.exu_mem_rreq.data      := 0.U
     io.exu_mem_rreq.respValid := false.B
+  }.otherwise {
+    io.exu_mem_rreq.data      := 0.U
+    io.exu_mem_rreq.respValid := false.B
+    io.ifu_mem_rreq.data      := 0.U
+    io.ifu_mem_rreq.respValid := false.B
   }
 
   io.wreq <> io.exu_mem_wreq
-  
+
 }
 
 class Top(word_width: Int = 32) extends Module {
