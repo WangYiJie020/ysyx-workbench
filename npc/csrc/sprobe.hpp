@@ -16,7 +16,7 @@
 #define ANSIFMT_NUM "\e[38;2;181;206;168m"
 #define ANSIFMT_NUM_PREFIX "\e[38;2;113;129;105m"
 #define ANSIFMT_COMMENT "\e[38;2;106;153;85m"
-#define ANSIFMT_HINT "\e[38;2;156;179;255m"
+#define ANSIFMT_HINT "\e[38;2;86;156;214m"
 #define ANSIFMT_SIGNAL_TYPE "\e[38;2;78;201;176m"
 #define ANSIFMT_BOLD "\e[1m"
 
@@ -156,7 +156,7 @@ public:
                        "{}{}{}.{}" ANSIFMT_NONE " = " ANSIFMT_NUM_PREFIX
                        "h'{}" ANSIFMT_NUM "{:0{}x}" ANSIFMT_NONE,
           value_changed ? val_upd_hint : "g", type[0], sig_width, parent_colfmt,
-          parent, value_changed ? ANSIFMT_HINT : ANSIFMT_SIGNAL_NAME, selfname,
+          parent, value_changed ? ANSIFMT_HINT ANSIFMT_BOLD : ANSIFMT_SIGNAL_NAME, selfname,
 					value_changed ? ANSIFMT_BOLD : ANSIFMT_NONE,
           (uint32_t)sig_value, val_out_width);
       h.updateLastValue();
