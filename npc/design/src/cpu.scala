@@ -49,7 +49,7 @@ class OneMasterOneSlaveFSM extends Module {
     )
   )
 
-  io.master_ready := (state === s_wait_slave) && (io.self_finished) &&(io.slave_ready)
+  io.master_ready := (state === s_wait_slave) && (io.self_finished) && (io.slave_ready)
   io.slave_valid  := (state === s_wait_slave)
 
   def connectMaster[T <: Data](master: DecoupledIO[T]): Unit = {
@@ -73,7 +73,6 @@ class IFU extends Module {
   fsm.connectMaster(io.pc)
   fsm.connectSlave(io.out)
 
-
   // printf("(ifu) fetch inst %x at pc 0x%x\n", io.out.bits.code,io.pc.bits)
   // printf("(ifu) pc.valid: %b\n", io.pc.valid)
 
@@ -95,10 +94,10 @@ class IFU extends Module {
 
   fsm.io.self_finished := (state === s_wait)
 
-  when(io.out.ready){
+  when(io.out.ready) {
     // printf("ifu downstream ready\n")
   }
-  
+
   // NOTICE: dpi function auto generated with void return
   // see https://github.com/llvm/circt/blob/main/docs/Dialects/FIRRTL/FIRRTLIntrinsics.md#dpi-intrinsic-abi
   io.out.bits.code := code
@@ -254,7 +253,7 @@ class ALU extends Module {
     add_sub_res := src1 - src2
   }.otherwise {
     add_sub_res := BADCALL_RESVALUE
-    // printf("(alu) UNKNOWN func7t %d", inbits.func7t)
+    printf("(alu) UNKNOWN func7t %d", inbits.func7t)
   }
 
   val shift_res = Wire(Types.UWord)
@@ -315,21 +314,6 @@ class EXU           extends Module {
   val MS_fsm = Module(new OneMasterOneSlaveFSM)
   MS_fsm.connectMaster(io.dinst)
   MS_fsm.connectSlave(io.out)
-
-  // printf("(exu) inst 0x%x at pc 0x%x\n", dinst.code, dinst.pc)
-
-  /*
-  printf("(exu) fsm st %d alu.valid %b mem_rreq.respValid %b\n",MS_fsm.io._state, alu.io.out.valid, io.mem_rreq.respValid)
-  when(io.mem_rreq.respValid){
-    printf("(exu) MEM read data 0x%x for inst at pc 0x%x\n", io.mem_rreq.data, dinst.pc)
-  }
-  when(alu.io.out.valid) {
-    printf("(exu) ALU result 0x%x for inst at pc 0x%x\n", alu.io.out.bits, dinst.pc)
-  }
-  when(io.out.valid) {
-    printf("(exu) finish exu for inst at pc 0x%x\n", dinst.pc)
-  }
-   */
 
   // reg
 
@@ -440,38 +424,25 @@ class EXU           extends Module {
 
   val mem_raw_rdata = Reg(Types.UWord)
 
-  val s_rmem_noneed :: s_rmem_wait :: s_rmem_ok :: Nil = Enum(3)
-
-  val mem_read_state = RegInit(s_rmem_noneed)
-  val is_load        = dinst.info.typ === InstType.load
+  val is_load   = (dinst.info.typ === InstType.load) && MS_fsm.io.master_valid
+  val needRdMem = is_load && (!MS_fsm.io.slave_ready)
 
   when(io.mem_rreq.respValid) {
     mem_raw_rdata := io.mem_rreq.data
   }
 
-  mem_read_state := MuxLookup(mem_read_state, s_rmem_noneed)(
-    Seq(
-      s_rmem_noneed -> Mux(is_load, s_rmem_wait, s_rmem_noneed),
-      s_rmem_wait   -> Mux(io.mem_rreq.respValid, s_rmem_ok, s_rmem_wait),
-      s_rmem_ok     -> Mux(MS_fsm.io.slave_ready, s_rmem_noneed, s_rmem_ok)
-    )
-  )
-
-//  printf("(exu) mem_read_state %d selve rdy %d\n", mem_read_state, MS_fsm.io.slave_ready)
+  val rdFSM = Module(new MemReadFSM)
+  io.mem_rreq <> rdFSM.io.memTX
+  rdFSM.io.need := needRdMem
+  rdFSM.io.addr := mem_addr
 
   val mem_data = mem_raw_rdata >> mem_addr_unalign_part_bitlen
 
-  io.mem_rreq.en          := is_load && (mem_read_state === s_rmem_wait)
   MS_fsm.io.self_finished := alu.io.out.valid && (
-    (!is_load) || (mem_read_state === s_rmem_ok)
+    (!is_load) || rdFSM.io.valid
   )
 
   mem_raddr := mem_addr
-
-//when(mem_ren) {
-//  printf("(exu) @pc 0x%x\n", dinst.pc)
-//  printf("(exu) LOAD from addr 0x%x\n", mem_raddr)
-//}
 
   // wdata
 

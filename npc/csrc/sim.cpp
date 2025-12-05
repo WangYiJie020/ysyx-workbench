@@ -53,9 +53,9 @@ static void step_cycle() {
   if (sim_settings.trace_clock_cycle) {
     printf("[Clock Cycle End]\n");
   }
-	if(sim_settings.cycle_finish_cb){
-		sim_settings.cycle_finish_cb();
-	}
+  if (sim_settings.cycle_finish_cb) {
+    sim_settings.cycle_finish_cb();
+  }
 }
 static void reset(int n) {
   dut.reset = 1;
@@ -166,12 +166,16 @@ void pmem_read(int addr, int *out_data) {
     }
     return;
   }
-  uint32_t host_aligned = guest_to_host(addr) & (~0x3);
 
+  if (sim_settings.trace_pmem_readcall) {
+    printf("[DPI] pmem_read addr=%08x get ", addr);
+  }
+
+  uint32_t host_aligned = guest_to_host(addr) & (~0x3);
   *out_data = mem[host_aligned / 4];
 
   if (sim_settings.trace_pmem_readcall) {
-    printf("[DPI] pmem_read addr=%08x get %08X\n", addr, *out_data);
+    printf("%08x\n", *out_data);
   }
 }
 void pmem_write(int addr, int data, int mask) {
@@ -300,7 +304,7 @@ uint8_t *loadmem(sdb::paddr_t addr, size_t nbyte) { return mem_atguest(addr); }
 } // namespace sdbwrap
 
 bool sim_init(int argc, char **argv, sim_setting setting) {
-	sim_settings=setting;
+  sim_settings = setting;
   if (setting.nvboard) {
     nvboard_bind_all_pins(&dut);
     nvboard_init();
