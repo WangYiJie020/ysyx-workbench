@@ -152,12 +152,12 @@ public:
 			bool value_changed = (sig_value != h.last_value);
 
       std::cout << std::format(
-          ANSIFMT_GRAY "Signal {} " ANSIFMT_NUM "{:2}W " ANSIFMT_SIGNAL_TYPE
-                       "{} {}{}" ANSIFMT_SIGNAL_NAME ".{}" ANSIFMT_NONE
+          ANSIFMT_GRAY "sig {} " ANSIFMT_SIGNAL_TYPE "{}" ANSIFMT_NUM "{:2} " 
+                       "{}{}" ANSIFMT_SIGNAL_NAME ".{}" ANSIFMT_NONE
                        " = " ANSIFMT_NUM_PREFIX "h'" ANSIFMT_NUM
                        "{:0{}x}" ANSIFMT_NONE,
 											 value_changed ? val_upd_hint : " ",
-          sig_width, type[0], parent_colfmt, parent, selfname, (uint32_t)sig_value,
+          type[0],sig_width,  parent_colfmt, parent, selfname, (uint32_t)sig_value,
           val_out_width);
       h.updateLastValue();
     }
