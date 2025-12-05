@@ -123,6 +123,10 @@ public:
       auto parent_end = notop_name.rfind('.');
       std::string_view parent = notop_name.substr(0, parent_end);
 
+
+			std::cout<<type<<std::endl;
+			std::cout<<parent_colfmt<<std::endl;
+			std::cout<<selfname<<std::endl;
       // if (selfname == "reset" || selfname == "clock" || selfname == "_RANDOM") {
       //   continue;
       // }
@@ -143,6 +147,12 @@ public:
       }
 
       auto sig_value = h.getValue();
+
+
+			std::cout<<type<<std::endl;
+			std::cout<<parent_colfmt<<std::endl;
+			std::cout<<selfname<<std::endl;
+
 			puts("--");
 			std::cout<<type;
 			std::cout<<parent_colfmt;
