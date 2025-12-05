@@ -8,6 +8,7 @@ import memory._
 import cpu._
 
 import chisel3.util.circt.dpi._
+import chisel3.util._
 
 // For NVBoard
 class TopIO extends Bundle {
@@ -35,6 +36,49 @@ class TopIO extends Bundle {
   val seg5 = Output(UInt(8.W))
   val seg6 = Output(UInt(8.W))
   val seg7 = Output(UInt(8.W))
+}
+
+// make exu and ifu access memory
+class EXUIFU_MemVisitArbiter extends Module {
+  val io = IO(new Bundle {
+    val exu_mem_rreq = MemReqIO.ReadRX
+    val exu_mem_wreq = MemReqIO.WriteRX
+
+    val ifu_mem_rreq = MemReqIO.ReadRX
+
+    val rreq = MemReqIO.ReadTX
+    val wreq = MemReqIO.WriteTX
+  })
+
+  // Simple arbiter, since IFU and EXU won't access memory at the same time
+
+  io.rreq.en   := io.exu_mem_rreq.en || io.ifu_mem_rreq.en
+
+  val isExuReg = Reg(Bool())
+  val isIfuReg = Reg(Bool())
+
+  val isExu = (isExuReg&&(!io.ifu_mem_rreq.en))||(io.exu_mem_rreq.en)
+  val isIfu = (isIfuReg&&(!io.exu_mem_rreq.en))||(io.ifu_mem_rreq.en)
+
+  when(io.exu_mem_rreq.en) {
+    isExuReg := true.B
+    isIfuReg := false.B
+  } .elsewhen(io.ifu_mem_rreq.en) {
+    isExuReg := false.B
+    isIfuReg := true.B
+  }
+
+  val rreq= io.rreq
+  rreq.addr := Mux(isExu, io.exu_mem_rreq.addr, io.ifu_mem_rreq.addr)
+
+  io.exu_mem_rreq.data := rreq.data
+  io.ifu_mem_rreq.data := rreq.data
+
+  io.ifu_mem_rreq.respValid := isIfu && rreq.respValid
+  io.exu_mem_rreq.respValid := isExu && rreq.respValid
+
+  io.wreq <> io.exu_mem_wreq
+
 }
 
 class Top(word_width: Int = 32) extends Module {
@@ -100,8 +144,13 @@ class Top(word_width: Int = 32) extends Module {
   exu.io.rvec <> gprs.io.read
   exu.io.csr_rvec <> csrs.io.read
 
-  mem.io.read <> exu.io.mem_rreq
-  mem.io.write <> exu.io.mem_wreq
+  val memArbiter = Module(new EXUIFU_MemVisitArbiter)
+  memArbiter.io.exu_mem_rreq <> exu.io.mem_rreq
+  memArbiter.io.exu_mem_wreq <> exu.io.mem_wreq
+  memArbiter.io.ifu_mem_rreq <> ifu.io.mem
+
+  mem.io.read <> memArbiter.io.rreq
+  mem.io.write <> memArbiter.io.wreq
 
   // Write back
 

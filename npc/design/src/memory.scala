@@ -82,35 +82,6 @@ class MemUnit   extends Module {
 
 }
 
-class MemReadFSM extends Module {
-  val io = IO(new Bundle {
-    val memTX = MemReqIO.ReadTX
-    val need  = Input(Bool())
-    val addr  = Input(Types.UWord)
-    val data  = Output(Types.UWord)
-    val valid = Output(Bool())
-  })
-
-  val sNoneed :: sWaitResp :: sDone :: Nil = Enum(3)
-  val state                                = RegInit(sNoneed)
-  state := MuxLookup(state, sNoneed)(
-    Seq(
-      sNoneed   -> Mux(io.need, sWaitResp, sNoneed),
-      sWaitResp -> Mux(io.memTX.respValid, sDone, sWaitResp),
-      sDone     -> Mux(io.need, sDone, sNoneed)
-    )
-  )
-
-  // only send 1 read request
-  // when in sNoneed and need
-  io.memTX.en := (state === sNoneed) && io.need
-
-  io.memTX.addr := io.addr
-  io.data       := io.memTX.data
-  io.valid      := (state === sDone)
-
-}
-
 class LoadStoreFSM extends Module {
   val io = IO(new Bundle {
     val memRd     = MemReqIO.ReadTX
@@ -151,6 +122,6 @@ class LoadStoreFSM extends Module {
       isLoad  -> io.memRd.respValid,
       isStore -> io.memWr.done
     )
-  ) || (state === sDone)
+  ) 
 
 }

@@ -30,6 +30,8 @@ struct sim_setting{
 
 bool sim_init(int argc, char** argv,sim_setting teg=sim_setting{});
 
+void sim_step_cycle();
+
 bool sim_halted();
 bool sim_hit_good_trap();
 

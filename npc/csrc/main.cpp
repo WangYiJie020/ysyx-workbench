@@ -36,8 +36,8 @@ void cyc_callback() {
 
 int main(int argc, char **argv) {
 	sim_setting setting;
-	setting.trace_pmem_readcall=true;
-	setting.trace_pmem_writecall=true;
+	// setting.trace_pmem_readcall=true;
+	// setting.trace_pmem_writecall=true;
 	// setting.trace_clock_cycle=true;
 	setting.cycle_finish_cb=cyc_callback;
   sim_init(argc, argv, setting);
@@ -47,7 +47,6 @@ int main(int argc, char **argv) {
   vpiHandle top = vpi_handle_by_name((PLI_BYTE8 *)"TOP.Top", NULL);
   assert(top);
 
-  sprobe.load_inside(top);
   vpi_release_handle(top);
 
   // std::cout << "===== All Signal Probed =====" << std::endl;
@@ -60,6 +59,10 @@ int main(int argc, char **argv) {
   while (!sim_halted() && !quit) {
     std::cout << "(sdb) ";
     std::getline(std::cin, cmd);
+		if(cmd=="sc"){
+			sim_step_cycle();
+			continue;
+		}
     if (cmd.size() > 3 && cmd.substr(0, 2) == "ps") {
       std::string sig_name = cmd.substr(3);
       auto fullname = "TOP.Top." + sig_name;
