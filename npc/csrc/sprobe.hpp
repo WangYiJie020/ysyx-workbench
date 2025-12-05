@@ -99,12 +99,12 @@ public:
     std::cout << ANSIFMT_COMMENT << "-- poke beg\n" << ANSIFMT_NONE;
 
     std::string last_parent = "";
-    std::string selfname;
 
     std::string_view parent_colfmt;
 
     for (auto &h : _watched) {
       auto fullname = h.getFullname();
+			auto selfname = h.getName();
       auto type = h.getType();
       auto sig_width = h.getSize();
       if (type.starts_with("vpi")) {
@@ -117,7 +117,6 @@ public:
       }
       auto parent_end = notop_name.rfind('.');
       std::string_view parent = notop_name.substr(0, parent_end);
-      selfname = notop_name.substr(parent_end + 1);
 
       if (selfname == "reset" || selfname == "clock" || selfname == "_RANDOM") {
         continue;
@@ -139,6 +138,7 @@ public:
       }
 
       auto sig_value = h.getValue();
+			puts("--");
 
       std::cout << std::format(
           ANSIFMT_GRAY "Signal " ANSIFMT_NUM "{:2}W " ANSIFMT_SIGNAL_TYPE
