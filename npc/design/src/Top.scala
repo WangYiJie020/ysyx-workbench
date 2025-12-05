@@ -78,6 +78,9 @@ class EXUIFU_MemVisitArbiter extends Module {
     io.exu_mem_rreq.data      := 0.U
     io.exu_mem_rreq.respValid := false.B
   }.otherwise {
+    io.rreq.addr      := 0.U
+    io.rreq.en        := false.B
+
     io.exu_mem_rreq.data      := 0.U
     io.exu_mem_rreq.respValid := false.B
     io.ifu_mem_rreq.data      := 0.U
