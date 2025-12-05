@@ -425,38 +425,24 @@ class EXU           extends Module {
 
   val mem_raw_rdata = Reg(Types.UWord)
 
-  val s_rmem_noneed :: s_rmem_wait :: s_rmem_ok :: Nil = Enum(3)
-
-  val mem_read_state = RegInit(s_rmem_noneed)
   val is_load        = dinst.info.typ === InstType.load
+  val needRdMem = is_load && (!MS_fsm.io.slave_ready)
 
   when(io.mem_rreq.respValid) {
     mem_raw_rdata := io.mem_rreq.data
   }
 
-  mem_read_state := MuxLookup(mem_read_state, s_rmem_noneed)(
-    Seq(
-      s_rmem_noneed -> Mux(is_load, s_rmem_wait, s_rmem_noneed),
-      s_rmem_wait   -> Mux(io.mem_rreq.respValid, s_rmem_ok, s_rmem_wait),
-      s_rmem_ok     -> Mux(MS_fsm.io.slave_ready, s_rmem_noneed, s_rmem_ok)
-    )
-  )
-
-//  printf("(exu) mem_read_state %d selve rdy %d\n", mem_read_state, MS_fsm.io.slave_ready)
+  val rdFSM = Module(new MemReadFSM)
+  io.mem_rreq <> rdFSM.io.memTX
+  rdFSM.io.need := needRdMem
 
   val mem_data = mem_raw_rdata >> mem_addr_unalign_part_bitlen
 
-  io.mem_rreq.en          := is_load && (mem_read_state === s_rmem_wait)
   MS_fsm.io.self_finished := alu.io.out.valid && (
-    (!is_load) || (mem_read_state === s_rmem_ok)
+    (!is_load) || rdFSM.io.valid
   )
 
   mem_raddr := mem_addr
-
-//when(mem_ren) {
-//  printf("(exu) @pc 0x%x\n", dinst.pc)
-//  printf("(exu) LOAD from addr 0x%x\n", mem_raddr)
-//}
 
   // wdata
 
