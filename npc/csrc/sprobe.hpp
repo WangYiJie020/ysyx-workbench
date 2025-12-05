@@ -152,11 +152,11 @@ public:
 
       std::cout << std::format(
           ANSIFMT_GRAY "si{} " ANSIFMT_SIGNAL_TYPE "{} " ANSIFMT_NUM "{:2} "
-                       "{}{}" ANSIFMT_SIGNAL_NAME ".{}" ANSIFMT_NONE
-                       " = " ANSIFMT_NUM_PREFIX "h'" ANSIFMT_NUM
-                       "{:0{}x}" ANSIFMT_NONE,
+                       "{}{}{}.{}" ANSIFMT_NONE " = " ANSIFMT_NUM_PREFIX
+                       "h'" ANSIFMT_NUM "{:0{}x}" ANSIFMT_NONE,
           value_changed ? val_upd_hint : "g", type[0], sig_width, parent_colfmt,
-          parent, selfname, (uint32_t)sig_value, val_out_width);
+          parent, value_changed ? ANSIFMT_HINT : ANSIFMT_SIGNAL_NAME, selfname,
+          (uint32_t)sig_value, val_out_width);
       h.updateLastValue();
     }
     std::cout << ANSIFMT_COMMENT " -- end" ANSIFMT_NONE << std::endl;
