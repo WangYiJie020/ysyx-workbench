@@ -128,10 +128,9 @@ public:
       auto parent_end = notop_name.rfind('.');
       auto parent = notop_name.substr(0, parent_end);
 
-      // if (selfname == "reset" || selfname == "clock" || selfname ==
-      // "_RANDOM") {
-      //   continue;
-      // }
+      if (selfname == "reset" || selfname == "clock" || selfname == "_RANDOM") {
+        continue;
+      }
 
       if (parent != last_parent) {
         last_parent = parent;
