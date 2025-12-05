@@ -240,7 +240,7 @@ class ALU extends Module {
     add_sub_res := src1 - src2
   }.otherwise {
     add_sub_res := BADCALL_RESVALUE
-    printf("(alu) UNKNOWN func7t %d", inbits.func7t)
+    // printf("(alu) UNKNOWN func7t %d", inbits.func7t)
   }
 
   val shift_res = Wire(Types.UWord)
