@@ -36,7 +36,7 @@ typedef uint32_t addr_t;
 std::shared_ptr<sdb::debuger> dbg;
 sdb::difftest_trace_handler_ptr diff_handler;
 
-static void step_cycle() {
+void sim_step_cycle() {
   if (sim_settings.trace_clock_cycle) {
     printf("[Clock Cycle Begin]\n");
   }
@@ -60,7 +60,7 @@ static void step_cycle() {
 static void reset(int n) {
   dut.reset = 1;
   while (n-- > 0) {
-    step_cycle();
+    sim_step_cycle();
   }
   dut.reset = 0;
 }
@@ -217,7 +217,7 @@ void dump_regs() {
 }
 void step_inst() {
   while (!pc_changed) {
-    step_cycle();
+    sim_step_cycle();
   }
   pc_changed = false;
   //	dump_regs();
