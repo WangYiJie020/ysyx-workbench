@@ -58,9 +58,9 @@ class EXUIFU_MemVisitArbiter extends Module {
   val isExu = isExuReg||(io.exu_mem_rreq.en)
 
   when(io.exu_mem_rreq.en) {
-    isExu := true.B
+    isExuReg := true.B
   } .elsewhen(io.ifu_mem_rreq.en) {
-    isExu := false.B
+    isExuReg := false.B
   }
 
   val rreq= io.rreq
