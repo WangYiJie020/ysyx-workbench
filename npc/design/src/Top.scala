@@ -50,7 +50,13 @@ class EXUIFU_MemVisitArbiter extends Module {
   })
 
   // Simple arbiter, since IFU and EXU won't access memory at the same time
-  io.rreq <> Mux(io.exu_mem_rreq.en, io.exu_mem_rreq, io.ifu_mem_rreq)
+
+  when(io.exu_mem_rreq.en) {
+    io.rreq <> io.exu_mem_rreq
+  } .otherwise {
+    io.rreq <> io.ifu_mem_rreq
+  }
+
   io.wreq <> io.exu_mem_wreq
   
 }
