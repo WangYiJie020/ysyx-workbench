@@ -413,14 +413,19 @@ class EXU           extends Module {
   memFSM.io.reqValid := isMemOp&& (!MS_fsm.io.slave_ready)
   memFSM.io.addr     := memAddr
 
+  val memOpDone = Reg(Bool())
   when(memFSM.io.respValid) {
     memRdRawData := memFSM.io.rdata
+    memOpDone    := true.B
+  }
+  when(!isMemOp) {
+    memOpDone := false.B
   }
 
   val memRdData = memRdRawData >> memAddrUnalignPartBitlen
 
   MS_fsm.io.self_finished := alu.io.out.valid && (
-    (!isMemOp)|| memFSM.io.respValid
+    (!isMemOp)|| memOpDone
   )
 
   // wdata
