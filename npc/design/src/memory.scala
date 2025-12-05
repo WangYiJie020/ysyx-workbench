@@ -56,7 +56,7 @@ class MemUnit   extends Module {
 
   io.read.data := RawClockedNonVoidFunctionCall("pmem_read", Types.UWord)(
     clock,
-    enRdCall,
+    enRdCall && (!reset.asBool),
     io.read.addr
   )
 
@@ -74,7 +74,7 @@ class MemUnit   extends Module {
 
   RawClockedVoidFunctionCall("pmem_write")(
     clock,
-    enWrCall,
+    enWrCall && (!reset.asBool),
     io.write.addr,
     io.write.data,
     io.write.mask.pad(32)
