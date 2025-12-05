@@ -57,15 +57,18 @@ class EXUIFU_MemVisitArbiter extends Module {
   val ifuStillReq = RegInit(false.B)
   ifuStillReq := Mux(ifuStillReq, !io.rreq.respValid, io.ifu_mem_rreq.en)
 
-  when(exuStillReq) {
+  when(exuStillReq || io.exu_mem_rreq.en) {
     io.rreq <> io.exu_mem_rreq
     io.ifu_mem_rreq.data      := 0.U
     io.ifu_mem_rreq.respValid := false.B
-  }.elsewhen(ifuStillReq) {
+  }.elsewhen(ifuStillReq || io.ifu_mem_rreq.en) {
     io.rreq <> io.ifu_mem_rreq
     io.exu_mem_rreq.data      := 0.U
     io.exu_mem_rreq.respValid := false.B
   }.otherwise {
+    io.rreq.addr      := 0.U
+    io.rreq.en        := false.B
+
     io.ifu_mem_rreq.data      := 0.U
     io.ifu_mem_rreq.respValid := false.B
 
