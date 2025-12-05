@@ -170,6 +170,7 @@ void pmem_read(int addr, int *out_data) {
   if (sim_settings.trace_pmem_readcall) {
     printf("[DPI] pmem_read addr=%08x get ", addr);
   }
+
   uint32_t host_aligned = guest_to_host(addr) & (~0x3);
   *out_data = mem[host_aligned / 4];
 
