@@ -10,7 +10,6 @@
 
 class SProbe {
 public:
-  std::vector<std::string> _fullnames;
 
   std::vector<vpiHandle> _watched_handles;
 
@@ -20,9 +19,8 @@ public:
     }
   }
 
-  void load_inside(vpiHandle top) {
-    // std::cout<<"SProbe load inside
-    // "<<vpi_get_str(vpiFullName,top)<<std::endl;
+  void watch_inside(vpiHandle top,int max_depth=1,int cur_depth=0) {
+		if (cur_depth>=max_depth)return;
 
     vpiHandle iter;
     vpiHandle it;
@@ -32,18 +30,21 @@ public:
       if (iter != NULL) {
         // printf("SProbe scanning type %d\n",type);
         while ((it = vpi_scan(iter)) != NULL) {
-          _fullnames.push_back(std::string(vpi_get_str(vpiFullName, it)));
           // printf("SProbe found %d  %s\n", type, _fullnames.back().c_str());
-          if (type == vpiModule)
-            load_inside(it);
-          vpi_release_handle(it);
+          if (type == vpiModule){
+            watch_inside(it,max_depth,cur_depth+1);
+						vpi_release_handle(it);
+					} else{
+						std::cout << "add watch "<< vpi_get_str(vpiType, it)<<" " << vpi_get_str(vpiFullName, it) << std::endl;
+						_watched_handles.push_back(it);
+					}
           // printf("SProbe back to %s\n",vpi_get_str(vpiFullName,top));
         }
       }
     }
   }
-  void load_inside(std::string_view top) {
-    load_inside(vpi_handle_by_name((PLI_BYTE8 *)top.data(), NULL));
+  void watch_inside(std::string_view top) {
+    watch_inside(vpi_handle_by_name((PLI_BYTE8 *)top.data(), NULL));
   }
 
   bool add_watch(std::string_view sig_name) {
@@ -55,10 +56,9 @@ public:
     }
     auto type = vpi_get(vpiType, vh1);
     if (type == vpiModule) {
-      std::cout << "SProbe add_watch cannot watch module " << sig_name
-                << std::endl;
+			watch_inside(vh1);
       vpi_release_handle(vh1);
-      return false;
+      return true;
     }
     _watched_handles.push_back(vh1);
     return true;

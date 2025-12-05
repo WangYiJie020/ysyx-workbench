@@ -47,7 +47,6 @@ int main(int argc, char **argv) {
   vpiHandle top = vpi_handle_by_name((PLI_BYTE8 *)"TOP.Top", NULL);
   assert(top);
 
-  sprobe.load_inside(top);
   vpi_release_handle(top);
 
   // std::cout << "===== All Signal Probed =====" << std::endl;
