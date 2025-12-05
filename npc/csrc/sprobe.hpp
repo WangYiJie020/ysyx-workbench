@@ -123,10 +123,6 @@ public:
       auto parent_end = notop_name.rfind('.');
       auto parent = notop_name.substr(0, parent_end);
 
-
-			std::cout<<type<<std::endl;
-			std::cout<<parent_colfmt<<std::endl;
-			std::cout<<selfname<<std::endl;
       // if (selfname == "reset" || selfname == "clock" || selfname == "_RANDOM") {
       //   continue;
       // }
@@ -147,18 +143,6 @@ public:
       }
 
       auto sig_value = h.getValue();
-
-
-			std::cout<<type<<std::endl;
-			std::cout<<parent_colfmt<<std::endl;
-			std::cout<<selfname<<std::endl;
-
-			puts("--");
-			std::cout<<type;
-			std::cout<<parent_colfmt;
-			std::cout<<parent;
-			std::cout<<selfname;
-
 
       std::cout << std::format(
           ANSIFMT_GRAY "Signal " ANSIFMT_NUM "{:2}W " ANSIFMT_SIGNAL_TYPE
