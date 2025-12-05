@@ -18,6 +18,7 @@
 #define ANSIFMT_COMMENT "\e[38;2;106;153;85m"
 #define ANSIFMT_HINT "\e[38;2;156;179;255m"
 #define ANSIFMT_SIGNAL_TYPE "\e[38;2;78;201;176m"
+#define ANSIFMT_BOLD "\e[1m"
 
 class SProbe {
 public:
@@ -153,9 +154,10 @@ public:
       std::cout << std::format(
           ANSIFMT_GRAY "si{} " ANSIFMT_SIGNAL_TYPE "{} " ANSIFMT_NUM "{:2} "
                        "{}{}{}.{}" ANSIFMT_NONE " = " ANSIFMT_NUM_PREFIX
-                       "h'" ANSIFMT_NUM "{:0{}x}" ANSIFMT_NONE,
+                       "h'{}{:0{}x}" ANSIFMT_NONE,
           value_changed ? val_upd_hint : "g", type[0], sig_width, parent_colfmt,
           parent, value_changed ? ANSIFMT_HINT : ANSIFMT_SIGNAL_NAME, selfname,
+					value_changed ? ANSIFMT_BOLD : ANSIFMT_NONE,
           (uint32_t)sig_value, val_out_width);
       h.updateLastValue();
     }
