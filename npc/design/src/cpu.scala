@@ -85,12 +85,16 @@ class IFU extends Module {
   loadFSM.io.reqValid := fsm.io.master_valid && (!fsm.io.slave_ready)
   loadFSM.io.addr     := io.pc.bits
 
+  val code = Reg(Types.UWord)
+  when(loadFSM.io.respValid) {
+    code := loadFSM.io.rdata
+  }
 
   fsm.io.self_finished := loadFSM.io.respValid
 
   // NOTICE: dpi function auto generated with void return
   // see https://github.com/llvm/circt/blob/main/docs/Dialects/FIRRTL/FIRRTLIntrinsics.md#dpi-intrinsic-abi
-  io.out.bits.code := loadFSM.io.rdata
+  io.out.bits.code := code
   io.out.bits.pc   := io.pc.bits
 }
 
