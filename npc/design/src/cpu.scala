@@ -421,9 +421,15 @@ class EXU           extends Module {
 
   val isLoad = (dinst.info.typ === InstType.load) && MS_fsm.io.master_valid
 
+
   val memFSM = Module(new LoadStoreFSM)
+  
+  io.mem_rreq <> memFSM.io.memRd
+  io.mem_wreq <> memFSM.io.memWr
+
   memFSM.io.reqValid := MS_fsm.io.master_valid && (!MS_fsm.io.slave_ready)
   memFSM.io.addr     := memAddr
+
 
   when(memFSM.io.respValid) {
     memRdRawData := memFSM.io.rdata
