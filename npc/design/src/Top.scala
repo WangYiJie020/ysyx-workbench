@@ -53,33 +53,25 @@ class EXUIFU_MemVisitArbiter extends Module {
   // Simple arbiter, since IFU and EXU won't access memory at the same time
 
   val exuStillReq = RegInit(false.B)
-  exuStillReq := Mux(exuStillReq,
-    !io.rreq.respValid,
-    io.exu_mem_rreq.en
-  )
+  exuStillReq := Mux(exuStillReq, !io.rreq.respValid, io.exu_mem_rreq.en)
   val ifuStillReq = RegInit(false.B)
-  ifuStillReq := Mux(ifuStillReq,
-    !io.rreq.respValid,
-    io.ifu_mem_rreq.en
-  )
+  ifuStillReq := Mux(ifuStillReq, !io.rreq.respValid, io.ifu_mem_rreq.en)
 
-  when(exuStillReq){
+  when(exuStillReq) {
     io.rreq <> io.exu_mem_rreq
-    io.ifu_mem_rreq.data := 0.U
+    io.ifu_mem_rreq.data      := 0.U
     io.ifu_mem_rreq.respValid := false.B
-  }.elsewhen(ifuStillReq){
+  }.elsewhen(ifuStillReq) {
     io.rreq <> io.ifu_mem_rreq
-    io.exu_mem_rreq.data := 0.U
+    io.exu_mem_rreq.data      := 0.U
     io.exu_mem_rreq.respValid := false.B
-  }.otherwise{
-    io.rreq.data := 0.U
-    io.rreq.respValid := false.B
-    io.exu_mem_rreq.data := 0.U
-    io.exu_mem_rreq.respValid := false.B
-    io.ifu_mem_rreq.data := 0.U
+  }.otherwise {
+    io.ifu_mem_rreq.data      := 0.U
     io.ifu_mem_rreq.respValid := false.B
-  }
 
+    io.exu_mem_rreq.data      := 0.U
+    io.exu_mem_rreq.respValid := false.B
+  }
 
   io.wreq <> io.exu_mem_wreq
 
