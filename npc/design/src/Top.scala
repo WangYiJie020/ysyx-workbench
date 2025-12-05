@@ -52,40 +52,34 @@ class EXUIFU_MemVisitArbiter extends Module {
 
   // Simple arbiter, since IFU and EXU won't access memory at the same time
 
-  val sIdle :: sExu :: sIfu :: Nil = Enum(3)
-
-  val state = RegInit(sIdle)
-  state := MuxLookup(state, sIdle)(
-    Seq(
-      sIdle -> MuxCase(
-        sIdle,
-        Seq(
-          io.exu_mem_rreq.en -> sExu,
-          io.ifu_mem_rreq.en -> sIfu
-        )
-      ),
-      sExu  -> Mux(io.rreq.respValid, sIdle, sExu),
-      sIfu  -> Mux(io.rreq.respValid, sIdle, sIfu)
-    )
+  val exuStillReq = RegInit(false.B)
+  exuStillReq := Mux(exuStillReq,
+    !io.rreq.respValid,
+    io.exu_mem_rreq.en
+  )
+  val ifuStillReq = RegInit(false.B)
+  ifuStillReq := Mux(ifuStillReq,
+    !io.rreq.respValid,
+    io.ifu_mem_rreq.en
   )
 
-  when(state === sExu) {
+  when(exuStillReq){
     io.rreq <> io.exu_mem_rreq
-    io.ifu_mem_rreq.data      := 0.U
+    io.ifu_mem_rreq.data := 0.U
     io.ifu_mem_rreq.respValid := false.B
-  }.elsewhen(state === sIfu) {
+  }.elsewhen(ifuStillReq){
     io.rreq <> io.ifu_mem_rreq
-    io.exu_mem_rreq.data      := 0.U
+    io.exu_mem_rreq.data := 0.U
     io.exu_mem_rreq.respValid := false.B
-  }.otherwise {
-    io.rreq.addr      := 0.U
-    io.rreq.en        := false.B
-
-    io.exu_mem_rreq.data      := 0.U
+  }.otherwise{
+    io.rreq.data := 0.U
+    io.rreq.respValid := false.B
+    io.exu_mem_rreq.data := 0.U
     io.exu_mem_rreq.respValid := false.B
-    io.ifu_mem_rreq.data      := 0.U
+    io.ifu_mem_rreq.data := 0.U
     io.ifu_mem_rreq.respValid := false.B
   }
+
 
   io.wreq <> io.exu_mem_wreq
 
