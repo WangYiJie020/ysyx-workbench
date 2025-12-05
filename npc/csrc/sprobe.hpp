@@ -38,13 +38,14 @@ public:
       handle = h;
       last_value = getValue();
     }
-    ~WatchItem() {
-      if (handle) {
-        vpi_release_handle(handle);
-      }
-    }
   };
   std::vector<WatchItem> _watched;
+
+	~SProbe() {
+		for (auto &w : _watched) {
+			vpi_release_handle(w.handle);
+		}
+	}
 
   void watch_inside(vpiHandle top, int max_depth = 1, int cur_depth = 0) {
     if (cur_depth >= max_depth)
