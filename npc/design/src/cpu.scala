@@ -424,7 +424,7 @@ class EXU           extends Module {
 
   val mem_raw_rdata = Reg(Types.UWord)
 
-  val is_load   = dinst.info.typ === InstType.load
+  val is_load   = (dinst.info.typ === InstType.load) && MS_fsm.io.master_valid
   val needRdMem = is_load && (!MS_fsm.io.slave_ready)
 
   when(io.mem_rreq.respValid) {
