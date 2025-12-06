@@ -163,10 +163,11 @@ public:
       bool value_changed = (sig_value != h.last_value);
 
       auto common_prefix = _max_common_prefix(last_name, cur_name);
-			printf("DEBUG: cur_name='%s' last_name='%s' common_prefix='%s'\n",cur_name.c_str(),last_name.c_str(),std::string(common_prefix).c_str());
+      // printf("DEBUG: cur_name='%s' last_name='%s' common_prefix='%s'\n",
+      //        cur_name.c_str(), last_name.c_str(),
+      //        std::string(common_prefix).c_str());
       last_name = cur_name;
-      auto common_prefix_back = common_prefix.back();
-      if (common_prefix_back == '.' || common_prefix_back == '_') {
+      if (common_prefix.ends_with('.')||common_prefix.ends_with('_')) {
         common_prefix = common_prefix.substr(0, common_prefix.size() - 1);
       }
       auto unique_part = cur_name.substr(common_prefix.size());
@@ -188,9 +189,9 @@ public:
           ANSIFMT_GRAY "si{} " ANSIFMT_SIGNAL_TYPE "{} " ANSIFMT_NUM "{:2} "
                        "{}" ANSIFMT_NONE " = " ANSIFMT_NUM_PREFIX
                        "h'{}" ANSIFMT_NUM "{:0{}x}" ANSIFMT_NONE,
-          value_changed ? val_upd_hint : "g", showed_type, sig_width, showed_name,
-          value_changed ? ANSIFMT_BOLD : ANSIFMT_NONE, (uint32_t)sig_value,
-          val_out_width);
+          value_changed ? val_upd_hint : "g", showed_type, sig_width,
+          showed_name, value_changed ? ANSIFMT_BOLD : ANSIFMT_NONE,
+          (uint32_t)sig_value, val_out_width);
       h.updateLastValue();
     }
     std::cout << ANSIFMT_COMMENT " -- end" ANSIFMT_NONE << std::endl;
