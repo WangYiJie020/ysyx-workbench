@@ -167,9 +167,17 @@ public:
       //        cur_name.c_str(), last_name.c_str(),
       //        std::string(common_prefix).c_str());
       last_name = cur_name;
-      if (common_prefix.ends_with('.')||common_prefix.ends_with('_')) {
+
+			// prefix should end with '.' or '_' (module/level separator)
+			while(common_prefix.size()>0&&
+				(common_prefix.back()!='.'||common_prefix.back()!='_')){
+				common_prefix=common_prefix.substr(0,common_prefix.size()-1);
+			}
+			// remove last '.' or '_', which should show in the unique part
+      if (!common_prefix.empty()){
         common_prefix = common_prefix.substr(0, common_prefix.size() - 1);
       }
+
       auto unique_part = cur_name.substr(common_prefix.size());
 
       std::string showed_name = std::format(
