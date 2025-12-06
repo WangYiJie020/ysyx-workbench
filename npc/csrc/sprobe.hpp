@@ -187,7 +187,7 @@ public:
           ANSIFMT_GRAY "si{} " ANSIFMT_SIGNAL_TYPE "{} " ANSIFMT_NUM "{:2} "
                        "{}" ANSIFMT_NONE " = " ANSIFMT_NUM_PREFIX
                        "h'{}" ANSIFMT_NUM "{:0{}x}" ANSIFMT_NONE,
-          value_changed ? val_upd_hint : "g", showed_name, sig_width, showed_name,
+          value_changed ? val_upd_hint : "g", showed_type, sig_width, showed_name,
           value_changed ? ANSIFMT_BOLD : ANSIFMT_NONE, (uint32_t)sig_value,
           val_out_width);
       h.updateLastValue();
