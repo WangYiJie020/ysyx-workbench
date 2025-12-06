@@ -3,14 +3,7 @@ package cpu
 import chisel3._
 import chisel3.util.{Cat, Decoupled, DecoupledIO, Enum, Fill, MuxLookup}
 
-// see https://www.chisel-lang.org/api/latest/chisel3/util/circt/dpi/index.html
-// chisel has native dpi interface since
-//  https://github.com/chipsalliance/chisel/pull/4158
-import chisel3.util.circt.dpi.{
-  RawClockedNonVoidFunctionCall,
-  RawClockedVoidFunctionCall,
-  RawUnclockedNonVoidFunctionCall
-}
+
 
 import chisel3.experimental.dataview._
 
@@ -18,7 +11,6 @@ import regfile._
 import memory._
 import common_def._
 import busfsm._
-
 
 class WriteBackInfo extends Bundle {
   val gpr = GPRegReqIO.TX.Write
