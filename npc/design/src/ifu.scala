@@ -1,4 +1,4 @@
-package cpu.ifu
+package cpu
 import chisel3._
 import chisel3.util._
 import common_def._
