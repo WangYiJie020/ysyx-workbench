@@ -35,7 +35,6 @@ void SProbe::dump_watched() {
       bool value_changed = (sig_value != h.last_value);
 
       auto common_prefix = _max_common_prefix(last_name, cur_name);
-      last_name = cur_name;
 
 			// prefix should end with '.' or '_' (module/level separator)
 			while(common_prefix.size()>0&&
@@ -69,7 +68,9 @@ void SProbe::dump_watched() {
           value_changed ? val_upd_hint : "g", showed_type, sig_width,
           showed_name, value_changed ? ANSIFMT_BOLD : ANSIFMT_NONE,
           (uint32_t)sig_value, val_out_width);
+
       h.updateLastValue();
+      last_name = cur_name;
     }
     std::cout << ANSIFMT_COMMENT " -- end" ANSIFMT_NONE << std::endl;
   }
