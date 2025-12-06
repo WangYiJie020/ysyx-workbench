@@ -362,7 +362,10 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 
 
   Verilated::traceEverOn(true);
-  tfp = std::make_shared<VerilatedFstC>();
+  tfp = std::shared_ptr<VerilatedFstC>(new VerilatedFstC,[](VerilatedFstC* p){
+		p->close();
+		delete p;
+	});
   dut.trace(tfp.get(), 99);
   tfp->open(setting.wave_fst_file.c_str());
 
