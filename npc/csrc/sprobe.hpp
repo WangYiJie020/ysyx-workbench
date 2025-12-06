@@ -170,7 +170,7 @@ public:
 
 			// prefix should end with '.' or '_' (module/level separator)
 			while(common_prefix.size()>0&&
-				(common_prefix.back()!='.'||common_prefix.back()!='_')){
+				(common_prefix.back()!='.'&&common_prefix.back()!='_')){
 				common_prefix=common_prefix.substr(0,common_prefix.size()-1);
 			}
 			// remove last '.' or '_', which should show in the unique part
