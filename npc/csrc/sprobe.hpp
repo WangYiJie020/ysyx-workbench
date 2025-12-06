@@ -163,7 +163,7 @@ public:
       bool value_changed = (sig_value != h.last_value);
 
       auto common_prefix = _max_common_prefix(last_name, cur_name);
-			printf("DEBUG: cur_name='%s' last_name='%s' common_prefix='%s'\n",cur_name.c_str(),last_name.c_str(),common_prefix.data());
+			printf("DEBUG: cur_name='%s' last_name='%s' common_prefix='%s'\n",cur_name.c_str(),last_name.c_str(),std::string(common_prefix).c_str());
       last_name = cur_name;
       auto common_prefix_back = common_prefix.back();
       if (common_prefix_back == '.' || common_prefix_back == '_') {
