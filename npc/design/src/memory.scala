@@ -120,7 +120,7 @@ class LoadStoreFSM extends Module {
   io.memWr.mask := io.wmask
 
   io.rdata     := io.memRd.data
-  io.respValid := false.B&&MuxCase(
+  io.respValid := MuxCase(
     false.B,
     Seq(
       isLoad  -> io.memRd.respValid,
