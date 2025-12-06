@@ -96,6 +96,7 @@ public:
             if (_in_ignore_list(vpi_get_str(vpiName, it))) {
               std::cout << "ignore " << vpi_get_str(vpiType, it) << " "
                         << vpi_get_str(vpiFullName, it) << std::endl;
+							vpi_release_handle(it);
               continue;
             }
             std::cout << "add watch " << vpi_get_str(vpiType, it) << " "
