@@ -360,12 +360,13 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
     dbg->add_trace(diff_handler);
   }
 
-  reset(10);
 
   Verilated::traceEverOn(true);
   tfp = std::make_shared<VerilatedFstC>();
   dut.trace(tfp.get(), 99);
   tfp->open(setting.wave_fst_file.c_str());
+
+  reset(10);
 
   if (batch_mode) {
     dbg->exec_command("c");
