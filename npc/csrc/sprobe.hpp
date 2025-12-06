@@ -53,7 +53,7 @@ public:
     uint64_t last_value;
     auto getValue() {
       s_vpi_value v;
-      v.format = vpiLongIntVal;
+      v.format = vpiVectorVal;
       vpi_get_value(handle, &v);
 			uint64_t res=v.value.vector[0].aval;
 			res <<=32;
