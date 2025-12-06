@@ -34,7 +34,7 @@ class WBU extends Module {
   val wbinfo = io.data.bits
   val valid  = io.data.valid
 
-  io.data.ready := valid
+  io.data.ready := valid&&false.B
 
   // printf("(wbu) write back gpr en %b addr %d data 0x%x\n", wbinfo.gpr.en, wbinfo.gpr.addr, wbinfo.gpr.data)
   // printf("(wbu) valid %b\n", valid)

@@ -47,15 +47,15 @@ void sim_step_cycle() {
 
   dut.clock = 0;
   dut.eval();
-	sim_time++;
+  sim_time++;
 
-	tfp->dump(sim_time);
+  tfp->dump(sim_time);
 
   dut.clock = 1;
   dut.eval();
-	sim_time++;
+  sim_time++;
 
-	tfp->dump(sim_time);
+  tfp->dump(sim_time);
 
   if (sim_settings.nvboard) {
     nvboard_update();
@@ -226,8 +226,27 @@ void dump_regs() {
   }
 }
 void step_inst() {
+  size_t cyc_cnt = 0;
+  constexpr size_t MAYBE_DEADLOOP_THRESHOLD = 1000;
   while (!pc_changed) {
     sim_step_cycle();
+    cyc_cnt++;
+    if (cyc_cnt > MAYBE_DEADLOOP_THRESHOLD) {
+      printf("sim has stepped %zu cycles without pc change, maybe deadloop "
+             "happened\n",
+             cyc_cnt);
+      printf("wanting to continue? (y/n) ");
+      char c = getchar();
+      if (c == 'y' || c == 'Y') {
+        cyc_cnt = 0;
+        while (getchar() != '\n')
+          ;
+        continue;
+      } else {
+        printf("exit sim\n");
+        exit(1);
+      }
+    }
   }
   pc_changed = false;
   //	dump_regs();
@@ -360,11 +379,9 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
     dbg->add_trace(diff_handler);
   }
 
-
   Verilated::traceEverOn(true);
-  tfp = std::shared_ptr<VerilatedFstC>(new VerilatedFstC,[](VerilatedFstC* p){
-		p->close();
-	});
+  tfp = std::shared_ptr<VerilatedFstC>(new VerilatedFstC,
+                                       [](VerilatedFstC *p) { p->close(); });
   dut.trace(tfp.get(), 99);
   tfp->open(setting.wave_fst_file.c_str());
 
