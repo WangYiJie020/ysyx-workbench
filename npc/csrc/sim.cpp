@@ -86,6 +86,7 @@ void raise_ebreak(int a0) {
 
 #define ANSI_FG_RED "\33[1;31m"
 #define ANSI_FG_GREEN "\33[1;32m"
+#define ANSI_FG_YELLOW "\33[1;33m"
 #define ANSI_NONE "\33[0m"
 
   if (a0 == 0) {
@@ -231,10 +232,11 @@ void step_inst() {
   while (!pc_changed) {
     sim_step_cycle();
     cyc_cnt++;
-    if (cyc_cnt > MAYBE_DEADLOOP_THRESHOLD) {
-      printf("sim has stepped %zu cycles without pc change, maybe deadloop "
-             "happened\n",
-             cyc_cnt);
+    if (cyc_cnt >= MAYBE_DEADLOOP_THRESHOLD) {
+      puts(ANSI_FG_YELLOW "[WARN]" ANSI_NONE);
+      printf(
+          "sim has stepped %zu cycles without pc change, maybe lock happened\n",
+          cyc_cnt);
       printf("wanting to continue? (y/n) ");
       char c = getchar();
       if (c == 'y' || c == 'Y') {
