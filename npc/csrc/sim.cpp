@@ -233,9 +233,9 @@ void step_inst() {
     sim_step_cycle();
     cyc_cnt++;
     if (cyc_cnt >= MAYBE_DEADLOOP_THRESHOLD) {
-      printf(ANSI_FG_YELLOW "[WARN]" ANSI_NONE);
+      printf(ANSI_FG_YELLOW "[WARN] " ANSI_NONE);
       printf(
-          "sim has stepped %zu cycles without pc change, maybe lock happened\n",
+          "simulation has stepped %zu cycles without pc change, maybe lock happened\n",
           cyc_cnt);
       printf("wanting to continue? (y/n) ");
       char c = getchar();
