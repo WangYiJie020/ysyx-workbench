@@ -53,9 +53,12 @@ public:
     uint64_t last_value;
     auto getValue() {
       s_vpi_value v;
-      v.format = vpiIntVal;
+      v.format = vpiLongIntVal;
       vpi_get_value(handle, &v);
-      return v.value.integer;
+			uint64_t res=v.value.vector[0].aval;
+			res <<=32;
+			res |=v.value.vector[1].aval;
+			return res;
     }
     void updateLastValue() { last_value = getValue(); }
     WatchItem(vpiHandle h) {
