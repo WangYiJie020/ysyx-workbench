@@ -148,7 +148,7 @@ public:
       const auto &sig_width = h.width;
 
       if (type.starts_with("vpi")) {
-        showed_type = type[3];
+        showed_type = std::string(1,type[3]);
       } else {
         showed_type = type;
       }
