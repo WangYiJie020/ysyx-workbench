@@ -6,6 +6,8 @@ import regfile._
 import memory._
 
 import cpu._
+import cpu.ifu._
+import cpu.idu._
 
 import chisel3.util.circt.dpi._
 import chisel3.util._
