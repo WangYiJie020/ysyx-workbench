@@ -32,9 +32,9 @@ class SProbe {
       "clock",
       "reset",
       "_RANDOM",
-      "_GEN",
   };
   bool _in_ignore_list(std::string_view name) {
+		if(name.starts_with("_GEN"))return true;
     for (auto &ign : _ignored_names) {
       if (ign == name)
         return true;
