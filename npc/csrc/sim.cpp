@@ -58,7 +58,7 @@ void sim_step_cycle() {
 
   tfp->dump(sim_time);
 
-	cycle_count++;
+  cycle_count++;
 
   if (sim_settings.nvboard) {
     nvboard_update();
@@ -237,9 +237,9 @@ void step_inst() {
     cnt++;
     if (cnt >= MAYBE_DEADLOOP_THRESHOLD) {
       printf(ANSI_FG_YELLOW "[WARN] " ANSI_NONE);
-      printf(
-          "simulation has stepped %zu cycles without pc change, maybe lock happened\n",
-          cnt);
+      printf("simulation has stepped %zu cycles without pc change, maybe lock "
+             "happened\n",
+             cnt);
       printf("wanting to continue? (y/n) ");
       char c = getchar();
       if (c == 'y' || c == 'Y') {
@@ -366,25 +366,27 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
       std::vector<std::string_view>(reg_names.begin(), reg_names.end()),
       sdbwrap::inst_fetcher);
 
-  dbg->enable_inst_trace = true;
+  dbg->enable_inst_trace = setting.enable_inst_trace;
 
-  if (setting.showdisasm) {
-    size_t inst_show_limit = setting.always_show_disasm ? SIZE_MAX : 16;
-    dbg->add_trace(sdb::make_disasm_trace_handler(sdb::default_inst_disasm,
-                                                  inst_show_limit));
+  if (setting.enable_inst_trace) {
+    if (setting.showdisasm) {
+      size_t inst_show_limit = setting.always_show_disasm ? SIZE_MAX : 16;
+      dbg->add_trace(sdb::make_disasm_trace_handler(sdb::default_inst_disasm,
+                                                    inst_show_limit));
+    }
+    if (setting.etrace)
+      dbg->add_trace(sdb::make_etrace_handler());
+    if (setting.iringbuf)
+      dbg->add_trace(sdb::make_iringbuf_trace_handler());
+
+    if (setting.difftest) {
+      diff_handler = sdb::make_difftest_trace_handler(
+          "../nemu/build/riscv32-nemu-interpreter-so", 0);
+      dbg->add_trace(diff_handler);
+    }
   }
-  if (setting.etrace)
-    dbg->add_trace(sdb::make_etrace_handler());
-  if (setting.iringbuf)
-    dbg->add_trace(sdb::make_iringbuf_trace_handler());
 
-  if (setting.difftest) {
-    diff_handler = sdb::make_difftest_trace_handler(
-        "../nemu/build/riscv32-nemu-interpreter-so", 0);
-    dbg->add_trace(diff_handler);
-  }
-
-  Verilated::traceEverOn(true);
+  Verilated::traceEverOn(setting.enable_waveform);
   tfp = std::shared_ptr<VerilatedFstC>(new VerilatedFstC,
                                        [](VerilatedFstC *p) { p->close(); });
   dut.trace(tfp.get(), 99);
