@@ -200,6 +200,10 @@ class AXI4LiteMemUnit extends Module {
     //   wrData,
     //   wrMask.pad(32)
     // )
+  }.otherwise {
+    synableMem.io.write.en:=false.B
+    synableMem.io.write.addr:=0.U
+    synableMem.io.write.data:=0.U
   }
   // for now mem write always finish in one cycle
   memWriteFinished := (bState === sBWaitMem)
