@@ -321,6 +321,7 @@ namespace sdbwrap {
 sdb::paddr_t cpu_exec(size_t n) {
   while (n-- > 0) {
     step_inst();
+		if(sim_halted()) break;
   }
   return current_pc;
 }
