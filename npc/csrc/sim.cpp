@@ -38,6 +38,7 @@ sdb::difftest_trace_handler_ptr diff_handler;
 std::shared_ptr<VerilatedFstC> tfp;
 
 static uint64_t sim_time = 0;
+static uint64_t cycle_count = 0;
 
 void sim_step_cycle() {
 
@@ -56,6 +57,8 @@ void sim_step_cycle() {
   sim_time++;
 
   tfp->dump(sim_time);
+
+	cycle_count++;
 
   if (sim_settings.nvboard) {
     nvboard_update();
@@ -93,9 +96,9 @@ void raise_ebreak(int a0) {
     printf(ANSI_FG_GREEN "HIT GOOD TRAP" ANSI_NONE);
     is_good_trap = true;
   } else {
-    printf(ANSI_FG_RED "HIT BAD TRAP" ANSI_NONE);
+    printf(ANSI_FG_RED "HIT BAD TRAP" ANSI_NONE " a0 = %d", a0);
   }
-  printf(" at pc = 0x%08x\n", current_pc);
+  printf(" @pc = 0x%08x cyc %lu\n", current_pc, cycle_count);
 }
 bool sim_halted() { return !is_running; }
 bool sim_hit_good_trap() { return is_good_trap; }
@@ -227,20 +230,20 @@ void dump_regs() {
   }
 }
 void step_inst() {
-  size_t cyc_cnt = 0;
+  size_t cnt = 0;
   constexpr size_t MAYBE_DEADLOOP_THRESHOLD = 100;
   while (!pc_changed) {
     sim_step_cycle();
-    cyc_cnt++;
-    if (cyc_cnt >= MAYBE_DEADLOOP_THRESHOLD) {
+    cnt++;
+    if (cnt >= MAYBE_DEADLOOP_THRESHOLD) {
       printf(ANSI_FG_YELLOW "[WARN] " ANSI_NONE);
       printf(
           "simulation has stepped %zu cycles without pc change, maybe lock happened\n",
-          cyc_cnt);
+          cnt);
       printf("wanting to continue? (y/n) ");
       char c = getchar();
       if (c == 'y' || c == 'Y') {
-        cyc_cnt = 0;
+        cnt = 0;
         while (getchar() != '\n')
           ;
         continue;
