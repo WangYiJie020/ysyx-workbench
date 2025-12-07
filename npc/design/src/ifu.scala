@@ -20,6 +20,9 @@ class IFU extends Module {
   val code = Reg(Types.UWord)
   val fetchDone = Reg(Bool())
 
+  dontTouch(code)
+  dontTouch(fetchDone)
+
   io.mem.aw.valid := false.B
   io.mem.w.valid  := false.B
 
