@@ -65,7 +65,7 @@ class EXUIFU_MemVisitArbiter extends Module {
 
   // AR channel
   io.out.ar.valid := io.exu.ar.valid || io.ifu.ar.valid
-  io.out.ar.bits := Mux(isExu, io.exu.ar.bits, io.ifu.ar.bits)
+  io.out.ar.bits  := Mux(isExu, io.exu.ar.bits, io.ifu.ar.bits)
 
   io.exu.ar.ready := isExu && io.out.ar.ready
   io.ifu.ar.ready := isIfu && io.out.ar.ready
@@ -87,7 +87,7 @@ class EXUIFU_MemVisitArbiter extends Module {
 
   io.ifu.aw := DontCare
   io.ifu.w  := DontCare
-  io.ifu.b.ready := DontCare
+  io.ifu.b  := DontCare
 }
 
 class Top(word_width: Int = 32) extends Module {
@@ -145,7 +145,7 @@ class Top(word_width: Int = 32) extends Module {
   }
 
   val memArbiter = Module(new EXUIFU_MemVisitArbiter)
-  mem.io<> memArbiter.io.out
+  mem.io <> memArbiter.io.out
   memArbiter.io.exu <> exu.io.mem
   memArbiter.io.ifu <> ifu.io.mem
 
