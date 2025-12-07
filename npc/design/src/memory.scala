@@ -115,7 +115,7 @@ class AXI4LiteMemUnit extends Module {
   when(rState === sRWaitMem) {
     rdData := RawClockedNonVoidFunctionCall("pmem_read", Types.UWord)(
       clock,
-      (!reset.asBool),
+      (!memReadFinished) && (!reset.asBool),
       rdAddr
     )
   }
