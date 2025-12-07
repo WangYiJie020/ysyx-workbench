@@ -9,61 +9,7 @@ import chisel3.util.circt.dpi._
 
 import common_def._
 
-import regfile._
-
-object AXI4LiteIO {
-  val ADDR_WIDTH = Types.BitWidth.word
-  val DATA_WIDTH = Types.BitWidth.word
-
-  def AddrT = UInt(ADDR_WIDTH.W)
-  def DataT = UInt(DATA_WIDTH.W)
-
-  def StrbT = UInt((DATA_WIDTH / 8).W)
-
-  object RResp{
-    val WIDTH = 2
-    private def _v(x: Int) = x.U(WIDTH.W)
-
-    val OKAY   = _v(0)
-    val EXOKAY = _v(1)
-    val SLVERR = _v(2)
-    val DECERR = _v(3)
-  }
-  object BResp{
-    val WIDTH = 2
-    private def _v(x: Int) = x.U(WIDTH.W)
-
-    val OKAY   = _v(0)
-    val EXOKAY = _v(1)
-    val SLVERR = _v(2)
-    val DECERR = _v(3)
-  }
-
-  class _ReqTX extends Bundle {
-    // addr read channel
-    val ar = Decoupled(AddrT)
-    // read data channel
-    val r  = Flipped(Decoupled(new Bundle {
-      val data = DataT
-      val resp = UInt(RResp.WIDTH.W)
-    }))
-
-    // addr write channel
-    val aw = Decoupled(AddrT)
-
-    // write data channel
-    val w = Decoupled(new Bundle {
-      val data = DataT
-      val strb = StrbT
-    })
-
-    // backward channel
-    val b = Flipped(Decoupled(UInt(BResp.WIDTH.W)))
-  }
-
-  def TX = new _ReqTX()
-  def RX = Flipped(TX)
-}
+import axi4._
 
 class AXI4LiteMemUnit extends Module {
   val io = IO(AXI4LiteIO.RX)
@@ -93,8 +39,6 @@ class AXI4LiteMemUnit extends Module {
     )
   )
 
-  val synableMem = Module(new RegisterFile(1,8))
-
   // R
 
   val rdData = Reg(Types.UWord)
@@ -116,16 +60,12 @@ class AXI4LiteMemUnit extends Module {
     )
   )
 
-  synableMem.io.read.en:=true.B
-  synableMem.io.read.addr(0):=rdAddr
-
   when(rState === sRWaitMem) {
-    rdData := synableMem.io.read.data(0)
-    // RawClockedNonVoidFunctionCall("pmem_read", Types.UWord)(
-    //   clock,
-    //   (!memReadFinished) && (!reset.asBool),
-    //   rdAddr
-    // )
+    rdData := RawClockedNonVoidFunctionCall("pmem_read", Types.UWord)(
+      clock,
+      (!memReadFinished) && (!reset.asBool),
+      rdAddr
+    )
   }
 
   // for now mem read always finish in one cycle
@@ -190,20 +130,13 @@ class AXI4LiteMemUnit extends Module {
   )
 
   when(bState === sBWaitMem) {
-    synableMem.io.write.en:=true.B
-    synableMem.io.write.addr:=wrAddr
-    synableMem.io.write.data:=wrData
-    // RawClockedVoidFunctionCall("pmem_write")(
-    //   clock,
-    //   (!reset.asBool),
-    //   wrAddr,
-    //   wrData,
-    //   wrMask.pad(32)
-    // )
-  }.otherwise {
-    synableMem.io.write.en:=false.B
-    synableMem.io.write.addr:=0.U
-    synableMem.io.write.data:=0.U
+    RawClockedVoidFunctionCall("pmem_write")(
+      clock,
+      (!reset.asBool),
+      wrAddr,
+      wrData,
+      wrMask.pad(32)
+    )
   }
   // for now mem write always finish in one cycle
   memWriteFinished := (bState === sBWaitMem)
