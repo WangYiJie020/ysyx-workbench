@@ -146,6 +146,7 @@ class Top(word_width: Int = 32) extends Module {
 
   exu.io.rvec <> gprs.io.read
   exu.io.csr_rvec <> csrs.io.read
+  mem.io <> exu.io.mem
 
   // Write back
 
