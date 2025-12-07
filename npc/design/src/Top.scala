@@ -101,9 +101,9 @@ class Top(word_width: Int = 32) extends Module {
     m
   }
 
-  val io = IO(new TopIO)
-  dontTouch(io)
-  io := DontCare
+  // val io = IO(new TopIO)
+  // dontTouch(io)
+  // io := DontCare
 
   val gprs = Module(new RegisterFile(READ_PORTS = 2))
   val csrs = Module(new ControlStatusRegisterFile())

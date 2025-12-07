@@ -44,6 +44,9 @@ VERILATOR_CFLAGS += -MMD --build -cc \
 V2CXX_EMIT_DIR = $(BUILD_DIR)/gened/cxx
 
 SIM_VSRCS = $(shell find $(abspath $(CHISEL2V_EMIT_DIR)) -name "*.v" -or -name "*.sv")
+
+SIM_NOVERIF_VSRCS = $(abspath $(wildcard $(CHISEL2V_EMIT_DIR)/*.sv))
+
 SIM_CSRCS = $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 
 SIM_HEADERS = $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.h" -or -name "*.hpp")
@@ -110,6 +113,31 @@ $(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) $(CHISEL2V_DONE) $(VPI_DONE) $
 		$(addprefix -CFLAGS , $(CXXFLAGS)) \
 		$(addprefix -LDFLAGS , $(LDFLAGS)) \
 		--Mdir $(V2CXX_EMIT_DIR) --exe -o $(abspath $(SIM_BIN))
+
+# synthesis
+
+YOSYS_STA_HOME = $(HOME)/yosys-sta
+SYNOUT_DIR = $(BUILD_DIR)/syn
+
+$(shell mkdir -p $(SYNOUT_DIR))
+
+define yosys_proc
+	make -C $(YOSYS_STA_HOME) $(1) \
+		DESIGN=$(TOP_NAME) \
+		CLK_PORT_NAME="clock" \
+		RTL_FILES="$(SIM_NOVERIF_VSRCS)" \
+		O=$(SYNOUT_DIR) \
+
+endef
+
+syn: $(CHISEL2V_DONE)
+	$(call yosys_proc,syn)
+
+sta: $(CHISEL2V_DONE)
+	$(call yosys_proc,sta)
+
+
+
 
 all: default
 
