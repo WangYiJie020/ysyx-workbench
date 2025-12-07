@@ -32,7 +32,7 @@ class IFU extends Module {
   io.mem.b := DontCare
 
 
-  io.mem.ar.valid := io.pc.valid
+  io.mem.ar.valid := io.pc.valid && (!fetchDone)
   io.mem.ar.bits  := io.pc.bits
 
   when(io.mem.ar.valid && io.mem.ar.ready) {
