@@ -36,6 +36,8 @@ class TopIO extends Bundle {
   val seg5 = Output(UInt(8.W))
   val seg6 = Output(UInt(8.W))
   val seg7 = Output(UInt(8.W))
+
+  val pc = Output(UInt(32.W))
 }
 
 // make exu and ifu access memory
@@ -101,9 +103,9 @@ class Top(word_width: Int = 32) extends Module {
     m
   }
 
-  // val io = IO(new TopIO)
-  // dontTouch(io)
-  // io := DontCare
+  val io = IO(new TopIO)
+  dontTouch(io)
+  io := DontCare
 
   val gprs = Module(new RegisterFile(READ_PORTS = 2))
   val csrs = Module(new ControlStatusRegisterFile())
@@ -118,6 +120,8 @@ class Top(word_width: Int = 32) extends Module {
   val INIT_PC = "h80000000".U(32.W)
 
   val pc = RegInit(INIT_PC)
+
+  io.pc := pc
 
   val is_ebreak = (ifu.io.out.valid) && (ifu.io.out.bits.code === "h00100073".U)
 
