@@ -19,11 +19,9 @@ class IFU extends Module {
 
   val code = Reg(Types.UWord)
   val fetchDone = Reg(Bool())
-  val addrSent = Reg(Bool())
 
   dontTouch(code)
   dontTouch(fetchDone)
-  dontTouch(addrSent)
   dontTouch(io)
 
   io.mem.aw.valid := false.B
@@ -34,11 +32,10 @@ class IFU extends Module {
   io.mem.b := DontCare
 
 
-  io.mem.ar.valid := io.pc.valid && !addrSent
+  io.mem.ar.valid := io.pc.valid
   io.mem.ar.bits  := io.pc.bits
 
   when(io.mem.ar.valid && io.mem.ar.ready) {
-    addrSent := true.B
   }
 
 
@@ -50,7 +47,6 @@ class IFU extends Module {
 
   when(!fsm.io.master_valid) {
     fetchDone := false.B
-    addrSent := false.B
   }
 
   fsm.io.self_finished := fetchDone
