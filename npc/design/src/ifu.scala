@@ -8,7 +8,7 @@ import memory._
 
 class IFU extends Module {
   val io = IO(new Bundle {
-    val pc  = Flipped(Decoupled(Input(Types.UWord)))
+    val pc  = Flipped(Decoupled(Types.UWord))
     val mem = AXI4LiteIO.TX
     val out = Decoupled(new Inst)
   })
@@ -23,6 +23,8 @@ class IFU extends Module {
 
   dontTouch(code)
   dontTouch(fetchDone)
+  dontTouch(addrSent)
+  dontTouch(io)
 
   io.mem.aw.valid := false.B
   io.mem.w.valid  := false.B
