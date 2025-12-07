@@ -9,7 +9,7 @@ import memory._
 class IFU extends Module {
   val io = IO(new Bundle {
     val pc  = Flipped(Decoupled(Input(Types.UWord)))
-    val mem = MemReqIO.ReadTX
+    val mem = AXI4LiteIO.TX
     val out = Decoupled(new Inst)
   })
 
@@ -17,23 +17,29 @@ class IFU extends Module {
   fsm.connectMaster(io.pc)
   fsm.connectSlave(io.out)
 
-  val loadFSM = Module(new LoadStoreFSM)
-  io.mem <> loadFSM.io.memRd
-
-  loadFSM.io.memWr := DontCare
-  loadFSM.io.wdata := 0.U
-  loadFSM.io.wmask := 0.U
-
-  loadFSM.io.wen:= false.B
-  loadFSM.io.reqValid := fsm.io.master_valid && (!fsm.io.slave_ready)
-  loadFSM.io.addr     := io.pc.bits
-
   val code = Reg(Types.UWord)
   val fetchDone = Reg(Bool())
-  when(loadFSM.io.respValid) {
-    code := loadFSM.io.rdata
+
+  io.mem.aw.valid := false.B
+  io.mem.w.valid  := false.B
+
+  io.mem.aw:= DontCare
+  io.mem.w := DontCare
+  io.mem.b := DontCare
+
+
+  io.mem.ar.valid := io.pc.valid
+  io.mem.ar.bits  := io.pc.bits
+
+  when(io.mem.ar.valid && io.mem.ar.ready) {
+  }
+
+  when(io.mem.r.valid && !fetchDone) {
+    code := io.mem.r.bits.data
     fetchDone := true.B
   }
+  io.mem.r.ready := true.B
+
   when(!fsm.io.master_valid) {
     fetchDone := false.B
   }

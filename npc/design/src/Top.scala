@@ -38,6 +38,7 @@ class TopIO extends Bundle {
   val seg7 = Output(UInt(8.W))
 }
 
+/*
 // make exu and ifu access memory
 class EXUIFU_MemVisitArbiter extends Module {
   val io = IO(new Bundle {
@@ -79,7 +80,7 @@ class EXUIFU_MemVisitArbiter extends Module {
 
   io.wreq <> io.exu_mem_wreq
 
-}
+}*/
 
 class Top(word_width: Int = 32) extends Module {
   type HasIO = {
@@ -99,7 +100,8 @@ class Top(word_width: Int = 32) extends Module {
   val gprs = Module(new RegisterFile(READ_PORTS = 2))
   val csrs = Module(new ControlStatusRegisterFile())
 
-  val mem = Module(new MemUnit)
+  val mem = Module(new AXI4LiteMemUnit)
+  val rom = Module(new AXI4LiteMemUnit)
 
   val ifu = Module(new IFU)
   val idu = Module(new IDU)
@@ -137,20 +139,13 @@ class Top(word_width: Int = 32) extends Module {
 
   ifu.io.pc.bits  := pc
   ifu.io.pc.valid := true.B
+  rom.io <> ifu.io.mem
 
   ifu.io.out <> idu.io.in
   idu.io.out <> exu.io.dinst
 
   exu.io.rvec <> gprs.io.read
   exu.io.csr_rvec <> csrs.io.read
-
-  val memArbiter = Module(new EXUIFU_MemVisitArbiter)
-  memArbiter.io.exu_mem_rreq <> exu.io.mem_rreq
-  memArbiter.io.exu_mem_wreq <> exu.io.mem_wreq
-  memArbiter.io.ifu_mem_rreq <> ifu.io.mem
-
-  mem.io.read <> memArbiter.io.rreq
-  mem.io.write <> memArbiter.io.wreq
 
   // Write back
 

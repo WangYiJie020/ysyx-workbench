@@ -23,6 +23,11 @@ object Types {
 }
 import Types.Ops._
 
+object DbgVal {
+  val UNINITIALIZED = 0xcccccccc.UWord
+  val BADCALL       = 0xbaddca11.UWord
+}
+
 object InstFmt  extends ChiselEnum {
   val imm, reg, store, upper, jump, branch = Value
 }
