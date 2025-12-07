@@ -17,8 +17,10 @@ class IFU extends Module {
   fsm.connectMaster(io.pc)
   fsm.connectSlave(io.out)
 
+  val lastPC = RegNext(io.pc.bits)
   val code = Reg(Types.UWord)
   val fetchDone = Reg(Bool())
+  val pcChanged = io.pc.bits =/= lastPC
 
   dontTouch(code)
   dontTouch(fetchDone)
@@ -45,7 +47,7 @@ class IFU extends Module {
   }
   io.mem.r.ready := true.B
 
-  when(!fsm.io.master_valid) {
+  when(!fsm.io.master_valid || pcChanged) {
     fetchDone := false.B
   }
 
