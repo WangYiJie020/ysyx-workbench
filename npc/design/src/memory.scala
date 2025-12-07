@@ -121,7 +121,7 @@ class AXI4LiteMemUnit extends Module {
   }
 
   // for now mem read always finish in one cycle
-  memReadFinished := RegNext(rState === sRWaitMem)
+  memReadFinished := (rState === sRWaitMem)
 
   // AW
 
