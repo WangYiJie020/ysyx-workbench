@@ -127,8 +127,8 @@ class Top(word_width: Int = 32) extends Module {
   val halted = RegInit(false.B)
 
   when(is_ebreak && !halted) {
-    printf(p"EBREAK at PC = 0x${Hexadecimal(ifu.io.out.bits.pc)} a0 = 0x${Hexadecimal(gprs.io.a0)}\n")
-    RawClockedVoidFunctionCall("raise_ebreak")(clock, is_ebreak, gprs.io.a0)
+    // printf(p"EBREAK at PC = 0x${Hexadecimal(ifu.io.out.bits.pc)} a0 = 0x${Hexadecimal(gprs.io.a0)}\n")
+    // RawClockedVoidFunctionCall("raise_ebreak")(clock, is_ebreak, gprs.io.a0)
     halted := true.B
   }
 
