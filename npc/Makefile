@@ -117,7 +117,7 @@ $(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) $(CHISEL2V_DONE) $(VPI_DONE) $
 # synthesis
 
 YOSYS_STA_HOME = $(HOME)/yosys-sta
-SYNOUT_DIR = $(BUILD_DIR)/syn
+SYNOUT_DIR = $(abspath $(BUILD_DIR)/syn)
 
 $(shell mkdir -p $(SYNOUT_DIR))
 
