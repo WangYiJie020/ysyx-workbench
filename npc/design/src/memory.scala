@@ -93,7 +93,7 @@ class AXI4LiteMemUnit extends Module {
 
   // R
 
-  val rdData = Wire(Types.UWord)
+  val rdData = Reg(Types.UWord)
 
   val sRIdle :: sRWaitMem :: sRWaitRdy :: Nil = Enum(3)
   val rState                                  = RegInit(sRIdle)
@@ -121,7 +121,7 @@ class AXI4LiteMemUnit extends Module {
   }
 
   // for now mem read always finish in one cycle
-  memReadFinished := (rState === sRWaitMem)
+  memReadFinished := RegNext(rState === sRWaitMem)
 
   // AW
 
