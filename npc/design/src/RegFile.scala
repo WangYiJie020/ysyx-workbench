@@ -45,16 +45,16 @@ class MetaRegReqIO(addr_width: Int = Types.BitWidth.reg_addr, data_width: Int = 
 object GPRegReqIO extends MetaRegReqIO()
 object CSRegReqIO extends MetaRegReqIO(addr_width = Types.BitWidth.csr_addr)
 
-class GPRIO(N_RD:Int=2) extends Bundle {
-  val read  = GPRegReqIO.RX.VecRead(N_RD)
-  val write = GPRegReqIO.RX.Write
+class GPRIO(N_RD:Int=2,ADDR_WIDTH:Int=5) extends Bundle {
+  val read  = (new MetaRegReqIO(addr_width=ADDR_WIDTH)).RX.VecRead(N_RD)
+  val write = (new MetaRegReqIO(addr_width=ADDR_WIDTH)).RX.Write
   val a0    = Output(Types.UWord)
 }
 
 class RegisterFile(READ_PORTS: Int = 2,ADDR_WIDTH: Int = Types.BitWidth.reg_addr) extends Module {
   val N_REG = 1 << ADDR_WIDTH
 
-  val io  = IO(new GPRIO(READ_PORTS))
+  val io  = IO(new GPRIO(READ_PORTS,ADDR_WIDTH))
 
   val reg = RegInit(VecInit(Seq.fill(N_REG)(0.UWord)))
 
