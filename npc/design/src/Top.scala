@@ -38,49 +38,57 @@ class TopIO extends Bundle {
   val seg7 = Output(UInt(8.W))
 }
 
-/*
 // make exu and ifu access memory
 class EXUIFU_MemVisitArbiter extends Module {
   val io = IO(new Bundle {
-    val exu_mem_rreq = MemReqIO.ReadRX
-    val exu_mem_wreq = MemReqIO.WriteRX
+    val exu = AXI4LiteIO.RX
+    val ifu = AXI4LiteIO.RX
 
-    val ifu_mem_rreq = MemReqIO.ReadRX
-
-    val rreq = MemReqIO.ReadTX
-    val wreq = MemReqIO.WriteTX
+    val out = AXI4LiteIO.TX
   })
 
   // Simple arbiter, since IFU and EXU won't access memory at the same time
 
-  io.rreq.en   := io.exu_mem_rreq.en || io.ifu_mem_rreq.en
-
   val isExuReg = Reg(Bool())
   val isIfuReg = Reg(Bool())
 
-  val isExu = (isExuReg&&(!io.ifu_mem_rreq.en))||(io.exu_mem_rreq.en)
-  val isIfu = (isIfuReg&&(!io.exu_mem_rreq.en))||(io.ifu_mem_rreq.en)
+  val isExu = (isExuReg && (!io.ifu.ar.valid)) || (io.exu.ar.valid)
+  val isIfu = (isIfuReg && (!io.exu.ar.valid)) || (io.ifu.ar.valid)
 
-  when(io.exu_mem_rreq.en) {
+  when(io.exu.ar.valid) {
     isExuReg := true.B
     isIfuReg := false.B
-  } .elsewhen(io.ifu_mem_rreq.en) {
+  }.elsewhen(io.ifu.ar.valid) {
     isExuReg := false.B
     isIfuReg := true.B
   }
 
-  val rreq= io.rreq
-  rreq.addr := Mux(isExu, io.exu_mem_rreq.addr, io.ifu_mem_rreq.addr)
+  // AR channel
+  io.out.ar.valid := io.exu.ar.valid || io.ifu.ar.valid
+  io.out.ar.bits  := Mux(isExu, io.exu.ar.bits, io.ifu.ar.bits)
 
-  io.exu_mem_rreq.data := rreq.data
-  io.ifu_mem_rreq.data := rreq.data
+  io.exu.ar.ready := isExu && io.out.ar.ready
+  io.ifu.ar.ready := isIfu && io.out.ar.ready
 
-  io.ifu_mem_rreq.respValid := isIfu && rreq.respValid
-  io.exu_mem_rreq.respValid := isExu && rreq.respValid
+  // R channel
+  io.exu.r.bits <> io.out.r.bits
+  io.ifu.r.bits <> io.out.r.bits
 
-  io.wreq <> io.exu_mem_wreq
+  io.exu.r.valid := isExu && io.out.r.valid
+  io.ifu.r.valid := isIfu && io.out.r.valid
 
-}*/
+  io.out.r.ready := Mux(isExu, io.exu.r.ready, io.ifu.r.ready)
+
+  // AW, W, B channel
+  //   since only exu need write
+  io.out.aw <> io.exu.aw
+  io.out.w <> io.exu.w
+  io.exu.b <> io.out.b
+
+  io.ifu.aw := DontCare
+  io.ifu.w  := DontCare
+  io.ifu.b  := DontCare
+}
 
 class Top(word_width: Int = 32) extends Module {
   type HasIO = {
@@ -101,7 +109,6 @@ class Top(word_width: Int = 32) extends Module {
   val csrs = Module(new ControlStatusRegisterFile())
 
   val mem = Module(new AXI4LiteMemUnit)
-  val rom = Module(new AXI4LiteMemUnit)
 
   val ifu = Module(new IFU)
   val idu = Module(new IDU)
@@ -137,16 +144,19 @@ class Top(word_width: Int = 32) extends Module {
     )
   }
 
+  val memArbiter = Module(new EXUIFU_MemVisitArbiter)
+  mem.io <> memArbiter.io.out
+  memArbiter.io.exu <> exu.io.mem
+  memArbiter.io.ifu <> ifu.io.mem
+
   ifu.io.pc.bits  := pc
   ifu.io.pc.valid := true.B
-  rom.io <> ifu.io.mem
 
   ifu.io.out <> idu.io.in
   idu.io.out <> exu.io.dinst
 
   exu.io.rvec <> gprs.io.read
   exu.io.csr_rvec <> csrs.io.read
-  mem.io <> exu.io.mem
 
   // Write back
 
