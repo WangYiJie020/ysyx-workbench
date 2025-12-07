@@ -5,6 +5,7 @@ import common_def._
 import busfsm._
 
 import memory._
+import axi4._
 
 class IFU extends Module {
   val io = IO(new Bundle {
