@@ -18,18 +18,18 @@ object AXI4LiteIO {
 
   def StrbT = UInt((DATA_WIDTH / 8).W)
 
-  object RResp extends ChiselEnum {
-    private def _v(x: Int) = Value(x.U(2.W))
+  object RResp{
     val WIDTH = 2
+    private def _v(x: Int) = x.U(WIDTH.W)
 
     val OKAY   = _v(0)
     val EXOKAY = _v(1)
     val SLVERR = _v(2)
     val DECERR = _v(3)
   }
-  object BResp extends ChiselEnum {
-    private def _v(x: Int) = Value(x.U(2.W))
+  object BResp{
     val WIDTH = 2
+    private def _v(x: Int) = x.U(WIDTH.W)
 
     val OKAY   = _v(0)
     val EXOKAY = _v(1)
