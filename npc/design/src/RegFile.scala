@@ -45,16 +45,16 @@ class MetaRegReqIO(addr_width: Int = Types.BitWidth.reg_addr, data_width: Int = 
 object GPRegReqIO extends MetaRegReqIO()
 object CSRegReqIO extends MetaRegReqIO(addr_width = Types.BitWidth.csr_addr)
 
-class GPRIO(N_RD:Int=2) extends Bundle {
-  val read  = GPRegReqIO.RX.VecRead(N_RD)
-  val write = GPRegReqIO.RX.Write
+class GPRIO(N_RD:Int=2,ADDR_WIDTH:Int=5) extends Bundle {
+  val read  = (new MetaRegReqIO(addr_width=ADDR_WIDTH)).RX.VecRead(N_RD)
+  val write = (new MetaRegReqIO(addr_width=ADDR_WIDTH)).RX.Write
   val a0    = Output(Types.UWord)
 }
 
-class RegisterFile(READ_PORTS: Int = 2) extends Module {
-  val N_REG = 1 << Types.BitWidth.reg_addr
+class RegisterFile(READ_PORTS: Int = 2,ADDR_WIDTH: Int = Types.BitWidth.reg_addr) extends Module {
+  val N_REG = 1 << ADDR_WIDTH
 
-  val io  = IO(new GPRIO(READ_PORTS))
+  val io  = IO(new GPRIO(READ_PORTS,ADDR_WIDTH))
 
   val reg = RegInit(VecInit(Seq.fill(N_REG)(0.UWord)))
 
@@ -63,21 +63,18 @@ class RegisterFile(READ_PORTS: Int = 2) extends Module {
   when(io.write.en) {
     reg(io.write.addr) := io.write.data
 
-    RawClockedVoidFunctionCall("gpr_upd")(
-      clock,
-      io.write.en,
-      io.write.addr.pad(32),
-      io.write.data
-    )
-
-    //printf("(RegFile) write reg[%d] <= 0x%x\n", io.write.addr, io.write.data)
+    // RawClockedVoidFunctionCall("gpr_upd")(
+    //   clock,
+    //   io.write.en,
+    //   io.write.addr.pad(32),
+    //   io.write.data
+    // )
   }
   for (i <- 0 until READ_PORTS) {
     when(io.read.addr(i) === 0.U) {
       io.read.data(i) := 0.U
     }.otherwise {
       io.read.data(i) := reg(io.read.addr(i))
-      //     printf("(RegFile) read reg[%d] => 0x%x\n", io.rvec.addr(i), io.rvec.data(i))
     }
   }
 }

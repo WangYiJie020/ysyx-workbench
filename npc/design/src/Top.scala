@@ -36,6 +36,8 @@ class TopIO extends Bundle {
   val seg5 = Output(UInt(8.W))
   val seg6 = Output(UInt(8.W))
   val seg7 = Output(UInt(8.W))
+
+  val pc = Output(UInt(32.W))
 }
 
 // make exu and ifu access memory
@@ -119,6 +121,8 @@ class Top(word_width: Int = 32) extends Module {
 
   val pc = RegInit(INIT_PC)
 
+  io.pc := pc
+
   val is_ebreak = (ifu.io.out.valid) && (ifu.io.out.bits.code === "h00100073".U)
 
   val nxt_pc       = exu.io.out.bits.nxt_pc
@@ -127,8 +131,8 @@ class Top(word_width: Int = 32) extends Module {
   val halted = RegInit(false.B)
 
   when(is_ebreak && !halted) {
-    printf(p"EBREAK at PC = 0x${Hexadecimal(ifu.io.out.bits.pc)} a0 = 0x${Hexadecimal(gprs.io.a0)}\n")
-    RawClockedVoidFunctionCall("raise_ebreak")(clock, is_ebreak, gprs.io.a0)
+    // printf(p"EBREAK at PC = 0x${Hexadecimal(ifu.io.out.bits.pc)} a0 = 0x${Hexadecimal(gprs.io.a0)}\n")
+    // RawClockedVoidFunctionCall("raise_ebreak")(clock, is_ebreak, gprs.io.a0)
     halted := true.B
   }
 
@@ -136,12 +140,12 @@ class Top(word_width: Int = 32) extends Module {
 
   when(nxt_pc_valid) {
 //    printf(p"(Top) PC: 0x${Hexadecimal(pc)} -> 0x${Hexadecimal(nxt_pc)}\n")
-    RawClockedVoidFunctionCall("pc_upd")(
-      clock,
-      nxt_pc_valid,
-      pc,
-      nxt_pc
-    )
+    // RawClockedVoidFunctionCall("pc_upd")(
+    //   clock,
+    //   nxt_pc_valid,
+    //   pc,
+    //   nxt_pc
+    // )
   }
 
   val memArbiter = Module(new EXUIFU_MemVisitArbiter)
