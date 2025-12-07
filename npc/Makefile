@@ -36,7 +36,7 @@ VERILOG_INCDIRS = $(shell find $(CHISEL2V_EMIT_DIR) -type d)
 VERILOG_INCFLAG = $(addprefix -I,$(VERILOG_INCDIRS))
 
 VERILATOR = verilator
-VERILATOR_CFLAGS += -MMD --build -cc -O3 \
+VERILATOR_CFLAGS += -MMD --build -cc \
 										--x-assign fast --x-initial fast \
 										$(VERILOG_INCFLAG) 
 # --noassert -O3
