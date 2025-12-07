@@ -9,6 +9,193 @@ import chisel3.util.circt.dpi._
 
 import common_def._
 
+object AXI4LiteIO {
+  val ADDR_WIDTH = Types.BitWidth.word
+  val DATA_WIDTH = Types.BitWidth.word
+
+  def AddrT = UInt(ADDR_WIDTH.W)
+  def DataT = UInt(DATA_WIDTH.W)
+
+  def StrbT = UInt((DATA_WIDTH / 8).W)
+
+  object RResp{
+    val WIDTH = 2
+    private def _v(x: Int) = x.U(WIDTH.W)
+
+    val OKAY   = _v(0)
+    val EXOKAY = _v(1)
+    val SLVERR = _v(2)
+    val DECERR = _v(3)
+  }
+  object BResp{
+    val WIDTH = 2
+    private def _v(x: Int) = x.U(WIDTH.W)
+
+    val OKAY   = _v(0)
+    val EXOKAY = _v(1)
+    val SLVERR = _v(2)
+    val DECERR = _v(3)
+  }
+
+  class _ReqTX extends Bundle {
+    // addr read channel
+    val ar = Decoupled(AddrT)
+    // read data channel
+    val r  = Flipped(Decoupled(new Bundle {
+      val data = DataT
+      val resp = UInt(RResp.WIDTH.W)
+    }))
+
+    // addr write channel
+    val aw = Decoupled(AddrT)
+
+    // write data channel
+    val w = Decoupled(new Bundle {
+      val data = DataT
+      val strb = StrbT
+    })
+
+    // backward channel
+    val b = Flipped(Decoupled(UInt(BResp.WIDTH.W)))
+  }
+
+  def TX = new _ReqTX()
+  def RX = Flipped(TX)
+}
+
+class AXI4LiteMemUnit extends Module {
+  val io = IO(AXI4LiteIO.RX)
+
+  when(reset.asBool) {
+    assert(io.ar.valid === false.B)
+    assert(io.aw.valid === false.B)
+    assert(io.w.valid === false.B)
+  }
+
+  // AR
+
+  val rdAddr = Reg(Types.UWord)
+
+  when(io.ar.valid && io.ar.ready) {
+    rdAddr := io.ar.bits
+  }
+
+  val sARIdle :: sARWait :: Nil = Enum(2)
+  val arState                   = RegInit(sARIdle)
+  io.ar.ready := (arState === sARIdle)
+
+  arState := MuxLookup(arState, sARIdle)(
+    Seq(
+      sARIdle -> Mux(io.ar.valid, sARWait, sARIdle),
+      sARWait -> Mux(io.r.valid, sARIdle, sARWait)
+    )
+  )
+
+  // R
+
+  val rdData = Reg(Types.UWord)
+
+  val sRIdle :: sRWaitMem :: sRWaitRdy :: Nil = Enum(3)
+  val rState                                  = RegInit(sRIdle)
+  io.r.valid     := (rState === sRWaitRdy)
+  io.r.bits.resp := AXI4LiteIO.RResp.OKAY
+  io.r.bits.data := rdData
+
+  val memReadFinished = Wire(Bool())
+  val memReadPrepared = (arState === sARWait)
+
+  rState := MuxLookup(rState, sRIdle)(
+    Seq(
+      sRIdle    -> Mux(memReadPrepared, sRWaitMem, sRIdle),
+      sRWaitMem -> Mux(memReadFinished, sRWaitRdy, sRWaitMem),
+      sRWaitRdy -> Mux(io.r.ready, sRIdle, sRWaitRdy)
+    )
+  )
+
+  when(rState === sRWaitMem) {
+    rdData := RawClockedNonVoidFunctionCall("pmem_read", Types.UWord)(
+      clock,
+      (!memReadFinished) && (!reset.asBool),
+      rdAddr
+    )
+  }
+
+  // for now mem read always finish in one cycle
+  memReadFinished := RegNext(rState === sRWaitMem)
+
+  // AW
+
+  val wrAddr = Reg(Types.UWord)
+
+  when(io.aw.valid && io.aw.ready) {
+    wrAddr := io.aw.bits
+  }
+
+  val sAWIdle :: sAWWait :: Nil = Enum(2)
+  val awState                   = RegInit(sAWIdle)
+  io.aw.ready := (awState === sAWIdle)
+
+  awState := MuxLookup(awState, sAWIdle)(
+    Seq(
+      sAWIdle -> Mux(io.aw.valid, sAWWait, sAWIdle),
+      sAWWait -> Mux(io.b.valid, sAWIdle, sAWWait)
+    )
+  )
+
+  // W
+
+  val wrData = Reg(Types.UWord)
+  val wrMask = Reg(UInt(4.W))
+  when(io.w.valid && io.w.ready) {
+    wrData := io.w.bits.data
+    wrMask := io.w.bits.strb
+  }
+
+  val sWIdle :: sWWait :: Nil = Enum(2)
+  val wState                  = RegInit(sWIdle)
+  io.w.ready := (wState === sWIdle)
+  wState     := MuxLookup(wState, sWIdle)(
+    Seq(
+      sWIdle -> Mux(io.w.valid, sWWait, sWIdle),
+      sWWait -> Mux(io.b.valid, sWIdle, sWWait)
+    )
+  )
+
+  // B
+
+  val sBIdle :: sBWaitAddrOrData :: sBWaitMem :: sBWaitRdy :: Nil = Enum(4)
+
+  val bState = RegInit(sBIdle)
+  io.b.valid := (bState === sBWaitRdy)
+  io.b.bits  := AXI4LiteIO.BResp.OKAY
+
+  val memWriteFinished = Wire(Bool())
+  val memWritePrepared = (awState === sAWWait) && (wState === sWWait)
+
+  bState := MuxLookup(bState, sBIdle)(
+    Seq(
+      sBIdle           -> Mux(io.aw.valid || io.w.valid, sBWaitAddrOrData, sBIdle),
+      sBWaitAddrOrData -> Mux(memWritePrepared, sBWaitMem, sBWaitAddrOrData),
+      sBWaitMem        -> Mux(memWriteFinished, sBWaitRdy, sBWaitMem),
+      sBWaitRdy        -> Mux(io.b.ready, sBIdle, sBWaitRdy)
+    )
+  )
+
+  when(bState === sBWaitMem) {
+    RawClockedVoidFunctionCall("pmem_write")(
+      clock,
+      (!reset.asBool),
+      wrAddr,
+      wrData,
+      wrMask.pad(32)
+    )
+  }
+  // for now mem write always finish in one cycle
+  memWriteFinished := (bState === sBWaitMem)
+
+}
+
+/*
 object MemReqIO {
 
   // Mem always return 4 bytes at addr & ~3.U
@@ -126,6 +313,8 @@ class LoadStoreFSM extends Module {
       isLoad  -> io.memRd.respValid,
       isStore -> io.memWr.done
     )
-  ) 
+  )
 
 }
+
+ */

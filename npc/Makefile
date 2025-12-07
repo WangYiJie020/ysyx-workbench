@@ -31,10 +31,15 @@ CHISEL2V_EMIT_DIR = $(BUILD_DIR)/gened/verilog
 CHISEL2V_DONE = $(BUILD_DIR)/verilog.done
 
 # Verilator
+
+VERILOG_INCDIRS := $(shell find $(CHISEL2v_EMI_DIR) -type d)
+VERILOG_INCFLAG := $(addprefix -I,$(VERILOG_INCDIRS))
+
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc -O3 \
-										--x-assign fast --x-initial fast --noassert \
-										-I$(CHISEL2V_EMIT_DIR)/verification
+										--x-assign fast --x-initial fast \
+										$(VERILOG_INCFLAG) 
+# --noassert
 
 V2CXX_EMIT_DIR = $(BUILD_DIR)/gened/cxx
 

@@ -8,13 +8,12 @@ import regfile._
 import memory._
 import cpu.alu._
 
-class EXU           extends Module {
+class EXU extends Module {
   val io = IO(new Bundle {
     val dinst    = Flipped(Decoupled(new DecodedInst))
     val rvec     = GPRegReqIO.TX.VecRead(2)
     val csr_rvec = CSRegReqIO.TX.SingleRead
-    val mem_rreq = MemReqIO.ReadTX
-    val mem_wreq = MemReqIO.WriteTX
+    val mem      = AXI4LiteIO.TX
     val out      = Decoupled(new WriteBackInfo)
   })
 
@@ -142,31 +141,48 @@ class EXU           extends Module {
 
   val memRdRawData = Reg(Types.UWord)
 
-  val isLoad = (dinst.info.typ === InstType.load) && MS_fsm.io.master_valid
+  val isLoad  = (dinst.info.typ === InstType.load) && MS_fsm.io.master_valid
   val isStore = (dinst.info.typ === InstType.store) && MS_fsm.io.master_valid
   val isMemOp = isLoad || isStore
 
-  val memFSM = Module(new LoadStoreFSM)
-  
-  io.mem_rreq <> memFSM.io.memRd
-  io.mem_wreq <> memFSM.io.memWr
+  // val memFSM = Module(new LoadStoreFSM)
+  //
+  // io.mem_rreq <> memFSM.io.memRd
+  // io.mem_wreq <> memFSM.io.memWr
+  //
+  // memFSM.io.reqValid := isMemOp && (!MS_fsm.io.slave_ready)
+  // memFSM.io.addr     := memAddr
+  //
+  // val memOpDone = Reg(Bool())
+  // when(memFSM.io.respValid) {
+  //   memRdRawData := memFSM.io.rdata
+  //   memOpDone    := true.B
+  // }
+  // when(!isMemOp) {
+  //   memOpDone := false.B
+  // }
 
-  memFSM.io.reqValid := isMemOp&& (!MS_fsm.io.slave_ready)
-  memFSM.io.addr     := memAddr
+  val memWDone = Reg(Bool())
+  val memRDone = Reg(Bool())
+  val memOPDone = memWDone || memRDone
 
-  val memOpDone = Reg(Bool())
-  when(memFSM.io.respValid) {
-    memRdRawData := memFSM.io.rdata
-    memOpDone    := true.B
+  io.mem.ar.bits := memAddr
+  io.mem.ar.valid := isLoad && (!memRDone)
+  when(io.mem.ar.valid && io.mem.ar.ready) {
   }
+  when(io.mem.r.valid && !memRDone) {
+    memRdRawData := io.mem.r.bits.data
+    memRDone    := true.B
+  }
+  io.mem.r.ready := true.B
   when(!isMemOp) {
-    memOpDone := false.B
+    memRDone := false.B
   }
 
   val memRdData = memRdRawData >> memAddrUnalignPartBitlen
 
   MS_fsm.io.self_finished := alu.io.out.valid && (
-    (!isMemOp)|| memOpDone
+    (!isMemOp) || memOPDone
   )
 
   // wdata
@@ -222,22 +238,35 @@ class EXU           extends Module {
 
   // for now sw only consider align addr
 
-  val mem_wdata = memFSM.io.wdata
-  val mem_waddr = memFSM.io.addr
-  val mem_wen   = memFSM.io.wen
-  val mem_wmask = memFSM.io.wmask
 
+  val memWAddr = io.mem.aw.bits
+  val memWData = io.mem.w.bits.data
+  val memWMask = io.mem.w.bits.strb
 
-  mem_wdata := reg_v2 << memAddrUnalignPartBitlen
-  mem_waddr := memAddr
-  mem_wmask := MuxLookup(func3t, 0.U)(
+  io.mem.aw.valid := isStore && (!memWDone)
+  io.mem.w.valid  := isStore && (!memWDone)
+
+  when(io.mem.aw.valid && io.mem.aw.ready){}
+  when(io.mem.w.valid && io.mem.w.ready){}
+
+  when(io.mem.b.valid) {
+    memWDone := true.B
+  }
+  io.mem.b.ready := true.B
+
+  when(!isStore) {
+    memWDone := false.B
+  }
+
+  memWData := reg_v2 << memAddrUnalignPartBitlen
+  memWAddr := memAddr
+  memWMask := MuxLookup(func3t, 0.U)(
     Seq(
       MemOp.byte     -> (1.U(4.W) << memAddrUnalignPart),
       MemOp.halfword -> (3.U(4.W) << memAddrUnalignPart),
       MemOp.word     -> 15.U(4.W)
     )
   )
-  mem_wen   := isStore
 
   when(dinst.info.typ === InstType.store) {
     when(!MemOp.isValidStoreOp(func3t)) {
