@@ -228,7 +228,7 @@ void dump_regs() {
 }
 void step_inst() {
   size_t cyc_cnt = 0;
-  constexpr size_t MAYBE_DEADLOOP_THRESHOLD = 1000;
+  constexpr size_t MAYBE_DEADLOOP_THRESHOLD = 100;
   while (!pc_changed) {
     sim_step_cycle();
     cyc_cnt++;
