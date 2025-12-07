@@ -84,6 +84,10 @@ class EXUIFU_MemVisitArbiter extends Module {
   io.out.aw <> io.exu.aw
   io.out.w <> io.exu.w
   io.exu.b <> io.out.b
+
+  io.ifu.aw := DontCare
+  io.ifu.w  := DontCare
+  io.ifu.b.ready := DontCare
 }
 
 class Top(word_width: Int = 32) extends Module {
