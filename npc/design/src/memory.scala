@@ -9,6 +9,8 @@ import chisel3.util.circt.dpi._
 
 import common_def._
 
+import regfile._
+
 object AXI4LiteIO {
   val ADDR_WIDTH = Types.BitWidth.word
   val DATA_WIDTH = Types.BitWidth.word
@@ -91,6 +93,8 @@ class AXI4LiteMemUnit extends Module {
     )
   )
 
+  val synableMem = Module(new RegisterFile(1,8))
+
   // R
 
   val rdData = Reg(Types.UWord)
@@ -112,12 +116,16 @@ class AXI4LiteMemUnit extends Module {
     )
   )
 
+  synableMem.io.read.en:=true.B
+  synableMem.io.read.addr(0):=rdAddr
+
   when(rState === sRWaitMem) {
-    rdData := RawClockedNonVoidFunctionCall("pmem_read", Types.UWord)(
-      clock,
-      (!memReadFinished) && (!reset.asBool),
-      rdAddr
-    )
+    rdData := synableMem.io.read.data(0)
+    // RawClockedNonVoidFunctionCall("pmem_read", Types.UWord)(
+    //   clock,
+    //   (!memReadFinished) && (!reset.asBool),
+    //   rdAddr
+    // )
   }
 
   // for now mem read always finish in one cycle
@@ -182,13 +190,16 @@ class AXI4LiteMemUnit extends Module {
   )
 
   when(bState === sBWaitMem) {
-    RawClockedVoidFunctionCall("pmem_write")(
-      clock,
-      (!reset.asBool),
-      wrAddr,
-      wrData,
-      wrMask.pad(32)
-    )
+    synableMem.io.write.en:=true.B
+    synableMem.io.write.addr:=wrAddr
+    synableMem.io.write.data:=wrData
+    // RawClockedVoidFunctionCall("pmem_write")(
+    //   clock,
+    //   (!reset.asBool),
+    //   wrAddr,
+    //   wrData,
+    //   wrMask.pad(32)
+    // )
   }
   // for now mem write always finish in one cycle
   memWriteFinished := (bState === sBWaitMem)
