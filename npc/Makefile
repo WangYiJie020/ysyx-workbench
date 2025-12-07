@@ -32,7 +32,7 @@ CHISEL2V_DONE = $(BUILD_DIR)/verilog.done
 
 # Verilator
 
-VERILOG_INCDIRS := $(shell find $(CHISEL2v_EMI_DIR) -type d)
+VERILOG_INCDIRS := $(shell find $(CHISEL2V_EMIT_DIR) -type d)
 VERILOG_INCFLAG := $(addprefix -I,$(VERILOG_INCDIRS))
 
 VERILATOR = verilator
