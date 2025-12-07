@@ -136,12 +136,12 @@ class Top(word_width: Int = 32) extends Module {
 
   when(nxt_pc_valid) {
 //    printf(p"(Top) PC: 0x${Hexadecimal(pc)} -> 0x${Hexadecimal(nxt_pc)}\n")
-    RawClockedVoidFunctionCall("pc_upd")(
-      clock,
-      nxt_pc_valid,
-      pc,
-      nxt_pc
-    )
+    // RawClockedVoidFunctionCall("pc_upd")(
+    //   clock,
+    //   nxt_pc_valid,
+    //   pc,
+    //   nxt_pc
+    // )
   }
 
   val memArbiter = Module(new EXUIFU_MemVisitArbiter)
