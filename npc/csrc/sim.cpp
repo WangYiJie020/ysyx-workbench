@@ -40,23 +40,23 @@ std::shared_ptr<VerilatedFstC> tfp;
 static uint64_t sim_time = 0;
 static uint64_t cycle_count = 0;
 
-void sim_step_cycle() {
+static void _sim_eval() {
+  dut.eval();
+  sim_time++;
+  if (tfp) {
+    tfp->dump(sim_time);
+  }
+}
 
+void sim_step_cycle() {
   if (sim_settings.trace_clock_cycle) {
     printf("[Clock Cycle Begin]\n");
   }
 
   dut.clock = 0;
-  dut.eval();
-  sim_time++;
-
-  tfp->dump(sim_time);
-
+  _sim_eval();
   dut.clock = 1;
-  dut.eval();
-  sim_time++;
-
-  tfp->dump(sim_time);
+  _sim_eval();
 
   cycle_count++;
 
@@ -386,11 +386,13 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
     }
   }
 
-  Verilated::traceEverOn(setting.enable_waveform);
-  tfp = std::shared_ptr<VerilatedFstC>(new VerilatedFstC,
-                                       [](VerilatedFstC *p) { p->close(); });
-  dut.trace(tfp.get(), 99);
-  tfp->open(setting.wave_fst_file.c_str());
+  if (setting.enable_waveform) {
+    Verilated::traceEverOn(true);
+    tfp = std::shared_ptr<VerilatedFstC>(new VerilatedFstC,
+                                         [](VerilatedFstC *p) { p->close(); });
+    dut.trace(tfp.get(), 99);
+    tfp->open(setting.wave_fst_file.c_str());
+  }
 
   reset(10);
 
