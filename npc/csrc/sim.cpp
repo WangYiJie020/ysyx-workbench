@@ -231,7 +231,7 @@ void dump_regs() {
 }
 void step_inst() {
   size_t cnt = 0;
-  constexpr size_t MAYBE_DEADLOOP_THRESHOLD = 100;
+  constexpr size_t MAYBE_DEADLOOP_THRESHOLD = 1000000;
   while (!pc_changed) {
     sim_step_cycle();
 		if(sim_halted())return;
