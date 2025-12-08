@@ -162,7 +162,7 @@ class Top(word_width: Int = 32) extends Module {
   val memXBar = Module(new AXI4LiteXBar(Seq(
     (MEM_BASE,MEM_END) -> mem.io,
     (SERIAL_BASE,SERIAL_END) -> uart.io,
-    // ("h10000048".U(32.W),"h10000050".U(32.W)) -> mem.io, // RTC
+    ("h10000048".U(32.W),"h10000050".U(32.W)) -> mem.io, // RTC
   )))
 
   memXBar.connect()
