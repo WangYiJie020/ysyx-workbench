@@ -3,6 +3,7 @@ import chisel3._
 import chisel3.util._
 
 import axi4._
+import chisel3.util.circt.dpi.RawClockedVoidFunctionCall
 
 class CLINTUnit extends Module {
   val io = IO(AXI4LiteIO.RX)
@@ -13,6 +14,13 @@ class CLINTUnit extends Module {
 
   io.ar.ready := true.B
   io.r.valid  := true.B
+
+  when(io.ar.valid){
+    RawClockedVoidFunctionCall("skip_difftest_ref")(
+      clock,
+      io.ar.valid
+    )
+  }
 
   val mtime = RegInit(0.U(64.W))
 
