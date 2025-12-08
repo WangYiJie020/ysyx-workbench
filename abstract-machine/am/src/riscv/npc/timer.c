@@ -36,7 +36,7 @@ void __am_timer_rtc(AM_TIMER_RTC_T *rtc) {
   rtc->minute = (seconds_in_day / 60) % 60;
   rtc->hour = (seconds_in_day / 3600) % 24;
 
-  int year = 1970;
+  int year = 1900;
   while (true) {
     int days_in_year = is_leap(year) ? 366 : 365;
     if (total_days >= days_in_year) {
