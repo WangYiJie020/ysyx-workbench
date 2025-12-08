@@ -19,7 +19,7 @@ class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4LiteIO.Imp)]) extends Module
     val slaves = Vec(mappings.size, AXI4LiteIO.newTX(axiParam.ADDR_WIDTH, axiParam.DATA_WIDTH))
   })
 
-  def connect = {
+  def connect() = {
     io.slaves.zip(mappings).foreach { case (sio, (_, s)) =>
       sio <> s
     }
