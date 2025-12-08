@@ -19,8 +19,10 @@ class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4LiteIO.Imp)]) extends Module
     val slaves = Vec(mappings.size, AXI4LiteIO.newTX(axiParam.ADDR_WIDTH, axiParam.DATA_WIDTH))
   })
 
-  io.slaves.zip(mappings).foreach { case (sio, (_, s)) =>
-    sio <> s
+  def connect = {
+    io.slaves.zip(mappings).foreach { case (sio, (_, s)) =>
+      sio <> s
+    }
   }
 
   val isAR = Wire(Vec(mappings.size, Bool()))
@@ -55,18 +57,18 @@ class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4LiteIO.Imp)]) extends Module
 
   master.r.valid := io.slaves(lastRdReqIdx).r.valid && hasLastRdReq
   master.r.bits  := io.slaves(lastRdReqIdx).r.bits
-  for(i <- mappings.indices){
+  for (i <- mappings.indices) {
     io.slaves(i).r.ready := hasLastRdReq && (i.U === lastRdReqIdx) && master.r.ready
   }
 
   master.w.ready := io.slaves(lastWrReqIdx).w.ready && hasLastWrReq
-  for(i <- mappings.indices){
+  for (i <- mappings.indices) {
     io.slaves(i).w.valid := hasLastWrReq && (i.U === lastWrReqIdx) && master.w.valid
   }
 
   master.b.valid := io.slaves(lastWrReqIdx).b.valid && hasLastWrReq
   master.b.bits  := io.slaves(lastWrReqIdx).b.bits
-  for(i <- mappings.indices){
+  for (i <- mappings.indices) {
     io.slaves(i).b.ready := hasLastWrReq && (i.U === lastWrReqIdx) && master.b.ready
   }
 

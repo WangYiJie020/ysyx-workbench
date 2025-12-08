@@ -164,6 +164,8 @@ class Top(word_width: Int = 32) extends Module {
     (SERIAL_BASE,SERIAL_END) -> uart.io
   )))
 
+  memXBar.connect()
+
   memArbiter.io.out <> memXBar.io.master
 
   ifu.io.pc.bits  := pc
