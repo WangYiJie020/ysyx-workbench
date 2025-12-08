@@ -123,6 +123,9 @@ class Top(word_width: Int = 32) extends Module {
   val MEM_BASE = "h80000000".U(32.W)
   val MEM_END  = "h8FFFFFFF".U(32.W)
 
+  val SERIAL_BASE = "h10000000".U(32.W)
+  val SERIAL_END  = "h10000001F".U(32.W)
+
   val pc = RegInit(INIT_PC)
 
   val is_ebreak = (ifu.io.out.valid) && (ifu.io.out.bits.code === "h00100073".U)
@@ -151,13 +154,17 @@ class Top(word_width: Int = 32) extends Module {
   }
 
   val memArbiter = Module(new EXUIFU_MemVisitArbiter)
-  mem.io <> memArbiter.io.out
   memArbiter.io.exu <> exu.io.mem
   memArbiter.io.ifu <> ifu.io.mem
 
+  val uart = Module(new UARTUnit)
+
   val memXBar = Module(new AXI4LiteXBar(Seq(
     (MEM_BASE,MEM_END) -> mem.io,
+    (SERIAL_BASE,SERIAL_END) -> uart.io
   )))
+
+  memArbiter.io.out <> memXBar.io.master
 
   ifu.io.pc.bits  := pc
   ifu.io.pc.valid := true.B
