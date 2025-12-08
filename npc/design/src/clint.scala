@@ -6,19 +6,21 @@ import axi4._
 import chisel3.util.circt.dpi.RawClockedVoidFunctionCall
 
 class CLINTUnit extends Module {
-  val io = IO(AXI4LiteIO.RX)
+  val io = IO(AXI4IO.Slave)
 
-  io.aw := DontCare
-  io.w  := DontCare
-  io.b  := DontCare
+  io.dontCareAW()
+  io.dontCareW()
+  io.dontCareB()
 
-  io.ar.ready := true.B
-  io.r.valid  := true.B
+  val sio = io.slave
 
-  when(io.ar.valid){
+  sio.arready := true.B
+  sio.rvalid  := true.B
+
+  when(sio.arvalid){
     RawClockedVoidFunctionCall("skip_difftest_ref")(
       clock,
-      io.ar.valid
+      sio.arvalid
     )
   }
 
@@ -26,6 +28,6 @@ class CLINTUnit extends Module {
 
   mtime := mtime + 1.U
 
-  io.r.bits.resp := AXI4LiteIO.RResp.OKAY
-  io.r.bits.data := Mux(io.ar.bits === 0x10000048.U, mtime(31, 0), Mux(io.ar.bits === 0x1000004c.U, mtime(63, 32), 0.U))
+  sio.rresp := AXI4IO.RResp.OKAY
+  sio.rdata := Mux(sio.araddr === 0x10000048.U, mtime(31, 0), Mux(sio.araddr === 0x1000004c.U, mtime(63, 32), 0.U))
 }

@@ -14,7 +14,7 @@ class EXU extends Module {
     val dinst    = Flipped(Decoupled(new DecodedInst))
     val rvec     = GPRegReqIO.TX.VecRead(2)
     val csr_rvec = CSRegReqIO.TX.SingleRead
-    val mem      = AXI4LiteIO.TX
+    val mem      = AXI4IO.Master
     val out      = Decoupled(new WriteBackInfo)
   })
 
@@ -150,15 +150,16 @@ class EXU extends Module {
   val memRDone = Reg(Bool())
   val memOPDone = memWDone || memRDone
 
-  io.mem.ar.bits := memAddr
-  io.mem.ar.valid := isLoad && (!memRDone)
-  when(io.mem.ar.valid && io.mem.ar.ready) {
+  val memIO = io.mem.master
+  memIO.araddr := memAddr
+  memIO.arvalid := isLoad && (!memRDone)
+  when(memIO.arvalid && memIO.arready) {
   }
-  when(io.mem.r.valid && !memRDone) {
-    memRdRawData := io.mem.r.bits.data
+  when(memIO.rvalid && !memRDone) {
+    memRdRawData := memIO.rdata
     memRDone    := true.B
   }
-  io.mem.r.ready := true.B
+  memIO.rready := true.B
   when(!isMemOp) {
     memRDone := false.B
   }
@@ -223,20 +224,20 @@ class EXU extends Module {
   // for now sw only consider align addr
 
 
-  val memWAddr = io.mem.aw.bits
-  val memWData = io.mem.w.bits.data
-  val memWMask = io.mem.w.bits.strb
+  val memWAddr = memIO.awaddr
+  val memWData = memIO.wdata
+  val memWMask = memIO.wstrb
 
-  io.mem.aw.valid := isStore && (!memWDone)
-  io.mem.w.valid  := isStore && (!memWDone)
+  memIO.awvalid := isStore && (!memWDone)
+  memIO.wvalid  := isStore && (!memWDone)
 
-  when(io.mem.aw.valid && io.mem.aw.ready){}
-  when(io.mem.w.valid && io.mem.w.ready){}
+  when(memIO.awvalid && memIO.awready){}
+  when(memIO.wvalid && memIO.wready){}
 
-  when(io.mem.b.valid) {
+  when(memIO.bvalid) {
     memWDone := true.B
   }
-  io.mem.b.ready := true.B
+  memIO.bready := true.B
 
   when(!isStore) {
     memWDone := false.B

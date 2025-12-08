@@ -2,7 +2,8 @@ package axi4
 import chisel3._
 import chisel3.util._
 
-object AXI4LiteIO {
+
+object AXI4IO {
 
   object RResp {
     val WIDTH = 2
@@ -22,6 +23,125 @@ object AXI4LiteIO {
     val SLVERR = _v(2)
     val DECERR = _v(3)
   }
+
+
+  // Master interface
+  class Imp(val ADDR_WIDTH:Int,val DATA_WIDTH:Int) extends Bundle {
+
+    def AddrT = UInt(ADDR_WIDTH.W)
+    def DataT = UInt(DATA_WIDTH.W)
+
+    def StrbT = UInt((DATA_WIDTH / 8).W)
+
+    // aw channel
+
+    val awready = Input(Bool())
+    val awvalid = Output(Bool())
+    val awaddr  = Output(AddrT)
+    val awid    = Output(UInt(4.W))
+    val awlen   = Output(UInt(8.W))
+    val awsize  = Output(UInt(3.W))
+    val awburst = Output(UInt(2.W))
+
+    // w channel
+
+    val wready = Input(Bool())
+    val wvalid = Output(Bool())
+    val wdata  = Output(DataT)
+    val wstrb  = Output(StrbT)
+    val wlast  = Output(Bool())
+
+    // b channel
+
+    val bready = Output(Bool())
+    val bvalid = Input(Bool())
+    val bresp  = Input(UInt(BResp.WIDTH.W))
+    val bid    = Input(UInt(4.W))
+
+    // ar channel
+
+    val arready = Input(Bool())
+    val arvalid = Output(Bool())
+    val araddr  = Output(AddrT)
+    val arid    = Output(UInt(4.W))
+    val arlen   = Output(UInt(8.W))
+    val arsize  = Output(UInt(3.W))
+    val arburst = Output(UInt(2.W))
+
+    // r channel
+
+    val rready = Output(Bool())
+    val rvalid = Input(Bool())
+    val rdata  = Input(DataT)
+    val rresp  = Input(UInt(RResp.WIDTH.W))
+    val rlast  = Input(Bool())
+    val rid    = Input(UInt(4.W))
+  }
+
+  def newMaster(addrWidth:Int=32,dataWidth:Int=32) = new Imp(addrWidth,dataWidth)
+  def newSlave(addrWidth:Int=32,dataWidth:Int=32) = Flipped(newMaster(addrWidth,dataWidth))
+
+  def Master = new Bundle{
+    val master = newMaster()
+    def dontCareAW() = {
+      master.awvalid := false.B
+      master.awaddr  := 0.U
+      master.awid    := 0.U
+      master.awlen   := 0.U
+      master.awsize  := 0.U
+      master.awburst := 0.U
+    }
+    def dontCareW() = {
+      master.wvalid := false.B
+      master.wdata  := 0.U
+      master.wstrb  := 0.U
+      master.wlast  := false.B
+    }
+    def dontCareB() = {
+      master.bready := false.B
+    }
+    def dontCareAR() = {
+      master.arvalid := false.B
+      master.araddr  := 0.U
+      master.arid    := 0.U
+      master.arlen   := 0.U
+      master.arsize  := 0.U
+      master.arburst := 0.U
+    }
+    def dontCareR() = {
+      master.rready := false.B
+    }
+  }
+  def Slave  = new Bundle{
+    val slave = newSlave()
+    def dontCareAW() = {
+      slave.awready := false.B
+    }
+    def dontCareW() = {
+      slave.wready := false.B
+    }
+    def dontCareB() = {
+      slave.bvalid := false.B
+      slave.bresp  := 0.U
+      slave.bid    := 0.U
+    }
+    def dontCareAR() = {
+      slave.arready := false.B
+    }
+    def dontCareR() = {
+      slave.rvalid := false.B
+      slave.rdata  := 0.U
+      slave.rresp  := 0.U
+      slave.rlast  := false.B
+      slave.rid    := 0.U
+    }
+  }
+}
+
+object AXI4LiteIO_ {
+
+  def BResp = AXI4IO.BResp
+  def RResp = AXI4IO.RResp
 
   class Imp(val ADDR_WIDTH:Int,val DATA_WIDTH:Int) extends Bundle {
 
@@ -58,3 +178,4 @@ object AXI4LiteIO {
   def TX = newTX()
   def RX = newRX()
 }
+
