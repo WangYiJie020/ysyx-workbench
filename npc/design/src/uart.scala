@@ -5,6 +5,8 @@ import chisel3.util._
 import common_def._
 import axi4._
 
+import chisel3.util.circt.dpi._
+
 class UARTUnit extends Module{
   val io = IO(AXI4LiteIO.RX)
 
@@ -19,5 +21,9 @@ class UARTUnit extends Module{
 
   when(io.w.valid){
     printf("%c", io.w.bits.data(7,0))
+    RawClockedVoidFunctionCall("skip_difftest_ref")(
+      clock,
+      io.w.valid
+    )
   }
 }

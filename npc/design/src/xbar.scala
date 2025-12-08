@@ -6,8 +6,8 @@ import axi4._
 
 class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4LiteIO.Imp)]) extends Module {
 
-  println(s"AXI4LiteXBar mappings: ${mappings.map(_._1)}")
-  println(s"AXI4LiteXBar parameter: ${mappings.map(_._2)}")
+  // println(s"AXI4LiteXBar mappings: ${mappings.map(_._1)}")
+  // println(s"AXI4LiteXBar parameter: ${mappings.map(_._2)}")
 
   require(mappings.nonEmpty, "AXI4LiteXBar requires non-empty mappings.")
   require(mappings.size > 1, "AXI4LiteXBar requires at least two mappings.")
