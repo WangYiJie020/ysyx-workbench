@@ -12,6 +12,7 @@ import chisel3.util._
 
 import axi4._
 import uart._
+import clint._
 import xbar._
 
 // For NVBoard
@@ -158,13 +159,12 @@ class Top(word_width: Int = 32) extends Module {
   memArbiter.io.ifu <> ifu.io.mem
 
   val uart = Module(new UARTUnit)
-
-  val rtcmem = Module(new AXI4LiteMemUnit)
+  val clint = Module(new CLINTUnit)
 
   val memXBar = Module(new AXI4LiteXBar(Seq(
     (MEM_BASE,MEM_END) -> mem.io,
     (SERIAL_BASE,SERIAL_END) -> uart.io,
-    ("h10000048".U(32.W),"h10000050".U(32.W)) -> rtcmem.io
+    ("h10000048".U(32.W),"h10000050".U(32.W)) -> clint.io
   )))
 
   dontTouch(memXBar.io)
