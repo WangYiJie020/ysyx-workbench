@@ -22,7 +22,7 @@ class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4IO.Imp)]) extends Module {
 
   def connect() = {
     io.slaves.zip(mappings).foreach { case (sio, (_, s)) =>
-      sio <> s
+      sio.master <> s
     }
   }
 
