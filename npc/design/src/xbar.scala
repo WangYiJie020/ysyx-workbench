@@ -19,6 +19,10 @@ class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4LiteIO.Imp)]) extends Module
     val slaves = Vec(mappings.size, AXI4LiteIO.newTX(axiParam.ADDR_WIDTH, axiParam.DATA_WIDTH))
   })
 
+  io.slaves.zip(mappings).foreach { case (sio, (_, s)) =>
+    sio <> s
+  }
+
   val isAR = Wire(Vec(mappings.size, Bool()))
   val isAW = Wire(Vec(mappings.size, Bool()))
 
