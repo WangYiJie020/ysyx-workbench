@@ -93,7 +93,8 @@ public:
         while ((it = vpi_scan(iter)) != NULL) {
           // printf("SProbe found %d  %s\n", type, vpi_get_str(vpiFullName,
           // it));
-          if (type == vpiModule) {
+
+          if (vpi_get(vpiType,it) == vpiModule) {
             watch_inside(it, max_depth, cur_depth + 1);
             vpi_release_handle(it);
           } else {
