@@ -233,7 +233,10 @@ void step_inst() {
   constexpr size_t MAYBE_DEADLOOP_THRESHOLD = 1000000;
   while (!pc_changed) {
     sim_step_cycle();
-		if(sim_halted())return;
+		if(sim_halted()){
+			current_pc+=4;
+			return;
+		}
     cnt++;
     if (cnt >= MAYBE_DEADLOOP_THRESHOLD) {
       printf(ANSI_FG_YELLOW "[WARN] " ANSI_NONE);
