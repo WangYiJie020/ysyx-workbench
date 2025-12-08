@@ -11,6 +11,8 @@ import chisel3.util.circt.dpi._
 import chisel3.util._
 
 import axi4._
+import uart._
+import xbar._
 
 // For NVBoard
 class TopIO extends Bundle {
@@ -118,6 +120,8 @@ class Top(word_width: Int = 32) extends Module {
   val wbu = Module(new WBU)
 
   val INIT_PC = "h80000000".U(32.W)
+  val MEM_BASE = "h80000000".U(32.W)
+  val MEM_END  = "h8FFFFFFF".U(32.W)
 
   val pc = RegInit(INIT_PC)
 
@@ -150,6 +154,10 @@ class Top(word_width: Int = 32) extends Module {
   mem.io <> memArbiter.io.out
   memArbiter.io.exu <> exu.io.mem
   memArbiter.io.ifu <> ifu.io.mem
+
+  val memXBar = Module(new AXI4LiteXBar(Seq(
+    (MEM_BASE,MEM_END) -> mem.io,
+  )))
 
   ifu.io.pc.bits  := pc
   ifu.io.pc.valid := true.B

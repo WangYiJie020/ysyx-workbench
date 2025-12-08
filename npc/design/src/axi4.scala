@@ -23,7 +23,7 @@ object AXI4LiteIO {
     val DECERR = _v(3)
   }
 
-  class _Imp(ADDR_WIDTH:Int,DATA_WIDTH:Int) extends Bundle {
+  class Imp(val ADDR_WIDTH:Int,val DATA_WIDTH:Int) extends Bundle {
 
     def AddrT = UInt(ADDR_WIDTH.W)
     def DataT = UInt(DATA_WIDTH.W)
@@ -51,7 +51,7 @@ object AXI4LiteIO {
     val b = Flipped(Decoupled(UInt(BResp.WIDTH.W)))
   }
 
-  def newTX(addrWidth:Int=32,dataWidth:Int=32) = new _Imp(addrWidth,dataWidth)
+  def newTX(addrWidth:Int=32,dataWidth:Int=32) = new Imp(addrWidth,dataWidth)
   def newRX(addrWidth:Int=32,dataWidth:Int=32) = Flipped(newTX(addrWidth,dataWidth))
 
   // for default
