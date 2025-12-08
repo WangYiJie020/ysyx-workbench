@@ -5,7 +5,7 @@ import chisel3.util._
 import axi4._
 
 // never map more than 1 range to one slave
-class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4LiteIO.Imp)]) extends Module {
+class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4IO.Imp)]) extends Module {
 
   // println(s"AXI4LiteXBar mappings: ${mappings.map(_._1)}")
   // println(s"AXI4LiteXBar parameter: ${mappings.map(_._2)}")
@@ -16,8 +16,8 @@ class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4LiteIO.Imp)]) extends Module
   val axiParam = mappings.head._2
 
   val io = IO(new Bundle {
-    val master = AXI4LiteIO.newRX(axiParam.ADDR_WIDTH, axiParam.DATA_WIDTH)
-    val slaves = Vec(mappings.size, AXI4LiteIO.newTX(axiParam.ADDR_WIDTH, axiParam.DATA_WIDTH))
+    val master = AXI4IO.Master
+    val slaves = Vec(mappings.size, AXI4IO.Slave)
   })
 
   def connect() = {
@@ -34,56 +34,63 @@ class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4LiteIO.Imp)]) extends Module
   val lastRdReqIdx = RegInit(0.U(log2Ceil(mappings.size).W))
   val lastWrReqIdx = RegInit(0.U(log2Ceil(mappings.size).W))
 
-  val master = io.master
+  val master = io.master.master
+
+  val slaveIO = Wire(Vec(mappings.size, new AXI4IO.Imp(axiParam.ADDR_WIDTH, axiParam.DATA_WIDTH)))
+
+  for( i <- mappings.indices) {
+    slaveIO(i) := io.slaves(i).slave
+  }
 
   for ((((addrBeg, addrEnd), _), i) <- mappings.zipWithIndex) {
-    isAR(i) := (master.ar.bits >= addrBeg) && (master.ar.bits < addrEnd)
-    isAW(i) := (master.aw.bits >= addrBeg) && (master.aw.bits < addrEnd)
+    isAR(i) := (master.araddr >= addrBeg) && (master.araddr < addrEnd)
+    isAW(i) := (master.awaddr >= addrBeg) && (master.awaddr < addrEnd)
 
-    io.slaves(i).ar.valid := isAR(i) && master.ar.valid
-    io.slaves(i).aw.valid := isAW(i) && master.aw.valid
+    slaveIO(i).arvalid := isAR(i) && master.arvalid
+    slaveIO(i).awvalid := isAW(i) && master.awvalid
 
-    when(io.slaves(i).ar.valid && io.slaves(i).ar.ready) {
+    when(slaveIO(i).arvalid && slaveIO(i).arready) {
       lastRdReqIdx := i.U
       hasLastRdReq := true.B
     }
-    when(io.slaves(i).aw.valid && io.slaves(i).aw.ready) {
+    when(slaveIO(i).awvalid && slaveIO(i).awready) {
       lastWrReqIdx := i.U
       hasLastWrReq := true.B
     }
   }
 
-  master.ar.ready := Mux1H(isAR, io.slaves.map(_.ar.ready))
-  master.aw.ready := Mux1H(isAW, io.slaves.map(_.aw.ready))
+  master.arready := Mux1H(isAR, io.slaves.map(_.slave.arready))
+  master.awready := Mux1H(isAW, io.slaves.map(_.slave.awready))
 
-  master.r.valid := io.slaves(lastRdReqIdx).r.valid && hasLastRdReq
-  master.r.bits  := io.slaves(lastRdReqIdx).r.bits
+  master.rvalid := slaveIO(lastRdReqIdx).rvalid && hasLastRdReq
+  AXI4IO.noShakeConnectR(master, slaveIO(lastRdReqIdx))
   for (i <- mappings.indices) {
-    io.slaves(i).r.ready := hasLastRdReq && (i.U === lastRdReqIdx) && master.r.ready
+    slaveIO(i).rready := hasLastRdReq && (i.U === lastRdReqIdx) && master.rready
   }
 
-  master.w.ready := io.slaves(lastWrReqIdx).w.ready && hasLastWrReq
+  master.wready := slaveIO(lastWrReqIdx).wready && hasLastWrReq
   for (i <- mappings.indices) {
-    io.slaves(i).w.valid := hasLastWrReq && (i.U === lastWrReqIdx) && master.w.valid
+    slaveIO(i).wvalid := hasLastWrReq && (i.U === lastWrReqIdx) && master.wvalid
   }
 
-  master.b.valid := io.slaves(lastWrReqIdx).b.valid && hasLastWrReq
-  master.b.bits  := io.slaves(lastWrReqIdx).b.bits
+  master.bvalid := slaveIO(lastWrReqIdx).bvalid && hasLastWrReq
+  AXI4IO.noShakeConnectB(master, slaveIO(lastWrReqIdx))
+
   for (i <- mappings.indices) {
-    io.slaves(i).b.ready := hasLastWrReq && (i.U === lastWrReqIdx) && master.b.ready
+    slaveIO(i).bready := hasLastWrReq && (i.U === lastWrReqIdx) && master.bready
   }
 
-  when(master.r.valid && master.r.ready) {
+  when(master.rvalid && master.rready) {
     hasLastRdReq := false.B
   }
-  when(master.b.valid && master.b.ready) {
+  when(master.bvalid && master.bready) {
     hasLastWrReq := false.B
   }
 
   io.slaves.foreach { s =>
-    s.ar.bits := io.master.ar.bits
-    s.aw.bits := io.master.aw.bits
-    s.w.bits  := io.master.w.bits
+    AXI4IO.noShakeConnectAR(master, s.slave)
+    AXI4IO.noShakeConnectAW(master, s.slave)
+    AXI4IO.noShakeConnectW(master, s.slave)
   }
 
 }

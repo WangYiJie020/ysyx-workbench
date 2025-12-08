@@ -78,6 +78,54 @@ object AXI4IO {
     val rid    = Input(UInt(4.W))
   }
 
+  def noShakeConnectAW(master:Imp,slave:Imp)={
+    slave.awaddr  := master.awaddr
+    slave.awid    := master.awid
+    slave.awlen   := master.awlen
+    slave.awsize  := master.awsize
+    slave.awburst := master.awburst
+  }
+  def noShakeConnectW(master:Imp,slave:Imp)={
+    slave.wdata  := master.wdata
+    slave.wstrb  := master.wstrb
+    slave.wlast  := master.wlast
+  }
+  def noShakeConnectB(master:Imp,slave:Imp)={
+    master.bresp  := slave.bresp
+    master.bid    := slave.bid
+  }
+
+  def connectAW(master:Imp,slave:Imp)={
+    noShakeConnectAW(master,slave)
+    master.awvalid := slave.awvalid
+    slave.awready  := master.awready
+  }
+  def connectW(master:Imp,slave:Imp)={
+    noShakeConnectW(master,slave)
+    master.wvalid := slave.wvalid
+    slave.wready  := master.wready
+  }
+  def connectB(master:Imp,slave:Imp)={
+    noShakeConnectB(master,slave)
+    master.bready := slave.bready
+    slave.bvalid  := master.bvalid
+  }
+
+  def noShakeConnectAR(master:Imp,slave:Imp)={
+    slave.araddr  := master.araddr
+    slave.arid    := master.arid
+    slave.arlen   := master.arlen
+    slave.arsize  := master.arsize
+    slave.arburst := master.arburst
+  }
+
+  def noShakeConnectR(master:Imp,slave:Imp)={
+    master.rdata  := slave.rdata
+    master.rresp  := slave.rresp
+    master.rlast  := slave.rlast
+    master.rid    := slave.rid
+  }
+
   def newMaster(addrWidth:Int=32,dataWidth:Int=32) = new Imp(addrWidth,dataWidth)
   def newSlave(addrWidth:Int=32,dataWidth:Int=32) = Flipped(newMaster(addrWidth,dataWidth))
 
@@ -111,6 +159,7 @@ object AXI4IO {
     def dontCareR() = {
       master.rready := false.B
     }
+
   }
   def Slave  = new Bundle{
     val slave = newSlave()
