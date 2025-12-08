@@ -36,8 +36,8 @@ void cyc_callback() {
 
 int main(int argc, char **argv) {
 	sim_setting setting;
-	// setting.trace_pmem_readcall=true;
-	// setting.trace_pmem_writecall=true;
+	setting.trace_pmem_readcall=true;
+	setting.trace_pmem_writecall=true;
 	// setting.trace_clock_cycle=true;
 	setting.always_show_disasm=true;
 	setting.enable_inst_trace=true;
