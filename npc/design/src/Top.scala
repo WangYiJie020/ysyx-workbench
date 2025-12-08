@@ -165,7 +165,7 @@ class Top(word_width: Int = 32) extends Module {
     ("h10000048".U(32.W),"h10000050".U(32.W)) -> mem.io, // RTC
   )))
 
-  dontTouch(memXBar)
+  dontTouch(memXBar.io)
 
   memXBar.connect()
 
