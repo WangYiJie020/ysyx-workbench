@@ -124,7 +124,7 @@ class Top(word_width: Int = 32) extends Module {
   val MEM_END  = "h8FFFFFFF".U(32.W)
 
   val SERIAL_BASE = "h10000000".U(32.W)
-  val SERIAL_END  = "h10000001F".U(32.W)
+  val SERIAL_END  = "h10000001".U(32.W)
 
   val pc = RegInit(INIT_PC)
 
