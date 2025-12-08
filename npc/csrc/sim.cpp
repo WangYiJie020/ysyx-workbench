@@ -193,7 +193,6 @@ void pmem_read(int addr, int *out_data) {
   }
 }
 void pmem_write(int addr, int data, int mask) {
-
   if (addr == MMIO_SERIAL_PORT) {
     if (sim_settings.trace_mmio_write) {
       printf("[DPI] MMIO write to serial port: %c\n", data & 0xff);
@@ -231,10 +230,13 @@ void dump_regs() {
 }
 void step_inst() {
   size_t cnt = 0;
-  constexpr size_t MAYBE_DEADLOOP_THRESHOLD = 100;
+  constexpr size_t MAYBE_DEADLOOP_THRESHOLD = 1000;
   while (!pc_changed) {
     sim_step_cycle();
-		if(sim_halted())return;
+		if(sim_halted()){
+			current_pc+=4;
+			return;
+		}
     cnt++;
     if (cnt >= MAYBE_DEADLOOP_THRESHOLD) {
       printf(ANSI_FG_YELLOW "[WARN] " ANSI_NONE);

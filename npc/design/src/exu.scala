@@ -7,6 +7,7 @@ import busfsm._
 import regfile._
 import memory._
 import cpu.alu._
+import axi4._
 
 class EXU extends Module {
   val io = IO(new Bundle {

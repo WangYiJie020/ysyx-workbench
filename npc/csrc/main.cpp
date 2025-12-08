@@ -39,7 +39,9 @@ int main(int argc, char **argv) {
 	// setting.trace_pmem_readcall=true;
 	// setting.trace_pmem_writecall=true;
 	// setting.trace_clock_cycle=true;
-	setting.enable_inst_trace=false;
+	// setting.always_show_disasm=true;
+	setting.enable_inst_trace=true;
+	// setting.trace_mmio_write=true;
 	setting.enable_waveform=false;
 
 	setting.cycle_finish_cb=cyc_callback;

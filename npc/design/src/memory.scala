@@ -9,59 +9,7 @@ import chisel3.util.circt.dpi._
 
 import common_def._
 
-object AXI4LiteIO {
-  val ADDR_WIDTH = Types.BitWidth.word
-  val DATA_WIDTH = Types.BitWidth.word
-
-  def AddrT = UInt(ADDR_WIDTH.W)
-  def DataT = UInt(DATA_WIDTH.W)
-
-  def StrbT = UInt((DATA_WIDTH / 8).W)
-
-  object RResp{
-    val WIDTH = 2
-    private def _v(x: Int) = x.U(WIDTH.W)
-
-    val OKAY   = _v(0)
-    val EXOKAY = _v(1)
-    val SLVERR = _v(2)
-    val DECERR = _v(3)
-  }
-  object BResp{
-    val WIDTH = 2
-    private def _v(x: Int) = x.U(WIDTH.W)
-
-    val OKAY   = _v(0)
-    val EXOKAY = _v(1)
-    val SLVERR = _v(2)
-    val DECERR = _v(3)
-  }
-
-  class _ReqTX extends Bundle {
-    // addr read channel
-    val ar = Decoupled(AddrT)
-    // read data channel
-    val r  = Flipped(Decoupled(new Bundle {
-      val data = DataT
-      val resp = UInt(RResp.WIDTH.W)
-    }))
-
-    // addr write channel
-    val aw = Decoupled(AddrT)
-
-    // write data channel
-    val w = Decoupled(new Bundle {
-      val data = DataT
-      val strb = StrbT
-    })
-
-    // backward channel
-    val b = Flipped(Decoupled(UInt(BResp.WIDTH.W)))
-  }
-
-  def TX = new _ReqTX()
-  def RX = Flipped(TX)
-}
+import axi4._
 
 class AXI4LiteMemUnit extends Module {
   val io = IO(AXI4LiteIO.RX)

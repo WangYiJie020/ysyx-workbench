@@ -10,6 +10,10 @@ import cpu._
 import chisel3.util.circt.dpi._
 import chisel3.util._
 
+import axi4._
+import uart._
+import xbar._
+
 // For NVBoard
 class TopIO extends Bundle {
   val btn      = Input(UInt(5.W))
@@ -116,6 +120,11 @@ class Top(word_width: Int = 32) extends Module {
   val wbu = Module(new WBU)
 
   val INIT_PC = "h80000000".U(32.W)
+  val MEM_BASE = "h80000000".U(32.W)
+  val MEM_END  = "h8FFFFFFF".U(32.W)
+
+  val SERIAL_BASE = "h10000000".U(32.W)
+  val SERIAL_END  = "h10000001".U(32.W)
 
   val pc = RegInit(INIT_PC)
 
@@ -145,9 +154,25 @@ class Top(word_width: Int = 32) extends Module {
   }
 
   val memArbiter = Module(new EXUIFU_MemVisitArbiter)
-  mem.io <> memArbiter.io.out
   memArbiter.io.exu <> exu.io.mem
   memArbiter.io.ifu <> ifu.io.mem
+
+  val uart = Module(new UARTUnit)
+
+  val rtcmem = Module(new AXI4LiteMemUnit)
+
+  val memXBar = Module(new AXI4LiteXBar(Seq(
+    (MEM_BASE,MEM_END) -> mem.io,
+    (SERIAL_BASE,SERIAL_END) -> uart.io,
+    ("h10000048".U(32.W),"h10000050".U(32.W)) -> rtcmem.io
+  )))
+
+  dontTouch(memXBar.io)
+
+  memXBar.connect()
+
+  memArbiter.io.out <> memXBar.io.master
+  // memXBar.io:=DontCare
 
   ifu.io.pc.bits  := pc
   ifu.io.pc.valid := true.B
