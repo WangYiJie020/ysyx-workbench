@@ -139,7 +139,7 @@ class AXI4LiteMemUnit extends Module {
     )
   }
   // for now mem write always finish in one cycle
-  memWriteFinished := (bState === sBWaitMem)
+  memWriteFinished := RegNext(bState === sBWaitMem)
 
 }
 
