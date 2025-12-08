@@ -105,8 +105,8 @@ object AXI4IO {
   }
   def connectB(master: Imp, slave: Imp)  = {
     noShakeConnectB(master, slave)
-    master.bready := slave.bready
-    slave.bvalid  := master.bvalid
+    master.bvalid := slave.bvalid
+    slave.bready  := master.bready
   }
 
   def noShakeConnectAR(master: Imp, slave: Imp) = {
