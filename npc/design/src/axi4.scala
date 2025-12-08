@@ -2,7 +2,6 @@ package axi4
 import chisel3._
 import chisel3.util._
 
-
 object AXI4IO {
 
   object RResp {
@@ -24,9 +23,8 @@ object AXI4IO {
     val DECERR = _v(3)
   }
 
-
   // Master interface
-  class Imp(val ADDR_WIDTH:Int,val DATA_WIDTH:Int) extends Bundle {
+  class Imp(val ADDR_WIDTH: Int, val DATA_WIDTH: Int) extends Bundle {
 
     def AddrT = UInt(ADDR_WIDTH.W)
     def DataT = UInt(DATA_WIDTH.W)
@@ -78,40 +76,40 @@ object AXI4IO {
     val rid    = Input(UInt(4.W))
   }
 
-  def noShakeConnectAW(master:Imp,slave:Imp)={
+  def noShakeConnectAW(master: Imp, slave: Imp) = {
     slave.awaddr  := master.awaddr
     slave.awid    := master.awid
     slave.awlen   := master.awlen
     slave.awsize  := master.awsize
     slave.awburst := master.awburst
   }
-  def noShakeConnectW(master:Imp,slave:Imp)={
-    slave.wdata  := master.wdata
-    slave.wstrb  := master.wstrb
-    slave.wlast  := master.wlast
+  def noShakeConnectW(master: Imp, slave: Imp)  = {
+    slave.wdata := master.wdata
+    slave.wstrb := master.wstrb
+    slave.wlast := master.wlast
   }
-  def noShakeConnectB(master:Imp,slave:Imp)={
-    master.bresp  := slave.bresp
-    master.bid    := slave.bid
+  def noShakeConnectB(master: Imp, slave: Imp)  = {
+    master.bresp := slave.bresp
+    master.bid   := slave.bid
   }
 
-  def connectAW(master:Imp,slave:Imp)={
-    noShakeConnectAW(master,slave)
-    master.awvalid := slave.awvalid
-    slave.awready  := master.awready
+  def connectAW(master: Imp, slave: Imp) = {
+    noShakeConnectAW(master, slave)
+    slave.awvalid  := master.awvalid
+    master.awready := slave.awready
   }
-  def connectW(master:Imp,slave:Imp)={
-    noShakeConnectW(master,slave)
-    master.wvalid := slave.wvalid
-    slave.wready  := master.wready
+  def connectW(master: Imp, slave: Imp)  = {
+    noShakeConnectW(master, slave)
+    slave.wvalid  := master.wvalid
+    master.wready := slave.wready
   }
-  def connectB(master:Imp,slave:Imp)={
-    noShakeConnectB(master,slave)
+  def connectB(master: Imp, slave: Imp)  = {
+    noShakeConnectB(master, slave)
     master.bready := slave.bready
     slave.bvalid  := master.bvalid
   }
 
-  def noShakeConnectAR(master:Imp,slave:Imp)={
+  def noShakeConnectAR(master: Imp, slave: Imp) = {
     slave.araddr  := master.araddr
     slave.arid    := master.arid
     slave.arlen   := master.arlen
@@ -119,18 +117,18 @@ object AXI4IO {
     slave.arburst := master.arburst
   }
 
-  def noShakeConnectR(master:Imp,slave:Imp)={
-    master.rdata  := slave.rdata
-    master.rresp  := slave.rresp
-    master.rlast  := slave.rlast
-    master.rid    := slave.rid
+  def noShakeConnectR(master: Imp, slave: Imp) = {
+    master.rdata := slave.rdata
+    master.rresp := slave.rresp
+    master.rlast := slave.rlast
+    master.rid   := slave.rid
   }
 
-  def newMaster(addrWidth:Int=32,dataWidth:Int=32) = new Imp(addrWidth,dataWidth)
-  def newSlave(addrWidth:Int=32,dataWidth:Int=32) = Flipped(newMaster(addrWidth,dataWidth))
+  def newMaster(addrWidth: Int = 32, dataWidth: Int = 32) = new Imp(addrWidth, dataWidth)
+  def newSlave(addrWidth:  Int = 32, dataWidth: Int = 32) = Flipped(newMaster(addrWidth, dataWidth))
 
-  def Master = new Bundle{
-    val master = newMaster()
+  def Master = new Bundle {
+    val master       = newMaster()
     def dontCareAW() = {
       master.awvalid := false.B
       master.awaddr  := 0.U
@@ -139,13 +137,13 @@ object AXI4IO {
       master.awsize  := 0.U
       master.awburst := 0.U
     }
-    def dontCareW() = {
+    def dontCareW()  = {
       master.wvalid := false.B
       master.wdata  := 0.U
       master.wstrb  := 0.U
       master.wlast  := false.B
     }
-    def dontCareB() = {
+    def dontCareB()  = {
       master.bready := false.B
     }
     def dontCareAR() = {
@@ -156,20 +154,20 @@ object AXI4IO {
       master.arsize  := 0.U
       master.arburst := 0.U
     }
-    def dontCareR() = {
+    def dontCareR()  = {
       master.rready := false.B
     }
 
   }
-  def Slave  = new Bundle{
-    val slave = newSlave()
+  def Slave  = new Bundle {
+    val slave        = newSlave()
     def dontCareAW() = {
       slave.awready := false.B
     }
-    def dontCareW() = {
+    def dontCareW()  = {
       slave.wready := false.B
     }
-    def dontCareB() = {
+    def dontCareB()  = {
       slave.bvalid := false.B
       slave.bresp  := 0.U
       slave.bid    := 0.U
@@ -177,7 +175,7 @@ object AXI4IO {
     def dontCareAR() = {
       slave.arready := false.B
     }
-    def dontCareR() = {
+    def dontCareR()  = {
       slave.rvalid := false.B
       slave.rdata  := 0.U
       slave.rresp  := 0.U
@@ -192,7 +190,7 @@ object AXI4LiteIO_ {
   def BResp = AXI4IO.BResp
   def RResp = AXI4IO.RResp
 
-  class Imp(val ADDR_WIDTH:Int,val DATA_WIDTH:Int) extends Bundle {
+  class Imp(val ADDR_WIDTH: Int, val DATA_WIDTH: Int) extends Bundle {
 
     def AddrT = UInt(ADDR_WIDTH.W)
     def DataT = UInt(DATA_WIDTH.W)
@@ -220,11 +218,10 @@ object AXI4LiteIO_ {
     val b = Flipped(Decoupled(UInt(BResp.WIDTH.W)))
   }
 
-  def newTX(addrWidth:Int=32,dataWidth:Int=32) = new Imp(addrWidth,dataWidth)
-  def newRX(addrWidth:Int=32,dataWidth:Int=32) = Flipped(newTX(addrWidth,dataWidth))
+  def newTX(addrWidth: Int = 32, dataWidth: Int = 32) = new Imp(addrWidth, dataWidth)
+  def newRX(addrWidth: Int = 32, dataWidth: Int = 32) = Flipped(newTX(addrWidth, dataWidth))
 
   // for default
   def TX = newTX()
   def RX = newRX()
 }
-
