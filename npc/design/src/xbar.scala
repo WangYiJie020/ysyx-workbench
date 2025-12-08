@@ -4,6 +4,7 @@ import chisel3.util._
 
 import axi4._
 
+// never map more than 1 range to one slave
 class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4LiteIO.Imp)]) extends Module {
 
   // println(s"AXI4LiteXBar mappings: ${mappings.map(_._1)}")
