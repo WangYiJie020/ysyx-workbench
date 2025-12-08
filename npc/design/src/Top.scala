@@ -161,13 +161,14 @@ class Top(word_width: Int = 32) extends Module {
 
   val memXBar = Module(new AXI4LiteXBar(Seq(
     (MEM_BASE,MEM_END) -> mem.io,
-    (SERIAL_BASE,SERIAL_END) -> uart.io
+    (SERIAL_BASE,SERIAL_END) -> uart.io,
+    ("h10000048".U(32.W),"h10000049".U(32.W)) -> mem.io, // RTC
   )))
 
   memXBar.connect()
 
-  memArbiter.io.out <> mem.io// memXBar.io.master
-  memXBar.io:=DontCare
+  memArbiter.io.out <> memXBar.io.master
+  // memXBar.io:=DontCare
 
   ifu.io.pc.bits  := pc
   ifu.io.pc.valid := true.B
