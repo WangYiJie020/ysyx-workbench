@@ -30,7 +30,7 @@ void __am_timer_rtc(AM_TIMER_RTC_T *rtc) {
 	rtc->month  = tm_info->tm_mon + 1;
 	rtc->year   = tm_info->tm_year + 1900;
 	*/
-	rtc->second = 0;
+	rtc->second = get_us_time()/1000000;
 	rtc->minute = 0;
 	rtc->hour   = 0;
 	rtc->day    = 0;
