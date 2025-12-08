@@ -164,7 +164,7 @@ class Top(word_width: Int = 32) extends Module {
     (SERIAL_BASE,SERIAL_END) -> uart.io
   )))
 
-  // memXBar.connect()
+  memXBar.connect()
 
   memArbiter.io.out <> mem.io// memXBar.io.master
   memXBar.io:=DontCare
