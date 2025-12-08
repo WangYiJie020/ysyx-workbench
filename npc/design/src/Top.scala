@@ -166,9 +166,9 @@ class Top(word_width: Int = 32) extends Module {
   val clint = Module(new CLINTUnit)
 
   val memXBar = Module(new AXI4LiteXBar(Seq(
-    (MEM_BASE,MEM_END) -> mem.io,
-    (SERIAL_BASE,SERIAL_END) -> uart.io,
-    ("h10000048".U(32.W),"h10000050".U(32.W)) -> clint.io
+    (MEM_BASE,MEM_END) -> mem.io.slave,
+    (SERIAL_BASE,SERIAL_END) -> uart.io.slave,
+    ("h10000048".U(32.W),"h10000050".U(32.W)) -> clint.io.slave
   )))
 
   dontTouch(memXBar.io)
