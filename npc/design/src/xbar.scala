@@ -12,6 +12,9 @@ class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4LiteIO.Imp)]) extends Module
     "AXI4LiteXBar requires all AXI4LiteIO parameters in mappings to be identical."
   )
 
+  println(s"AXI4LiteXBar mappings: ${mappings.map(_._1)}")
+  println(s"AXI4LiteXBar parameter: ${mappings.map(_._2)}")
+
   val axiParam = mappings.head._2
 
   val io = IO(new Bundle {
