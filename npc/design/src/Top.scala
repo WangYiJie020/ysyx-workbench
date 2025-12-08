@@ -166,7 +166,7 @@ class Top(word_width: Int = 32) extends Module {
 
   memXBar.connect()
 
-  memArbiter.io.out <> memXBar.io.master
+  memArbiter.io.out <> mem.io//memXBar.io.master
 
   ifu.io.pc.bits  := pc
   ifu.io.pc.valid := true.B
