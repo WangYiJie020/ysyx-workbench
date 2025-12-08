@@ -193,7 +193,6 @@ void pmem_read(int addr, int *out_data) {
   }
 }
 void pmem_write(int addr, int data, int mask) {
-
   if (addr == MMIO_SERIAL_PORT) {
     if (sim_settings.trace_mmio_write) {
       printf("[DPI] MMIO write to serial port: %c\n", data & 0xff);
