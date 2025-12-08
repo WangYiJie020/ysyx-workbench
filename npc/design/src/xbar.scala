@@ -11,11 +11,6 @@ class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4LiteIO.Imp)]) extends Module
 
   require(mappings.nonEmpty, "AXI4LiteXBar requires non-empty mappings.")
   require(mappings.size > 1, "AXI4LiteXBar requires at least two mappings.")
-  require(
-    mappings.map(_._2).distinct.size == 1,
-    "AXI4LiteXBar requires all AXI4LiteIO parameters in mappings to be identical."
-  )
-
 
   val axiParam = mappings.head._2
 
