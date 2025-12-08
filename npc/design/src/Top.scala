@@ -159,8 +159,8 @@ class Top(word_width: Int = 32) extends Module {
   }
 
   val memArbiter = Module(new EXUIFU_MemVisitArbiter)
-  memArbiter.io.exu <> exu.io.mem
-  memArbiter.io.ifu <> ifu.io.mem
+  memArbiter.io.exu.slave <> exu.io.mem.master
+  memArbiter.io.ifu.slave <> ifu.io.mem.master
 
   val uart = Module(new UARTUnit)
   val clint = Module(new CLINTUnit)
