@@ -1,6 +1,6 @@
 BUILD_DIR = ./build
 # case sensitive
-TOP_NAME = ysyx_25100261
+TOP_NAME = ysyxSoCFull #ysyx_25100261
 
 SIM_CSRC_DIR = ./csrc
 SIM_BIN = $(BUILD_DIR)/$(TOP_NAME)
@@ -97,21 +97,24 @@ endif
 
 # ysyxSoC
 SOC_PERIP_VSRCS = $(shell find $(abspath $(SOC_HOME)/perip) -name "*.v")
+SOC_GENED_FILE = $(abspath $(SOC_HOME)/build/ysyxSoCFull.v)
 
+SIM_VSRCS += $(SOC_GENED_FILE)
 SIM_VSRCS += $(SOC_PERIP_VSRCS)
+
 VERILATOR_INCDIRS += $(abspath $(SOC_HOME)/perip/uart16550/rtl)
 VERILATOR_INCDIRS += $(abspath $(SOC_HOME)/perip/spi/rtl)
 
-VERILATOR_CFLAGS += --timescale "1ns/1ns" --no-timing
+VERILATOR_CFLAGS += --timescale "1ns/1ns" --no-timing \
+										-Wno-SYMRSVDWORD # make uart verilog happy
 
 # rules for verilator
 
-VERILOG_INCDIRS = $(shell find $(CHISEL2V_EMIT_DIR) -type d)
-VERILOG_INCFLAG = $(addprefix -I,$(VERILOG_INCDIRS))
+VERILATOR_INCDIRS+= $(shell find $(CHISEL2V_EMIT_DIR) -type d)
 
 VERILATOR_CFLAGS += -MMD --build -cc \
 										--x-assign fast --x-initial fast \
-										$(VERILOG_INCFLAG) 
+										$(addprefix -I,$(VERILATOR_INCDIRS)) \
 # --noassert -O3
 
 

@@ -298,6 +298,9 @@ static long load_img() {
   return img_size;
 }
 
+extern "C" void flash_read(int32_t addr, int32_t *data) { assert(0); }
+extern "C" void mrom_read(int32_t addr, int32_t *data) { assert(0); }
+
 // ARG
 
 static void parse_args(int argc, char **argv) {
