@@ -46,10 +46,10 @@ class TopIO extends Bundle {
 // make exu and ifu access memory
 class EXUIFU_MemVisitArbiter extends Module {
   val io = IO(new Bundle {
-    val exu = AXI4LiteIO.RX
-    val ifu = AXI4LiteIO.RX
+    val exu = AXI4IO.Slave
+    val ifu = AXI4IO.Slave
 
-    val out = AXI4LiteIO.TX
+    val out = AXI4IO.Master
   })
 
   // Simple arbiter, since IFU and EXU won't access memory at the same time
@@ -57,42 +57,48 @@ class EXUIFU_MemVisitArbiter extends Module {
   val isExuReg = Reg(Bool())
   val isIfuReg = Reg(Bool())
 
-  val isExu = (isExuReg && (!io.ifu.ar.valid)) || (io.exu.ar.valid)
-  val isIfu = (isIfuReg && (!io.exu.ar.valid)) || (io.ifu.ar.valid)
+  val ifuIO = io.ifu.slave
+  val exuIO = io.exu.slave
+  val outIO = io.out.master
 
-  when(io.exu.ar.valid) {
+  val isExu = (isExuReg && (!ifuIO.arvalid)) || (exuIO.arvalid)
+  val isIfu = (isIfuReg && (!exuIO.arvalid)) || (ifuIO.arvalid)
+
+  when(exuIO.arvalid) {
     isExuReg := true.B
     isIfuReg := false.B
-  }.elsewhen(io.ifu.ar.valid) {
+  }.elsewhen(ifuIO.arvalid) {
     isExuReg := false.B
     isIfuReg := true.B
   }
 
   // AR channel
-  io.out.ar.valid := io.exu.ar.valid || io.ifu.ar.valid
-  io.out.ar.bits  := Mux(isExu, io.exu.ar.bits, io.ifu.ar.bits)
+  outIO.arvalid := exuIO.arvalid || ifuIO.arvalid
+  outIO.araddr  := Mux(isExu, exuIO.araddr, ifuIO.araddr)
 
-  io.exu.ar.ready := isExu && io.out.ar.ready
-  io.ifu.ar.ready := isIfu && io.out.ar.ready
+  io.out.dontCareNonLiteAR()
+
+  exuIO.arready := isExu && outIO.arready
+  ifuIO.arready := isIfu && outIO.arready
 
   // R channel
-  io.exu.r.bits <> io.out.r.bits
-  io.ifu.r.bits <> io.out.r.bits
+  AXI4IO.noShakeConnectR(exuIO, outIO)
+  AXI4IO.noShakeConnectR(ifuIO, outIO)
 
-  io.exu.r.valid := isExu && io.out.r.valid
-  io.ifu.r.valid := isIfu && io.out.r.valid
+  exuIO.rvalid := isExu && outIO.rvalid
+  ifuIO.rvalid := isIfu && outIO.rvalid
 
-  io.out.r.ready := Mux(isExu, io.exu.r.ready, io.ifu.r.ready)
+  outIO.rready := Mux(isExu, exuIO.rready, ifuIO.rready)
 
   // AW, W, B channel
   //   since only exu need write
-  io.out.aw <> io.exu.aw
-  io.out.w <> io.exu.w
-  io.exu.b <> io.out.b
+  AXI4IO.connectAW(exuIO, outIO)
+  AXI4IO.connectW(exuIO, outIO)
+  AXI4IO.connectB(exuIO, outIO)
 
-  io.ifu.aw := DontCare
-  io.ifu.w  := DontCare
-  io.ifu.b  := DontCare
+  io.ifu.dontCareAW()
+  io.ifu.dontCareW()
+  io.ifu.dontCareB()
 }
 
 class Top(word_width: Int = 32) extends Module {
@@ -145,7 +151,6 @@ class Top(word_width: Int = 32) extends Module {
   pc := Mux(wbu.io.done, nxt_pc, pc)
 
   when(nxt_pc_valid) {
-//    printf(p"(Top) PC: 0x${Hexadecimal(pc)} -> 0x${Hexadecimal(nxt_pc)}\n")
     RawClockedVoidFunctionCall("pc_upd")(
       clock,
       nxt_pc_valid,
@@ -155,8 +160,8 @@ class Top(word_width: Int = 32) extends Module {
   }
 
   val memArbiter = Module(new EXUIFU_MemVisitArbiter)
-  memArbiter.io.exu <> exu.io.mem
-  memArbiter.io.ifu <> ifu.io.mem
+  AXI4IO.connectMasterSlave(exu.io.mem, memArbiter.io.exu)
+  AXI4IO.connectMasterSlave(ifu.io.mem, memArbiter.io.ifu)
 
   val uart = Module(new UARTUnit)
   val clint = Module(new CLINTUnit)
@@ -167,12 +172,8 @@ class Top(word_width: Int = 32) extends Module {
     ("h10000048".U(32.W),"h10000050".U(32.W)) -> clint.io
   )))
 
-  dontTouch(memXBar.io)
-
+  AXI4IO.connectMasterSlave(memArbiter.io.out, memXBar.io.in)
   memXBar.connect()
-
-  memArbiter.io.out <> memXBar.io.master
-  // memXBar.io:=DontCare
 
   ifu.io.pc.bits  := pc
   ifu.io.pc.valid := true.B

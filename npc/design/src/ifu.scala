@@ -10,7 +10,7 @@ import axi4._
 class IFU extends Module {
   val io = IO(new Bundle {
     val pc  = Flipped(Decoupled(Types.UWord))
-    val mem = AXI4LiteIO.TX
+    val mem = AXI4IO.Master
     val out = Decoupled(new Inst)
   })
 
@@ -27,26 +27,27 @@ class IFU extends Module {
   dontTouch(fetchDone)
   dontTouch(io)
 
-  io.mem.aw.valid := false.B
-  io.mem.w.valid  := false.B
+  val memIO = io.mem.master
 
-  io.mem.aw:= DontCare
-  io.mem.w := DontCare
-  io.mem.b := DontCare
+  io.mem.dontCareAW()
+  io.mem.dontCareW()
+  io.mem.dontCareB()
 
+  memIO.arvalid := io.pc.valid && (!fetchDone)
+  memIO.araddr  := io.pc.bits
 
-  io.mem.ar.valid := io.pc.valid && (!fetchDone)
-  io.mem.ar.bits  := io.pc.bits
+  // not use now
+  io.mem.dontCareNonLiteAR()
 
-  when(io.mem.ar.valid && io.mem.ar.ready) {
+  when(memIO.arvalid && memIO.arready) {
   }
 
 
-  when(io.mem.r.valid && !fetchDone) {
-    code := io.mem.r.bits.data
+  when(memIO.rvalid && !fetchDone) {
+    code := memIO.rdata
     fetchDone := true.B
   }
-  io.mem.r.ready := true.B
+  memIO.rready := true.B
 
   when(!fsm.io.master_valid || pcChanged) {
     fetchDone := false.B
