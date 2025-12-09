@@ -216,9 +216,17 @@ object AXI4IO {
     slave.awvalid := master.awvalid && cond
     slave.wvalid  := master.wvalid && cond
 
-    slave.arvalid := master.arvalid && cond
+    master.awready := slave.awready && cond
+    master.wready  := slave.wready && cond
 
+    slave.arvalid := master.arvalid && cond
+    master.arready := slave.arready && cond
+
+    master.bvalid := slave.bvalid && cond
     slave.bready  := master.bready && cond
+
+    master.rvalid := slave.rvalid && cond
+    slave.rready  := master.rready && cond
 
     noShakeConnectAW(master, slave)
     noShakeConnectW(master, slave)
