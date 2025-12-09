@@ -49,7 +49,9 @@ int main(int argc, char **argv) {
 
   // get_dut()->contextp()->internalsDump(); // See scopes to help debug
 
-  vpiHandle top = vpi_handle_by_name((PLI_BYTE8 *)("TOP." _STR(TOP_NAME)), NULL);
+	std::string top_vpi_name = std::string("TOP.") + std::string(_STR(TOP_NAME)).substr(1);
+
+  vpiHandle top = vpi_handle_by_name((PLI_BYTE8 *)top_vpi_name.c_str(), NULL);
   assert(top);
 
   vpi_release_handle(top);
