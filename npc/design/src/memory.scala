@@ -45,6 +45,9 @@ class AXI4LiteMemUnit extends Module {
   sio.rresp  := AXI4IO.RResp.OKAY
   sio.rdata  := rdData
 
+  sio.rlast  := true.B
+  sio.rid    := 0.U
+
   val memReadFinished = Wire(Bool())
   val memReadPrepared = (arState === sARWait)
 
@@ -112,6 +115,8 @@ class AXI4LiteMemUnit extends Module {
   val bState = RegInit(sBIdle)
   sio.bvalid := (bState === sBWaitRdy)
   sio.bresp  := AXI4IO.BResp.OKAY
+
+  sio.bid    := 0.U
 
   val memWriteFinished = Wire(Bool())
   val memWritePrepared = (awState === sAWWait) && (wState === sWWait)

@@ -149,7 +149,6 @@ class Top(word_width: Int = 32) extends Module {
   pc := Mux(wbu.io.done, nxt_pc, pc)
 
   when(nxt_pc_valid) {
-//    printf(p"(Top) PC: 0x${Hexadecimal(pc)} -> 0x${Hexadecimal(nxt_pc)}\n")
     RawClockedVoidFunctionCall("pc_upd")(
       clock,
       nxt_pc_valid,
@@ -171,7 +170,6 @@ class Top(word_width: Int = 32) extends Module {
     ("h10000048".U(32.W),"h10000050".U(32.W)) -> clint.io
   )))
 
-  dontTouch(memXBar.io)
   AXI4IO.connectMasterSlave(memArbiter.io.out, memXBar.io.in)
   memXBar.connect()
 
