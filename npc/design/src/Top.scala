@@ -15,8 +15,7 @@ import uart._
 import clint._
 import xbar._
 
-// For NVBoard
-class TopIO extends Bundle {
+class NVBoardIO extends Bundle {
   val btn      = Input(UInt(5.W))
   val sw       = Input(UInt(16.W))
   val ps2_clk  = Input(Bool())
@@ -43,6 +42,12 @@ class TopIO extends Bundle {
   val seg7 = Output(UInt(8.W))
 }
 
+class TopIO extends Bundle {
+  val interrupt = Input(Bool())
+  val master = AXI4IO.Master
+  val slave  = AXI4IO.Slave
+}
+
 // make exu and ifu access memory
 class EXUIFU_MemVisitArbiter extends Module {
   val io = IO(new Bundle {
@@ -57,9 +62,9 @@ class EXUIFU_MemVisitArbiter extends Module {
   val isExuReg = Reg(Bool())
   val isIfuReg = Reg(Bool())
 
-  val ifuIO = io.ifu.slave
-  val exuIO = io.exu.slave
-  val outIO = io.out.master
+  val ifuIO = io.ifu
+  val exuIO = io.exu
+  val outIO = io.out
 
   val isExu = (isExuReg && (!ifuIO.arvalid)) || (exuIO.arvalid)
   val isIfu = (isIfuReg && (!exuIO.arvalid)) || (ifuIO.arvalid)
@@ -101,7 +106,7 @@ class EXUIFU_MemVisitArbiter extends Module {
   io.ifu.dontCareB()
 }
 
-class Top(word_width: Int = 32) extends Module {
+class ysyx_25100261(word_width: Int = 32) extends Module {
   type HasIO = {
     val io: Data
   }
@@ -119,7 +124,7 @@ class Top(word_width: Int = 32) extends Module {
   val gprs = Module(new RegisterFile(READ_PORTS = 2))
   val csrs = Module(new ControlStatusRegisterFile())
 
-  val mem = Module(new AXI4LiteMemUnit)
+  // val mem = Module(new AXI4LiteMemUnit)
 
   val ifu = Module(new IFU)
   val idu = Module(new IDU)
@@ -163,13 +168,17 @@ class Top(word_width: Int = 32) extends Module {
   AXI4IO.connectMasterSlave(exu.io.mem, memArbiter.io.exu)
   AXI4IO.connectMasterSlave(ifu.io.mem, memArbiter.io.ifu)
 
-  val uart = Module(new UARTUnit)
+  // val uart = Module(new UARTUnit)
   val clint = Module(new CLINTUnit)
 
+  val otherReqSlave = Wire(AXI4IO.Slave)
+  AXI4IO.connectMasterSlave(io.master, otherReqSlave)
+
   val memXBar = Module(new AXI4LiteXBar(Seq(
-    (MEM_BASE,MEM_END) -> mem.io,
-    (SERIAL_BASE,SERIAL_END) -> uart.io,
-    ("h10000048".U(32.W),"h10000050".U(32.W)) -> clint.io
+    // (MEM_BASE,MEM_END) -> mem.io,
+    // (SERIAL_BASE,SERIAL_END) -> uart.io,
+    ("h10000048".U(32.W),"h10000050".U(32.W)) -> clint.io,
+    ("h20000000".U(32.W),"hffffffff".U(32.W)) -> otherReqSlave
   )))
 
   AXI4IO.connectMasterSlave(memArbiter.io.out, memXBar.io.in)

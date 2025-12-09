@@ -13,7 +13,7 @@ class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4IO.SlaveT)]) extends Module 
   require(mappings.nonEmpty, "AXI4LiteXBar requires non-empty mappings.")
   require(mappings.size > 1, "AXI4LiteXBar requires at least two mappings.")
 
-  val axiParam = mappings.head._2.ioImp
+  val axiParam = mappings.head._2
 
   val io = IO(new Bundle {
     val in = AXI4IO.Slave
@@ -34,12 +34,12 @@ class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4IO.SlaveT)]) extends Module 
   val lastRdReqIdx = RegInit(0.U(log2Ceil(mappings.size).W))
   val lastWrReqIdx = RegInit(0.U(log2Ceil(mappings.size).W))
 
-  val master = io.in.ioImp
+  val master = io.in
 
   // val slaveIO = mappings.map(_._2.ioImp)
 
-  def slaveIO(i: Int) = io.slaves(i).ioImp
-  def slaveIO(i: UInt) = io.slaves(i).ioImp
+  def slaveIO(i: Int) = io.slaves(i)
+  def slaveIO(i: UInt) = io.slaves(i)
 
   for ((((addrBeg, addrEnd), _), i) <- mappings.zipWithIndex) {
     isAR(i) := (master.araddr >= addrBeg) && (master.araddr < addrEnd)
@@ -58,8 +58,8 @@ class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4IO.SlaveT)]) extends Module 
     }
   }
 
-  master.arready := Mux1H(isAR, io.slaves.map(_.ioImp.arready))
-  master.awready := Mux1H(isAW, io.slaves.map(_.ioImp.awready))
+  master.arready := Mux1H(isAR, io.slaves.map(_.arready))
+  master.awready := Mux1H(isAW, io.slaves.map(_.awready))
 
   master.rvalid := slaveIO(lastRdReqIdx).rvalid && hasLastRdReq
   AXI4IO.noShakeConnectR(master, slaveIO(lastRdReqIdx))
@@ -87,9 +87,9 @@ class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4IO.SlaveT)]) extends Module 
   }
 
   io.slaves.foreach { s =>
-    AXI4IO.noShakeConnectAR(master, s.ioImp)
-    AXI4IO.noShakeConnectAW(master, s.ioImp)
-    AXI4IO.noShakeConnectW(master, s.ioImp)
+    AXI4IO.noShakeConnectAR(master, s)
+    AXI4IO.noShakeConnectAW(master, s)
+    AXI4IO.noShakeConnectW(master, s)
   }
 
 }

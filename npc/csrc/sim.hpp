@@ -1,9 +1,9 @@
 #pragma once
 
-#include <VTop.h>
+#include "vsrc.hpp"
 #include <string_view>
 
-VTop* get_dut();
+TOP_NAME* get_dut();
 
 typedef void(*cycle_end_callback_t)();
 
@@ -17,8 +17,6 @@ struct sim_setting{
 	bool iringbuf=true;
 	bool etrace=true;
 	bool difftest=true;
-
-	bool nvboard=false;
 
 	bool trace_pmem_readcall=false;
 	bool trace_pmem_writecall=false;

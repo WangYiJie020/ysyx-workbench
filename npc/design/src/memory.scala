@@ -14,7 +14,7 @@ import axi4._
 class AXI4LiteMemUnit extends Module {
   val io = IO(AXI4IO.Slave)
 
-  val sio = io.slave
+  val sio = io
 
   // AR
 

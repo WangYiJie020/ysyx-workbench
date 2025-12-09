@@ -15,7 +15,7 @@ class UARTUnit extends Module{
 
   io.dontCareNonLiteB()
 
-  val sio = io.slave
+  val sio = io
 
   sio.awready := true.B
   sio.wready  := true.B

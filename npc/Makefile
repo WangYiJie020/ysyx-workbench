@@ -1,18 +1,23 @@
 BUILD_DIR = ./build
-TOP_NAME = Top # case sensitive
+# case sensitive
+TOP_NAME = ysyxSoCFull #ysyx_25100261
 
 SIM_CSRC_DIR = ./csrc
 SIM_BIN = $(BUILD_DIR)/$(TOP_NAME)
 
+VERILATOR = verilator
+
 default: $(SIM_BIN)
 
-
 SIM_IMG ?=
+
+SOC_HOME ?= ../ysyxSoC
 
 # SAN_FLAGS?= -fsanitize=address
 
 VERILATOR_CFLAGS ?=
 ENABLE_VPI ?= 1
+ENABLE_NVBOARD ?= 0
 
 ENABLE_WAVE ?= 1
 ifeq ($(ENABLE_WAVE), 1)
@@ -30,20 +35,10 @@ CHISEL_SRCS += build.mill
 CHISEL2V_EMIT_DIR = $(BUILD_DIR)/gened/verilog
 CHISEL2V_DONE = $(BUILD_DIR)/verilog.done
 
-# Verilator
-
-VERILOG_INCDIRS = $(shell find $(CHISEL2V_EMIT_DIR) -type d)
-VERILOG_INCFLAG = $(addprefix -I,$(VERILOG_INCDIRS))
-
-VERILATOR = verilator
-VERILATOR_CFLAGS += -MMD --build -cc \
-										--x-assign fast --x-initial fast \
-										$(VERILOG_INCFLAG) 
-# --noassert -O3
-
 V2CXX_EMIT_DIR = $(BUILD_DIR)/gened/cxx
 
-SIM_VSRCS = $(shell find $(abspath $(CHISEL2V_EMIT_DIR)) -name "*.v" -or -name "*.sv")
+MY_VSRCS = $(shell find $(abspath $(CHISEL2V_EMIT_DIR)) -name "*.v" -or -name "*.sv")
+SIM_VSRCS = $(MY_VSRCS)
 SIM_CSRCS = $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 
 SIM_HEADERS = $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.h" -or -name "*.hpp")
@@ -60,7 +55,7 @@ VPI_DONE := $(BUILD_DIR)/vpi.done
 $(VPI_DONE): $(CHISEL2V_DONE)
 ifeq ($(ENABLE_VPI), 1)
 	@echo "VPI enabled: inserting verilator public modifier"
-	$(foreach src,$(SIM_VSRCS),\
+	$(foreach src,$(MY_VSRCS),\
 	sed -i '1i /*verilator public_on*/' $(src); \
 	sed -i -e '$$a /*verilator public_off*/' $(src);)
 	touch $(VPI_DONE)
@@ -92,12 +87,38 @@ $(BUILD_DIR)/%.nxdc: %.nxdc
 NVB_AUTOBIND_SRC = $(abspath $(BUILD_DIR)/auto_bind.cpp)
 $(NVB_AUTOBIND_SRC): $(NXDC_FILES)
 	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
+
+ifeq ($(ENABLE_NVBOARD), 1)
 SIM_CSRCS += $(NVB_AUTOBIND_SRC)
+CXXFLAGS += -DENABLE_NVBOARD=1
 
 # rules for NVBoard
 include $(NVBOARD_HOME)/scripts/nvboard.mk
+endif
+
+# ysyxSoC
+SOC_PERIP_VSRCS = $(shell find $(abspath $(SOC_HOME)/perip) -name "*.v")
+SOC_GENED_FILE = $(abspath $(SOC_HOME)/build/ysyxSoCFull.v)
+
+SIM_VSRCS += $(SOC_GENED_FILE)
+SIM_VSRCS += $(SOC_PERIP_VSRCS)
+
+VERILATOR_INCDIRS += $(abspath $(SOC_HOME)/perip/uart16550/rtl)
+VERILATOR_INCDIRS += $(abspath $(SOC_HOME)/perip/spi/rtl)
+
+VERILATOR_CFLAGS += --timescale "1ns/1ns" --no-timing \
+										-Wno-SYMRSVDWORD # make uart verilog happy
 
 # rules for verilator
+
+VERILATOR_INCDIRS+= $(shell find $(CHISEL2V_EMIT_DIR) -type d)
+
+VERILATOR_CFLAGS += -MMD --build -cc \
+										--x-assign fast --x-initial fast \
+										$(addprefix -I,$(VERILATOR_INCDIRS)) \
+# --noassert -O3
+
+
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME=V$(TOP_NAME) -DENABLE_VPI=$(ENABLE_VPI) -DENABLE_WAVE=$(ENABLE_WAVE)
 CXXFLAGS += $(SAN_FLAGS) -std=c++20 -g
@@ -135,6 +156,9 @@ idea:
 
 clean:
 	-rm -rf $(BUILD_DIR)
+
+clean-bin:
+	-rm -f $(SIM_BIN)
 
 .PHONY: test help reformat checkformat clean
 

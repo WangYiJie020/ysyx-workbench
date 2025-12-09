@@ -10,6 +10,6 @@ object Elaborate extends App {
   )
   println("Emitting Verilog...")
   circt.stage.ChiselStage.emitSystemVerilogFile(
-    new top.Top(), args, firtoolOptions)
+    new top.ysyx_25100261(), args, firtoolOptions)
   println("Finish emit Verilog.")
 }

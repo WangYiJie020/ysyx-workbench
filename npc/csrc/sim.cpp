@@ -1,12 +1,8 @@
 #include "sim.hpp"
 
-#include <VTop.h>
-#include <VTop__Dpi.h>
-
 #include <array>
 #include <cstdint>
 #include <cstdio>
-#include <nvboard.h>
 #include <string_view>
 
 #include "elf_tool.hpp"
@@ -14,13 +10,17 @@
 #include "tracers.hpp"
 #include "verilated_fst_c.h"
 
+#ifdef ENABLE_NVBOARD
+#include <nvboard.h>
+#endif
+
 #include <getopt.h>
 #include <unistd.h>
 
 TOP_NAME dut;
 sim_setting sim_settings;
 
-VTop *get_dut() { return &dut; }
+TOP_NAME *get_dut() { return &dut; }
 
 void nvboard_bind_all_pins(TOP_NAME *top);
 
@@ -60,9 +60,10 @@ void sim_step_cycle() {
 
   cycle_count++;
 
-  if (sim_settings.nvboard) {
+#ifdef ENABLE_NVBOARD
     nvboard_update();
-  }
+#endif
+
   if (sim_settings.trace_clock_cycle) {
     printf("[Clock Cycle End]\n");
   }
@@ -233,26 +234,26 @@ void step_inst() {
   constexpr size_t MAYBE_DEADLOOP_THRESHOLD = 200;
   while (!pc_changed) {
     sim_step_cycle();
-		if(sim_halted()){
-			current_pc+=4;
-			return;
-		}
+    if (sim_halted()) {
+      current_pc += 4;
+      return;
+    }
     cnt++;
     if (cnt >= MAYBE_DEADLOOP_THRESHOLD) {
       printf(ANSI_FG_YELLOW "[WARN] " ANSI_NONE);
       printf("simulation has stepped %zu cycles without pc change, maybe lock "
              "happened\n",
              cnt);
-      printf("wanting to continue? (y/n) ");
+      printf("wanting to continue? (y/[n]) ");
       char c = getchar();
       if (c == 'y' || c == 'Y') {
         cnt = 0;
-        while (getchar() != '\n')
-          ;
+        while (getchar() != '\n') {
+        }
         continue;
       } else {
-        printf("exit sim\n");
-        exit(1);
+				printf("sim exit\n");
+				exit(1);
       }
     }
   }
@@ -297,6 +298,9 @@ static long load_img() {
   return img_size;
 }
 
+extern "C" void flash_read(int32_t addr, int32_t *data) { assert(0); }
+extern "C" void mrom_read(int32_t addr, int32_t *data) { assert(0); }
+
 // ARG
 
 static void parse_args(int argc, char **argv) {
@@ -323,7 +327,8 @@ namespace sdbwrap {
 sdb::paddr_t cpu_exec(size_t n) {
   while (n-- > 0) {
     step_inst();
-		if(sim_halted()) break;
+    if (sim_halted())
+      break;
   }
   return current_pc;
 }
@@ -342,11 +347,12 @@ uint8_t *loadmem(sdb::paddr_t addr, size_t nbyte) { return mem_atguest(addr); }
 } // namespace sdbwrap
 
 bool sim_init(int argc, char **argv, sim_setting setting) {
+	Verilated::commandArgs(argc, argv);
   sim_settings = setting;
-  if (setting.nvboard) {
+#ifdef ENABLE_NVBOARD
     nvboard_bind_all_pins(&dut);
     nvboard_init();
-  }
+#endif
 
   parse_args(argc, argv);
   using std::string;
