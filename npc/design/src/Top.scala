@@ -60,9 +60,9 @@ class EXUIFU_MemVisitArbiter extends Module {
   val isExuReg = Reg(Bool())
   val isIfuReg = Reg(Bool())
 
-  val ifuIO = io.ifu.slave
-  val exuIO = io.exu.slave
-  val outIO = io.out.master
+  val ifuIO = io.ifu
+  val exuIO = io.exu
+  val outIO = io.out
 
   val isExu = (isExuReg && (!ifuIO.arvalid)) || (exuIO.arvalid)
   val isIfu = (isIfuReg && (!exuIO.arvalid)) || (ifuIO.arvalid)
