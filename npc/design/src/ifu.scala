@@ -27,7 +27,7 @@ class IFU extends Module {
   dontTouch(fetchDone)
   dontTouch(io)
 
-  val memIO = io.mem.master
+  val memIO = io.mem
 
   io.mem.dontCareAW()
   io.mem.dontCareW()

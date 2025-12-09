@@ -12,7 +12,7 @@ class CLINTUnit extends Module {
   io.dontCareW()
   io.dontCareB()
 
-  val sio = io.slave
+  val sio = io
 
   io.dontCareNonLiteB()
   io.dontCareNonLiteR()

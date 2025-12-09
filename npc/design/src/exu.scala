@@ -150,7 +150,7 @@ class EXU extends Module {
   val memRDone = Reg(Bool())
   val memOPDone = memWDone || memRDone
 
-  val memIO = io.mem.master
+  val memIO = io.mem
 
   io.mem.dontCareNonLiteAR()
   io.mem.dontCareNonLiteAW()
