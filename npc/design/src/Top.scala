@@ -44,6 +44,8 @@ class NVBoardIO extends Bundle {
 
 class TopIO extends Bundle {
   val interrupt = Input(Bool())
+  val master = AXI4IO.Master
+  val slave  = AXI4IO.Slave
 }
 
 // make exu and ifu access memory
