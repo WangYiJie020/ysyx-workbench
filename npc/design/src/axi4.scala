@@ -229,7 +229,7 @@ object AXI4IO {
     noShakeConnectAW(master, slave)
     noShakeConnectW(master, slave)
     noShakeConnectB(master, slave)
-    noShakeConnectAR(master, slave)
+    noShakeConnectAR(slave, master)
     noShakeConnectR(master, slave)
   }
 
