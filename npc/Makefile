@@ -1,5 +1,5 @@
 BUILD_DIR = ./build
-TOP_NAME = Top # case sensitive
+TOP_NAME = ysyx_25100261 # case sensitive
 
 SIM_CSRC_DIR = ./csrc
 SIM_BIN = $(BUILD_DIR)/$(TOP_NAME)
@@ -101,6 +101,8 @@ CXXFLAGS += -DENABLE_NVBOARD=1
 include $(NVBOARD_HOME)/scripts/nvboard.mk
 endif
 
+# ysyxSoC
+# SIM_VSRCS
 
 # rules for verilator
 INCFLAGS = $(addprefix -I, $(INC_PATH))

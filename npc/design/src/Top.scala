@@ -106,7 +106,7 @@ class EXUIFU_MemVisitArbiter extends Module {
   io.ifu.dontCareB()
 }
 
-class Top(word_width: Int = 32) extends Module {
+class ysyx_25100261(word_width: Int = 32) extends Module {
   type HasIO = {
     val io: Data
   }
