@@ -129,7 +129,7 @@ object AXI4IO {
 
   class MasterT extends Bundle {
     val master = newMaster()
-    val ioImp  = master
+    def ioImp  = master
 
     def dontCareAW() = {
       master.awvalid := false.B
