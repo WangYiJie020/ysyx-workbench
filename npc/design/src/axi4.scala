@@ -154,6 +154,13 @@ object AXI4IO {
       master.arsize  := 0.U
       master.arburst := 0.U
     }
+    def dontCareNonLiteAW() = {
+      master.awid    := 0.U
+      master.awlen   := 0.U
+      master.awsize  := 0.U
+      master.awburst := 0.U
+    }
+
     def dontCareAR() = {
       master.arvalid := false.B
       master.araddr  := 0.U

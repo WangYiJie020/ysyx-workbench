@@ -153,6 +153,7 @@ class EXU extends Module {
   val memIO = io.mem.master
 
   io.mem.dontCareNonLiteAR()
+  io.mem.dontCareNonLiteAW()
 
   memIO.araddr := memAddr
   memIO.arvalid := isLoad && (!memRDone)
