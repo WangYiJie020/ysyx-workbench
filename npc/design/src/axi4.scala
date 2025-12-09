@@ -118,10 +118,10 @@ object AXI4IO {
   }
 
   def noShakeConnectR(master: Imp, slave: Imp) = {
-    master.rdata := slave.rdata
-    master.rresp := slave.rresp
-    master.rlast := slave.rlast
-    master.rid   := slave.rid
+    master.rdata <> slave.rdata
+    master.rresp <> slave.rresp
+    master.rlast <> slave.rlast
+    master.rid   <> slave.rid
   }
 
   def newMaster(addrWidth: Int = 32, dataWidth: Int = 32) = new Imp(addrWidth, dataWidth)
