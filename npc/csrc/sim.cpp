@@ -300,7 +300,7 @@ static long load_img() {
 
 extern "C" void flash_read(int32_t addr, int32_t *data) { assert(0); }
 extern "C" void mrom_read(int32_t addr, int32_t *data) { 
-	*data = 0x10000073; // ebreak
+	*data = 0x100073; // ebreak
 }
 
 // ARG
