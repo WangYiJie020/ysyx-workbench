@@ -36,11 +36,7 @@ class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4IO.SlaveT)]) extends Module 
 
   val master = io.in.ioImp
 
-  val slaveIO = Wire(Vec(mappings.size, new AXI4IO.Imp(axiParam.ADDR_WIDTH, axiParam.DATA_WIDTH)))
-
-  for (i <- mappings.indices) {
-    io.slaves(i).ioImp <> slaveIO(i)
-  }
+  val slaveIO = VecInit(mappings.map(_._2.ioImp))
 
   for ((((addrBeg, addrEnd), _), i) <- mappings.zipWithIndex) {
     isAR(i) := (master.araddr >= addrBeg) && (master.araddr < addrEnd)
