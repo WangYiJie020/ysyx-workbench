@@ -172,11 +172,8 @@ class Top(word_width: Int = 32) extends Module {
   )))
 
   dontTouch(memXBar.io)
-
+  AXI4IO.connectMasterSlave(memArbiter.io.out, memXBar.io.in)
   memXBar.connect()
-
-  memArbiter.io.out <> memXBar.io.master
-  // memXBar.io:=DontCare
 
   ifu.io.pc.bits  := pc
   ifu.io.pc.valid := true.B

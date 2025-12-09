@@ -16,7 +16,7 @@ class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4IO.SlaveT)]) extends Module 
   val axiParam = mappings.head._2.ioImp
 
   val io = IO(new Bundle {
-    val master = AXI4IO.Slave
+    val in = AXI4IO.Slave
     val slaves = Vec(mappings.size, AXI4IO.Master)
   })
 
@@ -34,7 +34,7 @@ class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4IO.SlaveT)]) extends Module 
   val lastRdReqIdx = RegInit(0.U(log2Ceil(mappings.size).W))
   val lastWrReqIdx = RegInit(0.U(log2Ceil(mappings.size).W))
 
-  val master = io.master.ioImp
+  val master = io.in.ioImp
 
   val slaveIO = Wire(Vec(mappings.size, new AXI4IO.Imp(axiParam.ADDR_WIDTH, axiParam.DATA_WIDTH)))
 
