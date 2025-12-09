@@ -207,7 +207,7 @@ object AXI4IO {
   }
 
   def Master = new MasterT
-  def Slave  = new SlaveT
+  def Slave  = Flipped(new SlaveT)
 
   def connectMasterSlave(master: MasterT, slave: SlaveT) = {
     master <> slave
