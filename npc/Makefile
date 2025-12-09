@@ -156,6 +156,9 @@ idea:
 clean:
 	-rm -rf $(BUILD_DIR)
 
+clean-bin:
+	-rm -f $(SIM_BIN)
+
 .PHONY: test help reformat checkformat clean
 
 ARGS?=
