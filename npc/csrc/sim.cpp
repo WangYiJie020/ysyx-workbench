@@ -60,9 +60,10 @@ void sim_step_cycle() {
 
   cycle_count++;
 
-  if (sim_settings.nvboard) {
+#ifdef ENABLE_NVBOARD
     nvboard_update();
-  }
+#endif
+
   if (sim_settings.trace_clock_cycle) {
     printf("[Clock Cycle End]\n");
   }
@@ -344,10 +345,10 @@ uint8_t *loadmem(sdb::paddr_t addr, size_t nbyte) { return mem_atguest(addr); }
 
 bool sim_init(int argc, char **argv, sim_setting setting) {
   sim_settings = setting;
-  if (setting.nvboard) {
+#ifdef ENABLE_NVBOARD
     nvboard_bind_all_pins(&dut);
     nvboard_init();
-  }
+#endif
 
   parse_args(argc, argv);
   using std::string;

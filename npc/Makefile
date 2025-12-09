@@ -6,13 +6,13 @@ SIM_BIN = $(BUILD_DIR)/$(TOP_NAME)
 
 default: $(SIM_BIN)
 
-
 SIM_IMG ?=
 
 # SAN_FLAGS?= -fsanitize=address
 
 VERILATOR_CFLAGS ?=
 ENABLE_VPI ?= 1
+ENABLE_NVBOARD ?= 0
 
 ENABLE_WAVE ?= 1
 ifeq ($(ENABLE_WAVE), 1)
@@ -92,7 +92,11 @@ $(BUILD_DIR)/%.nxdc: %.nxdc
 NVB_AUTOBIND_SRC = $(abspath $(BUILD_DIR)/auto_bind.cpp)
 $(NVB_AUTOBIND_SRC): $(NXDC_FILES)
 	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
+
+ifeq ($(ENABLE_NVBOARD), 1)
 SIM_CSRCS += $(NVB_AUTOBIND_SRC)
+CXXFLAGS += -DENABLE_NVBOARD=1
+endif
 
 # rules for NVBoard
 include $(NVBOARD_HOME)/scripts/nvboard.mk

@@ -18,8 +18,6 @@ struct sim_setting{
 	bool etrace=true;
 	bool difftest=true;
 
-	bool nvboard=false;
-
 	bool trace_pmem_readcall=false;
 	bool trace_pmem_writecall=false;
 	bool trace_inst_fetchcall=false;
