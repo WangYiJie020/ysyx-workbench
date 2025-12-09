@@ -89,8 +89,8 @@ object AXI4IO {
     slave.wlast := master.wlast
   }
   def noShakeConnectB(master: Imp, slave: Imp)  = {
-    slave.bresp := master.bresp
-    slave.bid   := master.bid
+    master.bresp <> slave.bresp
+    master.bid   <> slave.bid
   }
 
   def connectAW(master: Imp, slave: Imp) = {
