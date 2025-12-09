@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
         continue;
       }
       if (sig_name.starts_with("`c.")) {
-        sig_name = top_vpi_name + ".asic.cpu.cpu." + sig_name.substr(3);
+        sig_name = "asic.cpu.cpu." + sig_name.substr(3);
       }
 
       auto fullname = top_vpi_name + '.' + sig_name;
