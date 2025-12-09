@@ -199,6 +199,14 @@ object AXI4IO {
       slave.rlast  := false.B
       slave.rid    := 0.U
     }
+
+    def dontCareNonLiteR() = {
+      slave.rid    := 0.U
+      slave.rlast  := false.B
+    }
+    def dontCareNonLiteB() = {
+      slave.bid    := 0.U
+    }
   }
 
   def Master = new MasterT

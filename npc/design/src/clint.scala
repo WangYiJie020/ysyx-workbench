@@ -14,6 +14,9 @@ class CLINTUnit extends Module {
 
   val sio = io.slave
 
+  io.dontCareNonLiteB()
+  io.dontCareNonLiteR()
+
   sio.arready := true.B
   sio.rvalid  := true.B
 
