@@ -233,26 +233,26 @@ void step_inst() {
   constexpr size_t MAYBE_DEADLOOP_THRESHOLD = 200;
   while (!pc_changed) {
     sim_step_cycle();
-		if(sim_halted()){
-			current_pc+=4;
-			return;
-		}
+    if (sim_halted()) {
+      current_pc += 4;
+      return;
+    }
     cnt++;
     if (cnt >= MAYBE_DEADLOOP_THRESHOLD) {
       printf(ANSI_FG_YELLOW "[WARN] " ANSI_NONE);
       printf("simulation has stepped %zu cycles without pc change, maybe lock "
              "happened\n",
              cnt);
-      printf("wanting to continue? (y/n) ");
+      printf("wanting to continue? (y/[n]) ");
       char c = getchar();
       if (c == 'y' || c == 'Y') {
         cnt = 0;
-        while (getchar() != '\n')
-          ;
+        while (getchar() != '\n') {
+        }
         continue;
       } else {
-        printf("exit sim\n");
-        exit(1);
+				printf("sim exit\n");
+				exit(1);
       }
     }
   }
@@ -323,7 +323,8 @@ namespace sdbwrap {
 sdb::paddr_t cpu_exec(size_t n) {
   while (n-- > 0) {
     step_inst();
-		if(sim_halted()) break;
+    if (sim_halted())
+      break;
   }
   return current_pc;
 }
