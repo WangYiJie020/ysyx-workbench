@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
 
   // get_dut()->contextp()->internalsDump(); // See scopes to help debug
 
-  vpiHandle top = vpi_handle_by_name((PLI_BYTE8 *)"TOP.Top", NULL);
+  vpiHandle top = vpi_handle_by_name((PLI_BYTE8 *)("TOP." _STR(TOP_NAME)), NULL);
   assert(top);
 
   vpi_release_handle(top);
