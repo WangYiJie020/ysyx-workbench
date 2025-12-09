@@ -212,21 +212,18 @@ object AXI4IO {
   def connectMasterSlave(master: MasterT, slave: SlaveT) = {
     master <> slave
   }
-  def connectMasterSlaveValidIf(cond: Bool)(master: MasterT, slave: SlaveT) = {
-    slave.awvalid := master.awvalid && cond
-    slave.wvalid  := master.wvalid && cond
 
-    slave.awready := master.awready && cond
-    master.wready  := slave.wready && cond
+  def transformSlaveToMasterValidIf(cond: Bool)(master: MasterT, slave: SlaveT) = {
+    master.awvalid := Mux(cond, slave.awvalid, false.B)
+    master.wvalid  := Mux(cond, slave.wvalid, false.B)
+    master.bready  := Mux(cond, slave.bready, false.B)
+    master.arvalid := Mux(cond, slave.arvalid, false.B)
+    master.rready  := Mux(cond, slave.rready, false.B)
 
-    slave.arvalid := master.arvalid && cond
-    master.arready := slave.arready && cond
-
-    master.bvalid := slave.bvalid && cond
-    slave.bready  := master.bready && cond
-
-    master.rvalid := slave.rvalid && cond
-    slave.rready  := master.rready && cond
+    slave.awready := Mux(cond, master.awready, false.B)
+    slave.wready  := Mux(cond, master.wready, false.B)
+    slave.bvalid  := Mux(cond, master.bvalid, false.B)
+    slave.rvalid  := Mux(cond, master.rvalid, false.B)
 
     noShakeConnectAW(master, slave)
     noShakeConnectW(master, slave)
@@ -234,6 +231,7 @@ object AXI4IO {
     noShakeConnectAR(master, slave)
     noShakeConnectR(master, slave)
   }
+
 }
 
 object AXI4LiteIO_ {
