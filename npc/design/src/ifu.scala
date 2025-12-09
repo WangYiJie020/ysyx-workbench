@@ -29,15 +29,15 @@ class IFU extends Module {
 
   val memIO = io.mem.master
 
-  memIO.awvalid := false.B
-  memIO.wvalid  := false.B
-
   io.mem.dontCareAW()
   io.mem.dontCareW()
   io.mem.dontCareB()
 
   memIO.arvalid := io.pc.valid && (!fetchDone)
   memIO.araddr  := io.pc.bits
+
+  // not use now
+  io.mem.dontCareNonLiteAR()
 
   when(memIO.arvalid && memIO.arready) {
   }

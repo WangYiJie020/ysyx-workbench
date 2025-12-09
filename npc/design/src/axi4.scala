@@ -148,6 +148,12 @@ object AXI4IO {
     def dontCareB()  = {
       master.bready := false.B
     }
+    def dontCareNonLiteAR() = {
+      master.arid    := 0.U
+      master.arlen   := 0.U
+      master.arsize  := 0.U
+      master.arburst := 0.U
+    }
     def dontCareAR() = {
       master.arvalid := false.B
       master.araddr  := 0.U
