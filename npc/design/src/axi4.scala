@@ -216,7 +216,7 @@ object AXI4IO {
     slave.awvalid := master.awvalid && cond
     slave.wvalid  := master.wvalid && cond
 
-    master.awready := slave.awready && cond
+    slave.awready := master.awready && cond
     master.wready  := slave.wready && cond
 
     slave.arvalid := master.arvalid && cond
