@@ -15,8 +15,7 @@ import uart._
 import clint._
 import xbar._
 
-// For NVBoard
-class TopIO extends Bundle {
+class NVBoardIO extends Bundle {
   val btn      = Input(UInt(5.W))
   val sw       = Input(UInt(16.W))
   val ps2_clk  = Input(Bool())
@@ -41,6 +40,10 @@ class TopIO extends Bundle {
   val seg5 = Output(UInt(8.W))
   val seg6 = Output(UInt(8.W))
   val seg7 = Output(UInt(8.W))
+}
+
+class TopIO extends Bundle {
+  val interrupt = Input(Bool())
 }
 
 // make exu and ifu access memory

@@ -127,88 +127,82 @@ object AXI4IO {
   def newMaster(addrWidth: Int = 32, dataWidth: Int = 32) = new Imp(addrWidth, dataWidth)
   def newSlave(addrWidth:  Int = 32, dataWidth: Int = 32) = Flipped(newMaster(addrWidth, dataWidth))
 
-  class MasterT extends Bundle {
-    val master = newMaster()
-    def ioImp  = master
-
+  class MasterT extends Imp(32, 32) {
     def dontCareAW() = {
-      master.awvalid := false.B
-      master.awaddr  := 0.U
-      master.awid    := 0.U
-      master.awlen   := 0.U
-      master.awsize  := 0.U
-      master.awburst := 0.U
+      awvalid := false.B
+      awaddr  := 0.U
+      awid    := 0.U
+      awlen   := 0.U
+      awsize  := 0.U
+      awburst := 0.U
     }
     def dontCareW()  = {
-      master.wvalid := false.B
-      master.wdata  := 0.U
-      master.wstrb  := 0.U
-      master.wlast  := false.B
+      wvalid := false.B
+      wdata  := 0.U
+      wstrb  := 0.U
+      wlast  := false.B
     }
     def dontCareB()  = {
-      master.bready := false.B
+      bready := false.B
     }
     def dontCareNonLiteAR() = {
-      master.arid    := 0.U
-      master.arlen   := 0.U
-      master.arsize  := 0.U
-      master.arburst := 0.U
+      arid    := 0.U
+      arlen   := 0.U
+      arsize  := 0.U
+      arburst := 0.U
     }
     def dontCareNonLiteAW() = {
-      master.awid    := 0.U
-      master.awlen   := 0.U
-      master.awsize  := 0.U
-      master.awburst := 0.U
+      awid    := 0.U
+      awlen   := 0.U
+      awsize  := 0.U
+      awburst := 0.U
     }
     def dontCareNonLiteW() = {
-      master.wlast  := false.B
+      wlast  := false.B
     }
 
     def dontCareAR() = {
-      master.arvalid := false.B
-      master.araddr  := 0.U
-      master.arid    := 0.U
-      master.arlen   := 0.U
-      master.arsize  := 0.U
-      master.arburst := 0.U
+      arvalid := false.B
+      araddr  := 0.U
+      arid    := 0.U
+      arlen   := 0.U
+      arsize  := 0.U
+      arburst := 0.U
     }
     def dontCareR()  = {
-      master.rready := false.B
+      rready := false.B
     }
 
   }
-  class SlaveT extends Bundle {
-    val slave = newSlave()
-    def ioImp = slave
-
+  class SlaveT extends Imp(32, 32) {
     def dontCareAW() = {
-      slave.awready := false.B
+      awready := false.B
     }
     def dontCareW()  = {
-      slave.wready := false.B
+      wready := false.B
     }
     def dontCareB()  = {
-      slave.bvalid := false.B
-      slave.bresp  := 0.U
-      slave.bid    := 0.U
+      bvalid := false.B
+      bresp  := 0.U
+      bid    := 0.U
     }
     def dontCareAR() = {
-      slave.arready := false.B
+      arready := false.B
     }
     def dontCareR()  = {
-      slave.rvalid := false.B
-      slave.rdata  := 0.U
-      slave.rresp  := 0.U
-      slave.rlast  := false.B
-      slave.rid    := 0.U
+      rvalid := false.B
+      rdata  := 0.U
+      rresp  := 0.U
+      rlast  := false.B
+      rid    := 0.U
     }
 
     def dontCareNonLiteR() = {
-      slave.rid    := 0.U
-      slave.rlast  := false.B
+      rid    := 0.U
+      rlast  := false.B
     }
     def dontCareNonLiteB() = {
-      slave.bid    := 0.U
+      bid    := 0.U
     }
   }
 
@@ -216,7 +210,7 @@ object AXI4IO {
   def Slave  = new SlaveT
 
   def connectMasterSlave(master: MasterT, slave: SlaveT) = {
-    master.ioImp <> slave.ioImp
+    master <> slave
   }
 }
 
