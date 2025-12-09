@@ -5,9 +5,13 @@ TOP_NAME = ysyx_25100261
 SIM_CSRC_DIR = ./csrc
 SIM_BIN = $(BUILD_DIR)/$(TOP_NAME)
 
+VERILATOR = verilator
+
 default: $(SIM_BIN)
 
 SIM_IMG ?=
+
+SOC_HOME ?= ../ysyxSoC
 
 # SAN_FLAGS?= -fsanitize=address
 
@@ -30,17 +34,6 @@ CHISEL_SRCS = $(shell find $(abspath $(CHISEL_DESIGN)) -name "*.scala")
 CHISEL_SRCS += build.mill
 CHISEL2V_EMIT_DIR = $(BUILD_DIR)/gened/verilog
 CHISEL2V_DONE = $(BUILD_DIR)/verilog.done
-
-# Verilator
-
-VERILOG_INCDIRS = $(shell find $(CHISEL2V_EMIT_DIR) -type d)
-VERILOG_INCFLAG = $(addprefix -I,$(VERILOG_INCDIRS))
-
-VERILATOR = verilator
-VERILATOR_CFLAGS += -MMD --build -cc \
-										--x-assign fast --x-initial fast \
-										$(VERILOG_INCFLAG) 
-# --noassert -O3
 
 V2CXX_EMIT_DIR = $(BUILD_DIR)/gened/cxx
 
@@ -103,9 +96,25 @@ include $(NVBOARD_HOME)/scripts/nvboard.mk
 endif
 
 # ysyxSoC
-# SIM_VSRCS
+SOC_PERIP_VSRCS = $(shell find $(abspath $(SOC_HOME)/perip) -name "*.v")
+
+SIM_VSRCS += $(SOC_PERIP_VSRCS)
+VERILATOR_INCDIRS += $(abspath $(SOC_HOME)/perip/uart16550/rtl)
+VERILATOR_INCDIRS += $(abspath $(SOC_HOME)/perip/spi/rtl)
+
+VERILATOR_CFLAGS += --timescale "1ns/1ns" --no-timing
 
 # rules for verilator
+
+VERILOG_INCDIRS = $(shell find $(CHISEL2V_EMIT_DIR) -type d)
+VERILOG_INCFLAG = $(addprefix -I,$(VERILOG_INCDIRS))
+
+VERILATOR_CFLAGS += -MMD --build -cc \
+										--x-assign fast --x-initial fast \
+										$(VERILOG_INCFLAG) 
+# --noassert -O3
+
+
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME=V$(TOP_NAME) -DENABLE_VPI=$(ENABLE_VPI) -DENABLE_WAVE=$(ENABLE_WAVE)
 CXXFLAGS += $(SAN_FLAGS) -std=c++20 -g
