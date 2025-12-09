@@ -127,8 +127,10 @@ object AXI4IO {
   def newMaster(addrWidth: Int = 32, dataWidth: Int = 32) = new Imp(addrWidth, dataWidth)
   def newSlave(addrWidth:  Int = 32, dataWidth: Int = 32) = Flipped(newMaster(addrWidth, dataWidth))
 
-  def Master = new Bundle {
-    val master       = newMaster()
+  class MasterT extends Bundle {
+    val master = newMaster()
+    val ioImp  = master
+
     def dontCareAW() = {
       master.awvalid := false.B
       master.awaddr  := 0.U
@@ -159,8 +161,10 @@ object AXI4IO {
     }
 
   }
-  def Slave  = new Bundle {
-    val slave        = newSlave()
+  class SlaveT extends Bundle {
+    val slave = newSlave()
+    def ioImp = slave
+
     def dontCareAW() = {
       slave.awready := false.B
     }
@@ -182,6 +186,13 @@ object AXI4IO {
       slave.rlast  := false.B
       slave.rid    := 0.U
     }
+  }
+
+  def Master = new MasterT
+  def Slave  = new SlaveT
+
+  def connectMasterSlave(master: MasterT, slave: SlaveT) = {
+    master.ioImp <> slave.ioImp
   }
 }
 

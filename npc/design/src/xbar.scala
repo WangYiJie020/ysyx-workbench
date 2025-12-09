@@ -5,7 +5,7 @@ import chisel3.util._
 import axi4._
 
 // never map more than 1 range to one slave
-class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4IO.Imp)]) extends Module {
+class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4IO.SlaveT)]) extends Module {
 
   // println(s"AXI4LiteXBar mappings: ${mappings.map(_._1)}")
   // println(s"AXI4LiteXBar parameter: ${mappings.map(_._2)}")
@@ -13,7 +13,7 @@ class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4IO.Imp)]) extends Module {
   require(mappings.nonEmpty, "AXI4LiteXBar requires non-empty mappings.")
   require(mappings.size > 1, "AXI4LiteXBar requires at least two mappings.")
 
-  val axiParam = mappings.head._2
+  val axiParam = mappings.head._2.ioImp
 
   val io = IO(new Bundle {
     val master = AXI4IO.Slave
@@ -22,7 +22,7 @@ class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4IO.Imp)]) extends Module {
 
   def connect() = {
     io.slaves.zip(mappings).foreach { case (sio, (_, s)) =>
-      sio.master <> s
+      AXI4IO.connectMasterSlave(sio, s)
     }
   }
 
@@ -34,12 +34,12 @@ class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4IO.Imp)]) extends Module {
   val lastRdReqIdx = RegInit(0.U(log2Ceil(mappings.size).W))
   val lastWrReqIdx = RegInit(0.U(log2Ceil(mappings.size).W))
 
-  val master = io.master.slave
+  val master = io.master.ioImp
 
   val slaveIO = Wire(Vec(mappings.size, new AXI4IO.Imp(axiParam.ADDR_WIDTH, axiParam.DATA_WIDTH)))
 
   for (i <- mappings.indices) {
-    slaveIO(i) := io.slaves(i).master
+    slaveIO(i) := io.slaves(i).ioImp
   }
 
   for ((((addrBeg, addrEnd), _), i) <- mappings.zipWithIndex) {
@@ -88,9 +88,9 @@ class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4IO.Imp)]) extends Module {
   }
 
   io.slaves.foreach { s =>
-    AXI4IO.noShakeConnectAR(master, s.master)
-    AXI4IO.noShakeConnectAW(master, s.master)
-    AXI4IO.noShakeConnectW(master, s.master)
+    AXI4IO.noShakeConnectAR(master, s.ioImp)
+    AXI4IO.noShakeConnectAW(master, s.ioImp)
+    AXI4IO.noShakeConnectW(master, s.ioImp)
   }
 
 }
