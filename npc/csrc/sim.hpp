@@ -1,9 +1,9 @@
 #pragma once
 
-#include <VTop.h>
+#include TOP_HEADER
 #include <string_view>
 
-VTop* get_dut();
+TOP_NAME* get_dut();
 
 typedef void(*cycle_end_callback_t)();
 

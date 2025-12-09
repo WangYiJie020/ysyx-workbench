@@ -1,7 +1,7 @@
 #include "sim.hpp"
 
-#include <VTop.h>
-#include <VTop__Dpi.h>
+#include TOP_HEADER
+#include TOP_DPI_HEADER
 
 #include <array>
 #include <cstdint>
@@ -20,7 +20,7 @@
 TOP_NAME dut;
 sim_setting sim_settings;
 
-VTop *get_dut() { return &dut; }
+TOP_NAME *get_dut() { return &dut; }
 
 void nvboard_bind_all_pins(TOP_NAME *top);
 
