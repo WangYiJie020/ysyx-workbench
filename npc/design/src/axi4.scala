@@ -221,6 +221,7 @@ object AXI4IO {
     master.rready  := Mux(cond, slave.rready, false.B)
 
     slave.awready := Mux(cond, master.awready, false.B)
+    slave.arready := Mux(cond, master.arready, false.B)
     slave.wready  := Mux(cond, master.wready, false.B)
     slave.bvalid  := Mux(cond, master.bvalid, false.B)
     slave.rvalid  := Mux(cond, master.rvalid, false.B)
