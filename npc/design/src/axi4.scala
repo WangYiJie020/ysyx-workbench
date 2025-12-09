@@ -212,6 +212,20 @@ object AXI4IO {
   def connectMasterSlave(master: MasterT, slave: SlaveT) = {
     master <> slave
   }
+  def connectMasterSlaveValidIf(cond: Bool)(master: MasterT, slave: SlaveT) = {
+    slave.awvalid := master.awvalid && cond
+    slave.wvalid  := master.wvalid && cond
+
+    slave.arvalid := master.arvalid && cond
+
+    slave.bready  := master.bready && cond
+
+    noShakeConnectAW(master, slave)
+    noShakeConnectW(master, slave)
+    noShakeConnectB(master, slave)
+    noShakeConnectAR(master, slave)
+    noShakeConnectR(master, slave)
+  }
 }
 
 object AXI4LiteIO_ {
