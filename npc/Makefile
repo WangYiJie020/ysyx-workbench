@@ -96,10 +96,11 @@ $(NVB_AUTOBIND_SRC): $(NXDC_FILES)
 ifeq ($(ENABLE_NVBOARD), 1)
 SIM_CSRCS += $(NVB_AUTOBIND_SRC)
 CXXFLAGS += -DENABLE_NVBOARD=1
-endif
 
 # rules for NVBoard
 include $(NVBOARD_HOME)/scripts/nvboard.mk
+endif
+
 
 # rules for verilator
 INCFLAGS = $(addprefix -I, $(INC_PATH))
