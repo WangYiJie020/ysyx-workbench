@@ -154,6 +154,7 @@ class EXU extends Module {
 
   io.mem.dontCareNonLiteAR()
   io.mem.dontCareNonLiteAW()
+  io.mem.dontCareNonLiteW()
 
   memIO.araddr := memAddr
   memIO.arvalid := isLoad && (!memRDone)

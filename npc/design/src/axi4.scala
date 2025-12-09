@@ -160,6 +160,9 @@ object AXI4IO {
       master.awsize  := 0.U
       master.awburst := 0.U
     }
+    def dontCareNonLiteW() = {
+      master.wlast  := false.B
+    }
 
     def dontCareAR() = {
       master.arvalid := false.B
