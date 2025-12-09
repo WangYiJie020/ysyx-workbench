@@ -1,18 +1,18 @@
 #include "sim.hpp"
 
-#include TOP_HEADER
-#include TOP_DPI_HEADER
-
 #include <array>
 #include <cstdint>
 #include <cstdio>
-#include <nvboard.h>
 #include <string_view>
 
 #include "elf_tool.hpp"
 #include "sdb.hpp"
 #include "tracers.hpp"
 #include "verilated_fst_c.h"
+
+#ifdef ENABLE_NVBOARD
+#include <nvboard.h>
+#endif
 
 #include <getopt.h>
 #include <unistd.h>

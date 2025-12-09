@@ -1,6 +1,6 @@
 #pragma once
 
-#include TOP_HEADER
+#include "vsrc.hpp"
 #include <string_view>
 
 TOP_NAME* get_dut();

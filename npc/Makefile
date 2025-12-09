@@ -1,7 +1,6 @@
 BUILD_DIR = ./build
-TOP_NAME = Vysyx_25100261 # case sensitive
-TOP_HEADER = '<$(TOP_NAME).h>'
-TOP_DPI_HEADER = '<$(TOP_NAME)__Dpi.h>'
+# case sensitive
+TOP_NAME = ysyx_25100261
 
 SIM_CSRC_DIR = ./csrc
 SIM_BIN = $(BUILD_DIR)/$(TOP_NAME)
