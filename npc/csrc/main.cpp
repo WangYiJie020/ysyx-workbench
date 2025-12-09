@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
   // setting.always_show_disasm=true;
   setting.enable_inst_trace = true;
   // setting.trace_mmio_write=true;
-  setting.enable_waveform = false;
+  setting.enable_waveform = true;
 
   setting.cycle_finish_cb = cyc_callback;
   sim_init(argc, argv, setting);
