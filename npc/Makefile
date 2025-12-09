@@ -37,7 +37,8 @@ CHISEL2V_DONE = $(BUILD_DIR)/verilog.done
 
 V2CXX_EMIT_DIR = $(BUILD_DIR)/gened/cxx
 
-SIM_VSRCS = $(shell find $(abspath $(CHISEL2V_EMIT_DIR)) -name "*.v" -or -name "*.sv")
+MY_VSRCS = $(shell find $(abspath $(CHISEL2V_EMIT_DIR)) -name "*.v" -or -name "*.sv")
+SIM_VSRCS = $(MY_VSRCS)
 SIM_CSRCS = $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 
 SIM_HEADERS = $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.h" -or -name "*.hpp")
@@ -54,7 +55,7 @@ VPI_DONE := $(BUILD_DIR)/vpi.done
 $(VPI_DONE): $(CHISEL2V_DONE)
 ifeq ($(ENABLE_VPI), 1)
 	@echo "VPI enabled: inserting verilator public modifier"
-	$(foreach src,$(SIM_VSRCS),\
+	$(foreach src,$(MY_VSRCS),\
 	sed -i '1i /*verilator public_on*/' $(src); \
 	sed -i -e '$$a /*verilator public_off*/' $(src);)
 	touch $(VPI_DONE)
