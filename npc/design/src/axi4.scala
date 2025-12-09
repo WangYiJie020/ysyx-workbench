@@ -226,11 +226,11 @@ object AXI4IO {
     slave.bvalid  := Mux(cond, master.bvalid, false.B)
     slave.rvalid  := Mux(cond, master.rvalid, false.B)
 
-    noShakeConnectAW(master, slave)
-    noShakeConnectW(master, slave)
-    noShakeConnectB(master, slave)
+    noShakeConnectAW(slave, master)
+    noShakeConnectW(slave, master)
+    noShakeConnectB(slave, master)
     noShakeConnectAR(slave, master)
-    noShakeConnectR(master, slave)
+    noShakeConnectR(slave, master)
   }
 
 }
