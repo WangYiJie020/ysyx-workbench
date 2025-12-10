@@ -309,7 +309,7 @@ extern "C" void mrom_read(int32_t addr, int32_t *data) {
   // };
   assert(addr % 4 == 0);
   size_t index = addr / 4;
-	printf("mrom read addr=%08x index=%lu\n",addr,index);
+	// printf("mrom read addr=%08x index=%lu\n",addr,index);
   assert(index < img_size / 4);
   *data = mem[index];
 }
