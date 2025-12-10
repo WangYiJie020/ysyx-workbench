@@ -113,7 +113,7 @@ VERILATOR_CFLAGS += --timescale "1ns/1ns" --no-timing \
 
 VERILATOR_INCDIRS+= $(shell find $(CHISEL2V_EMIT_DIR) -type d)
 
-VERILATOR_CFLAGS += -MMD -cc \
+VERILATOR_CFLAGS += -MMD --build -cc \
 										--x-assign fast --x-initial fast \
 										--autoflush \
 										--output-split 20000 \
@@ -123,7 +123,7 @@ VERILATOR_CFLAGS += -MMD -cc \
 
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME=V$(TOP_NAME) -DENABLE_VPI=$(ENABLE_VPI) -DENABLE_WAVE=$(ENABLE_WAVE)
-CXXFLAGS += $(SAN_FLAGS) -std=c++20 -g
+CXXFLAGS += $(SAN_FLAGS) -std=c++20 -g -fno-inline -O0
 
 $(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) $(CHISEL2V_DONE) $(VPI_DONE) $(SIM_HEADERS)
 	@rm -rf $(V2CXX_EMIT_DIR)
