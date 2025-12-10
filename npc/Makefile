@@ -1,6 +1,7 @@
 BUILD_DIR = ./build
 # case sensitive
-TOP_NAME = ysyxSoCFull #ysyx_25100261
+TOP_NAME = ysyxSoCFull
+#ysyx_25100261
 
 SIM_CSRC_DIR = ./csrc
 SIM_BIN = $(BUILD_DIR)/$(TOP_NAME)
