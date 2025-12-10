@@ -34,7 +34,7 @@ class IFU extends Module {
   io.mem.dontCareW()
   io.mem.dontCareB()
 
-  memIO.arvalid := io.pc.valid && (!fetchDone) && (!arSent)
+  memIO.arvalid := true.B //io.pc.valid && (!fetchDone) && (!arSent)
   memIO.araddr  := io.pc.bits
 
   // not use now
