@@ -169,12 +169,12 @@ class EXU extends Module {
     memRDone     := true.B
   }
   memIO.rready  := true.B
-  when(!isMemOp) {
-    memRDone    := false.B
-    memWDone    := false.B
-    memAddrSent := false.B
-  }
-
+  // when(!isMemOp) {
+  //   memRDone    := false.B
+  //   memWDone    := false.B
+  //   memAddrSent := false.B
+  // }
+  //
   val memRdData = memRdRawData >> memAddrUnalignPartBitlen
 
   // mem write
