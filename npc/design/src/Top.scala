@@ -186,11 +186,11 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     stop()
     stop()
   }
-  // when(io.master.rvalid && io.master.rresp === AXI4IO.RResp.DECERR){
-  //   printf("AXI4 DECERR on read address 0x%x\n", io.master.araddr)
-  //   stop()
-  //   stop()
-  // }
+  when(io.master.rvalid && io.master.rresp === AXI4IO.RResp.DECERR){
+    printf("AXI4 DECERR on read address 0x%x\n", io.master.araddr)
+    stop()
+    stop()
+  }
 
   AXI4IO.connectMasterSlave(memArbiter.io.out, memXBar.io.in)
   memXBar.connect()
