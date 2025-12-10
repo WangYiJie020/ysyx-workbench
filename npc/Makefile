@@ -115,8 +115,9 @@ VERILATOR_CFLAGS += -MMD --build -cc \
 										--x-assign fast --x-initial fast \
 										--autoflush \
 										--hierarchical \
-										--output-split 20000 \
 										$(addprefix -I,$(VERILATOR_INCDIRS)) \
+
+										# --output-split 20000 
 
 VERILATOR_CONTROL_FILE = verilator.vlt
 
