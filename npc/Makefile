@@ -111,7 +111,7 @@ VERILATOR_CFLAGS += -Wno-SYMRSVDWORD # make uart verilog happy
 # VERILATOR_CFLAGS += -Wno-UNOPTFLAT
 # rules for verilator
 
-VERILATOR_CFLAGS += -MMD --build -cc -CXX clang++\
+VERILATOR_CFLAGS += -MMD -cc\
 										--autoflush \
 										--hierarchical \
 										$(addprefix -I,$(VERILATOR_INCDIRS)) \
