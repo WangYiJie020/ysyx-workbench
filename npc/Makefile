@@ -106,8 +106,8 @@ SIM_VSRCS += $(SOC_PERIP_VSRCS)
 VERILATOR_INCDIRS += $(abspath $(SOC_HOME)/perip/uart16550/rtl)
 VERILATOR_INCDIRS += $(abspath $(SOC_HOME)/perip/spi/rtl)
 
-VERILATOR_CFLAGS += --timescale "1ns/1ns" --no-timing \
-										-Wno-SYMRSVDWORD # make uart verilog happy
+VERILATOR_CFLAGS += --timescale "1ns/1ns" --no-timing 
+VERILATOR_CFLAGS += -Wno-SYMRSVDWORD # make uart verilog happy
 
 # rules for verilator
 
