@@ -159,19 +159,19 @@ class EXU extends Module {
   io.mem.dontCareNonLiteAW()
   io.mem.dontCareNonLiteW()
 
-  memIO.araddr := memAddr
+  memIO.araddr  := memAddr
   memIO.arvalid := isLoad && (!memRDone) && (!memAddrSent)
   when(memIO.arvalid && memIO.arready) {
     memAddrSent := true.B
   }
   when(memIO.rvalid && !memRDone) {
     memRdRawData := memIO.rdata
-    memRDone    := true.B
+    memRDone     := true.B
   }
-  memIO.rready := true.B
+  memIO.rready  := true.B
   when(!isMemOp) {
-    memRDone := false.B
-    memWDone := false.B
+    memRDone    := false.B
+    memWDone    := false.B
     memAddrSent := false.B
   }
 
@@ -181,7 +181,6 @@ class EXU extends Module {
 
   // for now sw only consider align addr
 
-
   val memWAddr = memIO.awaddr
   val memWData = memIO.wdata
   val memWMask = memIO.wstrb
@@ -189,14 +188,14 @@ class EXU extends Module {
   memIO.awvalid := isStore && (!memWDone) && (!memAddrSent)
   memIO.wvalid  := isStore && (!memWDone)
 
-  when(memIO.awvalid && memIO.awready){
+  when(memIO.awvalid && memIO.awready) {
     memAddrSent := true.B
   }
-  when(memIO.wvalid && memIO.wready){}
-
-  when(memIO.bvalid) {
+  when(memIO.wvalid && memIO.wready) {
     memWDone := true.B
   }
+
+  when(memIO.bvalid) {}
   memIO.bready := true.B
 
   memWData := reg_v2 << memAddrUnalignPartBitlen
