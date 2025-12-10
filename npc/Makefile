@@ -21,7 +21,7 @@ ENABLE_NVBOARD ?= 0
 
 ENABLE_WAVE ?= 1
 ifeq ($(ENABLE_WAVE), 1)
-VERILATOR_CFLAGS += --trace-fst
+VERILATOR_CFLAGS += --trace-fst --trace-structs
 endif
 
 ifeq ($(ENABLE_VPI), 1)
