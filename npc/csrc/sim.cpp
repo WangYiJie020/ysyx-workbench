@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <string_view>
 
+#include "VysyxSoCFull__Dpi.h"
 #include "elf_tool.hpp"
 #include "sdb.hpp"
 #include "tracers.hpp"
@@ -39,6 +40,10 @@ std::shared_ptr<VerilatedFstC> tfp;
 
 static uint64_t sim_time = 0;
 static uint64_t cycle_count = 0;
+
+void clk_rst_print(svBit in_0, svBit in_1){
+	printf("DPI clk_rst_print clk=%d rst=%d\n", in_0, in_1);
+}
 
 static void _sim_eval() {
   dut.eval();
