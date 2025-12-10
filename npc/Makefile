@@ -113,7 +113,7 @@ VERILATOR_CFLAGS += --timescale "1ns/1ns" --no-timing \
 
 VERILATOR_INCDIRS+= $(shell find $(CHISEL2V_EMIT_DIR) -type d)
 
-VERILATOR_CFLAGS += -MMD --build -cc \
+VERILATOR_CFLAGS += -MMD -cc \
 										--x-assign fast --x-initial fast \
 										--autoflush \
 										--output-split 20000 \
