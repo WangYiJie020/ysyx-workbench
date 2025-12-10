@@ -154,8 +154,8 @@ object AXI4IO {
     def dontCareNonLiteAW() = {
       awid    := 0.U
       awlen   := 0.U
-      awsize  := 0.U
-      awburst := 0.U
+      awsize  := 2.U
+      awburst := 1.U
     }
     def dontCareNonLiteW() = {
       wlast  := false.B
