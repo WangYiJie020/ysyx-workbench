@@ -131,13 +131,14 @@ CXXFLAGS += $(SAN_FLAGS) -std=c++20 -g # -fno-inline -O0
 
 $(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) $(CHISEL2V_DONE) $(VPI_DONE) $(SIM_HEADERS)
 	@rm -rf $(V2CXX_EMIT_DIR)
+	export CXX=clang++
 	@$(VERILATOR) $(VERILATOR_CFLAGS) \
 		$(SIM_CSRCS) $(NVBOARD_ARCHIVE) \
 		--top-module $(TOP_NAME) $(VERILATOR_CONTROL_FILE) $(SIM_VSRCS) \
 		$(addprefix -CFLAGS , $(CXXFLAGS)) \
 		$(addprefix -LDFLAGS , $(LDFLAGS)) \
 		--Mdir $(V2CXX_EMIT_DIR) --exe -o $(abspath $(SIM_BIN))
-	CXX=clang++ make -C $(V2CXX_EMIT_DIR) -f V$(TOP_NAME).mk -j$(shell nproc) OPT_FAST="-O0"
+	make -C $(V2CXX_EMIT_DIR) -f V$(TOP_NAME).mk -j$(shell nproc) OPT_FAST="-O0"
 
 all: default
 
