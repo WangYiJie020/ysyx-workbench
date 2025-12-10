@@ -27,7 +27,7 @@ void nvboard_bind_all_pins(TOP_NAME *top);
 typedef uint32_t word_t;
 typedef uint32_t addr_t;
 
-#define MADDR_BASE 0x80000000u
+#define MADDR_BASE 0x20000000u
 #define INITIAL_PC MADDR_BASE
 
 // #define TRACE_PMEM_CALL
