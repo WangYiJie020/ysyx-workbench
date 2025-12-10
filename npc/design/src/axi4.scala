@@ -148,7 +148,7 @@ object AXI4IO {
     def dontCareNonLiteAR() = {
       arid    := 0.U
       arlen   := 0.U
-      arsize  := 2.U
+      arsize  := 1.U
       arburst := 1.U
     }
     def dontCareNonLiteAW() = {
