@@ -278,7 +278,7 @@ static long load_img() {
 
   if (img_file == NULL) {
     Log("No image is given. Use the default build-in image.");
-    return 4096; // built-in image size
+    return img_size=4096; // built-in image size
   }
 
   FILE *fp = fopen(img_file, "rb");
@@ -309,6 +309,7 @@ extern "C" void mrom_read(int32_t addr, int32_t *data) {
   // };
   assert(addr % 4 == 0);
   size_t index = addr / 4;
+	// printf("mrom read addr=%08x index=%lu\n",addr,index);
   assert(index < img_size / 4);
   *data = mem[index];
 }

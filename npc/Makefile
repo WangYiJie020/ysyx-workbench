@@ -37,7 +37,7 @@ CHISEL2V_DONE = $(BUILD_DIR)/verilog.done
 
 V2CXX_EMIT_DIR = $(BUILD_DIR)/gened/cxx
 
-MY_VSRCS = $(shell find $(abspath $(CHISEL2V_EMIT_DIR)) -name "*.v" -or -name "*.sv")
+MY_VSRCS = $(shell find $(abspath $(CHISEL2V_EMIT_DIR)) -maxdepth 1 -name "*.v" -or -name "*.sv")
 SIM_VSRCS = $(MY_VSRCS)
 SIM_CSRCS = $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 
@@ -111,25 +111,27 @@ VERILATOR_CFLAGS += --timescale "1ns/1ns" --no-timing \
 
 # rules for verilator
 
-VERILATOR_INCDIRS+= $(shell find $(CHISEL2V_EMIT_DIR) -type d)
-
 VERILATOR_CFLAGS += -MMD --build -cc \
 										--x-assign fast --x-initial fast \
 										--autoflush \
+										--hierarchical \
 										--output-split 20000 \
 										$(addprefix -I,$(VERILATOR_INCDIRS)) \
+
+VERILATOR_CONTROL_FILE = verilator.vlt
+
 # --noassert -O3
 
 
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME=V$(TOP_NAME) -DENABLE_VPI=$(ENABLE_VPI) -DENABLE_WAVE=$(ENABLE_WAVE)
-CXXFLAGS += $(SAN_FLAGS) -std=c++20 -g
+CXXFLAGS += $(SAN_FLAGS) -std=c++20 -g -fno-inline -O0
 
 $(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) $(CHISEL2V_DONE) $(VPI_DONE) $(SIM_HEADERS)
 	@rm -rf $(V2CXX_EMIT_DIR)
 	@$(VERILATOR) $(VERILATOR_CFLAGS) \
 		$(SIM_CSRCS) $(NVBOARD_ARCHIVE) \
-		--top-module $(TOP_NAME) $(SIM_VSRCS) \
+		--top-module $(TOP_NAME) $(VERILATOR_CONTROL_FILE) $(SIM_VSRCS) \
 		$(addprefix -CFLAGS , $(CXXFLAGS)) \
 		$(addprefix -LDFLAGS , $(LDFLAGS)) \
 		--Mdir $(V2CXX_EMIT_DIR) --exe -o $(abspath $(SIM_BIN))
