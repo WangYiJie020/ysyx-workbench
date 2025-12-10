@@ -67,7 +67,6 @@ INC_PATH += $(abspath ../sdb/include)
 LDFLAGS += $(SAN_FLAGS) -L$(abspath ../sdb/build) -lsdb
 ARCHIVES += $(NVBOARD_ARCHIVE) $(abspath ../sdb/build/libsdb.a)
 
-LDFLAGS += -fuse-ld=mold
 
 # dirs
 $(shell mkdir -p $(BUILD_DIR))
@@ -132,6 +131,9 @@ INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME=V$(TOP_NAME) -DENABLE_VPI=$(ENABLE_VPI) -DENABLE_WAVE=$(ENABLE_WAVE)
 CXXFLAGS += $(SAN_FLAGS) -std=c++20 -g # -fno-inline -O0
 
+# make link faster
+LDFLAGS += -fuse-ld=mold
+
 $(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) $(CHISEL2V_DONE) $(VPI_DONE) $(SIM_HEADERS)
 	@rm -rf $(V2CXX_EMIT_DIR)
 	@$(VERILATOR) $(VERILATOR_CFLAGS) \
@@ -140,7 +142,7 @@ $(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) $(CHISEL2V_DONE) $(VPI_DONE) $
 		$(addprefix -CFLAGS , $(CXXFLAGS)) \
 		$(addprefix -LDFLAGS , $(LDFLAGS)) \
 		--Mdir $(V2CXX_EMIT_DIR) --exe -o $(abspath $(SIM_BIN))
-	make -C $(V2CXX_EMIT_DIR) -f V$(TOP_NAME).mk -j$(shell nproc) OPT_FAST="-O0" CXX=clang++
+	make -C $(V2CXX_EMIT_DIR) -f V$(TOP_NAME).mk -j$(shell nproc) CXX=clang++
 
 all: default
 
