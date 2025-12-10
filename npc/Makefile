@@ -37,7 +37,7 @@ CHISEL2V_DONE = $(BUILD_DIR)/verilog.done
 
 V2CXX_EMIT_DIR = $(BUILD_DIR)/gened/cxx
 
-MY_VSRCS = $(shell find $(abspath $(CHISEL2V_EMIT_DIR)) -name "*.v" -or -name "*.sv")
+MY_VSRCS = $(shell find $(abspath $(CHISEL2V_EMIT_DIR)) -maxdepth 1 -name "*.v" -or -name "*.sv")
 SIM_VSRCS = $(MY_VSRCS)
 SIM_CSRCS = $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 
@@ -110,8 +110,6 @@ VERILATOR_CFLAGS += --timescale "1ns/1ns" --no-timing \
 										-Wno-SYMRSVDWORD # make uart verilog happy
 
 # rules for verilator
-
-VERILATOR_INCDIRS+= $(shell find $(CHISEL2V_EMIT_DIR) -type d)
 
 VERILATOR_CFLAGS += -MMD --build -cc \
 										--x-assign fast --x-initial fast \
