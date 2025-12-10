@@ -54,7 +54,7 @@ paddr_t host_to_guest(uint8_t *haddr) {
 	} else if (haddr >= sram && haddr < sram + sizeof(sram)) {
 		return haddr - sram + SRAM_BASE;
 	}
-	return NULL;
+	return 0;
 }
 
 static bool builtin_read(paddr_t addr, int len, word_t *data) {
