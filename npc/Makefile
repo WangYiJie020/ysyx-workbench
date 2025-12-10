@@ -67,6 +67,8 @@ INC_PATH += $(abspath ../sdb/include)
 LDFLAGS += $(SAN_FLAGS) -L$(abspath ../sdb/build) -lsdb
 ARCHIVES += $(NVBOARD_ARCHIVE) $(abspath ../sdb/build/libsdb.a)
 
+LDFLAGS += -fuse-ld=mold
+
 # dirs
 $(shell mkdir -p $(BUILD_DIR))
 $(shell mkdir -p $(V2CXX_EMIT_DIR))
@@ -138,7 +140,7 @@ $(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) $(CHISEL2V_DONE) $(VPI_DONE) $
 		$(addprefix -CFLAGS , $(CXXFLAGS)) \
 		$(addprefix -LDFLAGS , $(LDFLAGS)) \
 		--Mdir $(V2CXX_EMIT_DIR) --exe -o $(abspath $(SIM_BIN))
-	make -C $(V2CXX_EMIT_DIR) -f V$(TOP_NAME).mk -j$(shell nproc) OPT_FAST="-O0"
+	make -C $(V2CXX_EMIT_DIR) -f V$(TOP_NAME).mk -j$(shell nproc) OPT_FAST="-O0" CXX=clang++
 
 all: default
 
