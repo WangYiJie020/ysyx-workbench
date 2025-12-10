@@ -61,7 +61,7 @@ void sim_step_cycle() {
   cycle_count++;
 
 #ifdef ENABLE_NVBOARD
-    nvboard_update();
+  nvboard_update();
 #endif
 
   if (sim_settings.trace_clock_cycle) {
@@ -252,8 +252,8 @@ void step_inst() {
         }
         continue;
       } else {
-				printf("sim exit\n");
-				exit(1);
+        printf("sim exit\n");
+        exit(1);
       }
     }
   }
@@ -299,8 +299,21 @@ static long load_img() {
 }
 
 extern "C" void flash_read(int32_t addr, int32_t *data) { assert(0); }
-extern "C" void mrom_read(int32_t addr, int32_t *data) { 
-	*data = 0x100073; // ebreak
+extern "C" void mrom_read(int32_t addr, int32_t *data) {
+  static const uint32_t mrom[] = {
+    0xc6061141,
+    0x0800c422,
+    0x100007b7,
+    0x04100713,
+    0x00e78023,
+    0x100007b7,
+    0x80234729,
+    0xa00100e7,
+  };
+	assert(addr % 4 == 0);
+	size_t index = addr / 4;
+	assert(index < sizeof(mrom) / sizeof(mrom[0]));
+	*data = mrom[index];
 }
 
 // ARG
@@ -349,11 +362,11 @@ uint8_t *loadmem(sdb::paddr_t addr, size_t nbyte) { return mem_atguest(addr); }
 } // namespace sdbwrap
 
 bool sim_init(int argc, char **argv, sim_setting setting) {
-	Verilated::commandArgs(argc, argv);
+  Verilated::commandArgs(argc, argv);
   sim_settings = setting;
 #ifdef ENABLE_NVBOARD
-    nvboard_bind_all_pins(&dut);
-    nvboard_init();
+  nvboard_bind_all_pins(&dut);
+  nvboard_init();
 #endif
 
   parse_args(argc, argv);
