@@ -115,7 +115,7 @@ VERILATOR_CFLAGS += -Wno-SYMRSVDWORD # make uart verilog happy
 VERILATOR_CFLAGS += -MMD -cc\
 										--autoflush \
 										--hierarchical \
-										--compiler clang++ \
+										--compiler clang \
 										$(addprefix -I,$(VERILATOR_INCDIRS)) \
 
 										# --output-split 20000 
