@@ -26,7 +26,7 @@ SECTIONS {
   }
 
   _stack_top = _pmem_start;
-  . = _stack_top + 0x0fff;
+  . = _stack_top + 0x0ff0;
   _stack_pointer = .;
   end = .;
   _end = .;
