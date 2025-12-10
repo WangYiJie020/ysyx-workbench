@@ -2,7 +2,7 @@ AM_SRCS := riscv/ysyxsoc/start.S \
 					 riscv/ysyxsoc/trm.c
 
 CFLAGS    += -fdata-sections -ffunction-sections
-LDSCRIPTS += $(AM_HOME)/scripts/linker.ld
+LDSCRIPTS += $(AM_HOME)/am/src/riscv/ysyxsoc/linker.ld
 LDFLAGS   += --defsym=_pmem_start=0x0f000000 --defsym=_entry_offset=0x11000000
 LDFLAGS   += --gc-sections -e _start
 
