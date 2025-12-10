@@ -300,6 +300,9 @@ static long load_img() {
 
 extern "C" void flash_read(int32_t addr, int32_t *data) { assert(0); }
 extern "C" void mrom_read(int32_t addr, int32_t *data) {
+	constexpr uint32_t MROM_BASE = 0x20000000u;
+	assert(addr >= MROM_BASE);
+	addr -= MROM_BASE;
   static const uint32_t mrom[] = {
     0xc6061141,
     0x0800c422,
