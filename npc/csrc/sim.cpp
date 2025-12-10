@@ -351,7 +351,8 @@ void shot_regsnap(sdb::reg_snapshot_t &regsnap) {
 }
 sdb::vlen_inst_code inst_fetcher(sdb::paddr_t pc) {
   word_t inst;
-  fetch_inst(pc, (int *)&inst);
+	mrom_read(pc, (int*)&inst);
+  //fetch_inst(pc, (int *)&inst);
   uint8_t *p = (uint8_t *)&inst;
   return sdb::vlen_inst_code(p, p + 4);
 }
