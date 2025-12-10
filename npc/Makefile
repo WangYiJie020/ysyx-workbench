@@ -115,6 +115,7 @@ VERILATOR_CFLAGS += -Wno-SYMRSVDWORD # make uart verilog happy
 VERILATOR_CFLAGS += -MMD -cc\
 										--autoflush \
 										--hierarchical \
+										--compiler clang++ \
 										$(addprefix -I,$(VERILATOR_INCDIRS)) \
 
 										# --output-split 20000 
@@ -131,7 +132,6 @@ CXXFLAGS += $(SAN_FLAGS) -std=c++20 -g # -fno-inline -O0
 
 $(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) $(CHISEL2V_DONE) $(VPI_DONE) $(SIM_HEADERS)
 	@rm -rf $(V2CXX_EMIT_DIR)
-	export CXX=clang++
 	@$(VERILATOR) $(VERILATOR_CFLAGS) \
 		$(SIM_CSRCS) $(NVBOARD_ARCHIVE) \
 		--top-module $(TOP_NAME) $(VERILATOR_CONTROL_FILE) $(SIM_VSRCS) \
