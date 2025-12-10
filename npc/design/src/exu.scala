@@ -162,7 +162,7 @@ class EXU extends Module {
   memIO.araddr  := memAddr
   memIO.arvalid := isLoad && (!memRDone) && (!memAddrSent)
   when(memIO.arvalid && memIO.arready) {
-    memAddrSent := true.B
+    // memAddrSent := true.B
   }
   when(memIO.rvalid && !memRDone) {
     memRdRawData := memIO.rdata
