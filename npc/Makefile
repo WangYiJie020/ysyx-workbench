@@ -111,7 +111,7 @@ VERILATOR_CFLAGS += -Wno-SYMRSVDWORD # make uart verilog happy
 # VERILATOR_CFLAGS += -Wno-UNOPTFLAT
 # rules for verilator
 
-VERILATOR_CFLAGS += -MMD --build -cc \
+VERILATOR_CFLAGS += -MMD --build -cc -CXX clang++\
 										--autoflush \
 										--hierarchical \
 										$(addprefix -I,$(VERILATOR_INCDIRS)) \
@@ -128,7 +128,6 @@ INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME=V$(TOP_NAME) -DENABLE_VPI=$(ENABLE_VPI) -DENABLE_WAVE=$(ENABLE_WAVE)
 CXXFLAGS += $(SAN_FLAGS) -std=c++20 -g # -fno-inline -O0
 
-export OPT_FAST"=-O0"
 $(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) $(CHISEL2V_DONE) $(VPI_DONE) $(SIM_HEADERS)
 	@rm -rf $(V2CXX_EMIT_DIR)
 	@$(VERILATOR) $(VERILATOR_CFLAGS) \
