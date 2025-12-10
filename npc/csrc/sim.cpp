@@ -300,23 +300,17 @@ static long load_img() {
 
 extern "C" void flash_read(int32_t addr, int32_t *data) { assert(0); }
 extern "C" void mrom_read(int32_t addr, int32_t *data) {
-	constexpr uint32_t MROM_BASE = 0x20000000u;
-	assert(addr >= MROM_BASE);
-	addr -= MROM_BASE;
+  constexpr uint32_t MROM_BASE = 0x20000000u;
+  assert(addr >= MROM_BASE);
+  addr -= MROM_BASE;
   static const uint32_t mrom[] = {
-    0xc6061141,
-    0x0800c422,
-    0x100007b7,
-    0x04100713,
-    0x00e78023,
-    0x100007b7,
-    0x80234729,
-    0xa00100e7,
+      0xc6061141, 0x0800c422, 0x100007b7, 0x04100713,
+      0x00e78023, 0x100007b7, 0x80234729, 0xa00100e7,
   };
-	assert(addr % 4 == 0);
-	size_t index = addr / 4;
-	assert(index < sizeof(mrom) / sizeof(mrom[0]));
-	*data = mrom[index];
+  assert(addr % 4 == 0);
+  size_t index = addr / 4;
+  assert(index < sizeof(mrom) / sizeof(mrom[0]));
+  *data = mrom[index];
 }
 
 // ARG
