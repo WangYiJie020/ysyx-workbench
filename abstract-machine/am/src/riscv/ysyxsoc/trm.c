@@ -1,5 +1,6 @@
 #include <am.h>
 #include <klib-macros.h>
+#include <klib.h>
 
 extern char _heap_start;
 extern char _heap_end;
@@ -24,7 +25,10 @@ asm volatile("mv a0, %0; ebreak" : :"r"(code));
 	while (1) {} // make sure no return
 }
 
+extern char _data, _edata, _etext;
+
 void _trm_init() {
+	memcpy((void *)&_data, (void *)&_etext, (uintptr_t)&_edata - (uintptr_t)&_data);
 	int ret = main(mainargs);
 	halt(ret);
 }
