@@ -133,12 +133,18 @@ std::array<std::string_view, 32> reg_names = {
     "$0", "ra", "sp", "gp", "tp",  "t0",  "t1", "t2", "s0", "s1", "a0",
     "a1", "a2", "a3", "a4", "a5",  "a6",  "a7", "s2", "s3", "s4", "s5",
     "s6", "s7", "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"};
+void dump_regs() {
+  for (int i = 0; i < 32; i++) {
+    printf("%s: %08x\n", reg_names[i].data(), gpr_snap[i]);
+  }
+}
 
 bool pc_changed = false;
 void pc_upd(int pc, int npc) {
   //	printf("pc upd pc=%08x npc=%08x\n",pc,npc);
   pc_changed = true;
   current_pc = npc;
+	dump_regs();
 }
 
 void skip_difftest_ref() {
@@ -224,11 +230,6 @@ void pmem_write(int addr, int data, int mask) {
   }
 }
 
-void dump_regs() {
-  for (int i = 0; i < 32; i++) {
-    printf("%s: %08x\n", reg_names[i].data(), gpr_snap[i]);
-  }
-}
 void step_inst() {
   size_t cnt = 0;
   constexpr size_t MAYBE_DEADLOOP_THRESHOLD = 200;
