@@ -30,7 +30,6 @@ void init_serial() {
   // set UART to 8 bits, no parity, one stop bit
   // 0x3 = 0b11 : Select each character 8 bits
   // 0x80 = 0b10000000 : Divisor Latch Access bit
-  *UART_FIFO_CTRL = 0x7 | (0x3 << 6);
   *UART_LCR = 0x3;
   *UART_LCR = 0x80;
   if (*UART_LCR == 0x0) {
@@ -48,8 +47,6 @@ void init_serial() {
 }
 
 void putch(char ch) {
-
-  init_serial();
   *(uint8_t *)(SERIAL_PORT + 0x00) = ch;
 }
 
@@ -66,6 +63,7 @@ extern char __data_load_start__;
 extern char __data_size__;
 
 void _trm_init() {
+  init_serial();
 
   memcpy((void *)&_data, (void *)&__data_load_start__,
          (uintptr_t)&__data_size__);
