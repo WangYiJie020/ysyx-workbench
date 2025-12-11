@@ -33,7 +33,7 @@ void init_serial() {
   // *UART_LCR = 0x3;
 	// *UART_LCR = 0x80;
   // set baud rate to 115200
-	*UART_DL_MSB = 0x10;
+	*UART_DL_MSB = 'A';
 	*UART_DL_LSB = 0x23;
 	// clear DLAB bit
 	// *UART_LCR = 0x3;
