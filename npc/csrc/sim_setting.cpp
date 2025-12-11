@@ -29,6 +29,7 @@ void load_sim_setting_from_env(sim_setting &setting) {
   GET(iringbuf);
   GET(etrace);
   GET(difftest);
+	GET(trace_difftest_skip);
   GET(trace_pmem_readcall);
   GET(trace_pmem_writecall);
   GET(trace_inst_fetchcall);

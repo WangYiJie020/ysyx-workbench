@@ -148,6 +148,9 @@ void pc_upd(int pc, int npc) {
 }
 
 void skip_difftest_ref() {
+  if (sim_settings.trace_difftest_skip) {
+    printf("[DPI] skip_difftest_ref called\n");
+  }
   if (diff_handler)
     diff_handler->skip_ref();
 }
