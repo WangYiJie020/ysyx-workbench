@@ -84,9 +84,11 @@ public:
       msg = format(ANSI_FG_GRAY "from " ANSI_FG_FUN "{}" ANSI_NONE, cur_fname);
       show_addr = cur_f ? cur_f->addr : 0;
     }
+		(void)show_addr;
 
-    _log("0x{:08X}: {} " ANSI_FG_GRAY "f`{:08X}" ANSI_NONE "{}{}\n", ctx.pc,
-         hint_str, show_addr, string(func_depth, ' '), msg);
+		// " ANSI_FG_GRAY "f`{:08X}
+    _log("0x{:08X}: {} " ANSI_NONE "{}{}\n", ctx.pc,
+         hint_str, string(func_depth, ' '), msg);
 
     if (type == jump_type::ret) {
       if (func_depth > 0)
