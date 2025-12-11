@@ -20,7 +20,7 @@ static const char mainargs[MAINARGS_MAX_LEN] =
 
 #define SERIAL_PORT 0x10000000u
 
-#define UART_LCR ((volatile uint8_t *)(SERIAL_PORT + 0x03))
+#define UART_LCR ((volatile uint32_t *)(SERIAL_PORT + 0x03))
 #define UART_DL_LSB ((volatile uint8_t *)(SERIAL_PORT + 0x00))
 #define UART_DL_MSB ((volatile uint8_t *)(SERIAL_PORT + 0x01))
 #define UART_FIFO_CTRL ((volatile uint8_t *)(SERIAL_PORT + 0x02))
@@ -33,6 +33,7 @@ void init_serial() {
   *UART_LCR = 0x3;
   *UART_LCR = 0x80;
   while (*UART_LCR == 0x0) {
+    *UART_LCR = 0x80;
     *UART_DL_LSB = 'F';
   }
   // set baud rate to 115200
@@ -46,9 +47,7 @@ void init_serial() {
   // *UART_IER = 0x0;
 }
 
-void putch(char ch) {
-  *(uint8_t *)(SERIAL_PORT + 0x00) = ch;
-}
+void putch(char ch) { *(uint8_t *)(SERIAL_PORT + 0x00) = ch; }
 
 void halt(int code) {
   asm volatile("mv a0, %0; ebreak" : : "r"(code));
