@@ -15,7 +15,7 @@ import mill.bsp._
 /* extends ScalaModule
   with ScalafmtModule
   with BspModule */
-object design extends SbtModule { m =>
+object design extends ScalaModule { m =>
     // see https://www.chisel-lang.org/docs/installation
     // Scala/Java compatibility table said: 
     //   Chisel | Scala   | Java
