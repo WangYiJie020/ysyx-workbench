@@ -13,7 +13,8 @@ SECTIONS {
     *(entry)
     *(.text*)
 		_etext = .;
-  } > mrom AT> mrom 
+  } > mrom
+	/* AT> mrom  */
   /* .rodata : { */
   /*   *(.rodata*) */
   /* } > mrom AT> mrom */

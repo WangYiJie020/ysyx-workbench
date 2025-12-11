@@ -39,7 +39,7 @@ void _trm_init() {
 
 	// printf("%d\n",(uintptr_t)&__data_size__);
 
-	memset((void *)&_bss, 0, (uintptr_t)&_ebss - (uintptr_t)&_bss);
+	// memset((void *)&_bss, 0, (uintptr_t)&_ebss - (uintptr_t)&_bss);
 	int ret = main(mainargs);
 	halt(ret);
 }
