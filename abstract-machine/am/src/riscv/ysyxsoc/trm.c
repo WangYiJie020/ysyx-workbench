@@ -31,7 +31,7 @@ asm volatile("mv a0, %0; ebreak" : :"r"(code));
 extern char _data, _edata,_text, _etext;
 
 void _trm_init() {
-	memcpy((void *)&_data, (void *)&_text, (uintptr_t)&_edata - (uintptr_t)&_data);
+	memcpy((void *)&_data, (void *)&_text, (uintptr_t)&_etext - (uintptr_t)&_text);
 	int ret = main(mainargs);
 	halt(ret);
 }
