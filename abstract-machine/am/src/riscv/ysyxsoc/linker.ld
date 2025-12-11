@@ -21,14 +21,14 @@ SECTIONS {
 		_data = .;
     *(.data*)
 		_edata = .;
-  } > mrom AT> mrom : data
+  } > msram AT> mrom : data
 
   .bss : {
 	_bss_start = .;
     *(.bss*)
     *(.sbss*)
     *(.scommon)
-  } > mrom
+  } > sram
 
 	_sram_start = ORIGIN(sram);
 	_sram_size = LENGTH(sram);
