@@ -37,7 +37,7 @@ void init_serial() {
 	// clear DLAB bit
 	*UART_LCR = 0x3;
 	// enable FIFO with 14-byte threshold
-	*UART_FIFO_CTRL = 0x7;
+	*UART_FIFO_CTRL = 0x7 | (0x3 << 6);
 	// disable all interrupts
 	// *UART_IER = 0x0;
 
