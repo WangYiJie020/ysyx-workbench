@@ -58,7 +58,6 @@ public:
     auto type = recog_jmp(ctx.inst);
     if (type == jump_type::normal)
       return;
-    auto hint_str = type == jump_type::call ? "call fun" : "ret from";
     if (type == jump_type::call)
       func_depth++;
 
@@ -70,14 +69,25 @@ public:
     auto tar_f = elf.get_fun_at(target);
     auto tar_fname = tar_f ? tar_f->name : "(unknown)";
 
+    string msg, hint_str;
+    word_t show_addr;
 #define ANSI_FG_FUN "\e[38;2;220;220;170m"
 
+    if (type == jump_type::call) {
+      hint_str = "call fun";
+      msg =
+          format(ANSI_FG_FUN "{}" ANSI_NONE " from " ANSI_FG_FUN "{}" ANSI_NONE,
+                 tar_fname, cur_fname);
+      show_addr = tar_f ? tar_f->addr : 0;
+    } else {
+      hint_str = "ret from";
+      msg = format(ANSI_FG_FUN "{}" ANSI_NONE, cur_fname);
+      show_addr = cur_f ? cur_f->addr : 0;
+    }
+
     _log("0x{:08X}: "
-         "{}{} " ANSI_FG_GRAY "f`{:08X}" ANSI_NONE "{}" ANSI_FG_FUN
-         "{}" ANSI_NONE " from " ANSI_FG_FUN "{}\n",
-         ctx.pc, type == jump_type::call ? ANSI_FG_YELLOW : ANSI_FG_BLUE,
-         hint_str, tar_f ? tar_f->addr : 0, string(func_depth, ' '), tar_fname,
-         cur_fname);
+         "{}{} " ANSI_FG_GRAY "f`{:08X}" ANSI_NONE "{}{}\n",
+         ctx.pc, hint_str, show_addr, string(func_depth, ' '), msg);
 
     if (type == jump_type::ret) {
       if (func_depth > 0)
