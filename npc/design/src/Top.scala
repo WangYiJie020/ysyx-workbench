@@ -191,7 +191,9 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     stop()
     stop()
   }
-  when(io.master.awvalid && io.master.awaddr === "h10000000".U && io.master.awready){
+  val SERIAL_ADDR_BASE = "h10000000".U(32.W)
+  val SERIAL_ADDR_END  = "h10000020".U(32.W)
+  when(io.master.awvalid && io.master.awaddr >= SERIAL_ADDR_BASE && io.master.awaddr < SERIAL_ADDR_END && io.master.awready){
     RawClockedVoidFunctionCall("skip_difftest_ref")(
       clock,
       true.B
