@@ -14,15 +14,14 @@ SECTIONS {
     *(.text*)
 		_etext = .;
   } > mrom
-	/* AT> mrom  */
   /* .rodata : { */
   /*   *(.rodata*) */
   /* } > mrom AT> mrom */
-  .data : {
+  .data : AT (ADDR(.text) + SIZEOF(.text)) {
 		_data = .;
     *(.data*)
 		_edata = .;
-  } > sram AT> mrom
+  } > sram
 
 	__data_load_start__ = LOADADDR(.data); /* MA */
 	__data_size__       = SIZEOF(.data);   /* LEN */
