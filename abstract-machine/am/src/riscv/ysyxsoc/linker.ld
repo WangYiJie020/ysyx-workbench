@@ -1,28 +1,37 @@
 ENTRY(_start)
 PHDRS { text PT_LOAD; data PT_LOAD; }
 
+MEMORY {
+  mrom : ORIGIN = 0x20000000, LENGTH = 4K
+  sram : ORIGIN = 0x0f000000, LENGTH = 8K
+}
+
 SECTIONS {
-  . = _mrom_start;
+  . = ORIGIN(mrom);
   .text : {
+		_text = .;
     *(entry)
     *(.text*)
-  } : text
-  etext = .;
-  _etext = .;
+		_etext = .;
+  } > sram AT> mrom : text
   .rodata : {
     *(.rodata*)
-  }
+  } > mrom
   .data : {
+		_data = .;
     *(.data*)
-  } : data
-  edata = .;
-  _data = .;
+		_edata = .;
+  } > sram AT> mrom : data
+
   .bss : {
 	_bss_start = .;
     *(.bss*)
     *(.sbss*)
     *(.scommon)
-  }
+  } > sram
+
+	_sram_start = ORIGIN(sram);
+	_sram_size = LENGTH(sram);
 
   _stack_top = _sram_start + _sram_size - _stack_size;
   . = _stack_top + _stack_size;
