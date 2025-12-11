@@ -191,6 +191,12 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     stop()
     stop()
   }
+  when(io.master.awvalid && io.master.awaddr === "h10000000".U && io.master.awready){
+    RawClockedVoidFunctionCall("skip_difftest_ref")(
+      clock,
+      true.B
+    )
+  }
 
   AXI4IO.connectMasterSlave(memArbiter.io.out, memXBar.io.in)
   memXBar.connect()
