@@ -47,7 +47,11 @@ void init_serial() {
   // *UART_IER = 0x0;
 }
 
-void putch(char ch) { *(uint8_t *)(SERIAL_PORT + 0x00) = ch; }
+void putch(char ch) {
+
+  init_serial();
+  *(uint8_t *)(SERIAL_PORT + 0x00) = ch;
+}
 
 void halt(int code) {
   asm volatile("mv a0, %0; ebreak" : : "r"(code));
@@ -63,7 +67,6 @@ extern char __data_size__;
 
 void _trm_init() {
 
-  init_serial();
   memcpy((void *)&_data, (void *)&__data_load_start__,
          (uintptr_t)&__data_size__);
 
