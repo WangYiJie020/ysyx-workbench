@@ -31,7 +31,6 @@ void init_serial() {
   // 0x3 = 0b11 : Select each character 8 bits
   // 0x80 = 0b10000000 : Divisor Latch Access bit
   *UART_LCR = 0x3;
-  *UART_LCR = 0x80;
   // while (*UART_LCR == 0x0) {
   //   *UART_LCR = 0x80;
   //   *UART_DL_LSB = 'F';
