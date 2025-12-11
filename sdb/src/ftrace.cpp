@@ -39,7 +39,7 @@ class sdb::ftrace_handler:public trace_handler{
 			auto hint_str=type==jump_type::call?"call fun":"ret from";
 			if(type==jump_type::call)func_depth++;
 
-			auto f=elf.get_fun_at(ctx.pc);
+			auto f=elf.get_fun_at(ctx.lastpc);
 			auto fname=f?f->name:"(unknown)";
 
 			_log(
