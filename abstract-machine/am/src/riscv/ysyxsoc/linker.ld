@@ -22,14 +22,15 @@ SECTIONS {
     *(.data*)
 		_edata = .;
   } > sram AT> mrom
-	/**/
- /*  .bss : { */
-	/* _bss_start = .; */
- /*    *(.bss*) */
- /*    *(.sbss*) */
- /*    *(.scommon) */
- /*  } > sram */
-	/**/
+
+  .bss : {
+		_bss = .;
+    *(.bss*)
+    *(.sbss*)
+    *(.scommon)
+		_ebss = .;
+  } > sram
+
 	_sram_start = ORIGIN(sram);
 	_sram_size = LENGTH(sram);
 
