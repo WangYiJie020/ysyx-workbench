@@ -422,7 +422,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   reset(10);
 
   if (batch_mode) {
-    // dbg->exec_command("c");
+    dbg->exec_command("c");
     return dbg->state().is_badexit();
   }
 
