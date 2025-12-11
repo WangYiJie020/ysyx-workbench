@@ -21,7 +21,7 @@ SECTIONS {
 		_data = .;
     *(.data*)
 		_edata = .;
-  } > sram AT> sram : data
+  } > sram AT> mrom : data
 
   .bss : {
 	_bss_start = .;
