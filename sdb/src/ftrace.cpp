@@ -85,9 +85,8 @@ public:
       show_addr = cur_f ? cur_f->addr : 0;
     }
 
-    _log("0x{:08X}: "
-         "{}{} " ANSI_FG_GRAY "f`{:08X}" ANSI_NONE "{}{}\n",
-         ctx.pc, hint_str, show_addr, string(func_depth, ' '), msg);
+    _log("0x{:08X}: {}" ANSI_FG_GRAY "f`{:08X}" ANSI_NONE "{}{}\n", ctx.pc,
+         hint_str, show_addr, string(func_depth, ' '), msg);
 
     if (type == jump_type::ret) {
       if (func_depth > 0)
