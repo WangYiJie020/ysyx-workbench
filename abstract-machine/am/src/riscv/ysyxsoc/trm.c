@@ -1,9 +1,12 @@
 #include <am.h>
 #include <klib-macros.h>
 #include <klib.h>
+#include <stdint.h>
 
 extern char _heap_start;
 extern char _heap_end;
+
+typedef int (*mainfunc_t)(const char *args);
 
 int main(const char *args);
 
@@ -29,6 +32,10 @@ extern char _data, _edata, _etext;
 
 void _trm_init() {
 	memcpy((void *)&_data, (void *)&_etext, (uintptr_t)&_edata - (uintptr_t)&_data);
-	int ret = main(mainargs);
+
+	uintptr_t main_offset = (uintptr_t)&main - (uintptr_t)&_etext;
+	uintptr_t data_main = (uintptr_t)&_data + main_offset;
+	int ret = ((mainfunc_t)data_main)(mainargs);
+	// int ret = main(mainargs);
 	halt(ret);
 }
