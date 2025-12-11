@@ -144,7 +144,7 @@ void pc_upd(int pc, int npc) {
   //	printf("pc upd pc=%08x npc=%08x\n",pc,npc);
   pc_changed = true;
   current_pc = npc;
-	dump_regs();
+	// dump_regs();
 }
 
 void skip_difftest_ref() {
@@ -422,7 +422,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   reset(10);
 
   if (batch_mode) {
-    dbg->exec_command("c");
+    // dbg->exec_command("c");
     return dbg->state().is_badexit();
   }
 
