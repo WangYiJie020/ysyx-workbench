@@ -31,7 +31,7 @@ void init_serial() {
   // 0x3 = 0b11 : Select each character 8 bits
   // 0x80 = 0b10000000 : Divisor Latch Access bit
   *UART_LCR = 0x3;
-	*UART_LCR = 0x80;
+	*UART_LCR = 0xf0;
   // set baud rate to 115200
 	*UART_DL_MSB = 0x1;
 	*UART_DL_LSB = 0x23;
