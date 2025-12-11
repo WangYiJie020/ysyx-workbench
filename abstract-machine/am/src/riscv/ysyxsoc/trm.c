@@ -32,14 +32,14 @@ void init_serial() {
   // 0x80 = 0b10000000 : Divisor Latch Access bit
   *UART_LCR = 0x3;
   *UART_LCR = 0x80;
-  while (*UART_LCR == 0x0) {
-    *UART_LCR = 0x80;
-    *UART_DL_LSB = 'F';
-  }
-  // set baud rate to 115200
-  *UART_DL_MSB = 'A';
-  *UART_DL_LSB = 'B';
-  // clear DLAB bit
+  // while (*UART_LCR == 0x0) {
+  //   *UART_LCR = 0x80;
+  //   *UART_DL_LSB = 'F';
+  // }
+  // // set baud rate to 115200
+  // *UART_DL_MSB = 'A';
+  // *UART_DL_LSB = 'B';
+  // // clear DLAB bit
   // *UART_LCR = 0x3;
   // enable FIFO with 14-byte threshold
   // *UART_FIFO_CTRL = 0x7 | (0x3 << 6);
