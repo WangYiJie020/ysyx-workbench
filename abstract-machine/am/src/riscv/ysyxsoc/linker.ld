@@ -33,7 +33,7 @@ SECTIONS {
     *(.sbss*)
     *(.scommon)
 		_ebss = .;
-  } > sram
+  } > sram AT> mrom
 
 	_sram_start = ORIGIN(sram);
 	_sram_size = LENGTH(sram);
