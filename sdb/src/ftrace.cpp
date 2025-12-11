@@ -39,20 +39,22 @@ class sdb::ftrace_handler:public trace_handler{
 			auto hint_str=type==jump_type::call?"call fun":"ret from";
 			if(type==jump_type::call)func_depth++;
 
-			auto f=elf.get_fun_at(ctx.lastpc);
-			auto fname=f?f->name:"(unknown)";
+			auto lastf=elf.get_fun_at(ctx.lastpc);
+			auto curf=elf.get_fun_at(ctx.pc);
+			auto lastfname=lastf?lastf->name:"(unknown)";
+			auto curfname=curf?curf->name:"(unknown)";
 
 			_log(
 					"0x{:08X}: "
 					"{}{} "
 					ANSI_FG_GRAY "f`{:08X}"
-					ANSI_NONE "{}{}\n",
+					ANSI_NONE "{} last {} cur {}\n",
 				ctx.pc,
 				type==jump_type::call?ANSI_FG_YELLOW:ANSI_FG_BLUE,
 				hint_str,
-				f?f->addr:0,
+				lastf?lastf->addr:0,
 				string(func_depth,' '),
-				fname
+				lastfname,curfname
 			);
 
 			if(type==jump_type::ret){
