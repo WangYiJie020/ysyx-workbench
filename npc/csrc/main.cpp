@@ -15,7 +15,8 @@ void cyc_callback() {
 }
 
 int main(int argc, char **argv) {
-  sim_setting setting = load_sim_setting_from_env();
+	sim_setting setting;
+	load_sim_setting_from_env(setting);
   setting.cycle_finish_cb = cyc_callback;
   sim_init(argc, argv, setting);
 

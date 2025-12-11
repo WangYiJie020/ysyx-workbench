@@ -8,10 +8,10 @@ TOP_NAME* get_dut();
 typedef void(*cycle_end_callback_t)();
 
 struct sim_setting{
-	bool enable_inst_trace=true;
+	bool en_inst_trace=true;
 
-	bool showdisasm=true;
-	bool always_show_disasm=false;
+	bool en_showdisasm=true;
+	bool always_showdisasm=false;
 
 	bool ftrace=false;
 	bool iringbuf=true;
@@ -32,7 +32,8 @@ struct sim_setting{
 	std::string wave_fst_file="build/wave.fst";
 };
 
-sim_setting load_sim_setting_from_env();
+// unchange item if not set in env
+void load_sim_setting_from_env(sim_setting& setting);
 
 bool sim_init(int argc, char** argv,sim_setting teg=sim_setting{});
 

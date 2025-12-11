@@ -382,11 +382,11 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
       std::vector<std::string_view>(reg_names.begin(), reg_names.end()),
       sdbwrap::inst_fetcher);
 
-  dbg->enable_inst_trace = setting.enable_inst_trace;
+  dbg->enable_inst_trace = setting.en_inst_trace;
 
-  if (setting.enable_inst_trace) {
-    if (setting.showdisasm) {
-      size_t inst_show_limit = setting.always_show_disasm ? SIZE_MAX : 16;
+  if (setting.en_inst_trace) {
+    if (setting.en_showdisasm) {
+      size_t inst_show_limit = setting.always_showdisasm ? SIZE_MAX : 16;
       dbg->add_trace(sdb::make_disasm_trace_handler(sdb::default_inst_disasm,
                                                     inst_show_limit));
     }
