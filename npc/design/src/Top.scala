@@ -124,8 +124,6 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val gprs = Module(new RegisterFile(READ_PORTS = 2))
   val csrs = Module(new ControlStatusRegisterFile())
 
-  RawUnclockedNonVoidFunctionCall("clk_rst_print",UInt(1.W))(true.B,clock.asUInt,reset.asUInt)
-
   // val mem = Module(new AXI4LiteMemUnit)
 
   val ifu = Module(new IFU)
