@@ -12,17 +12,16 @@ SECTIONS {
 		_text = .;
     *(entry)
     *(.text*)
-    *(.rodata*)
 		_etext = .;
   } > mrom
   /* .rodata : { */
   /*   *(.rodata*) */
   /* } > mrom AT> mrom */
-  .data : AT (ADDR(.text) + SIZEOF(.text)) {
+  .data : {
 		_data = .;
     *(.data*)
 		_edata = .;
-  } > sram
+  } > sram AT> mrom
 
 	__data_load_start__ = LOADADDR(.data); /* MA */
 	__data_size__       = SIZEOF(.data);   /* LEN */
