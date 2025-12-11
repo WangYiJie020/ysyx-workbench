@@ -12,7 +12,6 @@ SECTIONS {
 		_text = .;
     *(entry)
     *(.text*)
-    *(.rodata*)
 		_etext = .;
   } > mrom
   /* .rodata : { */
@@ -21,6 +20,7 @@ SECTIONS {
   .data : {
 		_data = .;
     *(.data*)
+    *(.sdata*)
 		_edata = .;
   } > sram AT> mrom
 
