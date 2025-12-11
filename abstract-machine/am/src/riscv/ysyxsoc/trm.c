@@ -39,7 +39,7 @@ void init_serial() {
 	// enable FIFO with 14-byte threshold
 	*UART_FIFO_CTRL = 0x7;
 	// disable all interrupts
-	*UART_IER = 0x0;
+	// *UART_IER = 0x0;
 
 }
 
