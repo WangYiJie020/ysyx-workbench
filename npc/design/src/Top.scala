@@ -171,10 +171,8 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   // val uart = Module(new UARTUnit)
   val clint = Module(new CLINTUnit)
 
-  val resetPrev = RegNext(reset.asBool, true.B)
-
   val otherReqSlave = Wire(AXI4IO.Slave)
-  AXI4IO.transformSlaveToMasterValidIf(!resetPrev)(io.master, otherReqSlave)
+  AXI4IO.transformSlaveToMasterValidIf(!reset.asBool)(io.master, otherReqSlave)
 
   val memXBar = Module(new AXI4LiteXBar(Seq(
     // (MEM_BASE,MEM_END) -> mem.io,
