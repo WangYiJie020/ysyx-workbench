@@ -29,10 +29,10 @@ void init_serial() {
   // set UART to 8 bits, no parity, one stop bit
   // 0x3 = 0b11 : Select each character 8 bits
   // 0x80 = 0b10000000 : Divisor Latch Access bit
-  *UART_LCR = 0x3 | 0x80;
+  // *UART_LCR = 0x3 | 0x80;
   // set baud rate to 115200
-	*UART_DL_MSB = 0x0;
-	*UART_DL_LSB = 0;
+	// *UART_DL_MSB = 0x0;
+	// *UART_DL_LSB = 0;
 	// clear DLAB bit
 	*UART_LCR = 0x3;
 	// enable FIFO with 14-byte threshold
