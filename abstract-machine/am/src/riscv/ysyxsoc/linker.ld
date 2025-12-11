@@ -18,10 +18,10 @@ SECTIONS {
     *(.rodata*)
   } > mrom
   .data : {
+		_data = .;
     *(.data*)
-  } > sram AT> mrom : data
-	_edata = .;
-	_data = .;
+		_edata = .;
+  } > sram AT> sram : data
 
   .bss : {
 	_bss_start = .;
