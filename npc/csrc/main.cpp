@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
   // setting.always_show_disasm=true;
   setting.enable_inst_trace = true;
 	// setting.ftrace = true;
-	// setting.difftest = false;
+	setting.difftest = false;
   // setting.trace_mmio_write=true;
   setting.enable_waveform = true;
 
