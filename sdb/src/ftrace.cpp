@@ -70,11 +70,11 @@ public:
     auto tar_f = elf.get_fun_at(target);
     auto tar_fname = tar_f ? tar_f->name : "(unknown)";
 
-    _log("0x{:08X}: "
-         "{}{} " ANSI_FG_GRAY "f`{:08X}" ANSI_NONE "{} cur {} tar {}\n",
-         ctx.pc, type == jump_type::call ? ANSI_FG_YELLOW : ANSI_FG_BLUE,
-         hint_str, tar_f ? tar_f->addr : 0, string(func_depth, ' '), tar_fname,
-         cur_fname);
+    _log("0x{:08X}@f`{}: "
+         "{}{} " ANSI_FG_GRAY "f`{:08X}" ANSI_NONE "{} {}\n",
+         ctx.pc, cur_fname,
+         type == jump_type::call ? ANSI_FG_YELLOW : ANSI_FG_BLUE, hint_str,
+         tar_f ? tar_f->addr : 0, string(func_depth, ' '), tar_fname);
 
     if (type == jump_type::ret) {
       if (func_depth > 0)
