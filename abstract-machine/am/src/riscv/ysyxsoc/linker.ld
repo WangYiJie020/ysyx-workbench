@@ -1,34 +1,45 @@
 ENTRY(_start)
-PHDRS { text PT_LOAD; data PT_LOAD; }
+/* PHDRS { text PT_LOAD; data PT_LOAD; } */
+
+MEMORY {
+  mrom : ORIGIN = 0x20000000, LENGTH = 4K
+  sram : ORIGIN = 0x0f000000, LENGTH = 8K
+}
 
 SECTIONS {
-  . = _mrom_start;
+  . = ORIGIN(mrom);
   .text : {
+		_text = .;
     *(entry)
     *(.text*)
-  } : text
-  etext = .;
-  _etext = .;
-  .rodata : {
-    *(.rodata*)
-  }
+		_etext = .;
+  } > mrom
+  /* .rodata : { */
+  /*   *(.rodata*) */
+  /* } > mrom AT> mrom */
   .data : {
+		_data = .;
+    *(.sdata*)
     *(.data*)
-  } : data
-  edata = .;
-  _data = .;
+		_edata = .;
+  } > sram AT> mrom
+
+	__data_load_start__ = LOADADDR(.data); /* MA */
+	__data_size__       = SIZEOF(.data);   /* LEN */
+
   .bss : {
-	_bss_start = .;
+		_bss = .;
     *(.bss*)
     *(.sbss*)
     *(.scommon)
-  }
+		_ebss = .;
+  } > sram
 
-  _stack_top = _sram_start + _sram_size - _stack_size;
-  . = _stack_top + _stack_size;
-  _stack_pointer = .;
-  end = .;
-  _end = .;
-  _heap_start = _sram_start;
+	_sram_start = ORIGIN(sram);
+	_sram_size = LENGTH(sram);
+
+  _stack_top = _sram_start + _sram_size;
+  _stack_pointer  = _stack_top;
+  _heap_start = _edata;
 	_heap_end = _stack_top;
 }

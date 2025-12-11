@@ -7,26 +7,6 @@
 
 #include "sprobe.hpp"
 
-void read_and_check(std::string sig_name) {
-  vpiHandle vh1 = vpi_handle_by_name((PLI_BYTE8 *)(sig_name.c_str()), NULL);
-  if (!vh1) {
-    printf("No handle found for %s\n", sig_name.c_str());
-    return;
-    // vl_fatal(__FILE__, __LINE__, "sim_main", "No handle found");
-  }
-  const char *name = vpi_get_str(vpiName, vh1);
-  const char *type = vpi_get_str(vpiType, vh1);
-  const int size = vpi_get(vpiSize, vh1);
-  printf("name: %s, type: %s, size: %d\n", name, type, size);
-
-  return;
-  s_vpi_value v;
-  v.format = vpiIntVal;
-  vpi_get_value(vh1, &v);
-  printf("Value of %s: %d\n", name,
-         v.value.integer); // Prints "Value of readme: 0"
-}
-
 SProbe sprobe;
 void cyc_callback() {
   if (sim_halted())
@@ -35,17 +15,8 @@ void cyc_callback() {
 }
 
 int main(int argc, char **argv) {
-  sim_setting setting;
-  // setting.trace_pmem_readcall=true;
-  // setting.trace_pmem_writecall=true;
-  // setting.trace_clock_cycle=true;
-  // setting.always_show_disasm=true;
-  setting.enable_inst_trace = true;
-	setting.ftrace = true;
-	// setting.difftest = false;
-  // setting.trace_mmio_write=true;
-  setting.enable_waveform = true;
-
+	sim_setting setting;
+	load_sim_setting_from_env(setting);
   setting.cycle_finish_cb = cyc_callback;
   sim_init(argc, argv, setting);
 
@@ -53,16 +24,6 @@ int main(int argc, char **argv) {
   //
   std::string top_vpi_name =
       std::string("TOP.") + std::string(_STR(TOP_NAME)).substr(1);
-  //
-  // vpiHandle top = vpi_handle_by_name((PLI_BYTE8 *)top_vpi_name.c_str(), NULL);
-  // assert(top);
-  //
-  // vpi_release_handle(top);
-  //
-  // std::cout << "===== All Signal Probed =====" << std::endl;
-  // for (auto &n : sprobe._fullnames) {
-  //   std::cout << n << std::endl;
-  // }
 
   std::string cmd;
   bool quit = false;

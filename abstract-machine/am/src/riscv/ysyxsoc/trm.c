@@ -1,8 +1,12 @@
 #include <am.h>
 #include <klib-macros.h>
+#include <klib.h>
+#include <stdint.h>
 
 extern char _heap_start;
 extern char _heap_end;
+
+typedef int (*mainfunc_t)(const char *args);
 
 int main(const char *args);
 
@@ -24,7 +28,18 @@ asm volatile("mv a0, %0; ebreak" : :"r"(code));
 	while (1) {} // make sure no return
 }
 
+extern char _data, _edata,_text, _etext;
+extern char _bss, _ebss;
+
+extern char __data_load_start__;
+extern char __data_size__;
+
 void _trm_init() {
+	memcpy((void *)&_data, (void *)&__data_load_start__, (uintptr_t)&__data_size__);
+
+	// printf("%d\n",(uintptr_t)&__data_size__);
+
+	// memset((void *)&_bss, 0, (uintptr_t)&_ebss - (uintptr_t)&_bss);
 	int ret = main(mainargs);
 	halt(ret);
 }
