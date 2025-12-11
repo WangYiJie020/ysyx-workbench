@@ -87,7 +87,7 @@ public:
 		(void)show_addr;
 
 		// " ANSI_FG_GRAY "f`{:08X}
-    _log("0x{:08X}: {} " ANSI_NONE "{}{}\n", ctx.pc,
+    _log("0x{:08X}: {}" ANSI_NONE "{}{}\n", ctx.pc,
          hint_str, string(func_depth, ' '), msg);
 
     if (type == jump_type::ret) {
