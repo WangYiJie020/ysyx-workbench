@@ -76,7 +76,7 @@ public:
     if (type == jump_type::call) {
       hint_str = ANSI_FG_YELLOW "call";
       msg =
-          format(ANSI_FG_FUN "{}" ANSI_NONE " from " ANSI_FG_GRAY "{}" ANSI_NONE,
+          format(ANSI_FG_FUN "{}" ANSI_FG_GRAY " from " ANSI_FG_FUN "{}" ANSI_NONE,
                  tar_fname, cur_fname);
       show_addr = tar_f ? tar_f->addr : 0;
     } else {
