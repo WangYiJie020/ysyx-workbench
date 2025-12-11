@@ -31,20 +31,19 @@ void init_serial() {
   // 0x3 = 0b11 : Select each character 8 bits
   // 0x80 = 0b10000000 : Divisor Latch Access bit
   *UART_LCR = 0x3;
-	*UART_LCR = 0x80;
-	if(*UART_LCR != 0x80){
-	*UART_DL_LSB = 'F';
-	}
+  *UART_LCR = 0x80;
+  if (*UART_LCR == 0x3) {
+    *UART_DL_LSB = 'F';
+  }
   // set baud rate to 115200
-	*UART_DL_MSB = 'A';
-	*UART_DL_LSB = 'B';
-	// clear DLAB bit
-	// *UART_LCR = 0x3;
-	// enable FIFO with 14-byte threshold
-	// *UART_FIFO_CTRL = 0x7 | (0x3 << 6);
-	// disable all interrupts
-	// *UART_IER = 0x0;
-
+  *UART_DL_MSB = 'A';
+  *UART_DL_LSB = 'B';
+  // clear DLAB bit
+  // *UART_LCR = 0x3;
+  // enable FIFO with 14-byte threshold
+  // *UART_FIFO_CTRL = 0x7 | (0x3 << 6);
+  // disable all interrupts
+  // *UART_IER = 0x0;
 }
 
 void putch(char ch) { *(uint8_t *)(SERIAL_PORT + 0x00) = ch; }
@@ -64,7 +63,7 @@ extern char __data_size__;
 void _trm_init() {
   memcpy((void *)&_data, (void *)&__data_load_start__,
          (uintptr_t)&__data_size__);
-	init_serial();
+  init_serial();
 
   // printf("%d\n",(uintptr_t)&__data_size__);
 
