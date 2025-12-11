@@ -32,6 +32,8 @@ struct sim_setting{
 	std::string wave_fst_file="build/wave.fst";
 };
 
+sim_setting load_sim_setting_from_env();
+
 bool sim_init(int argc, char** argv,sim_setting teg=sim_setting{});
 
 void sim_step_cycle();
