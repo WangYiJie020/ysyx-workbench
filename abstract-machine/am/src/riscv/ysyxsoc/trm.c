@@ -31,9 +31,12 @@ asm volatile("mv a0, %0; ebreak" : :"r"(code));
 extern char _data, _edata,_text, _etext;
 extern char _bss, _ebss;
 
+extern char __data_load_start__;
+extern char __data_size__;
+
 void _trm_init() {
-	memcpy((void *)&_data, (void *)&_text, (uintptr_t)&_etext - (uintptr_t)&_text);
-	memset((void *)&_bss, 0, (uintptr_t)&_ebss - (uintptr_t)&_bss);
+	memcpy((void *)&_data, (void *)&__data_load_start__, (uintptr_t)&__data_size__);
+	// memset((void *)&_bss, 0, (uintptr_t)&_ebss - (uintptr_t)&_bss);
 	int ret = main(mainargs);
 	halt(ret);
 }
