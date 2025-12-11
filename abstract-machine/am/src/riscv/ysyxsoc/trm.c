@@ -20,7 +20,7 @@ static const char mainargs[MAINARGS_MAX_LEN] =
 
 #define SERIAL_PORT 0x10000000u
 
-#define UART_LCR ((volatile uint32_t *)(SERIAL_PORT + 0x03))
+#define UART_LCR ((volatile uint8_t *)(SERIAL_PORT + 0x03))
 #define UART_DL_LSB ((volatile uint8_t *)(SERIAL_PORT + 0x00))
 #define UART_DL_MSB ((volatile uint8_t *)(SERIAL_PORT + 0x01))
 #define UART_FIFO_CTRL ((volatile uint8_t *)(SERIAL_PORT + 0x02))
@@ -31,7 +31,7 @@ void init_serial() {
   // set UART to 8 bits, no parity, one stop bit
   // 0x3 = 0b11 : Select each character 8 bits
   // 0x80 = 0b10000000 : Divisor Latch Access bit
-  *UART_LCR = 0x83000000;//0x3 | 0x80u;
+  *UART_LCR = 0x3 | 0x80u;
   // while (*UART_LCR == 0x0) {
   //   *UART_LCR = 0x80;
   //   *UART_DL_LSB = 'F';
