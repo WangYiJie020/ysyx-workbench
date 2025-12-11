@@ -27,6 +27,9 @@ static const char mainargs[MAINARGS_MAX_LEN] =
 #define UART_IER ((volatile uint8_t *)(SERIAL_PORT + 0x01))
 
 void init_serial() {
+
+	*((uint32_t*)(SERIAL_PORT)) = 0x83838383;
+
   // set UART to 8 bits, no parity, one stop bit
   // 0x3 = 0b11 : Select each character 8 bits
   // 0x80 = 0b10000000 : Divisor Latch Access bit
