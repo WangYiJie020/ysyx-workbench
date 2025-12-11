@@ -13,7 +13,7 @@ SECTIONS {
     *(entry)
     *(.text*)
 		_etext = .;
-  } > sram AT> mrom : text
+  } > mrom AT> mrom : text
   .rodata : {
     *(.rodata*)
   } > mrom
@@ -21,14 +21,14 @@ SECTIONS {
 		_data = .;
     *(.data*)
 		_edata = .;
-  } > sram AT> mrom : data
+  } > mrom AT> mrom : data
 
   .bss : {
 	_bss_start = .;
     *(.bss*)
     *(.sbss*)
     *(.scommon)
-  } > sram
+  } > mrom
 
 	_sram_start = ORIGIN(sram);
 	_sram_size = LENGTH(sram);
