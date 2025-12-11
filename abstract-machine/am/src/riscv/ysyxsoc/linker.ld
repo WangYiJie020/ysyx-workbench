@@ -38,6 +38,6 @@ SECTIONS {
   _stack_pointer = .;
   end = .;
   _end = .;
-  _heap_start = _sram_start;
+  _heap_start = _edata;
 	_heap_end = _stack_top;
 }
