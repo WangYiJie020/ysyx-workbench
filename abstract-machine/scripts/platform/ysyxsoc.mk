@@ -4,8 +4,8 @@ AM_SRCS := riscv/ysyxsoc/start.S \
 CFLAGS    += -fdata-sections -ffunction-sections
 LDSCRIPTS += $(AM_HOME)/am/src/riscv/ysyxsoc/linker.ld
 LDFLAGS	  += --defsym=_pmem_start=0x20000000
-LDFLAGS	  += --defsym=_sram_size=0x2000 --defsym=_mrom_size=0x1000
-LDFLAGS   += --defsym=_stack_size=0x000
+# LDFLAGS	  += --defsym=_sram_size=0x2000 --defsym=_mrom_size=0x1000
+LDFLAGS   += --defsym=_stack_size=0x100
 LDFLAGS   += --gc-sections -e _start
 
 MAINARGS_MAX_LEN = 64
