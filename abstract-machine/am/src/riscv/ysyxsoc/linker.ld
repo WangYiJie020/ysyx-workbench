@@ -30,4 +30,5 @@ SECTIONS {
   end = .;
   _end = .;
   _heap_start = _sram_start;
+	_heap_end = _stack_top;
 }
