@@ -37,8 +37,8 @@ SECTIONS {
 	_sram_start = ORIGIN(sram);
 	_sram_size = LENGTH(sram);
 
-  _stack_top = _sram_start + _sram_size - _stack_size;
-  _stack_pointer  = _stack_top + _stack_size;
+  _stack_top = _sram_start + _sram_size;
+  _stack_pointer  = _stack_top;
   _heap_start = _edata;
 	_heap_end = _stack_top;
 }
