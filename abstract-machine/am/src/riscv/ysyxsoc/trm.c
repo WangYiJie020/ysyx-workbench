@@ -24,6 +24,7 @@ static const char mainargs[MAINARGS_MAX_LEN] =
 #define UART_DL_LSB ((volatile uint8_t *)(SERIAL_PORT + 0x00))
 #define UART_DL_MSB ((volatile uint8_t *)(SERIAL_PORT + 0x01))
 #define UART_FIFO_CTRL ((volatile uint8_t *)(SERIAL_PORT + 0x02))
+#define UART_IER ((volatile uint8_t *)(SERIAL_PORT + 0x01))
 
 void init_serial() {
   // set UART to 8 bits, no parity, one stop bit
@@ -36,7 +37,9 @@ void init_serial() {
 	// clear DLAB bit
 	*UART_LCR = 0x3;
 	// enable FIFO with 14-byte threshold
-	// *UART_FIFO_CTRL = 0x7;
+	*UART_FIFO_CTRL = 0x7;
+	// disable all interrupts
+	*UART_IER = 0x0;
 
 }
 
