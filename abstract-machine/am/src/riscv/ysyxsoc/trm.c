@@ -20,7 +20,7 @@ static const char mainargs[MAINARGS_MAX_LEN] =
 
 #define SERIAL_PORT 0x10000000
 
-#define UART_LCR ((volatile uint8_t *)(SERIAL_PORT + 0x03))
+#define UART_LCR ((uint8_t *)(SERIAL_PORT + 0x03))
 #define UART_DL_LSB ((volatile uint8_t *)(SERIAL_PORT + 0x00))
 #define UART_DL_MSB ((volatile uint8_t *)(SERIAL_PORT + 0x01))
 #define UART_FIFO_CTRL ((volatile uint8_t *)(SERIAL_PORT + 0x02))
