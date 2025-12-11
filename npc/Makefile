@@ -1,6 +1,7 @@
 BUILD_DIR = ./build
 # case sensitive
-TOP_NAME = ysyxSoCFull #ysyx_25100261
+TOP_NAME = ysyxSoCFull
+#ysyx_25100261
 
 SIM_CSRC_DIR = ./csrc
 SIM_BIN = $(BUILD_DIR)/$(TOP_NAME)
@@ -21,7 +22,7 @@ ENABLE_NVBOARD ?= 0
 
 ENABLE_WAVE ?= 1
 ifeq ($(ENABLE_WAVE), 1)
-VERILATOR_CFLAGS += --trace-fst
+VERILATOR_CFLAGS += --trace-fst --trace-structs
 endif
 
 ifeq ($(ENABLE_VPI), 1)
@@ -66,6 +67,7 @@ INC_PATH += $(abspath ../sdb/include)
 LDFLAGS += $(SAN_FLAGS) -L$(abspath ../sdb/build) -lsdb
 ARCHIVES += $(NVBOARD_ARCHIVE) $(abspath ../sdb/build/libsdb.a)
 
+
 # dirs
 $(shell mkdir -p $(BUILD_DIR))
 $(shell mkdir -p $(V2CXX_EMIT_DIR))
@@ -106,17 +108,19 @@ SIM_VSRCS += $(SOC_PERIP_VSRCS)
 VERILATOR_INCDIRS += $(abspath $(SOC_HOME)/perip/uart16550/rtl)
 VERILATOR_INCDIRS += $(abspath $(SOC_HOME)/perip/spi/rtl)
 
-VERILATOR_CFLAGS += --timescale "1ns/1ns" --no-timing \
-										-Wno-SYMRSVDWORD # make uart verilog happy
-
+VERILATOR_CFLAGS += --timescale "1ns/1ns" --no-timing 
+VERILATOR_CFLAGS += -Wno-SYMRSVDWORD # make uart verilog happy
+# VERILATOR_CFLAGS += -Wno-UNOPTFLAT
 # rules for verilator
 
-VERILATOR_CFLAGS += -MMD --build -cc \
-										--x-assign fast --x-initial fast \
+VERILATOR_CFLAGS += -MMD -cc\
 										--autoflush \
 										--hierarchical \
-										--output-split 20000 \
+										--compiler clang \
 										$(addprefix -I,$(VERILATOR_INCDIRS)) \
+
+										# --output-split 20000 
+										# --x-assign fast --x-initial fast \
 
 VERILATOR_CONTROL_FILE = verilator.vlt
 
@@ -125,7 +129,10 @@ VERILATOR_CONTROL_FILE = verilator.vlt
 
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME=V$(TOP_NAME) -DENABLE_VPI=$(ENABLE_VPI) -DENABLE_WAVE=$(ENABLE_WAVE)
-CXXFLAGS += $(SAN_FLAGS) -std=c++20 -g -fno-inline -O0
+CXXFLAGS += $(SAN_FLAGS) -std=c++20 -g # -fno-inline -O0
+
+# make link faster
+LDFLAGS += -fuse-ld=mold
 
 $(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) $(CHISEL2V_DONE) $(VPI_DONE) $(SIM_HEADERS)
 	@rm -rf $(V2CXX_EMIT_DIR)
@@ -135,6 +142,7 @@ $(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) $(CHISEL2V_DONE) $(VPI_DONE) $
 		$(addprefix -CFLAGS , $(CXXFLAGS)) \
 		$(addprefix -LDFLAGS , $(LDFLAGS)) \
 		--Mdir $(V2CXX_EMIT_DIR) --exe -o $(abspath $(SIM_BIN))
+	make -C $(V2CXX_EMIT_DIR) -f V$(TOP_NAME).mk -j$(shell nproc) OPT_FAST="-O0" CXX=clang++
 
 all: default
 
