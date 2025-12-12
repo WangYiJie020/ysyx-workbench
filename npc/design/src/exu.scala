@@ -171,6 +171,7 @@ class EXU extends Module {
   memIO.arvalid := isLoad && (!memRDone) && (!memAddrSent)
 
   val isDeviceMem = (memAddr >= "h10000000".U) && (memAddr < "h10002000".U)
+  val isSRAM = (memAddr >= "h0f000000".U) && (memAddr < "h0f002000".U)
 
   memIO.arid    := 0.U
   memIO.arlen   := 0.U
@@ -191,7 +192,7 @@ class EXU extends Module {
     memAddrSent := false.B
   }
 
-  val memRdData = memRdRawData //>> memAddrUnalignPartBitlen
+  val memRdData = Mux(isSRAM,memRdRawData >> memAddrUnalignPartBitlen,memRdRawData)
 
   // mem write
 
