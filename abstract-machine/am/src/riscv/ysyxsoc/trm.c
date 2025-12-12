@@ -25,6 +25,7 @@ static const char mainargs[MAINARGS_MAX_LEN] =
 #define UART_DL_MSB ((volatile uint8_t *)(SERIAL_PORT + 0x01))
 #define UART_FIFO_CTRL ((volatile uint8_t *)(SERIAL_PORT + 0x02))
 #define UART_IER ((volatile uint8_t *)(SERIAL_PORT + 0x01))
+#define UART_LSR ((volatile uint8_t *)(SERIAL_PORT + 0x05))
 
 void init_serial() {
 
@@ -32,7 +33,7 @@ void init_serial() {
   // 0x3 = 0b11 : Select each character 8 bits
   // 0x80 = 0b10000000 : Divisor Latch Access bit
   *UART_LCR = 0x03u | 0x80u;
-	// halt(*UART_LCR);
+  // halt(*UART_LCR);
 
   // set baud rate to 115200
   *UART_DL_MSB = 0;
@@ -42,10 +43,14 @@ void init_serial() {
   // enable FIFO with 14-byte threshold
   *UART_FIFO_CTRL = (0x3 << 6);
   // disable all interrupts
-  // *UART_IER = 0x0;
+  *UART_IER = 0x0;
 }
 
-void putch(char ch) { *(uint8_t *)(SERIAL_PORT + 0x00) = ch; }
+void putch(char ch) {
+  while (!(*UART_LSR & 0x20)) {
+  }
+  *(uint8_t *)(SERIAL_PORT + 0x00) = ch;
+}
 
 void halt(int code) {
   asm volatile("mv a0, %0; ebreak" : : "r"(code));
