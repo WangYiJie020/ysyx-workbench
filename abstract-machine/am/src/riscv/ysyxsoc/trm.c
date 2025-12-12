@@ -35,7 +35,7 @@ void init_serial() {
 
   // set baud rate to 115200
   *UART_DL_MSB = 100;
-  *UART_DL_LSB = 100;
+  *UART_DL_LSB = 10;
   // clear DLAB bit
   *UART_LCR = 0x3;
   // enable FIFO with 14-byte threshold
