@@ -191,7 +191,7 @@ class EXU extends Module {
     memAddrSent := false.B
   }
 
-  val memRdData = memRdRawData >> memAddrUnalignPartBitlen
+  val memRdData = memRdRawData //>> memAddrUnalignPartBitlen
 
   // mem write
 
