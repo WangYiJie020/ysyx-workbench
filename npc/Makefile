@@ -60,6 +60,7 @@ ifeq ($(ENABLE_VPI), 1)
 	sed -i '1i /*verilator public_on*/' $(src); \
 	sed -i -e '$$a /*verilator public_off*/' $(src);)
 	touch $(VPI_DONE)
+	@echo "VPI insertion done"
 endif
 
 # sdb
