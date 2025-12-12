@@ -81,7 +81,10 @@ class EXUIFU_MemVisitArbiter extends Module {
   outIO.arvalid := exuIO.arvalid || ifuIO.arvalid
   outIO.araddr  := Mux(isExu, exuIO.araddr, ifuIO.araddr)
 
-  io.out.dontCareNonLiteAR()
+  outIO.arid    := Mux(isExu, exuIO.arid, ifuIO.arid)
+  outIO.arlen   := Mux(isExu, exuIO.arlen, ifuIO.arlen)
+  outIO.arsize  := Mux(isExu, exuIO.arsize, ifuIO.arsize)
+  outIO.arburst := Mux(isExu, exuIO.arburst, ifuIO.arburst)
 
   exuIO.arready := isExu && outIO.arready
   ifuIO.arready := isIfu && outIO.arready
