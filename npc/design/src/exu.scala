@@ -217,7 +217,7 @@ class EXU extends Module {
   when(memIO.bvalid) {}
   memIO.bready := true.B
 
-  memWData := reg_v2 << memAddrUnalignPartBitlen
+  memWData := (reg_v2 << memAddrUnalignPartBitlen) | (reg_v2 & 0xff.U)
   memWAddr := memAddr
   memWMask := MuxLookup(func3t, 0.U)(
     Seq(
