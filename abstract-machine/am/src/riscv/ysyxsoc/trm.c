@@ -39,9 +39,9 @@ void init_serial() {
   // clear DLAB bit
   *UART_LCR = 0x3;
   // enable FIFO with 14-byte threshold
-  *UART_FIFO_CTRL = 0x7 | (0x3 << 6);
+  *UART_FIFO_CTRL = (0x3 << 6);
   // disable all interrupts
-  // *UART_IER = 0x0;
+  *UART_IER = 0x0;
 }
 
 void putch(char ch) { *(uint8_t *)(SERIAL_PORT + 0x00) = ch; }
