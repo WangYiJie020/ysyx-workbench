@@ -156,7 +156,6 @@ class EXU extends Module {
   val memIO = io.mem
 
   io.mem.dontCareNonLiteAR()
-  io.mem.dontCareNonLiteAW()
   io.mem.dontCareNonLiteW()
 
   memIO.araddr  := memAddr
@@ -188,6 +187,11 @@ class EXU extends Module {
   memIO.awvalid := isStore && (!memWDone) && (!memAddrSent)
   memIO.wvalid  := isStore && (!memWDone)
 
+  memIO.awid := 0.U
+  memIO.awlen := 0.U
+  memIO.awsize := func3t 
+  memIO.awburst := 1.U
+
   when(memIO.awvalid && memIO.awready) {
     memAddrSent := true.B
   }
@@ -198,12 +202,12 @@ class EXU extends Module {
   when(memIO.bvalid) {}
   memIO.bready := true.B
 
-  memWData := reg_v2 << memAddrUnalignPartBitlen
+  memWData := reg_v2// << memAddrUnalignPartBitlen
   memWAddr := memAddr
   memWMask := MuxLookup(func3t, 0.U)(
     Seq(
-      MemOp.byte     -> (1.U(4.W) << memAddrUnalignPart),
-      MemOp.halfword -> (3.U(4.W) << memAddrUnalignPart),
+      MemOp.byte     -> (1.U(4.W)), // << memAddrUnalignPart),
+      MemOp.halfword -> (3.U(4.W)), // << memAddrUnalignPart),
       MemOp.word     -> 15.U(4.W)
     )
   )
