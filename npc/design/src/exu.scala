@@ -136,25 +136,11 @@ class EXU extends Module {
     }
   }
 
-  val memAddr                  = reg_v1 + dinst.info.imm
-  val memAddrUnalignPart       = memAddr(1, 0)
-  val memAddrUnalignPartBitlen = memAddrUnalignPart << 3
-
   val memRdRawData = Reg(Types.UWord)
 
   val isLoad  = (dinst.info.typ === InstType.load) && MS_fsm.io.master_valid
   val isStore = (dinst.info.typ === InstType.store) && MS_fsm.io.master_valid
   val isMemOp = isLoad || isStore
-
-  val memOpSize = MuxLookup(func3t, 0.U)(
-    Seq(
-      MemOp.byte     -> 0.U,
-      MemOp.halfword -> 1.U,
-      MemOp.word     -> 2.U,
-      MemOp.lbu      -> 0.U,
-      MemOp.lhu      -> 1.U
-    )
-  )
 
   val memWDone = Reg(Bool())
   val memRDone = Reg(Bool())
@@ -167,16 +153,29 @@ class EXU extends Module {
 
   io.mem.dontCareNonLiteW()
 
+  val memAddr                  = reg_v1 + dinst.info.imm
+  val memAddrUnalignPart       = memAddr(1, 0)
+  val memAddrUnalignPartBitlen = memAddrUnalignPart << 3
+
   memIO.araddr  := memAddr
   memIO.arvalid := isLoad && (!memRDone) && (!memAddrSent)
 
-  val isDeviceMem = (memAddr >= "h10000000".U) && (memAddr < "h10002000".U)
-  val isSRAM = (memAddr >= "h0f000000".U) && (memAddr < "h0f002000".U)
+  val memOpSize = MuxLookup(func3t, 0.U)(
+    Seq(
+      MemOp.byte     -> 0.U,
+      MemOp.halfword -> 1.U,
+      MemOp.word     -> 2.U,
+      MemOp.lbu      -> 0.U,
+      MemOp.lhu      -> 1.U
+    )
+  )
 
   memIO.arid    := 0.U
   memIO.arlen   := 0.U
-  memIO.arsize  := memOpSize//Mux(isDeviceMem, memOpSize, 2.U)
+  memIO.arsize  := memOpSize
   memIO.arburst := 1.U
+
+  val memRdData = memRdRawData >> memAddrUnalignPartBitlen
 
   when(memIO.arvalid && memIO.arready) {
     memAddrSent := true.B
@@ -191,8 +190,6 @@ class EXU extends Module {
     memWDone    := false.B
     memAddrSent := false.B
   }
-
-  val memRdData = Mux(isSRAM,memRdRawData >> memAddrUnalignPartBitlen,memRdRawData)
 
   // mem write
 
