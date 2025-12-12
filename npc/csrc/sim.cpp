@@ -317,7 +317,7 @@ extern "C" void mrom_read(int32_t addr, int32_t *data) {
 	*data = *(int32_t *)ptr;
 	uintptr_t aligned_addr = addr & (~0x3);
 	uint32_t aligned_data = *(uint32_t *)( (uintptr_t)mem + aligned_addr);
-	printf("[DPI] mrom_read addr=%08x data=%08x alignedd=%08X\n", addr + MROM_BASE, *data,aligned_data);
+	// printf("[DPI] mrom_read addr=%08x data=%08x alignedd=%08X\n", addr + MROM_BASE, *data,aligned_data);
 }
 
 // ARG
