@@ -62,7 +62,7 @@ extern char __data_load_start__;
 extern char __data_size__;
 
 void _trm_init() {
-  // init_serial();
+  init_serial();
 
   memcpy((void *)&_data, (void *)&__data_load_start__,
          (uintptr_t)&__data_size__);
