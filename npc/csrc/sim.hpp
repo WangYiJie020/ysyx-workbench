@@ -13,6 +13,8 @@ struct sim_setting {
   bool en_showdisasm = true;
   bool always_showdisasm = false;
 
+	bool no_batch = false;
+
   bool ftrace = false;
   bool iringbuf = true;
   bool etrace = true;

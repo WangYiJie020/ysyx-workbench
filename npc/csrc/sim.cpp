@@ -424,7 +424,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 
   reset(10);
 
-  if (batch_mode) {
+  if (batch_mode && !setting.no_batch) {
     dbg->exec_command("c");
     return dbg->state().is_badexit();
   }
