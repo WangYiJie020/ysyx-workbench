@@ -202,11 +202,11 @@ class EXU extends Module {
   when(memIO.bvalid) {}
   memIO.bready := true.B
 
-  memWData := Mux(func3t===MemOp.halfword, reg_v2 << memAddrUnalignPartBitlen,reg_v2)
+  memWData := reg_v2 << memAddrUnalignPartBitlen
   memWAddr := memAddr
   memWMask := MuxLookup(func3t, 0.U)(
     Seq(
-      MemOp.byte     -> (1.U(4.W)), // << memAddrUnalignPart),
+      MemOp.byte     -> (1.U(4.W) << memAddrUnalignPart),
       MemOp.halfword -> (3.U(4.W) << memAddrUnalignPart),
       MemOp.word     -> 15.U(4.W)
     )
