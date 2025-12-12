@@ -114,14 +114,15 @@ VERILATOR_CFLAGS += -Wno-SYMRSVDWORD # make uart verilog happy
 # VERILATOR_CFLAGS += -Wno-UNOPTFLAT
 # rules for verilator
 
-VERILATOR_CFLAGS += -MMD -cc\
+VERILATOR_CFLAGS += -MMD -cc \
+										-O3 \
+										--x-assign fast --x-initial fast \
 										--autoflush \
 										--hierarchical \
 										--compiler clang \
 										$(addprefix -I,$(VERILATOR_INCDIRS)) \
 
 										# --output-split 20000 
-										# --x-assign fast --x-initial fast \
 
 VERILATOR_CONTROL_FILE = verilator.vlt
 
