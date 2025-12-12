@@ -146,6 +146,16 @@ class EXU extends Module {
   val isStore = (dinst.info.typ === InstType.store) && MS_fsm.io.master_valid
   val isMemOp = isLoad || isStore
 
+  val memOpSize = MuxLookup(func3t, 0.U)(
+    Seq(
+      MemOp.byte     -> 0.U,
+      MemOp.halfword -> 1.U,
+      MemOp.word     -> 2.U,
+      MemOp.lbu      -> 0.U,
+      MemOp.lhu      -> 1.U
+    )
+  )
+
   val memWDone = Reg(Bool())
   val memRDone = Reg(Bool())
 
@@ -155,11 +165,15 @@ class EXU extends Module {
 
   val memIO = io.mem
 
-  io.mem.dontCareNonLiteAR()
   io.mem.dontCareNonLiteW()
 
   memIO.araddr  := memAddr
   memIO.arvalid := isLoad && (!memRDone) && (!memAddrSent)
+
+  memIO.arid    := 0.U
+  memIO.arlen   := 0.U
+  memIO.arsize  := memOpSize
+
   when(memIO.arvalid && memIO.arready) {
     memAddrSent := true.B
   }
@@ -189,7 +203,7 @@ class EXU extends Module {
 
   memIO.awid := 0.U
   memIO.awlen := 0.U
-  memIO.awsize := func3t 
+  memIO.awsize := memOpSize
   memIO.awburst := 1.U
 
   when(memIO.awvalid && memIO.awready) {
