@@ -172,7 +172,7 @@ class EXU extends Module {
 
   memIO.arid    := 0.U
   memIO.arlen   := 0.U
-  memIO.arsize  := 2.U //memOpSize
+  memIO.arsize  := memOpSize
   memIO.arburst := 1.U
 
   when(memIO.arvalid && memIO.arready) {
@@ -189,7 +189,7 @@ class EXU extends Module {
     memAddrSent := false.B
   }
 
-  val memRdData = memRdRawData >> memAddrUnalignPartBitlen
+  val memRdData = memRdRawData //>> memAddrUnalignPartBitlen
 
   // mem write
 
