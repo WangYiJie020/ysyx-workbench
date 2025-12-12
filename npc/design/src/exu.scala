@@ -173,6 +173,7 @@ class EXU extends Module {
   memIO.arid    := 0.U
   memIO.arlen   := 0.U
   memIO.arsize  := memOpSize
+  memIO.arburst := 1.U
 
   when(memIO.arvalid && memIO.arready) {
     memAddrSent := true.B
