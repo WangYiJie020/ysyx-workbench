@@ -174,7 +174,7 @@ class EXU extends Module {
 
   memIO.arid    := 0.U
   memIO.arlen   := 0.U
-  memIO.arsize  := Mux(isDeviceMem, memOpSize, 2.U)
+  memIO.arsize  := memOpSize//Mux(isDeviceMem, memOpSize, 2.U)
   memIO.arburst := 1.U
 
   when(memIO.arvalid && memIO.arready) {

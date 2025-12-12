@@ -315,7 +315,7 @@ extern "C" void mrom_read(int32_t addr, int32_t *data) {
 	assert(addr < sizeof(mem));
 	uintptr_t ptr = (uintptr_t)mem + addr;
 	*data = *(int32_t *)ptr;
-	// printf("[DPI] mrom_read addr=%08x data=%08x\n", addr + MROM_BASE, *data);
+	printf("[DPI] mrom_read addr=%08x data=%08x\n", addr + MROM_BASE, *data);
 }
 
 // ARG
