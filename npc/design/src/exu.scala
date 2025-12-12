@@ -182,14 +182,14 @@ class EXU extends Module {
     memRdRawData := memIO.rdata
     memRDone     := true.B
   }
-  memIO.rready  := true.B
+  memIO.rready := true.B
   when(!isMemOp) {
     memRDone    := false.B
     memWDone    := false.B
     memAddrSent := false.B
   }
 
-  val memRdData = memRdRawData //>> memAddrUnalignPartBitlen
+  val memRdData = memRdRawData // >> memAddrUnalignPartBitlen
 
   // mem write
 
@@ -202,9 +202,9 @@ class EXU extends Module {
   memIO.awvalid := isStore && (!memWDone) && (!memAddrSent)
   memIO.wvalid  := isStore && (!memWDone)
 
-  memIO.awid := 0.U
-  memIO.awlen := 0.U
-  memIO.awsize := memOpSize
+  memIO.awid    := 0.U
+  memIO.awlen   := 0.U
+  memIO.awsize  := memOpSize
   memIO.awburst := 1.U
 
   when(memIO.awvalid && memIO.awready) {
@@ -221,8 +221,8 @@ class EXU extends Module {
   memWAddr := memAddr
   memWMask := MuxLookup(func3t, 0.U)(
     Seq(
-      MemOp.byte     -> (1.U(4.W) ), // << memAddrUnalignPart),
-      MemOp.halfword -> (3.U(4.W) ), // << memAddrUnalignPart),
+      MemOp.byte     -> (1.U(4.W) << memAddrUnalignPart),
+      MemOp.halfword -> (3.U(4.W) << memAddrUnalignPart),
       MemOp.word     -> 15.U(4.W)
     )
   )
