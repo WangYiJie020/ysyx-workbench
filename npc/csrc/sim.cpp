@@ -431,7 +431,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
     return dbg->state().is_badexit();
   }
 
-  return is_good_trap ? 0 : 1;
+  return 0;
 }
 
 void sim_exec_sdbcmd(std::string_view cmd, bool &quit) {

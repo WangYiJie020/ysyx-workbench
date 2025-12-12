@@ -18,7 +18,9 @@ int main(int argc, char **argv) {
 	sim_setting setting;
 	load_sim_setting_from_env(setting);
   setting.cycle_finish_cb = cyc_callback;
-  sim_init(argc, argv, setting);
+  if(sim_init(argc, argv, setting)!=0){
+		return 1;
+	}
 
   // get_dut()->contextp()->internalsDump(); // See scopes to help debug
   //
