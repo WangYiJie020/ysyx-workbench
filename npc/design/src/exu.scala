@@ -170,9 +170,11 @@ class EXU extends Module {
   memIO.araddr  := memAddr
   memIO.arvalid := isLoad && (!memRDone) && (!memAddrSent)
 
+  val isDeviceMem = (memAddr >= "h10000000".U) && (memAddr < "h10002000".U)
+
   memIO.arid    := 0.U
   memIO.arlen   := 0.U
-  memIO.arsize  := 2.U //memOpSize
+  memIO.arsize  := Mux(isDeviceMem, 2.U, memOpSize)
   memIO.arburst := 1.U
 
   when(memIO.arvalid && memIO.arready) {
