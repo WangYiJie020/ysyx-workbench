@@ -1,6 +1,7 @@
 #include "sim.hpp"
 
 #include <array>
+#include <cassert>
 #include <cstdint>
 #include <cstdio>
 #include <string_view>
@@ -311,11 +312,9 @@ extern "C" void mrom_read(int32_t addr, int32_t *data) {
   //     0x100007b7, 0x04100713, 0x00e78023, 0x00000013, 0xffdff06f,
   //
   // };
-  assert(addr % 4 == 0);
-  size_t index = addr / 4;
-  // printf("mrom read addr=%08x index=%lu\n",addr,index);
-  assert(index < img_size / 4);
-  *data = mem[index];
+	assert(addr < sizeof(mem));
+	uintptr_t ptr = (uintptr_t)mem + addr;
+	*data = *(int32_t *)ptr;
 }
 
 // ARG
