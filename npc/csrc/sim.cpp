@@ -385,7 +385,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   dbg->enable_inst_trace = setting.en_inst_trace;
 
   if (setting.en_inst_trace) {
-    if (setting.en_showdisasm) {
+    if (setting.showdisasm) {
       size_t inst_show_limit = setting.always_showdisasm ? SIZE_MAX : 16;
       dbg->add_trace(sdb::make_disasm_trace_handler(sdb::default_inst_disasm,
                                                     inst_show_limit));
@@ -411,7 +411,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
     }
   }
 
-  if (setting.enable_waveform) {
+  if (setting.en_waveform) {
     Verilated::traceEverOn(true);
     tfp = std::shared_ptr<VerilatedFstC>(new VerilatedFstC,
                                          [](VerilatedFstC *p) { p->close(); });
