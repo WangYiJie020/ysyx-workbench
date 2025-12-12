@@ -136,25 +136,11 @@ class EXU extends Module {
     }
   }
 
-  val memAddr                  = reg_v1 + dinst.info.imm
-  val memAddrUnalignPart       = memAddr(1, 0)
-  val memAddrUnalignPartBitlen = memAddrUnalignPart << 3
-
   val memRdRawData = Reg(Types.UWord)
 
   val isLoad  = (dinst.info.typ === InstType.load) && MS_fsm.io.master_valid
   val isStore = (dinst.info.typ === InstType.store) && MS_fsm.io.master_valid
   val isMemOp = isLoad || isStore
-
-  val memOpSize = MuxLookup(func3t, 0.U)(
-    Seq(
-      MemOp.byte     -> 0.U,
-      MemOp.halfword -> 1.U,
-      MemOp.word     -> 2.U,
-      MemOp.lbu      -> 0.U,
-      MemOp.lhu      -> 1.U
-    )
-  )
 
   val memWDone = Reg(Bool())
   val memRDone = Reg(Bool())
@@ -167,13 +153,29 @@ class EXU extends Module {
 
   io.mem.dontCareNonLiteW()
 
+  val memAddr                  = reg_v1 + dinst.info.imm
+  val memAddrUnalignPart       = memAddr(1, 0)
+  val memAddrUnalignPartBitlen = memAddrUnalignPart << 3
+
   memIO.araddr  := memAddr
   memIO.arvalid := isLoad && (!memRDone) && (!memAddrSent)
+
+  val memOpSize = MuxLookup(func3t, 0.U)(
+    Seq(
+      MemOp.byte     -> 0.U,
+      MemOp.halfword -> 1.U,
+      MemOp.word     -> 2.U,
+      MemOp.lbu      -> 0.U,
+      MemOp.lhu      -> 1.U
+    )
+  )
 
   memIO.arid    := 0.U
   memIO.arlen   := 0.U
   memIO.arsize  := memOpSize
   memIO.arburst := 1.U
+
+  val memRdData = memRdRawData >> memAddrUnalignPartBitlen
 
   when(memIO.arvalid && memIO.arready) {
     memAddrSent := true.B
@@ -182,14 +184,12 @@ class EXU extends Module {
     memRdRawData := memIO.rdata
     memRDone     := true.B
   }
-  memIO.rready  := true.B
+  memIO.rready := true.B
   when(!isMemOp) {
     memRDone    := false.B
     memWDone    := false.B
     memAddrSent := false.B
   }
-
-  val memRdData = memRdRawData // >> memAddrUnalignPartBitlen
 
   // mem write
 
@@ -202,9 +202,9 @@ class EXU extends Module {
   memIO.awvalid := isStore && (!memWDone) && (!memAddrSent)
   memIO.wvalid  := isStore && (!memWDone)
 
-  memIO.awid := 0.U
-  memIO.awlen := 0.U
-  memIO.awsize := memOpSize
+  memIO.awid    := 0.U
+  memIO.awlen   := 0.U
+  memIO.awsize  := memOpSize
   memIO.awburst := 1.U
 
   when(memIO.awvalid && memIO.awready) {

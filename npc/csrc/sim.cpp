@@ -313,9 +313,10 @@ extern "C" void mrom_read(int32_t addr, int32_t *data) {
   //
   // };
 	assert(addr < sizeof(mem));
+	addr &= ~0x3;
 	uintptr_t ptr = (uintptr_t)mem + addr;
 	*data = *(int32_t *)ptr;
-	// printf("[DPI] mrom_read addr=%08x data=%08x\n", addr + MROM_BASE, *data);
+	// printf("[DPI] mrom_read addr=%08x data=%08x alignedd=%08X\n", addr + MROM_BASE, *data,aligned_data);
 }
 
 // ARG
@@ -429,7 +430,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
     return dbg->state().is_badexit();
   }
 
-  return is_good_trap ? 0 : 1;
+  return 0;
 }
 
 void sim_exec_sdbcmd(std::string_view cmd, bool &quit) {
