@@ -4,7 +4,8 @@ TOP_NAME = ysyxSoCFull
 #ysyx_25100261
 
 SIM_CSRC_DIR = ./csrc
-SIM_BIN = $(BUILD_DIR)/$(TOP_NAME)
+VSIM_OPT?= -O0
+SIM_BIN = $(BUILD_DIR)/sim_$(TOP_NAME)$(VSIM_OPT)
 
 VERILATOR = verilator
 
@@ -135,7 +136,6 @@ CXXFLAGS += $(SAN_FLAGS) -std=c++20 -g # -fno-inline -O0
 # make link faster
 LDFLAGS += -fuse-ld=mold
 
-VSIM_OPT?= -O0
 
 $(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) $(CHISEL2V_DONE) $(VPI_DONE) $(SIM_HEADERS)
 	@rm -rf $(V2CXX_EMIT_DIR)
