@@ -5,7 +5,8 @@ TOP_NAME = ysyxSoCFull
 
 SIM_CSRC_DIR = ./csrc
 VSIM_OPT?= -O0
-SIM_BIN = $(BUILD_DIR)/sim_$(TOP_NAME)$(VSIM_OPT)
+SIM_BIN_DIR = $(BUILD_DIR)/bin
+SIM_BIN = $(SIM_BIN_DIR)/$(TOP_NAME)$(VSIM_OPT)
 
 VERILATOR = verilator
 
@@ -72,6 +73,7 @@ ARCHIVES += $(NVBOARD_ARCHIVE) $(abspath ../sdb/build/libsdb.a)
 
 # dirs
 $(shell mkdir -p $(BUILD_DIR))
+$(shell mkdir -p $(SIM_BIN_DIR))
 $(shell mkdir -p $(V2CXX_EMIT_DIR))
 $(shell mkdir -p $(CHISEL2V_EMIT_DIR))
 
@@ -173,7 +175,7 @@ clean:
 	-rm -rf $(BUILD_DIR)
 
 clean-bin:
-	-rm -f $(SIM_BIN)
+	-rm -rf $(SIM_BIN_DIR)
 
 .PHONY: test help reformat checkformat clean
 
