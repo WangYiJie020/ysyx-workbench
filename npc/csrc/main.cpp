@@ -7,6 +7,14 @@
 
 #include "sprobe.hpp"
 
+int f(int,int=9);
+
+int f(int a, int b) {
+
+	printf("a=%d b=%d\n", a, b);
+	return a+b;
+}
+
 SProbe sprobe;
 void cyc_callback() {
   if (sim_halted())
@@ -15,6 +23,9 @@ void cyc_callback() {
 }
 
 int main(int argc, char **argv) {
+
+	f(3);
+
 	sim_setting setting;
 	load_sim_setting_from_env(setting);
   setting.cycle_finish_cb = cyc_callback;
