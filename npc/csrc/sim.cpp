@@ -323,8 +323,8 @@ extern "C" void flash_read(int32_t addr, int32_t *data) {
 
 extern "C" void mrom_read(int32_t addr, int32_t *data) {
   constexpr uint32_t MROM_BASE = 0x20000000u;
-  assert(addr >= MROM_BASE);
-  addr -= MROM_BASE;
+  // assert(addr >= MROM_BASE);
+  // addr -= MROM_BASE;
 	assert(addr < sizeof(mem));
 	addr &= ~0x3;
 	uintptr_t ptr = (uintptr_t)mem + addr;
