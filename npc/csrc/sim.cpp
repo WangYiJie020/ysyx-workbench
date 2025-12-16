@@ -303,7 +303,23 @@ static long load_img() {
   return img_size;
 }
 
-extern "C" void flash_read(int32_t addr, int32_t *data) { assert(0); }
+uint32_t flash_data[8192];
+static void init_flash() {
+	uint8_t* flash_ptr = (uint8_t*)flash_data;
+	for (size_t i = 0; i < sizeof(flash_data); i++) {
+		flash_ptr[i] = i & 0xFF;
+	}
+}
+extern "C" void flash_read(int32_t addr, int32_t *data) {
+	constexpr uint32_t FLASH_BASE = 0x30000000u;
+	assert(addr >= FLASH_BASE);
+	addr -= FLASH_BASE;
+	assert(addr < sizeof(flash_data));
+	addr &= ~0x3;
+	uintptr_t ptr = (uintptr_t)flash_data + addr;
+	*data = *(int32_t *)ptr;
+}
+
 extern "C" void mrom_read(int32_t addr, int32_t *data) {
   constexpr uint32_t MROM_BASE = 0x20000000u;
   assert(addr >= MROM_BASE);
@@ -375,6 +391,8 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   using namespace std::ranges;
 
   load_img();
+
+	init_flash();
 
   dbg = std::make_shared<sdb::debuger>(
       INITIAL_PC, INITIAL_PC, img_size, sdbwrap::cpu_exec, sdbwrap::loadmem,
