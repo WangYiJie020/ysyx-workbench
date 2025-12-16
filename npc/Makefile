@@ -123,7 +123,7 @@ VERILATOR_CFLAGS += -MMD -cc \
 										--compiler clang \
 										$(addprefix -I,$(VERILATOR_INCDIRS)) \
 
-VERILATOR_CFLAGS += --hierarchical
+# VERILATOR_CFLAGS += --hierarchical
 										# --output-split 20000 
 
 VERILATOR_CONTROL_FILE = verilator.vlt
