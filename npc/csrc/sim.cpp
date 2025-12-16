@@ -311,6 +311,7 @@ static void init_flash() {
 	}
 }
 extern "C" void flash_read(int32_t addr, int32_t *data) {
+	printf("[DPI] flash_read addr=%08x\n", addr);
 	constexpr uint32_t FLASH_BASE = 0x30000000u;
 	assert(addr >= FLASH_BASE);
 	addr -= FLASH_BASE;
