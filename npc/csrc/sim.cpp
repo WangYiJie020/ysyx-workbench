@@ -311,10 +311,13 @@ static void init_flash() {
 	}
 }
 extern "C" void flash_read(int32_t addr, int32_t *data) {
-	// printf("[DPI] flash_read addr=%08x\n", addr);
 	constexpr uint32_t FLASH_BASE = 0x30000000u;
-	// assert(addr >= FLASH_BASE);
-	// addr -= FLASH_BASE;
+	
+	// in spi
+	//   .addr({8'b0, in_paddr[23:2], 2'b0}),
+	// so the high 8 bits are ignored
+	// 0x3XXXXXXX -> 0x0XXXXXXX
+	// no need to minus FLASH_BASE
 	assert(addr < sizeof(flash_data));
 	addr &= ~0x3;
 	uintptr_t ptr = (uintptr_t)flash_data + addr;
