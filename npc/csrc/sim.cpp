@@ -313,8 +313,8 @@ static void init_flash() {
 extern "C" void flash_read(int32_t addr, int32_t *data) {
 	printf("[DPI] flash_read addr=%08x\n", addr);
 	constexpr uint32_t FLASH_BASE = 0x30000000u;
-	assert(addr >= FLASH_BASE);
-	addr -= FLASH_BASE;
+	// assert(addr >= FLASH_BASE);
+	// addr -= FLASH_BASE;
 	assert(addr < sizeof(flash_data));
 	addr &= ~0x3;
 	uintptr_t ptr = (uintptr_t)flash_data + addr;
@@ -323,8 +323,8 @@ extern "C" void flash_read(int32_t addr, int32_t *data) {
 
 extern "C" void mrom_read(int32_t addr, int32_t *data) {
   constexpr uint32_t MROM_BASE = 0x20000000u;
-  // assert(addr >= MROM_BASE);
-  // addr -= MROM_BASE;
+  assert(addr >= MROM_BASE);
+  addr -= MROM_BASE;
 	assert(addr < sizeof(mem));
 	addr &= ~0x3;
 	uintptr_t ptr = (uintptr_t)mem + addr;
