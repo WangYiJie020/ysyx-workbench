@@ -184,16 +184,16 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     ("h0f000000".U(32.W),"hffffffff".U(32.W)) -> otherReqSlave
   )))
 
-  when(io.master.bvalid && io.master.bresp === AXI4IO.BResp.DECERR){
-    printf("AXI4 DECERR on write address 0x%x\n", io.master.awaddr)
-    stop()
-    stop()
-  }
-  when(io.master.rvalid && io.master.rresp === AXI4IO.RResp.DECERR){
-    printf("AXI4 DECERR on read address 0x%x\n", io.master.araddr)
-    stop()
-    stop()
-  }
+  // when(io.master.bvalid && io.master.bresp === AXI4IO.BResp.DECERR){
+  //   printf("AXI4 DECERR on write address 0x%x\n", io.master.awaddr)
+  //   stop()
+  //   stop()
+  // }
+  // when(io.master.rvalid && io.master.rresp === AXI4IO.RResp.DECERR){
+  //   printf("AXI4 DECERR on read address 0x%x\n", io.master.araddr)
+  //   stop()
+  //   stop()
+  // }
   val SERIAL_ADDR_BASE = "h10000000".U(32.W)
   val SERIAL_ADDR_END  = "h10000020".U(32.W)
   when(io.master.awvalid && io.master.awaddr >= SERIAL_ADDR_BASE && io.master.awaddr < SERIAL_ADDR_END && io.master.awready){
