@@ -120,10 +120,10 @@ VERILATOR_CFLAGS += -Wno-SYMRSVDWORD # make uart verilog happy
 VERILATOR_CFLAGS += -MMD -cc \
 										--x-assign fast --x-initial fast \
 										--autoflush \
-										--hierarchical \
 										--compiler clang \
 										$(addprefix -I,$(VERILATOR_INCDIRS)) \
 
+# VERILATOR_CFLAGS += --hierarchical
 										# --output-split 20000 
 
 VERILATOR_CONTROL_FILE = verilator.vlt
