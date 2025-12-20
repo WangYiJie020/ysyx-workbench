@@ -398,6 +398,8 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		Bits<12> imm = Bits<12>(Concat{InstRng(31, 25), InstRng(11, 7)});
 		// operation:
 		XReg virtual_address = X[xs1] + as_signed(imm);
+
+		std::cout << "XS2: " << std::hex << X[xs2] << std::dec << std::endl;
 		
 		write_memory<32>(virtual_address, X[xs2] * Rng(31, 0), _UNUSED_INTVAL_);
 		GOOD_END();
