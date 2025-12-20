@@ -65,6 +65,7 @@ static int decode_exec(Decode *s) {
 
 	word_t tmp = s->pc;
 	bool matched = (execute_instruction(inst, &tmp, cpu.gpr) == 0);
+	if(matched) s->dnpc = tmp;
 
   if (IS_INST(CSRRW)) {
     if (rd != 0) {
