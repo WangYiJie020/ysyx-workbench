@@ -1,6 +1,7 @@
 // Auto-generated code for RISC-V instructions
 
 #include <stdint.h>
+#include <iostream>
 
 #include "IDLHlper.hpp"
 #include "encoding.out.h" 
@@ -241,6 +242,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 	if (INST_IS(ADDI)) { 
 		// variables:
 		Bits<12> imm = Bits<12>(InstRng(31, 20));
+		std::cout<< "ADDI imm: " << as_signed(imm) << std::endl;
 		// operation:
 		X[xd] = X[xs1] + as_signed(imm);
 		return EXEC_SUCCESS;
