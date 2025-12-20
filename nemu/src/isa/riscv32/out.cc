@@ -16,6 +16,9 @@
 #define jump_halfword(addr) *pc = (addr)
 #define jump(addr) *pc = (addr)
 
+#define EXEC_SUCCESS 0
+#define EXEC_NOMATCH -1
+
 // return 0 if instruction matched and executed
 extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs) {
     auto X = regs;
@@ -29,14 +32,14 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		XReg operand1 = sext(X[xs1], 32);
 		XReg operand2 = sext(X[xs2], 32);
 		X[xd] = sext(operand1 + operand2, 32);
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(SLTI)) { 
 		// variables:
 		Bits<12> imm = Bits<12>(InstRng(31, 20));
 		// operation:
 		X[xd] = (as_signed(X[xs1]) < as_signed(imm)) ? 1 : 0;
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(SUBW)) { 
 		// variables:
@@ -44,7 +47,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		Bits<32> t0 = X[xs1] * Rng(31, 0);
 		Bits<32> t1 = X[xs2] * Rng(31, 0);
 		X[xd] = sext(t0 - t1, 32);
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(SRAW)) { 
 		// variables:
@@ -52,7 +55,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		XReg operand1 = sext(X[xs1], 32);
 		
 		X[xd] = sext(operand1 SRA X[xs2] * Rng(4, 0), 32);
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(LWU)) { 
 		// variables:
@@ -61,13 +64,13 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		XReg virtual_address = X[xs1] + as_signed(imm);
 		
 		X[xd] = read_memory<32>(virtual_address, _UNUSED_INTVAL_);
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(AND)) { 
 		// variables:
 		// operation:
 		X[xd] = X[xs1] & X[xs2];
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(SLL)) { 
 		// variables:
@@ -77,7 +80,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		} else {
 		  X[xd] = X[xs1] << X[xs2] * Rng(4, 0);
 		}
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(SRLIW)) { 
 		// variables:
@@ -87,7 +90,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		XReg operand = X[xs1] * Rng(31, 0);
 		
 		X[xd] = sext(operand >> shamt, 32);
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(LB)) { 
 		// variables:
@@ -96,14 +99,14 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		XReg virtual_address = X[xs1] + as_signed(imm);
 		
 		X[xd] = sext(read_memory<8>(virtual_address, _UNUSED_INTVAL_), 8);
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(XORI)) { 
 		// variables:
 		Bits<12> imm = Bits<12>(InstRng(31, 20));
 		// operation:
 		X[xd] = X[xs1] ^ as_signed(imm);
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(SH)) { 
 		// variables:
@@ -112,7 +115,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		XReg virtual_address = X[xs1] + as_signed(imm);
 		
 		write_memory<16>(virtual_address, X[xs2] * Rng(15, 0), _UNUSED_INTVAL_);
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(SLLIW)) { 
 		// variables:
@@ -120,7 +123,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		// operation:
 		// #  shamt is between 0-32
 		X[xd] = sext(X[xs1] << shamt, 32);
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(SB)) { 
 		// variables:
@@ -129,7 +132,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		XReg virtual_address = X[xs1] + as_signed(imm);
 		
 		write_memory<8>(virtual_address, X[xs2] * Rng(7, 0), _UNUSED_INTVAL_);
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(BLT)) { 
 		// variables:
@@ -143,13 +146,13 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		if (as_signed(lhs) < as_signed(rhs)) {
 		  jump_halfword(*pc + as_signed(imm));
 		}
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(XOR)) { 
 		// variables:
 		// operation:
 		X[xd] = X[xs1] ^ X[xs2];
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(SRAI)) { 
 		// variables:
@@ -157,7 +160,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		// operation:
 		// #  shamt is between 0-63
 		X[xd] = X[xs1] SRA shamt;
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(LUI)) { 
 		// variables:
@@ -165,32 +168,32 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 			.left_shift(12);
 		// operation:
 		X[xd] = as_signed(imm);
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(SRLW)) { 
 		// variables:
 		// operation:
 		X[xd] = sext(X[xs1] * Rng(31, 0) >> X[xs2] * Rng(4, 0), 32);
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(ORI)) { 
 		// variables:
 		Bits<12> imm = Bits<12>(InstRng(31, 20));
 		// operation:
 		X[xd] = X[xs1] | as_signed(imm);
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(SLTU)) { 
 		// variables:
 		// operation:
 		X[xd] = (X[xs1] < X[xs2]) ? 1 : 0;
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(OR)) { 
 		// variables:
 		// operation:
 		X[xd] = X[xs1] | X[xs2];
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(JALR)) { 
 		// variables:
@@ -202,7 +205,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		
 		X[xd] = returnaddr;
 		jump(addr);
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(LH)) { 
 		// variables:
@@ -211,7 +214,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		XReg virtual_address = X[xs1] + as_signed(imm);
 		
 		X[xd] = sext(read_memory<16>(virtual_address, _UNUSED_INTVAL_), 16);
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(SLTIU)) { 
 		// variables:
@@ -219,7 +222,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		// operation:
 		Bits<MXLEN> sign_extend_imm = as_signed(imm);
 		X[xd] = (X[xs1] < sign_extend_imm) ? 1 : 0;
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(BNE)) { 
 		// variables:
@@ -233,14 +236,14 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		if (lhs != rhs) {
 		  jump_halfword(*pc + as_signed(imm));
 		}
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(ADDI)) { 
 		// variables:
 		Bits<12> imm = Bits<12>(InstRng(31, 20));
 		// operation:
 		X[xd] = X[xs1] + as_signed(imm);
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(SLLI)) { 
 		// variables:
@@ -248,7 +251,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		// operation:
 		// #  shamt is between 0-(XLEN-1)
 		X[xd] = X[xs1] << shamt;
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(LHU)) { 
 		// variables:
@@ -257,7 +260,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		XReg virtual_address = X[xs1] + as_signed(imm);
 		
 		X[xd] = read_memory<16>(virtual_address, _UNUSED_INTVAL_);
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(SUB)) { 
 		// variables:
@@ -265,13 +268,13 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		XReg t0 = X[xs1];
 		XReg t1 = X[xs2];
 		X[xd] = t0 - t1;
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(SLLW)) { 
 		// variables:
 		// operation:
 		X[xd] = sext(X[xs1] << X[xs2] * Rng(4, 0), 32);
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(BGEU)) { 
 		// variables:
@@ -284,7 +287,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		if (lhs >= rhs) {
 		  jump_halfword(*pc + as_signed(imm));
 		}
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(AUIPC)) { 
 		// variables:
@@ -292,7 +295,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 			.left_shift(12);
 		// operation:
 		X[xd] = *pc + as_signed(imm);
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(SRL)) { 
 		// variables:
@@ -302,7 +305,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		} else {
 		  X[xd] = X[xs1] >> X[xs2] * Rng(4, 0);
 		}
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(SRA)) { 
 		// variables:
@@ -312,13 +315,13 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		} else {
 		  X[xd] = X[xs1] SRA X[xs2] * Rng(4, 0);
 		}
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(ADD)) { 
 		// variables:
 		// operation:
 		X[xd] = X[xs1] + X[xs2];
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(SLT)) { 
 		// variables:
@@ -327,7 +330,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		XReg src2 = X[xs2];
 		
 		X[xd] = (as_signed(src1) < as_signed(src2)) ? 1 : 0;
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(BLTU)) { 
 		// variables:
@@ -340,7 +343,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		if (lhs < rhs) {
 		  jump_halfword(*pc + as_signed(imm));
 		}
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(SRAIW)) { 
 		// variables:
@@ -349,7 +352,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		// #  shamt is between 0-32
 		XReg operand = sext(X[xs1], 32);
 		X[xd] = sext(operand SRA shamt, 32);
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(BGE)) { 
 		// variables:
@@ -363,7 +366,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		if (as_signed(lhs) >= as_signed(rhs)) {
 		  jump_halfword(*pc + as_signed(imm));
 		}
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(SRLI)) { 
 		// variables:
@@ -371,7 +374,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		// operation:
 		// #  shamt is between 0-63
 		X[xd] = X[xs1] >> shamt;
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(BEQ)) { 
 		// variables:
@@ -385,7 +388,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		if (lhs == rhs) {
 		  jump_halfword(*pc + as_signed(imm));
 		}
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(SW)) { 
 		// variables:
@@ -394,7 +397,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		XReg virtual_address = X[xs1] + as_signed(imm);
 		
 		write_memory<32>(virtual_address, X[xs2] * Rng(31, 0), _UNUSED_INTVAL_);
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(LBU)) { 
 		// variables:
@@ -403,14 +406,14 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		XReg virtual_address = X[xs1] + as_signed(imm);
 		
 		X[xd] = read_memory<8>(virtual_address, _UNUSED_INTVAL_);
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(ANDI)) { 
 		// variables:
 		Bits<12> imm = Bits<12>(InstRng(31, 20));
 		// operation:
 		X[xd] = X[xs1] & as_signed(imm);
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(JAL)) { 
 		// variables:
@@ -422,7 +425,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		
 		X[xd] = return_addr;
 		jump_halfword(*pc + as_signed(imm));
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(LW)) { 
 		// variables:
@@ -431,7 +434,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		XReg virtual_address = X[xs1] + as_signed(imm);
 		
 		X[xd] = sext(read_memory<32>(virtual_address, _UNUSED_INTVAL_), 32);
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(MULH)) { 
 		// variables:
@@ -447,7 +450,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		
 		// #  grab the high half of the result, and put it in xd
 		X[xd] = (src1 * src2) * Rng((xlen()*Bits<8>(2))-1, xlen());
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(DIVUW)) { 
 		// variables:
@@ -469,7 +472,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		
 		  X[xd] = Concat{{Repl<32>{sign_bit}}, result};
 		}
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(DIVW)) { 
 		// variables:
@@ -494,7 +497,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		  // #  no special case, just divide
 		  X[xd] = sext(as_signed(src1) / as_signed(src2), 32);
 		}
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(MULW)) { 
 		// variables:
@@ -509,7 +512,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		
 		// #  return the sign-extended result
 		X[xd] = Concat{{Repl<32>{sign_bit}}, result};
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(REMUW)) { 
 		// variables:
@@ -534,7 +537,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		
 		  X[xd] = Concat{{Repl<32>{sign_bit}}, result};
 		}
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(MULHU)) { 
 		// variables:
@@ -546,7 +549,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		Bits<MXLEN*Bits<8>(2)> src2 = Concat{{Repl<MXLEN>{Bits<1>(0)}}, X[xs2]};
 		
 		X[xd] = (src1 * src2) * Rng((MXLEN*Bits<8>(2))-1, MXLEN);
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(REMW)) { 
 		// variables:
@@ -574,7 +577,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		
 		  X[xd] = Concat{{Repl<32>{sign_bit}}, result};
 		}
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(MUL)) { 
 		// variables:
@@ -585,7 +588,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		XReg src2 = X[xs2];
 		
 		X[xd] = (src1 * src2) * Rng(MXLEN-1, 0);
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(DIVU)) { 
 		// variables:
@@ -602,7 +605,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		} else {
 		  X[xd] = src1 / src2;
 		}
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(DIV)) { 
 		// variables:
@@ -629,7 +632,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		  // #  no special case, just divide
 		  X[xd] = as_signed(src1) / as_signed(src2);
 		}
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(MULHSU)) { 
 		// variables:
@@ -642,7 +645,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		Bits<MXLEN*Bits<8>(2)> src2 = Concat{{Repl<MXLEN>{Bits<1>(0)}}, X[xs2]};
 		
 		X[xd] = (src1 * src2) * Rng((MXLEN*Bits<8>(2))-1, MXLEN);
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(REMU)) { 
 		// variables:
@@ -659,7 +662,7 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		} else {
 		  X[xd] = src1 % src2;
 		}
-		return true;
+		return EXEC_SUCCESS;
 	}
 	if (INST_IS(REM)) { 
 		// variables:
@@ -682,8 +685,8 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		} else {
 		  X[xd] = as_signed(src1) % as_signed(src2);
 		}
-		return true;
+		return EXEC_SUCCESS;
 	}
 
-	return false;
+	return EXEC_NOMATCH;
 }
