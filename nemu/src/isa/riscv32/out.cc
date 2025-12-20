@@ -435,10 +435,6 @@ extern "C" int execute_instruction(word_t INST(), word_t* pc, word_t* regs) {
 		
 		Bits<1> xs2_sign_bit = X[xs2] * At(xlen()-1);
 		Bits<MXLEN WIDE_MUL 2> src2 = Concat{{Repl<xlen()>{xs2_sign_bit}}, X[xs2]};
-
-		std::cout << "MULH src1: " << std::hex << src1.value << ", src2: " << src2.value << std::dec << std::endl;
-		std::cout << "MULH result: " << std::hex << (src1 * src2)<< std::dec << std::endl;
-		std::cout << "MULH high half: " << std::hex << ((src1 * src2) * Rng((xlen()*Bits<8>(2))-1, xlen()))<< std::dec << std::endl;
 		
 		// #  grab the high half of the result, and put it in xd
 		X[xd] = (src1 * src2) * Rng((xlen()*Bits<8>(2))-1, xlen());
