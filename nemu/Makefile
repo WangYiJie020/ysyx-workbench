@@ -63,6 +63,12 @@ include $(NEMU_HOME)/scripts/config.mk
 
 run: export LSAN_OPTIONS=suppressions=asan_suppress.txt
 
+CXXSRC += $(shell find src -name "*.cc")
+foo: 
+	@echo $(DIRS-y)
+	@echo $(shell find -L $(DIRS-y) -name "*.c" -or -name "*.cpp")
+	@echo $(SRCS-y)
+
 INC_PATH += $(abspath ../sdb/include)
 LDFLAGS += -L$(abspath ../sdb/build) -lsdb
 ARCHIVES += $(abspath ../sdb/build/libsdb.a)
