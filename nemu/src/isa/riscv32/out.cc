@@ -126,7 +126,7 @@ extern "C" int execute_instruction(word_t INST(), word_t* pc, word_t* regs) {
 		// variables:
 		XReg imm = Bits<12>(Concat{InstAt(31), InstAt(7), InstRng(30, 25), InstRng(11, 8)})
 			.sign_extend()
-			.left_shift(1);
+			.left_pad<1>();
 		// operation:
 		XReg lhs = X[xs1];
 		XReg rhs = X[xs2];
@@ -152,11 +152,9 @@ extern "C" int execute_instruction(word_t INST(), word_t* pc, word_t* regs) {
 	}
 	if (INST_IS(LUI)) { 
 		// variables:
-		Bits<20> imm = Bits<20>(InstRng(31, 12))
-			.left_shift(12);
+		Bits<32> imm = Bits<20>(InstRng(31, 12))
+			.left_pad<12>();
 		// operation:
-		std::cout << "LUI raw imm: " << std::hex << imm << std::dec << std::endl;
-		std::cout << "LUI imm: " << std::hex << as_signed(imm) << std::dec << std::endl;
 		X[xd] = as_signed(imm);
 		GOOD_END();
 	}
@@ -218,7 +216,7 @@ extern "C" int execute_instruction(word_t INST(), word_t* pc, word_t* regs) {
 		// variables:
 		XReg imm = Bits<12>(Concat{InstAt(31), InstAt(7), InstRng(30, 25), InstRng(11, 8)})
 			.sign_extend()
-			.left_shift(1);
+			.left_pad<1>();
 		// operation:
 		XReg lhs = X[xs1];
 		XReg rhs = X[xs2];
@@ -268,8 +266,8 @@ extern "C" int execute_instruction(word_t INST(), word_t* pc, word_t* regs) {
 	}
 	if (INST_IS(BGEU)) { 
 		// variables:
-		Bits<12> imm = Bits<12>(Concat{InstAt(31), InstAt(7), InstRng(30, 25), InstRng(11, 8)})
-			.left_shift(1);
+		Bits<13> imm = Bits<12>(Concat{InstAt(31), InstAt(7), InstRng(30, 25), InstRng(11, 8)})
+			.left_pad<1>();
 		// operation:
 		XReg lhs = X[xs1];
 		XReg rhs = X[xs2];
@@ -281,8 +279,8 @@ extern "C" int execute_instruction(word_t INST(), word_t* pc, word_t* regs) {
 	}
 	if (INST_IS(AUIPC)) { 
 		// variables:
-		Bits<20> imm = Bits<20>(InstRng(31, 12))
-			.left_shift(12);
+		Bits<32> imm = Bits<20>(InstRng(31, 12))
+			.left_pad<12>();
 		// operation:
 		X[xd] = *pc + as_signed(imm);
 		GOOD_END();
@@ -324,8 +322,8 @@ extern "C" int execute_instruction(word_t INST(), word_t* pc, word_t* regs) {
 	}
 	if (INST_IS(BLTU)) { 
 		// variables:
-		Bits<12> imm = Bits<12>(Concat{InstAt(31), InstAt(7), InstRng(30, 25), InstRng(11, 8)})
-			.left_shift(1);
+		Bits<13> imm = Bits<12>(Concat{InstAt(31), InstAt(7), InstRng(30, 25), InstRng(11, 8)})
+			.left_pad<1>();
 		// operation:
 		XReg lhs = X[xs1];
 		XReg rhs = X[xs2];
@@ -348,7 +346,7 @@ extern "C" int execute_instruction(word_t INST(), word_t* pc, word_t* regs) {
 		// variables:
 		XReg imm = Bits<12>(Concat{InstAt(31), InstAt(7), InstRng(30, 25), InstRng(11, 8)})
 			.sign_extend()
-			.left_shift(1);
+			.left_pad<1>();
 		// operation:
 		XReg lhs = X[xs1];
 		XReg rhs = X[xs2];
@@ -370,7 +368,7 @@ extern "C" int execute_instruction(word_t INST(), word_t* pc, word_t* regs) {
 		// variables:
 		XReg imm = Bits<12>(Concat{InstAt(31), InstAt(7), InstRng(30, 25), InstRng(11, 8)})
 			.sign_extend()
-			.left_shift(1);
+			.left_pad<1>();
 		// operation:
 		XReg lhs = X[xs1];
 		XReg rhs = X[xs2];
@@ -409,7 +407,7 @@ extern "C" int execute_instruction(word_t INST(), word_t* pc, word_t* regs) {
 		// variables:
 		XReg imm = Bits<20>(Concat{InstAt(31), InstRng(19, 12), InstAt(20), InstRng(30, 21)})
 			.sign_extend()
-			.left_shift(1);
+			.left_pad<1>();
 		// operation:
 		XReg return_addr = *pc + 4;
 		
