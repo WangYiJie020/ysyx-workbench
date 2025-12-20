@@ -399,7 +399,9 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		// operation:
 		XReg virtual_address = X[xs1] + as_signed(imm);
 
+		std::cout << "SW Instruction Executed" << std::endl;
 		std::cout << "XS2: " << std::hex << X[xs2] << std::dec << std::endl;
+		std::cout << "Xs2Rnged "<< std::hex << (X[xs2] * Rng(31, 0)) << std::dec << std::endl;
 		
 		write_memory<32>(virtual_address, X[xs2] * Rng(31, 0), _UNUSED_INTVAL_);
 		GOOD_END();
