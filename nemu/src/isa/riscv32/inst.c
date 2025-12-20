@@ -61,7 +61,7 @@ static int decode_exec(Decode *s) {
   word_t rd = (inst & INSN_FIELD_RD) >> 7;
   word_t rs1 = (inst & INSN_FIELD_RS1) >> 15;
 
-#define IS_INST(name) (((inst & MASK_##name) == MASK_##name)&&(!matched))
+#define IS_INST(name) (((inst & MASK_##name) == MATCH_##name)&&(!matched))
 
 	word_t tmp = s->pc;
 	bool matched = (execute_instruction(inst, &tmp, cpu.gpr) == 0);
