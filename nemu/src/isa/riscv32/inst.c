@@ -32,15 +32,6 @@
 #define signed_min INT_MIN
 #define WORD_MAXBITLEN 32
 
-typedef uint64_t dword_t;
-
-// #define CSR_MTVEC 0x305
-// #define CSR_MCAUSE 0x342
-// #define CSR_MEPC 0x341
-// #define CSR_MSTATUS 0x300
-// #define CSR_MVENDORID 0xF11
-// #define CSR_MARCHID 0xF12
-
 #define R(i) gpr(i)
 
 static word_t _handel_csr_rw(word_t csr, word_t src1, bool is_write);
@@ -49,6 +40,7 @@ static void _csr_write(word_t csr, word_t src1) {
   _handel_csr_rw(csr, src1, 1);
 }
 
+// generate in out.cc
 int execute_instruction(word_t instruction, word_t* pc, word_t* regs);
 
 static int decode_exec(Decode *s) {
@@ -71,7 +63,6 @@ static int decode_exec(Decode *s) {
     if (rd != 0) {
       R(rd) = _csr_read(csr_imm);
     }
-    //		printf("csrw csr=%03X val=%08X\n",(uint32_t)imm,(uint32_t)src1);
     word_t src1 = R(rs1);
     _csr_write(csr_imm, src1);
 		matched = true;
@@ -80,8 +71,6 @@ static int decode_exec(Decode *s) {
     word_t old = _csr_read(csr_imm);
     R(rd) = old;
     word_t src1 = R(rs1);
-    //		printf("csrs csr=%03X
-    // val=%08X\n",(uint32_t)imm,(uint32_t)src1);
     _csr_write(csr_imm, old | src1);
 		matched = true;
   }
@@ -91,7 +80,6 @@ static int decode_exec(Decode *s) {
 		matched = true;
   }
 	if (IS_INST(ECALL)) {
-		// raise ecall from m-mode
 		_csr_write(CSR_MEPC, s->pc);
 		_csr_write(CSR_MCAUSE, CAUSE_MACHINE_ECALL);
 		s->dnpc = isa_raise_intr(0x11451419, s->pc);
