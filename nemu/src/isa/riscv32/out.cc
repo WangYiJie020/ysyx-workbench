@@ -5,25 +5,10 @@
 #include "IDLHlper.hpp"
 #include "encoding.out.h" 
 
-#define INST() (instruction)
-#define INST_IS(name) (INST() & MASK_##name) == MATCH_##name
 
-#define InstAt(bit) Bits<1>(((instruction) >> (bit)) & 0x1)
-#define InstRng(high, low) Bits<(high) - (low) + 1>(selbits((instruction), (high), (low)))
-
-#define _UNUSED_INTVAL_ 0
-
-// -4 will be added at the end of execute_instruction
-#define jump_halfword(addr) do{ *pc = (addr) - 4; }while(0)
-#define jump(addr) do{ *pc = (addr) - 4; }while(0)
-
-#define GOOD_END() do { *pc += 4; return EXEC_SUCCESS; } while(0)
-
-#define EXEC_SUCCESS 0
-#define EXEC_NOMATCH -1
 
 // return 0 if instruction matched and executed
-extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs) {
+extern "C" int execute_instruction(word_t INST(), word_t* pc, word_t* regs) {
     auto X = regs;
     Bits<5> xs2 = Bits<5>(InstRng(24, 20));
     Bits<5> xs1 = Bits<5>(InstRng(19, 15));
@@ -398,10 +383,6 @@ extern "C" int execute_instruction(word_t instruction, word_t* pc, word_t* regs)
 		Bits<12> imm = Bits<12>(Concat{InstRng(31, 25), InstRng(11, 7)});
 		// operation:
 		XReg virtual_address = X[xs1] + as_signed(imm);
-
-		std::cout << "SW Instruction Executed" << std::endl;
-		std::cout << "XS2: " << std::hex << X[xs2] << std::dec << std::endl;
-		std::cout << "Xs2Rnged "<< std::hex << (X[xs2] * Rng(31, 0)) << std::dec << std::endl;
 		
 		write_memory<32>(virtual_address, X[xs2] * Rng(31, 0), _UNUSED_INTVAL_);
 		GOOD_END();
