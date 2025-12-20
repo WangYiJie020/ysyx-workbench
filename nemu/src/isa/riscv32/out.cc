@@ -155,6 +155,7 @@ extern "C" int execute_instruction(word_t INST(), word_t* pc, word_t* regs) {
 		Bits<20> imm = Bits<20>(InstRng(31, 12))
 			.left_shift(12);
 		// operation:
+		std::cout << "LUI raw imm: " << std::hex << imm << std::dec << std::endl;
 		std::cout << "LUI imm: " << std::hex << as_signed(imm) << std::dec << std::endl;
 		X[xd] = as_signed(imm);
 		GOOD_END();
