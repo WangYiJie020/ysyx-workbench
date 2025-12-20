@@ -45,6 +45,8 @@ SRCS-BLACKLIST-y += $(SRCS-BLACKLIST) $(shell find -L $(DIRS-BLACKLIST-y) -name 
 SRCS-y += $(shell find -L $(DIRS-y) -name "*.c")
 SRCS = $(filter-out $(SRCS-BLACKLIST-y),$(SRCS-y))
 
+CXXSRC += $(shell find src -name "*.cpp" -or -name "*.cc")
+
 # Extract compiler and options from menuconfig
 ifneq ($(CONFIG_CC),)
 CC = $(call remove_quote,$(CONFIG_CC))
@@ -62,6 +64,11 @@ LDFLAGS += $(CFLAGS_BUILD)
 include $(NEMU_HOME)/scripts/config.mk
 
 run: export LSAN_OPTIONS=suppressions=asan_suppress.txt
+
+# foo: 
+# 	@echo $(DIRS-y)
+# 	@echo $(shell find -L $(DIRS-y) -name "*.c" -or -name "*.cpp")
+# 	@echo $(SRCS-y)
 
 INC_PATH += $(abspath ../sdb/include)
 LDFLAGS += -L$(abspath ../sdb/build) -lsdb
