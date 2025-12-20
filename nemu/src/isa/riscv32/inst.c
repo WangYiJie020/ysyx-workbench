@@ -87,6 +87,7 @@ static int decode_exec(Decode *s) {
 
   if (IS_INST(EBREAK)) {
     NEMUTRAP(s->pc, R(10)); // R(10) is $a0
+		matched = true;
   }
 	if (IS_INST(ECALL)) {
 		// raise ecall from m-mode
