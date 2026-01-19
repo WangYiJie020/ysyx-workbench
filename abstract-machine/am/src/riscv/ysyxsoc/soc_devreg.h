@@ -22,7 +22,7 @@ typedef volatile uint32_t* dev_reg32_ptr;
 
 
 #define SPI_BASE 0x10001000u
-#define _SPI_R(x)    (DEV_REG32(SPI_BASE + (x)))
+#define _SPI_R(x)    (DEV_REG32(SPI_BASE + (x)*4))
 #define SPI_Rx0     _SPI_R(0)
 #define SPI_Rx1     _SPI_R(1)
 #define SPI_Rx2     _SPI_R(2)
