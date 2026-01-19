@@ -3,6 +3,8 @@
 #include <klib.h>
 #include <stdint.h>
 
+#include "soc_devreg.h"
+
 extern char _heap_start;
 extern char _heap_end;
 
@@ -17,15 +19,6 @@ extern char _pmem_start;
 Area heap = RANGE(&_heap_start, &_heap_end);
 static const char mainargs[MAINARGS_MAX_LEN] =
     TOSTRING(MAINARGS_PLACEHOLDER); // defined in CFLAGS
-
-#define SERIAL_PORT 0x10000000u
-
-#define UART_LCR ((volatile uint8_t *)(SERIAL_PORT + 0x03))
-#define UART_DL_LSB ((volatile uint8_t *)(SERIAL_PORT + 0x00))
-#define UART_DL_MSB ((volatile uint8_t *)(SERIAL_PORT + 0x01))
-#define UART_FIFO_CTRL ((volatile uint8_t *)(SERIAL_PORT + 0x02))
-#define UART_IER ((volatile uint8_t *)(SERIAL_PORT + 0x01))
-#define UART_LSR ((volatile uint8_t *)(SERIAL_PORT + 0x05))
 
 void init_serial() {
 
@@ -51,7 +44,7 @@ void init_serial() {
 void putch(char ch) {
   while (!(*UART_LSR & 0x20)) {
   }
-  *(uint8_t *)(SERIAL_PORT + 0x00) = ch;
+  *(uint8_t *)(UART_BASE + 0x00) = ch;
 }
 
 void halt(int code) {
