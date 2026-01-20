@@ -28,9 +28,9 @@ void init_serial() {
   // 0x3 = 0b11 : Select each character 8 bits
   // 0x80 = 0b10000000 : Divisor Latch Access bit
   *UART_LCR = 0x83u;
-	if(*UART_LCR != 0x83u) {
-		halt(-114514);
-	}
+  if (*UART_LCR != 0x83u) {
+    halt(-114514);
+  }
 
   // set baud rate to 115200
   *UART_DL_MSB = 0;
@@ -42,7 +42,6 @@ void init_serial() {
   // disable all interrupts
   *UART_IER = 0x0;
 }
-
 
 #define NOINLINE __attribute__((noinline))
 NOINLINE void putch(char ch) {
@@ -66,17 +65,22 @@ extern char __data_size__;
 void _trm_init() {
   init_serial();
 
-	uint32_t mvendor_id, marchid;
-	asm volatile("csrr %0, mvendorid" : "=r"(mvendor_id));
-	asm volatile("csrr %0, marchid" : "=r"(marchid));
-	char* vendor=(char*)&mvendor_id;
-	putstr("mvendor: 0x");
-	// putnum_base16(mvendor_id);
-	putch(' ');putch('(');putch(vendor[3]);putch(vendor[2]);putch(vendor[1]);putch(vendor[0]);putch(')');
-
-	halt(0);
-	return;
-	// putstr("marchid: ");putnum(marchid);putch('\n');
+  uint32_t mvendor_id, marchid;
+  asm volatile("csrr %0, mvendorid" : "=r"(mvendor_id));
+  asm volatile("csrr %0, marchid" : "=r"(marchid));
+  char *vendor = (char *)&mvendor_id;
+  putstr("mvendor: 0x");
+  putnum_base16(mvendor_id);
+  putch(' ');
+  putch('(');
+  putch(vendor[3]);
+  putch(vendor[2]);
+  putch(vendor[1]);
+  putch(vendor[0]);
+  putch(')');
+  putstr("marchid: ");
+  putnum(marchid);
+  putch('\n');
 
   memcpy((void *)&_data, (void *)&__data_load_start__,
          (uintptr_t)&__data_size__);
