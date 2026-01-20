@@ -236,7 +236,8 @@ void pmem_write(int addr, int data, int mask) {
 
 void step_inst() {
   size_t cnt = 0;
-  constexpr size_t MAYBE_DEADLOOP_THRESHOLD = 200;
+	// SPI flash may need many cycles to respond
+  constexpr size_t MAYBE_DEADLOOP_THRESHOLD = 1024;
   while (!pc_changed) {
     sim_step_cycle();
     if (sim_halted()) {
