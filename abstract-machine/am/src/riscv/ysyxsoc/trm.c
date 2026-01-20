@@ -68,7 +68,8 @@ void _trm_init() {
 	asm volatile("csrr %0, mvendorid" : "=r"(mvendor_id));
 	asm volatile("csrr %0, marchid" : "=r"(marchid));
 	char* vendor=(char*)&mvendor_id;
-	putstr("mvendor: 0x");putnum_base16(mvendor_id);
+	putstr("mvendor: 0x");
+	// putnum_base16(mvendor_id);
 	putch(' ');putch('(');putch(vendor[0]);putch(vendor[1]);putch(vendor[2]);putch(vendor[3]);putch(')');
 	putch('\n');
 	// putstr("marchid: ");putnum(marchid);putch('\n');
