@@ -74,6 +74,7 @@ void _trm_init() {
 	putch('\n');
 	putch('\n');
 	putch('\n');
+	putch(0);
 	putstr("\n\n");
 	// putstr("marchid: ");putnum(marchid);putch('\n');
 
