@@ -28,7 +28,7 @@ void putnum_base16(uint32_t x){
 	char buf[8];
 	int idx=0;
 	if(x==0)buf[idx++]='0';
-	while(x>0){
+	while(x){
 		uint8_t t=x&0xf;
 		if(t<10)buf[idx++]=(t+'0');
 		else buf[idx++]=(t-10+'A');
