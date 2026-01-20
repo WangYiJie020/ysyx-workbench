@@ -72,7 +72,7 @@ void _trm_init() {
 	char* vendor=(char*)&mvendor_id;
 	putstr("mvendor: 0x");
 	// putnum_base16(mvendor_id);
-	putch(' ');putch('(');putch(vendor[0]);putch(vendor[1]);putch(vendor[2]);putch(vendor[3]);putch(')');
+	putch(' ');putch('(');putch(vendor[3]);putch(vendor[2]);putch(vendor[1]);putch(vendor[0]);putch(')');
 
 	halt(0);
 	return;
