@@ -35,12 +35,16 @@ typedef volatile uint32_t* dev_reg32_ptr;
 #define SPI_DIVIDER _SPI_R(5)
 #define SPI_SS      _SPI_R(6)
 
-#define _To1b(x) ((x)&0x1)
-#define MAKE_SPI_CTRL(ass,ie,lsb,tx_neg,rx_neg,go_bsy,char_len) \
-	((_To1b(ass)<<13)    | (_To1b(ie)<<12)    | (_To1b(lsb)<<11)   | \
-	 (_To1b(tx_neg)<<10) | (_To1b(rx_neg)<<9) | (_To1b(go_bsy)<<8) | \
-	 ((char_len)&0xff))
-#define IS_SPI_BUSY() _To1b((*SPI_CTRL)>>8)
+#define SPI_CTRL_ASS   (1<<13)
+#define SPI_CTRL_IE    (1<<12)
+#define SPI_CTRL_LSB   (1<<11)
+#define SPI_CTRL_TXNEG (1<<10)
+#define SPI_CTRL_RXNEG (1<<9)
+#define SPI_CTRL_GOBSY (1<<8)
+
+#define SPI_CTRL_CHARLEN(len) ((len)&0xff)
+
+#define IS_SPI_BUSY()  ((*SPI_CTRL)&SPI_CTRL_GOBSY)
 
 
 #endif // __DEV_REG_H__
