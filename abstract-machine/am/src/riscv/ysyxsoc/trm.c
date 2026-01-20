@@ -74,6 +74,7 @@ void _trm_init() {
 	putch('\n');
 	putch('\n');
 	putch('\n');
+	putstr("\n\n");
 	// putstr("marchid: ");putnum(marchid);putch('\n');
 
   memcpy((void *)&_data, (void *)&__data_load_start__,
