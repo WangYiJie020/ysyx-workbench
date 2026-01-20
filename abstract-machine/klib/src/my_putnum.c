@@ -4,7 +4,7 @@
 void putnum(uint32_t x){
 	char buf[16];
 	int idx=0;
-	if(x==0)buf[0]='0';
+	if(x==0)buf[idx++]='0';
 	while(x>0){
 		buf[idx++]=(x%10+'0');
 		x/=10;
