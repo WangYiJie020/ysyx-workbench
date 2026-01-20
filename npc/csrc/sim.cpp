@@ -312,6 +312,9 @@ static void init_flash() {
 	for(size_t i=0;i<8192;i++) {
 		flash_data[i] = i;
 	}
+	flash_data[0] = 0x12345678;
+	flash_data[1] = 0x9abcdef0;
+	flash_data[2] = 0x19198100;
 }
 extern "C" void flash_read(int32_t addr, int32_t *data) {
 	constexpr uint32_t FLASH_BASE = 0x30000000u;
