@@ -62,6 +62,14 @@ extern char __data_size__;
 void _trm_init() {
   init_serial();
 
+	uint32_t mvendor_id, marchid;
+	asm volatile("csrr %0, mvendorid" : "=r"(mvendor_id));
+	asm volatile("csrr %0, marchid" : "=r"(marchid));
+	char* vendor=(char*)&mvendor_id;
+	printf("mvendor: 0x%08x (%c%c%c%c)\n", mvendor_id,
+		 	vendor[3], vendor[2], vendor[1], vendor[0]);
+	printf("marchid: %d\n", marchid);
+
   memcpy((void *)&_data, (void *)&__data_load_start__,
          (uintptr_t)&__data_size__);
 
