@@ -392,7 +392,7 @@ sdb::vlen_inst_code inst_fetcher(sdb::paddr_t pc) {
 	if(pc>=MROM_BASE&&pc<MROM_BASE+sizeof(mem)) {
   mrom_read(pc, (int *)&inst);
 	} else {
-		printf("[W] inst_fetcher don't support fetch out of mrom @pc=%08x\n",pc);
+		// printf("[W] inst_fetcher don't support fetch out of mrom @pc=%08x\n",pc);
 		inst = 0;
 	}
 
