@@ -43,7 +43,9 @@ void init_serial() {
   *UART_IER = 0x0;
 }
 
-void putch(char ch) {
+
+#define NOINLINE __attribute__((noinline))
+NOINLINE void putch(char ch) {
   while (!(*UART_LSR & 0x20)) {
   }
   *(uint8_t *)(UART_BASE + 0x00) = ch;
