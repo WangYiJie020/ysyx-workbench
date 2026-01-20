@@ -134,7 +134,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val exu = Module(new EXU)
   val wbu = Module(new WBU)
 
-  val INIT_PC = "h20000000".U(32.W)
+  val INIT_PC = "h30000000".U(32.W)
   // val MEM_BASE = "h80000000".U(32.W)
   // val MEM_END  = "h8FFFFFFF".U(32.W)
   //
