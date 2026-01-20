@@ -340,7 +340,9 @@ extern "C" void flash_read(int32_t addr, int32_t *data) {
 extern "C" void mrom_read(int32_t addr, int32_t *data) {
   constexpr uint32_t MROM_BASE = 0x20000000u;
 	if(addr<MROM_BASE) {
-		printf("[DPI] mrom_read addr=%08x ERROR BELOW MROM_BASE\n", addr);
+		printf("[clk %zu] [DPI] mrom_read addr=%08x ERROR BELOW MROM_BASE\n", sim_time,addr);
+		*data = 0;
+		return;
 	}
   assert(addr >= MROM_BASE);
   addr -= MROM_BASE;
