@@ -305,9 +305,12 @@ static long load_img() {
 
 uint32_t flash_data[8192];
 static void init_flash() {
-	uint8_t* flash_ptr = (uint8_t*)flash_data;
-	for (size_t i = 0; i < sizeof(flash_data); i++) {
-		flash_ptr[i] = i & 0xFF;
+	// uint8_t* flash_ptr = (uint8_t*)flash_data;
+	// for (size_t i = 0; i < sizeof(flash_data); i++) {
+	// 	flash_ptr[i] = i & 0xFF;
+	// }
+	for(size_t i=0;i<8192;i++) {
+		flash_data[i] = i;
 	}
 }
 extern "C" void flash_read(int32_t addr, int32_t *data) {
