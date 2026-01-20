@@ -72,6 +72,8 @@ void _trm_init() {
 	// putnum_base16(mvendor_id);
 	putch(' ');putch('(');putch(vendor[0]);putch(vendor[1]);putch(vendor[2]);putch(vendor[3]);putch(')');
 	putch('\n');
+	putch('\n');
+	putch('\n');
 	// putstr("marchid: ");putnum(marchid);putch('\n');
 
   memcpy((void *)&_data, (void *)&__data_load_start__,
