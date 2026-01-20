@@ -337,12 +337,10 @@ extern "C" void flash_read(int32_t addr, int32_t *data) {
 	*data = *(int32_t *)ptr;
 }
 
+constexpr uint32_t MROM_BASE = 0x20000000u;
 extern "C" void mrom_read(int32_t addr, int32_t *data) {
-  constexpr uint32_t MROM_BASE = 0x20000000u;
 	if(addr<MROM_BASE) {
 		printf("[clk %zu] [DPI] mrom_read addr=%08x ERROR BELOW MROM_BASE\n", sim_time,addr);
-		*data = 0;
-		return;
 	}
   assert(addr >= MROM_BASE);
   addr -= MROM_BASE;
@@ -391,7 +389,13 @@ void shot_regsnap(sdb::reg_snapshot_t &regsnap) {
 }
 sdb::vlen_inst_code inst_fetcher(sdb::paddr_t pc) {
   word_t inst;
+	if(pc>=MROM_BASE&&pc<MROM_BASE+sizeof(mem)) {
   mrom_read(pc, (int *)&inst);
+	} else {
+		printf("[W] inst_fetcher don't support fetch out of mrom @pc=%08x\n",pc);
+		inst = 0;
+	}
+
   // fetch_inst(pc, (int *)&inst);
   uint8_t *p = (uint8_t *)&inst;
   return sdb::vlen_inst_code(p, p + 4);
