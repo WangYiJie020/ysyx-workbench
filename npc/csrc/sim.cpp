@@ -304,25 +304,9 @@ static long load_img() {
   return img_size;
 }
 
-uint32_t flash_data[8192]=
-{
-0x100007b7,
-0x04100713,
-0x00e78023,
-0x00000013,
-0xffdff06f,
-};
+uint32_t flash_data[sizeof(mem)/4];
 static void init_flash() {
-	// uint8_t* flash_ptr = (uint8_t*)flash_data;
-	// for (size_t i = 0; i < sizeof(flash_data); i++) {
-	// 	flash_ptr[i] = i & 0xFF;
-	// }
-	// for(size_t i=0;i<8192;i++) {
-	// 	flash_data[i] = i;
-	// }
-	// flash_data[0] = 0x12345678;
-	// flash_data[1] = 0x9abcdef0;
-	// flash_data[2] = 0x19198100;
+	memcpy(flash_data, mem, img_size);
 }
 extern "C" void flash_read(int32_t addr, int32_t *data) {
 	constexpr uint32_t FLASH_BASE = 0x30000000u;
