@@ -78,8 +78,9 @@ void _trm_init() {
   putch(vendor[0]);
   putch(')');
   putch('\n');
-  putstr("marchid: ");
-  putnum(marchid);
+  putstr("marchid: 0x");
+	// base 10 too slow
+  putnum_base16(marchid);
   putch('\n');
 
   memcpy((void *)&_data, (void *)&__data_load_start__,
