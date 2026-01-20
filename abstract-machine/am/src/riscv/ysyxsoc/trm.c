@@ -3,6 +3,8 @@
 #include <klib.h>
 #include <stdint.h>
 
+#include <my_putnum.h>
+
 #include "soc_devreg.h"
 
 extern char _heap_start;
@@ -66,9 +68,9 @@ void _trm_init() {
 	asm volatile("csrr %0, mvendorid" : "=r"(mvendor_id));
 	asm volatile("csrr %0, marchid" : "=r"(marchid));
 	char* vendor=(char*)&mvendor_id;
-	printf("mvendor: 0x%08x (%c%c%c%c)\n", mvendor_id,
-		 	vendor[3], vendor[2], vendor[1], vendor[0]);
-	printf("marchid: %d\n", marchid);
+	putstr("mvendor: 0x");putnum_base16(mvendor_id);
+	putstr(vendor);putch('\n');
+	putstr("marchid: ");putnum(marchid);putch('\n');
 
   memcpy((void *)&_data, (void *)&__data_load_start__,
          (uintptr_t)&__data_size__);
