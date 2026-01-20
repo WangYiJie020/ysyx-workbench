@@ -44,10 +44,10 @@ void init_serial() {
 }
 
 #define NOINLINE __attribute__((noinline))
-NOINLINE void putch(char ch) {
+void putch(char ch) {
   while (!(*UART_LSR & 0x20)) {
   }
-  *(uint8_t *)(UART_BASE + 0x00) = ch;
+  *(volatile uint8_t *)(UART_BASE + 0x00) = ch;
 }
 
 void halt(int code) {
@@ -78,6 +78,7 @@ void _trm_init() {
   putch(vendor[1]);
   putch(vendor[0]);
   putch(')');
+  putch('\n');
   putstr("marchid: ");
   putnum(marchid);
   putch('\n');
