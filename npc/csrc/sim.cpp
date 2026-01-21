@@ -147,7 +147,7 @@ extern "C" void flash_read(int32_t addr, int32_t *data) {
 	addr &= ~0x3;
 	uintptr_t ptr = (uintptr_t)flash_data + addr;
 	*data = *(int32_t *)ptr;
-	// printf("[DPI] flash_read addr=%08x data=%08x\n", addr + FLASH_BASE, *data);
+	printf("[DPI] flash_read addr=%08x data=%08x\n", addr + FLASH_BASE, *data);
 }
 
 uint8_t *mem_atguest(word_t addr) {
