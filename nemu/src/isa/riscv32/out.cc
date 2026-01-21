@@ -621,6 +621,7 @@ extern "C" int execute_instruction(word_t INST(), word_t* pc, word_t* regs) {
 		} else {
 			printf(" as_signed(src1) = %d\n", (int32_t)as_signed(src1));
 			printf(" is signed_min? %d\n", (src1 == signed_min) ? 1 : 0);
+			printf(" signed_min = %x\n", (uint32_t)signed_min);
 			printf(" as_signed(src2) = %d\n", (int32_t)as_signed(src2));
 			printf(" is full ones? %d\n", (src2 == Concat{Repl<MXLEN>{Bits<1>(1)}}) ? 1 : 0);
 		  // #  no special case, just divide
