@@ -620,6 +620,7 @@ extern "C" int execute_instruction(word_t INST(), word_t* pc, word_t* regs) {
 		  // #  no special case, just divide
 		  X[xd] = as_signed(src1) / as_signed(src2);
 		}
+		printf("%x / %x = %x\n", (uint32_t)src1, (uint32_t)src2, (uint32_t)X[xd]);
 		GOOD_END();
 	}
 	if (INST_IS(MULHSU)) { 
