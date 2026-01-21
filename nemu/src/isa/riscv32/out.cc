@@ -302,6 +302,7 @@ extern "C" int execute_instruction(word_t INST(), word_t* pc, word_t* regs) {
 		  X[xd] = X[xs1] SRA X[xs2] * Rng(5, 0);
 		} else {
 		  X[xd] = X[xs1] SRA X[xs2] * Rng(4, 0);
+			printf("%x >>> %d = %x\n", (uint32_t)X[xs1], (uint32_t)(X[xs2] * Rng(4,0)), (uint32_t)X[xd]);
 		}
 		GOOD_END();
 	}
