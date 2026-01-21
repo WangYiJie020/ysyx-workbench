@@ -382,10 +382,10 @@ sdb::vlen_inst_code inst_fetcher(sdb::paddr_t pc) {
   word_t inst;
 	if(pc>=MROM_BASE&&pc<MROM_END){
 		mrom_read(pc, (int *)&inst);
-		printf("[DPI] inst_fetcher fetch from mrom @pc=%08x get %08x\n",pc,inst);
+		// printf("[DPI] inst_fetcher fetch from mrom @pc=%08x get %08x\n",pc,inst);
 	} else if (pc>=FLASH_BASE&&pc<FLASH_END) {
 		flash_read(pc - FLASH_BASE, (int *)&inst);
-		printf("[DPI] inst_fetcher fetch from flash @pc=%08x get %08x\n",pc,inst);
+		// printf("[DPI] inst_fetcher fetch from flash @pc=%08x get %08x\n",pc,inst);
 	} else {
 		printf("[W] inst_fetcher don't support fetch out of mrom @pc=%08x\n",pc);
 		inst = 0;
