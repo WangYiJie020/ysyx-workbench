@@ -147,7 +147,7 @@ extern "C" void flash_read(int32_t addr, int32_t *data) {
 	addr &= ~0x3;
 	uintptr_t ptr = (uintptr_t)flash_data + addr;
 	*data = *(int32_t *)ptr;
-	printf("[DPI] flash_read addr=%08x data=%08x\n", addr + FLASH_BASE, *data);
+	// printf("[DPI] flash_read addr=%08x data=%08x\n", addr + FLASH_BASE, *data);
 }
 
 uint8_t *mem_atguest(word_t addr) {
@@ -380,7 +380,7 @@ void shot_regsnap(sdb::reg_snapshot_t &regsnap) {
 }
 sdb::vlen_inst_code inst_fetcher(sdb::paddr_t pc) {
   word_t inst;
-	if(pc>=MROM_BASE&&pc<MROM_BASE+sizeof(img)) {
+	if(pc>=MROM_BASE&&pc<MROM_END){
 		mrom_read(pc, (int *)&inst);
 		printf("[DPI] inst_fetcher fetch from mrom @pc=%08x get %08x\n",pc,inst);
 	} else if (pc>=FLASH_BASE&&pc<FLASH_END) {
