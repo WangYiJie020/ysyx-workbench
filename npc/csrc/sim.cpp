@@ -167,7 +167,7 @@ extern "C" void psram_read(int32_t addr, int32_t *data) {
 	*data = *(int32_t *)ptr;
 	printf("[DPI] psram_read addr=%08x data=%08x\n", addr + PSRAM_BASE, *data);
 }
-extern "C" void psram_write(int32_t addr, int32_t data) {
+extern "C" void psram_write(int32_t addr, int32_t data,int32_t*) {
 	assert(addr < sizeof(psram_data));
 	addr &= ~0x3;
 	uintptr_t ptr = (uintptr_t)psram_data + addr;
