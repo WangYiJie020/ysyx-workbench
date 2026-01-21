@@ -167,12 +167,26 @@ extern "C" void psram_read(int32_t addr, int32_t *data) {
 	*data = *(int32_t *)ptr;
 	printf("[DPI] psram_read addr=%08x data=%08x\n", addr + PSRAM_BASE, *data);
 }
-extern "C" void psram_write(int32_t addr, int32_t data,int32_t*) {
+extern "C" void psram_write(int32_t addr,char chstrb, int32_t data,int32_t*) {
 	assert(addr < sizeof(psram_data));
 	addr &= ~0x3;
-	uintptr_t ptr = (uintptr_t)psram_data + addr;
-	*(int32_t *)ptr = data;
-	printf("[DPI] psram_write addr=%08x data=%08x\n", addr + PSRAM_BASE, data);
+	auto ptr = (uint32_t*)psram_data + addr;
+
+	uint32_t strb = 0;
+	if (chstrb & 0x1)
+		strb |= 0x000000ff;
+	if (chstrb & 0x2)
+		strb |= 0x0000ff00;
+	if (chstrb & 0x4)
+		strb |= 0x00ff0000;
+	if (chstrb & 0x8)
+		strb |= 0xff000000;
+	uint32_t umask = strb, udata = data;
+
+	*ptr &= ~strb; // clear bits to be written
+	*ptr |= (udata & strb); // set bits
+	
+	printf("[DPI] psram_write addr=%08x data=%08x (strb %X)\n", addr + PSRAM_BASE, data, strb);
 }
 
 uint8_t *mem_atguest(word_t addr) {
