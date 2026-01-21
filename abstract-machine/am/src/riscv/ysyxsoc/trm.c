@@ -44,8 +44,7 @@ void init_serial() {
 }
 
 void putch(char ch) {
-  while (!(*UART_LSR & 0x20)) {
-  }
+  while (!(*UART_LSR & 0x20)) {}
   *(volatile uint8_t *)(UART_BASE + 0x00) = ch;
 }
 
@@ -55,15 +54,7 @@ void halt(int code) {
   } // make sure no return
 }
 
-extern char _data, _edata, _text, _etext;
-extern char _bss, _ebss;
-
-extern char __data_load_start__;
-extern char __data_size__;
-
-void _trm_init() {
-  init_serial();
-
+void print_csr() {
   uint32_t mvendor_id, marchid;
   asm volatile("csrr %0, mvendorid" : "=r"(mvendor_id));
   asm volatile("csrr %0, marchid" : "=r"(marchid));
@@ -79,9 +70,21 @@ void _trm_init() {
   putch(')');
   putch('\n');
   putstr("marchid: 0x");
-	// base 10 too slow
+  // base 10 too slow
   putnum_base16(marchid);
   putch('\n');
+}
+
+extern char _data, _edata, _text, _etext;
+extern char _bss, _ebss;
+
+extern char __data_load_start__;
+extern char __data_size__;
+
+void _trm_init() {
+  init_serial();
+
+	// print_csr();
 
   memcpy((void *)&_data, (void *)&__data_load_start__,
          (uintptr_t)&__data_size__);
