@@ -196,18 +196,26 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   }
   val SERIAL_ADDR_BASE = "h10000000".U(32.W)
   val SERIAL_ADDR_END  = "h10001000".U(32.W)
+  val SPI_ADDR_BASE = "h10001000".U(32.W)
+  val SPI_ADDR_END  = "h10002000".U(32.W)
 
-  def isWriteRng(beg: UInt, end: UInt, addr: UInt): Bool = {
+  def inRng(beg: UInt, end: UInt, addr: UInt): Bool = {
     (addr >= beg) && (addr < end)
   }
 
-  when(io.master.awvalid && io.master.awready && isWriteRng(SERIAL_ADDR_BASE, SERIAL_ADDR_END, io.master.awaddr)){
+  val wNeedSkip = inRng(SERIAL_ADDR_BASE, SERIAL_ADDR_END, io.master.awaddr) ||
+                  inRng(SPI_ADDR_BASE, SPI_ADDR_END, io.master.awaddr)
+  val rNeedSkip = inRng(SERIAL_ADDR_BASE, SERIAL_ADDR_END, io.master.araddr) ||
+                  inRng(SPI_ADDR_BASE, SPI_ADDR_END, io.master.araddr)
+
+
+  when(io.master.awvalid && io.master.awready && wNeedSkip){
     RawClockedVoidFunctionCall("skip_difftest_ref")(
       clock,
       true.B
     )
   }
-  when(io.master.arvalid && io.master.arready && isWriteRng(SERIAL_ADDR_BASE, SERIAL_ADDR_END, io.master.araddr)){
+  when(io.master.arvalid && io.master.arready && rNeedSkip){
     RawClockedVoidFunctionCall("skip_difftest_ref")(
       clock,
       true.B
