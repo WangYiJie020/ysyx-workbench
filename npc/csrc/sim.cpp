@@ -169,6 +169,7 @@ extern "C" void psram_read(int32_t addr, int32_t *data) {
 }
 extern "C" void psram_write(int32_t addr,char chstrb, int32_t data,int32_t*) {
 	assert(addr < sizeof(psram_data));
+	chstrb <<= (addr & 0x3);
 	addr &= ~0x3;
 	auto ptr = (uint32_t*)psram_data + addr;
 
