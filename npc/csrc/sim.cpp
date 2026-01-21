@@ -151,15 +151,17 @@ extern "C" void flash_read(int32_t addr, int32_t *data) {
 }
 
 uint8_t *mem_atguest(word_t addr) {
-	if(addr>=MROM_BASE&&addr<MROM_BASE+sizeof(img)) {
-		return (uint8_t *)img + (addr - MROM_BASE);
+	uint32_t *ptr = nullptr;
+	if(addr>=MROM_BASE&&addr<MROM_END){
+		ptr=img + (addr - MROM_BASE);
 	} else if (addr>=FLASH_BASE&&addr<FLASH_END) {
-		return (uint8_t *)flash_data + (addr - FLASH_BASE);
+		ptr=flash_data + (addr - FLASH_BASE);
 	} else {
 		printf("[W] mem_atguest don't support addr=%08x\n",addr);
 		assert(0);
-		return nullptr;
 	}
+	printf("[DPI] mem_atguest addr=%08x get %08x\n",addr,*ptr);
+	return (uint8_t *)ptr;
 }
 word_t guest_to_host(word_t addr) {
   // printf("raw addr %08X\n",addr);
@@ -198,18 +200,6 @@ void skip_difftest_ref() {
   }
   if (diff_handler)
     diff_handler->skip_ref();
-}
-
-void _fetch_inst(int pc, int *out_inst) {
-  if (sim_settings.trace_inst_fetchcall) {
-    printf("[DPI] fetch_inst called with pc=%08x\n", pc);
-  }
-
-  if (pc == 0) {
-    *out_inst = 0;
-    return;
-  }
-  *out_inst = img[guest_to_host(pc) / 4];
 }
 
 #define MMIO_SERIAL_PORT 0x10000000u
@@ -392,6 +382,7 @@ sdb::vlen_inst_code inst_fetcher(sdb::paddr_t pc) {
   word_t inst;
 	if(pc>=MROM_BASE&&pc<MROM_BASE+sizeof(img)) {
 		mrom_read(pc, (int *)&inst);
+		printf("[DPI] inst_fetcher fetch from mrom @pc=%08x get %08x\n",pc,inst);
 	} else if (pc>=FLASH_BASE&&pc<FLASH_END) {
 		flash_read(pc - FLASH_BASE, (int *)&inst);
 		printf("[DPI] inst_fetcher fetch from flash @pc=%08x get %08x\n",pc,inst);
@@ -400,7 +391,6 @@ sdb::vlen_inst_code inst_fetcher(sdb::paddr_t pc) {
 		inst = 0;
 	}
 
-  // fetch_inst(pc, (int *)&inst);
   uint8_t *p = (uint8_t *)&inst;
   return sdb::vlen_inst_code(p, p + 4);
 }
