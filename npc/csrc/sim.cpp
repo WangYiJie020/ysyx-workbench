@@ -165,6 +165,7 @@ extern "C" void psram_read(int32_t addr, int32_t *data) {
 	addr &= ~0x3;
 	uintptr_t ptr = (uintptr_t)psram_data + addr;
 	*data = *(int32_t *)ptr;
+	printf("[DPI] psram_read addr=%08x data=%08x\n", addr + PSRAM_BASE, *data);
 }
 
 uint8_t *mem_atguest(word_t addr) {
