@@ -160,7 +160,7 @@ uint8_t *mem_atguest(word_t addr) {
 		printf("[W] mem_atguest don't support addr=%08x\n",addr);
 		assert(0);
 	}
-	printf("[DPI] mem_atguest addr=%08x get %08x\n",addr,*ptr);
+	// printf("[DPI] mem_atguest addr=%08x get %08x\n",addr,*ptr);
 	return (uint8_t *)ptr;
 }
 word_t guest_to_host(word_t addr) {

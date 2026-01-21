@@ -196,18 +196,36 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   }
   val SERIAL_ADDR_BASE = "h10000000".U(32.W)
   val SERIAL_ADDR_END  = "h10000020".U(32.W)
-  when(io.master.awvalid && io.master.awaddr >= SERIAL_ADDR_BASE && io.master.awaddr < SERIAL_ADDR_END && io.master.awready){
+
+  def isWriteRng(beg: UInt, end: UInt, addr: UInt): Bool = {
+    (addr >= beg) && (addr < end)
+  }
+
+  when(io.master.awvalid && io.master.awready && isWriteRng(SERIAL_ADDR_BASE, SERIAL_ADDR_END, io.master.awaddr)){
     RawClockedVoidFunctionCall("skip_difftest_ref")(
       clock,
       true.B
     )
   }
-  when(io.master.arvalid && io.master.araddr >= SERIAL_ADDR_BASE && io.master.araddr < SERIAL_ADDR_END && io.master.arready){
+  when(io.master.arvalid && io.master.arready && isWriteRng(SERIAL_ADDR_BASE, SERIAL_ADDR_END, io.master.araddr)){
     RawClockedVoidFunctionCall("skip_difftest_ref")(
       clock,
       true.B
     )
   }
+
+  val MinAccessAddr = "h02000000".U(32.W)
+  when(io.master.awvalid && io.master.awready && io.master.awaddr < MinAccessAddr){
+    printf("AXI4 Invalid Write Address 0x%x\n", io.master.awaddr)
+    stop()
+    stop()
+  }
+  when(io.master.arvalid && io.master.arready && io.master.araddr < MinAccessAddr){
+    printf("AXI4 Invalid Read Address 0x%x\n", io.master.araddr)
+    stop()
+    stop()
+  }
+
   AXI4IO.connectMasterSlave(memArbiter.io.out, memXBar.io.in)
   memXBar.connect()
 
