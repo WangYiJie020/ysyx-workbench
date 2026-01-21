@@ -167,27 +167,28 @@ extern "C" void psram_read(int32_t addr, int32_t *data) {
 	*data = *(int32_t *)ptr;
 	printf("[DPI] psram_read addr=%08x data=%08x\n", addr + PSRAM_BASE, *data);
 }
-extern "C" void psram_write(int32_t addr,char chstrb, int32_t data,int32_t*) {
+extern "C" void psram_write(int32_t addr,char strb8, int32_t data,int32_t*) {
 	assert(addr < sizeof(psram_data));
-	chstrb <<= (addr & 0x3);
+	uint8_t shift = (addr & 0x3) * 8;
 	addr &= ~0x3;
 	auto ptr = (uint32_t*)psram_data + addr;
 
-	uint32_t strb = 0;
-	if (chstrb & 0x1)
-		strb |= 0x000000ff;
-	if (chstrb & 0x2)
-		strb |= 0x0000ff00;
-	if (chstrb & 0x4)
-		strb |= 0x00ff0000;
-	if (chstrb & 0x8)
-		strb |= 0xff000000;
-	uint32_t umask = strb, udata = data;
+	uint32_t strb32 = 0;
+	if (strb8 & 0x1)
+		strb32 |= 0x000000ff;
+	if (strb8 & 0x2)
+		strb32 |= 0x0000ff00;
+	if (strb8 & 0x4)
+		strb32 |= 0x00ff0000;
+	if (strb8 & 0x8)
+		strb32 |= 0xff000000;
+	uint32_t shMask = strb32 << shift;
+	uint32_t shData = data << shift;
 
-	*ptr &= ~strb; // clear bits to be written
-	*ptr |= (udata & strb); // set bits
+	*ptr &= ~shMask;
+	*ptr |= (shData & shMask);
 	
-	printf("[DPI] psram_write addr=%08x data=%08x (strb %X)\n", addr + PSRAM_BASE, data, (uint32_t)chstrb);
+	printf("[DPI] psram_write addr=%08x data=%08x (strb %X)\n", addr + PSRAM_BASE, data, (uint32_t)strb8);
 }
 
 uint8_t *mem_atguest(word_t addr) {
