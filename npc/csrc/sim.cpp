@@ -313,6 +313,7 @@ static void init_flash() {
 constexpr uint32_t FLASH_BASE = 0x30000000u;
 constexpr uint32_t FLASH_END = 0x40000000u;
 extern "C" void flash_read(int32_t addr, int32_t *data) {
+	printf("[DPI] flash_read addr=%08x\n", addr);
 	
 	// in spi
 	//   .addr({8'b0, in_paddr[23:2], 2'b0}),
