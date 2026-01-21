@@ -52,12 +52,12 @@ uint8_t *guest_to_host(paddr_t paddr) {
     return sram + paddr - SRAM_BASE;
   } else if (in_flash(paddr)) {
 		if(paddr - FLASH_BASE >= sizeof(flash)) {
-			Log("Flash address out of range: " FMT_PADDR, paddr);
+			printf("Flash address out of range: " FMT_PADDR, paddr);
 			return NULL;
 		}
 	  return flash + paddr - FLASH_BASE;
 	}
-	Log("Failed to translate guest to host address: " FMT_PADDR, paddr);
+	printf("Failed to translate guest to host address: " FMT_PADDR, paddr);
   return NULL;
 }
 paddr_t host_to_guest(uint8_t *haddr) {
@@ -70,7 +70,7 @@ paddr_t host_to_guest(uint8_t *haddr) {
 	} else if (haddr >= flash && haddr < flash + sizeof(flash)) {
 		return haddr - flash + FLASH_BASE;
 	}
-	Log("Failed to translate host to guest address: %p", haddr);
+	printf("Failed to translate host to guest address: %p", haddr);
 	return 0;
 }
 
