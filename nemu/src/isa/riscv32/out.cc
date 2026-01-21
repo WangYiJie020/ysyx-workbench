@@ -603,7 +603,7 @@ extern "C" int execute_instruction(word_t INST(), word_t* pc, word_t* regs) {
 		XReg src1 = X[xs1];
 		XReg src2 = X[xs2];
 		
-		printf("%x / %x = ", (uint32_t)src1, (uint32_t)src2);
+		printf("%x / %x = \n", (uint32_t)src1, (uint32_t)src2);
 
 		// #  smallest signed value
 		XReg signed_min = (xlen() == 32) ? as_signed(Concat{Bits<1>(1), {Repl<31>{Bits<1>(0)}}}) : 1ll * Concat{Bits<1>(1), {Repl<63>{Bits<1>(0)}}};
@@ -622,7 +622,7 @@ extern "C" int execute_instruction(word_t INST(), word_t* pc, word_t* regs) {
 		  // #  no special case, just divide
 		  X[xd] = as_signed(src1) / as_signed(src2);
 		}
-		printf("%x\n", (uint32_t)X[xd]);
+		printf("%x / %x = %x\n", (uint32_t)src1, (uint32_t)src2, (uint32_t)X[xd]);
 		GOOD_END();
 	}
 	if (INST_IS(MULHSU)) { 
