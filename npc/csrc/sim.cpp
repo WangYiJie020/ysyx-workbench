@@ -150,6 +150,23 @@ extern "C" void flash_read(int32_t addr, int32_t *data) {
 	// printf("[DPI] flash_read addr=%08x data=%08x\n", addr + FLASH_BASE, *data);
 }
 
+constexpr uint32_t PSRAM_BASE = 0x80000000u;
+constexpr uint32_t PSRAM_END = 0xA0000000u;
+uint32_t psram_data[sizeof(img)/4]={
+	0x12345678,
+	0x9abcdef0,
+	0x11223344,
+	0x55667788,
+};
+extern "C" void psram_read(int32_t addr, int32_t *data) {
+	// in psram high 8bit addr are 0
+	// no need to minus PSRAM_BASE
+	assert(addr < sizeof(psram_data));
+	addr &= ~0x3;
+	uintptr_t ptr = (uintptr_t)psram_data + addr;
+	*data = *(int32_t *)ptr;
+}
+
 uint8_t *mem_atguest(word_t addr) {
 	uint32_t *ptr = nullptr;
 	if(addr>=MROM_BASE&&addr<MROM_END){
