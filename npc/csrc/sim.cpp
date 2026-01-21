@@ -310,8 +310,9 @@ uint32_t flash_data[sizeof(mem)/4];
 static void init_flash() {
 	memcpy(flash_data, mem, img_size);
 }
+constexpr uint32_t FLASH_BASE = 0x30000000u;
+constexpr uint32_t FLASH_END = 0x40000000u;
 extern "C" void flash_read(int32_t addr, int32_t *data) {
-	constexpr uint32_t FLASH_BASE = 0x30000000u;
 	
 	// in spi
 	//   .addr({8'b0, in_paddr[23:2], 2'b0}),
@@ -377,7 +378,9 @@ void shot_regsnap(sdb::reg_snapshot_t &regsnap) {
 sdb::vlen_inst_code inst_fetcher(sdb::paddr_t pc) {
   word_t inst;
 	if(pc>=MROM_BASE&&pc<MROM_BASE+sizeof(mem)) {
-  mrom_read(pc, (int *)&inst);
+		mrom_read(pc, (int *)&inst);
+	} else if (pc>=FLASH_BASE&&pc<FLASH_END) {
+		flash_read(pc - FLASH_BASE, (int *)&inst);
 	} else {
 		// printf("[W] inst_fetcher don't support fetch out of mrom @pc=%08x\n",pc);
 		inst = 0;
