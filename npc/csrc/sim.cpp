@@ -186,7 +186,7 @@ extern "C" void psram_write(int32_t addr,char chstrb, int32_t data,int32_t*) {
 	*ptr &= ~strb; // clear bits to be written
 	*ptr |= (udata & strb); // set bits
 	
-	printf("[DPI] psram_write addr=%08x data=%08x (strb %X)\n", addr + PSRAM_BASE, data, strb);
+	printf("[DPI] psram_write addr=%08x data=%08x (strb %X)\n", addr + PSRAM_BASE, data, (uint32_t)strb);
 }
 
 uint8_t *mem_atguest(word_t addr) {
