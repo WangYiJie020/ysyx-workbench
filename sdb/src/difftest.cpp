@@ -72,6 +72,8 @@ static reg_snapshot_t pack_regs_and_pc(const trace_context& ctx){
 
 void hander_t::init(_ctx_ref ctx,std::span<uint8_t> img_data, paddr_t img_base){
 	_imp->ref_memcpy(img_base, img_data.data(), img_data.size(), DIFFTEST_TO_REF);
+	printf("Difftest init memory from img_data, base addr=%08x, size=%zu\n", img_base, img_data.size());
+
 	auto regs=pack_regs_and_pc(ctx);
 	_imp->ref_regcpy(regs.data(), DIFFTEST_TO_REF);
 }
