@@ -280,6 +280,7 @@ void step_inst() {
     }
     cnt++;
     if (cnt >= MAYBE_DEADLOOP_THRESHOLD) {
+			dbg->dump_all();
       printf(ANSI_FG_YELLOW "[WARN] " ANSI_NONE);
       printf("simulation has stepped %zu cycles without pc change, maybe lock "
              "happened\n",
