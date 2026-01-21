@@ -117,7 +117,7 @@ word_t mem[600 * 1024 * 1024 / 4] = {
 };
 uint8_t *mem_atguest(size_t addr) {
   assert(addr >= MADDR_BASE);
-	// assert(addr
+	assert(addr < 0x20010000);
   return ((uint8_t *)mem) + addr - MADDR_BASE;
 }
 word_t guest_to_host(word_t addr) {
