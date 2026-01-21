@@ -215,12 +215,12 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   }
 
   val MinAccessAddr = "h02000000".U(32.W)
-  when(io.master.awvalid && io.master.awready && io.master.awaddr < MinAccessAddr){
+  when(io.master.awvalid && io.master.awaddr < MinAccessAddr){
     printf("AXI4 Invalid Write Address 0x%x\n", io.master.awaddr)
     stop()
     stop()
   }
-  when(io.master.arvalid && io.master.arready && io.master.araddr < MinAccessAddr){
+  when(io.master.arvalid && io.master.araddr < MinAccessAddr){
     printf("AXI4 Invalid Read Address 0x%x\n", io.master.araddr)
     stop()
     stop()
