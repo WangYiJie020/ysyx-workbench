@@ -209,11 +209,7 @@ extern "C" int execute_instruction(word_t INST(), word_t* pc, word_t* regs) {
 		Bits<12> imm = Bits<12>(InstRng(31, 20));
 		// operation:
 		Bits<MXLEN> sign_extend_imm = as_signed(imm);
-		printf("xs1: 0x%x\n", X[xs1]);
-		printf("imm: 0x%lx\n", imm.value);
-		printf("sign_extend_imm: 0x%lx\n", sign_extend_imm.value);
 		X[xd] = (X[xs1] < sign_extend_imm) ? 1 : 0;
-		printf("result: 0x%x\n", X[xd]);
 		GOOD_END();
 	}
 	if (INST_IS(BNE)) { 
