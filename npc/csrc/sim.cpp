@@ -29,7 +29,7 @@ typedef uint32_t word_t;
 typedef uint32_t addr_t;
 
 #define MADDR_BASE 0x20000000u
-#define INITIAL_PC MADDR_BASE
+#define INITIAL_PC 0x30000000u
 
 // #define TRACE_PMEM_CALL
 // #define TRACE_SHOW_ALL_INST
@@ -117,6 +117,7 @@ word_t mem[600 * 1024 * 1024 / 4] = {
 };
 uint8_t *mem_atguest(size_t addr) {
   assert(addr >= MADDR_BASE);
+	// assert(addr
   return ((uint8_t *)mem) + addr - MADDR_BASE;
 }
 word_t guest_to_host(word_t addr) {
@@ -323,7 +324,7 @@ extern "C" void flash_read(int32_t addr, int32_t *data) {
 	addr &= ~0x3;
 	uintptr_t ptr = (uintptr_t)flash_data + addr;
 	*data = *(int32_t *)ptr;
-	printf("[DPI] flash_read addr=%08x data=%08x\n", addr + FLASH_BASE, *data);
+	// printf("[DPI] flash_read addr=%08x data=%08x\n", addr + FLASH_BASE, *data);
 }
 
 constexpr uint32_t MROM_BASE = 0x20000000u;
@@ -382,6 +383,7 @@ sdb::vlen_inst_code inst_fetcher(sdb::paddr_t pc) {
 		mrom_read(pc, (int *)&inst);
 	} else if (pc>=FLASH_BASE&&pc<FLASH_END) {
 		flash_read(pc - FLASH_BASE, (int *)&inst);
+		printf("[DPI] inst_fetcher fetch from flash @pc=%08x get %08x\n",pc,inst);
 	} else {
 		printf("[W] inst_fetcher don't support fetch out of mrom @pc=%08x\n",pc);
 		inst = 0;
