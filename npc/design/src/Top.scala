@@ -195,7 +195,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     stop()
   }
   val SERIAL_ADDR_BASE = "h10000000".U(32.W)
-  val SERIAL_ADDR_END  = "h10000020".U(32.W)
+  val SERIAL_ADDR_END  = "h10001000".U(32.W)
 
   def isWriteRng(beg: UInt, end: UInt, addr: UInt): Bool = {
     (addr >= beg) && (addr < end)
