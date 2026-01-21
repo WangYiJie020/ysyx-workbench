@@ -22,6 +22,16 @@
 #define ANSIFMT_SIGNAL_TYPE "\e[38;2;78;201;176m"
 #define ANSIFMT_BOLD "\e[1m"
 
+#if ENABLE_VPI==0
+#define vpi_get_str(...) ""
+#define vpi_get(...) 0
+#define vpi_release_handle(...)
+#define vpi_handle_by_name(...) NULL
+#define vpi_scan(...) NULL
+#define vpi_iterate(...) NULL
+#define vpi_get_value(...) 
+#endif
+
 class SProbe {
   static std::string_view _max_common_prefix(std::string_view a,
                                              std::string_view b) {

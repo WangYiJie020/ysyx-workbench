@@ -29,7 +29,7 @@ typedef uint32_t word_t;
 typedef uint32_t addr_t;
 
 #define MADDR_BASE 0x20000000u
-#define INITIAL_PC MADDR_BASE
+#define INITIAL_PC 0x30000000u
 
 // #define TRACE_PMEM_CALL
 // #define TRACE_SHOW_ALL_INST
@@ -44,9 +44,11 @@ static uint64_t cycle_count = 0;
 static void _sim_eval() {
   dut.eval();
   sim_time++;
+#if ENABLE_WAVE
   if (tfp) {
     tfp->dump(sim_time);
   }
+#endif
 }
 
 void sim_step_cycle() {
@@ -105,7 +107,7 @@ void raise_ebreak(int a0) {
 bool sim_halted() { return !is_running; }
 bool sim_hit_good_trap() { return is_good_trap; }
 
-word_t mem[600 * 1024 * 1024 / 4] = {
+word_t img[600 * 1024 * 1024 / 4] = {
     0x00000297, // auipc t0,0
     0x00028823, // sb  zero,16(t0)
     0x0102c503, // lbu a0,16(t0)
@@ -113,9 +115,53 @@ word_t mem[600 * 1024 * 1024 / 4] = {
     0xdeadbeef, // some data
     0x12345678,
 };
-uint8_t *mem_atguest(size_t addr) {
-  assert(addr >= MADDR_BASE);
-  return ((uint8_t *)mem) + addr - MADDR_BASE;
+
+
+constexpr uint32_t MROM_BASE = 0x20000000u;
+constexpr uint32_t MROM_END = 0x20010000u;
+word_t mrom_data[(MROM_END - MROM_BASE) / 4];
+extern "C" void mrom_read(int32_t addr, int32_t *data) {
+	if(addr<MROM_BASE) {
+		printf("[clk %zu] [DPI] mrom_read addr=%08x ERROR BELOW MROM_BASE\n", sim_time,addr);
+	}
+  assert(addr >= MROM_BASE);
+  addr -= MROM_BASE;
+	assert(addr < sizeof(img));
+	addr &= ~0x3;
+	uintptr_t ptr = (uintptr_t)img + addr;
+	*data = *(int32_t *)ptr;
+	// printf("[DPI] mrom_read addr=%08x data=%08x alignedd=%08X\n", addr + MROM_BASE, *data,aligned_data);
+}
+
+constexpr uint32_t FLASH_BASE = 0x30000000u;
+constexpr uint32_t FLASH_END = 0x40000000u;
+uint32_t flash_data[sizeof(img)/4];
+static void init_flash();
+extern "C" void flash_read(int32_t addr, int32_t *data) {
+	// in spi
+	//   .addr({8'b0, in_paddr[23:2], 2'b0}),
+	// so the high 8 bits are ignored
+	// 0x3XXXXXXX -> 0x0XXXXXXX
+	// no need to minus FLASH_BASE
+	assert(addr < sizeof(flash_data));
+	addr &= ~0x3;
+	uintptr_t ptr = (uintptr_t)flash_data + addr;
+	*data = *(int32_t *)ptr;
+	// printf("[DPI] flash_read addr=%08x data=%08x\n", addr + FLASH_BASE, *data);
+}
+
+uint8_t *mem_atguest(word_t addr) {
+	uint32_t *ptr = nullptr;
+	if(addr>=MROM_BASE&&addr<MROM_END){
+		ptr=img + (addr - MROM_BASE);
+	} else if (addr>=FLASH_BASE&&addr<FLASH_END) {
+		ptr=flash_data + (addr - FLASH_BASE);
+	} else {
+		printf("[W] mem_atguest don't support addr=%08x\n",addr);
+		assert(0);
+	}
+	// printf("[DPI] mem_atguest addr=%08x get %08x\n",addr,*ptr);
+	return (uint8_t *)ptr;
 }
 word_t guest_to_host(word_t addr) {
   // printf("raw addr %08X\n",addr);
@@ -156,18 +202,6 @@ void skip_difftest_ref() {
     diff_handler->skip_ref();
 }
 
-void fetch_inst(int pc, int *out_inst) {
-  if (sim_settings.trace_inst_fetchcall) {
-    printf("[DPI] fetch_inst called with pc=%08x\n", pc);
-  }
-
-  if (pc == 0) {
-    *out_inst = 0;
-    return;
-  }
-  *out_inst = mem[guest_to_host(pc) / 4];
-}
-
 #define MMIO_SERIAL_PORT 0x10000000u
 #define MMIO_RTC_ADDR 0x10000048u
 
@@ -197,7 +231,7 @@ void pmem_read(int addr, int *out_data) {
   }
 
   uint32_t host_aligned = guest_to_host(addr) & (~0x3);
-  *out_data = mem[host_aligned / 4];
+  *out_data = img[host_aligned / 4];
 
   if (sim_settings.trace_pmem_readcall) {
     printf("%08x\n", *out_data);
@@ -221,7 +255,7 @@ void pmem_write(int addr, int data, int mask) {
 
   uint32_t host_aligned = guest_to_host(addr) & (~0x3);
 
-  uint8_t *p = (uint8_t *)(&mem[host_aligned >> 2]);
+  uint8_t *p = (uint8_t *)(&img[host_aligned >> 2]);
   uint32_t umask = mask, udata = data;
 
   while (umask) {
@@ -236,7 +270,8 @@ void pmem_write(int addr, int data, int mask) {
 
 void step_inst() {
   size_t cnt = 0;
-  constexpr size_t MAYBE_DEADLOOP_THRESHOLD = 200;
+	// SPI flash may need many cycles to respond
+  constexpr size_t MAYBE_DEADLOOP_THRESHOLD = 8192*4;
   while (!pc_changed) {
     sim_step_cycle();
     if (sim_halted()) {
@@ -245,6 +280,7 @@ void step_inst() {
     }
     cnt++;
     if (cnt >= MAYBE_DEADLOOP_THRESHOLD) {
+			dbg->dump_all();
       printf(ANSI_FG_YELLOW "[WARN] " ANSI_NONE);
       printf("simulation has stepped %zu cycles without pc change, maybe lock "
              "happened\n",
@@ -295,7 +331,7 @@ static long load_img() {
   Log("The image is %s, size = %ld", img_file, img_size);
 
   fseek(fp, 0, SEEK_SET);
-  int ret = fread(mem, img_size, 1, fp);
+  int ret = fread(img, img_size, 1, fp);
   assert(ret == 1);
 
   fclose(fp);
@@ -303,52 +339,8 @@ static long load_img() {
   return img_size;
 }
 
-uint32_t flash_data[8192]=
-{
-0x100007b7,
-0x04100713,
-0x00e78023,
-0x00000013,
-0xffdff06f,
-};
-static void init_flash() {
-	// uint8_t* flash_ptr = (uint8_t*)flash_data;
-	// for (size_t i = 0; i < sizeof(flash_data); i++) {
-	// 	flash_ptr[i] = i & 0xFF;
-	// }
-	// for(size_t i=0;i<8192;i++) {
-	// 	flash_data[i] = i;
-	// }
-	// flash_data[0] = 0x12345678;
-	// flash_data[1] = 0x9abcdef0;
-	// flash_data[2] = 0x19198100;
-}
-extern "C" void flash_read(int32_t addr, int32_t *data) {
-	constexpr uint32_t FLASH_BASE = 0x30000000u;
-	
-	// in spi
-	//   .addr({8'b0, in_paddr[23:2], 2'b0}),
-	// so the high 8 bits are ignored
-	// 0x3XXXXXXX -> 0x0XXXXXXX
-	// no need to minus FLASH_BASE
-	assert(addr < sizeof(flash_data));
-	addr &= ~0x3;
-	uintptr_t ptr = (uintptr_t)flash_data + addr;
-	*data = *(int32_t *)ptr;
-}
-
-constexpr uint32_t MROM_BASE = 0x20000000u;
-extern "C" void mrom_read(int32_t addr, int32_t *data) {
-	if(addr<MROM_BASE) {
-		printf("[clk %zu] [DPI] mrom_read addr=%08x ERROR BELOW MROM_BASE\n", sim_time,addr);
-	}
-  assert(addr >= MROM_BASE);
-  addr -= MROM_BASE;
-	assert(addr < sizeof(mem));
-	addr &= ~0x3;
-	uintptr_t ptr = (uintptr_t)mem + addr;
-	*data = *(int32_t *)ptr;
-	// printf("[DPI] mrom_read addr=%08x data=%08x alignedd=%08X\n", addr + MROM_BASE, *data,aligned_data);
+static void init_flash(){
+	memcpy(flash_data, img, img_size);
 }
 
 // ARG
@@ -389,14 +381,17 @@ void shot_regsnap(sdb::reg_snapshot_t &regsnap) {
 }
 sdb::vlen_inst_code inst_fetcher(sdb::paddr_t pc) {
   word_t inst;
-	if(pc>=MROM_BASE&&pc<MROM_BASE+sizeof(mem)) {
-  mrom_read(pc, (int *)&inst);
+	if(pc>=MROM_BASE&&pc<MROM_END){
+		mrom_read(pc, (int *)&inst);
+		// printf("[DPI] inst_fetcher fetch from mrom @pc=%08x get %08x\n",pc,inst);
+	} else if (pc>=FLASH_BASE&&pc<FLASH_END) {
+		flash_read(pc - FLASH_BASE, (int *)&inst);
+		// printf("[DPI] inst_fetcher fetch from flash @pc=%08x get %08x\n",pc,inst);
 	} else {
-		// printf("[W] inst_fetcher don't support fetch out of mrom @pc=%08x\n",pc);
+		printf("[W] inst_fetcher don't support fetch out of mrom @pc=%08x\n",pc);
 		inst = 0;
 	}
 
-  // fetch_inst(pc, (int *)&inst);
   uint8_t *p = (uint8_t *)&inst;
   return sdb::vlen_inst_code(p, p + 4);
 }
@@ -455,6 +450,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
     }
   }
 
+#if ENABLE_WAVE
   if (setting.en_waveform) {
     Verilated::traceEverOn(true);
     tfp = std::shared_ptr<VerilatedFstC>(new VerilatedFstC,
@@ -462,6 +458,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
     dut.trace(tfp.get(), 99);
     tfp->open(setting.wave_fst_file.c_str());
   }
+#endif
 
   reset(10);
 

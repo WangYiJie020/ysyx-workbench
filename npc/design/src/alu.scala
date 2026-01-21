@@ -52,12 +52,14 @@ class ALU extends Module {
     shift_res := src1 >> shamt
   }
 
+  val is_sltiu_func7t = (inbits.func7t === "b0010011".U)
+
   io.out.bits := MuxLookup(inbits.func3t, BADCALL_RESVALUE)(
     Seq(
       0.U -> add_sub_res,                    // 000: add/sub/addi
       1.U -> (src1 << shamt),                // 001: sll/slli
       2.U -> Mux(s_src1 < s_src2, 1.U, 0.U), // 010: slt/slti
-      3.U -> Mux(src1 < src2, 1.U, 0.U),     // 011: sltu/sltui
+      3.U -> Mux(src1 < src2, 1.U, 0.U),     // 011: sltu/sltiu
       4.U -> (src1 ^ src2),                  // 100: xor/xori
       5.U -> shift_res,                      // 101: srl/srli/sra/srai
       6.U -> (src1 | src2),                  // 110: or/ori

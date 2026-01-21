@@ -19,10 +19,10 @@ SOC_HOME ?= ../ysyxSoC
 SAN_FLAGS?= -fsanitize=address
 
 VERILATOR_CFLAGS ?=
-ENABLE_VPI ?= 1
+ENABLE_VPI ?= 0
 ENABLE_NVBOARD ?= 0
 
-ENABLE_WAVE ?= 1
+ENABLE_WAVE ?= 0
 ifeq ($(ENABLE_WAVE), 1)
 VERILATOR_CFLAGS += --trace-fst --trace-structs
 endif
