@@ -382,7 +382,7 @@ sdb::vlen_inst_code inst_fetcher(sdb::paddr_t pc) {
 	} else if (pc>=FLASH_BASE&&pc<FLASH_END) {
 		flash_read(pc - FLASH_BASE, (int *)&inst);
 	} else {
-		// printf("[W] inst_fetcher don't support fetch out of mrom @pc=%08x\n",pc);
+		 printf("[W] inst_fetcher don't support fetch out of mrom @pc=%08x\n",pc);
 		inst = 0;
 	}
 
