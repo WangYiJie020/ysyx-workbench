@@ -170,8 +170,8 @@ extern "C" void psram_read(int32_t addr, int32_t *data) {
 extern "C" void psram_write(int32_t addr,char strb8, int32_t data,int32_t*) {
 	assert(addr < sizeof(psram_data));
 	uint8_t shift = (addr & 0x3) * 8;
-	addr &= ~0x3;
-	auto ptr = (uint32_t*)psram_data + addr;
+	uint32_t aligned_addr = addr & 0x3;
+	auto ptr = (uint32_t*)psram_data + aligned_addr;
 
 	uint32_t strb32 = 0;
 	if (strb8 & 0x1)
