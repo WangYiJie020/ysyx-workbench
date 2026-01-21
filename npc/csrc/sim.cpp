@@ -44,9 +44,11 @@ static uint64_t cycle_count = 0;
 static void _sim_eval() {
   dut.eval();
   sim_time++;
+#if ENABLE_WAVE
   if (tfp) {
     tfp->dump(sim_time);
   }
+#endif
 }
 
 void sim_step_cycle() {
@@ -440,6 +442,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
     }
   }
 
+#if ENABLE_WAVE
   if (setting.en_waveform) {
     Verilated::traceEverOn(true);
     tfp = std::shared_ptr<VerilatedFstC>(new VerilatedFstC,
@@ -447,6 +450,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
     dut.trace(tfp.get(), 99);
     tfp->open(setting.wave_fst_file.c_str());
   }
+#endif
 
   reset(10);
 
