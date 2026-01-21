@@ -619,6 +619,8 @@ extern "C" int execute_instruction(word_t INST(), word_t* pc, word_t* regs) {
 		  X[xd] = signed_min;
 		
 		} else {
+			printf(" as_signed(src1) = %d\n", (int32_t)as_signed(src1));
+			printf(" as_signed(src2) = %d\n", (int32_t)as_signed(src2));
 		  // #  no special case, just divide
 		  X[xd] = as_signed(src1) / as_signed(src2);
 		}
