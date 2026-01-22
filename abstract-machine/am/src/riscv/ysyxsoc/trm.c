@@ -101,11 +101,17 @@ extern char __psram_end__[];
 
 typedef int (*entry_func_t)(const char *args);
 
+#define IS_4BYTE_ALIGNED(x) ((((uintptr_t)(x)) & 0x3) == 0)
+
 __attribute__((section(".boot_text")))
 void boot_memcpy(void *dst, const void *src, size_t n) {
-	uint8_t *d = (uint8_t *)dst;
-	const uint8_t *s = (const uint8_t *)src;
-	for (size_t i = 0; i < n; i++) {
+	assert(IS_4BYTE_ALIGNED(dst));
+	assert(IS_4BYTE_ALIGNED(src));
+	assert(IS_4BYTE_ALIGNED(n));
+	uint32_t *d = (uint32_t *)dst;
+	const uint32_t *s = (const uint32_t *)src;
+	size_t wn = n / 4;
+	for (size_t i = 0; i < wn; i++) {
 		d[i] = s[i];
 	}
 }
@@ -114,6 +120,7 @@ __attribute__((section(".boot_text")))
 void _trm_init() {
   init_serial();
 
+	putstr("Bootloader start...\n");
 	boot_memcpy(_text_start, __text_load_start__, (size_t)__text_size__);
 	boot_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
 	boot_memcpy(_data_start, __data_load_start__, (size_t)__data_size__);
