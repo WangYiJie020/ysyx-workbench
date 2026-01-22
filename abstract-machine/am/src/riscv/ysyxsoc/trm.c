@@ -105,13 +105,19 @@ void _trm_init() {
 
   // print_csr();
 
-	// putnum_base16((uint32_t)&_data);
-	// putch('\n');
-	// putnum_base16((uint32_t)__data_load_start__);
-	// putch('\n');
+	putstr("data");
+	putnum_base16((uint32_t)&_data);
+	putch('\n');
+	putnum_base16((uint32_t)__data_load_start__);
+	putch('\n');
   memcpy((void *)&_data, (void *)__data_load_start__, (uintptr_t)__data_size__);
   putstr(".data loaded.\n");
 
+	putstr("text");
+	putnum_base16((uint32_t)&__runtime_text_start__);
+	putch('\n');
+	putnum_base16((uint32_t)__text_load_start__);
+	putch('\n');
   memcpy((void *)&__runtime_text_start__, (void *)__text_load_start__, (uintptr_t)__text_size__);
   putstr(".text copied.\n");
 
