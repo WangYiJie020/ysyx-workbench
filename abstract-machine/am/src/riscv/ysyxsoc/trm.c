@@ -22,8 +22,10 @@ Area heap = RANGE(&_heap_start, &_heap_end);
 static const char mainargs[MAINARGS_MAX_LEN] =
     TOSTRING(MAINARGS_PLACEHOLDER); // defined in CFLAGS
 
-__attribute__((section(".boot_text")))
-void init_serial() {
+#define BOOT_TEXT __attribute__((section(".boot_text")))
+#define BOOT_RODATA __attribute__((section(".boot_rodata")))
+
+BOOT_TEXT void init_serial() {
 
   // set UART to 8 bits, no parity, one stop bit
   // 0x3 = 0b11 : Select each character 8 bits
@@ -103,8 +105,7 @@ typedef int (*entry_func_t)(const char *args);
 
 #define IS_4BYTE_ALIGNED(x) ((((uintptr_t)(x)) & 0x3) == 0)
 
-__attribute__((section(".boot_text")))
-void boot_memcpy(void *dst, const void *src, size_t n) {
+BOOT_TEXT void boot_memcpy(void *dst, const void *src, size_t n) {
 	assert(IS_4BYTE_ALIGNED(dst));
 	assert(IS_4BYTE_ALIGNED(src));
 	assert(IS_4BYTE_ALIGNED(n));
@@ -116,9 +117,13 @@ void boot_memcpy(void *dst, const void *src, size_t n) {
 	}
 }
 
-__attribute__((section(".boot_text")))
-void _trm_init() {
+BOOT_RODATA const char msg1[] = "test123\n";
+
+BOOT_TEXT void _trm_init() {
   init_serial();
+
+	putstr(msg1);
+
 
 	boot_memcpy(_text_start, __text_load_start__, (size_t)__text_size__);
 	boot_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
