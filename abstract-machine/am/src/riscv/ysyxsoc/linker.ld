@@ -23,7 +23,7 @@ SECTIONS {
   .rodata : {
 		_rodata = .;
     *(.rodata*)
-  } > psram AT > flash
+  } > flash
 
 	__rodata_load_start__ = LOADADDR(.rodata);
 	__rodata_size__       = SIZEOF(.rodata);

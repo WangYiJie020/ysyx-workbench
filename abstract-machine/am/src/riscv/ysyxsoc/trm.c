@@ -114,7 +114,9 @@ void _trm_init() {
   putnum_base16((uintptr_t)__text_size__);
   putstr(" bytes).\n");
 
-	memcpy((void *)&_rodata, (void *)__rodata_load_start__,
+	uintptr_t runtime_rodata_start = (uintptr_t)__runtime_ptext_start__ + 
+		((uintptr_t)&_rodata - (uintptr_t)&_text);
+	memcpy((void*)runtime_rodata_start, (void *)__rodata_load_start__,
 				 (uintptr_t)__rodata_size__);
 	putstr("ROData segment loaded.\n");
 
