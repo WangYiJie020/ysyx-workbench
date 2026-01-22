@@ -428,7 +428,7 @@ sdb::vlen_inst_code inst_fetcher(sdb::paddr_t pc) {
 		flash_read(pc - FLASH_BASE, (int *)&inst);
 		// printf("[DPI] inst_fetcher fetch from flash @pc=%08x get %08x\n",pc,inst);
 	} else if (pc>=SRAM_BASE&&pc<SRAM_END) {
-		printf("[W] inst_fetcher fetch from sram @pc=%08x\n",pc);
+		// printf("[W] inst_fetcher fetch from sram @pc=%08x\n",pc);
 		// for debug
 		inst = img[(pc - SRAM_BASE) / 4];
 	} else {
