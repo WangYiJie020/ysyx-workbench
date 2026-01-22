@@ -57,7 +57,7 @@ uint8_t *guest_to_host(paddr_t paddr) {
 		}
 	  return flash + paddr - FLASH_BASE;
 	}
-	printf("Failed to translate guest to host address: " FMT_PADDR, paddr);
+	// printf("Failed to translate guest to host address: " FMT_PADDR, paddr);
   return NULL;
 }
 paddr_t host_to_guest(uint8_t *haddr) {
@@ -70,7 +70,7 @@ paddr_t host_to_guest(uint8_t *haddr) {
 	} else if (haddr >= flash && haddr < flash + sizeof(flash)) {
 		return haddr - flash + FLASH_BASE;
 	}
-	printf("Failed to translate host to guest address: %p", haddr);
+	// printf("Failed to translate host to guest address: %p", haddr);
 	return 0;
 }
 
