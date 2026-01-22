@@ -107,7 +107,7 @@ void raise_ebreak(int a0) {
 bool sim_halted() { return !is_running; }
 bool sim_hit_good_trap() { return is_good_trap; }
 
-word_t img[600 * 1024 * 1024 / 4] = {
+word_t img[60 * 1024 * 1024 / 4] = {
     0x00000297, // auipc t0,0
     0x00028823, // sb  zero,16(t0)
     0x0102c503, // lbu a0,16(t0)
