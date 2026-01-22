@@ -19,7 +19,7 @@ SECTIONS {
 	} > flash AT> flash
 
   .text : {
-		_text_start = .;
+		_text_start = . + SIZEOF(.boot);
     *(.text*)
 		_text_end = .;
   } > psram AT> flash
