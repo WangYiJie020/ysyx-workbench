@@ -123,6 +123,15 @@ BOOT_TEXT void boot_memcpy(void *dst, const void *src, size_t n) {
     d[i] = s[i];
   }
 }
+BOOT_TEXT void boot_clear(void *dst, size_t n) {
+	assert(IS_4BYTE_ALIGNED(dst));
+	assert(IS_4BYTE_ALIGNED(n));
+	size_t wn = n / 4;
+	uint32_t *d = (uint32_t *)dst;
+	for (size_t i = 0; i < wn; i++) {
+		d[i] = 0;
+	}
+}
 
 BOOT_RODATA const char msg1[] = "test123\n";
 
@@ -130,12 +139,13 @@ BOOT_TEXT void _trm_init() {
   init_serial();
 
   // boot_putstr(msg1);
+	putch('\n');
 
   boot_memcpy(_text_start, __text_load_start__, (size_t)__text_size__);
   boot_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
   boot_memcpy(_data_start, __data_load_start__, (size_t)__data_size__);
 
-  // memset(_bss_start, 0, _bss_end - _bss_start);
+  boot_clear(_bss_start, (size_t)(_bss_end - _bss_start));
 
   int ret = main(mainargs);
   halt(ret);
