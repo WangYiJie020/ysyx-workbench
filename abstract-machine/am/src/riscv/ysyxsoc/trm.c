@@ -122,20 +122,7 @@ FSBL_TEXT static const char *_boot_rodata_rawpos(const char *ptr) {
     }                                                                          \
   } while (0)
 
-FSBL_TEXT static void _word_memcpy(uint32_t *dst, const uint32_t *src,
-                                   size_t wn) {
-  for (size_t i = 0; i < wn; i++) {
-    dst[i] = src[i];
-  }
-}
 
-FSBL_TEXT void boot_memcpy(void *dst, const void *src, size_t n) {
-  BOOT_ASSERT(IS_4BYTE_ALIGNED(dst));
-  BOOT_ASSERT(IS_4BYTE_ALIGNED(src));
-  BOOT_ASSERT(IS_4BYTE_ALIGNED(n));
-  size_t wn = n / 4;
-  _word_memcpy((uint32_t *)dst, (const uint32_t *)src, wn);
-}
 SSBL_TEXT void _ssbl_clear(void *dst, size_t n) {
   assert(IS_4BYTE_ALIGNED(dst));
   assert(IS_4BYTE_ALIGNED(n));
@@ -171,6 +158,15 @@ SSBL_TEXT void _second_boot(){
   halt(ret);
 }
 
+FSBL_TEXT void boot_memcpy(void *dst, const void *src, size_t n) {
+  BOOT_ASSERT(IS_4BYTE_ALIGNED(dst));
+  BOOT_ASSERT(IS_4BYTE_ALIGNED(src));
+  BOOT_ASSERT(IS_4BYTE_ALIGNED(n));
+  size_t wn = n / 4;
+	for (size_t i = 0; i < wn; i++) {
+		((uint32_t*)dst)[i] = ((const uint32_t*)src)[i];
+	}
+}
 FSBL_TEXT void _trm_init() {
   init_serial();
   boot_log("serial initialized.\n");
