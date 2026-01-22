@@ -127,7 +127,7 @@ void _trm_init() {
   entry_func_t entry = (entry_func_t)(__runtime_text_start__ + main_offset);
   // printf("%d\n",(uintptr_t)&__data_size__);
 
-  memset((void *)&_bss, 0, (uintptr_t)&_ebss - (uintptr_t)&_bss);
+  // memset((void *)&_bss, 0, (uintptr_t)&_ebss - (uintptr_t)&_bss);
 
   // int ret = main(mainargs);
   int ret = entry(mainargs);
