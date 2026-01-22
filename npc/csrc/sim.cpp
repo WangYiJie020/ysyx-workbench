@@ -152,12 +152,7 @@ extern "C" void flash_read(int32_t addr, int32_t *data) {
 
 constexpr uint32_t PSRAM_BASE = 0x80000000u;
 constexpr uint32_t PSRAM_END = 0xA0000000u;
-uint32_t psram_data[sizeof(img)/4]={
-	0x12345678,
-	0x9abcdef0,
-	0x11223344,
-	0x55667788,
-};
+uint32_t psram_data[8*1024*1024/4];
 extern "C" void psram_read(int32_t addr, int32_t *data) {
 	// in psram high 8bit addr are 0
 	// no need to minus PSRAM_BASE
