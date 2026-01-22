@@ -121,9 +121,6 @@ void _trm_init() {
   init_serial();
 
 	putstr("Bootloader start...\n");
-	const char* rotest = "Read-only segment test.\n";
-	putnum_base16((uint32_t)rotest);
-	putch('\n');
 	boot_memcpy(_text_start, __text_load_start__, (size_t)__text_size__);
 	boot_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
 	boot_memcpy(_data_start, __data_load_start__, (size_t)__data_size__);
