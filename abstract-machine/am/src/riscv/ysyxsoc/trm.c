@@ -115,7 +115,7 @@ void _trm_init() {
   memcpy((void *)&__runtime_text_start__, (void *)__text_load_start__, (uintptr_t)__text_size__);
   putstr(".text copied.\n");
 
-  // memcpy((void *)&_rodata, (void *)__rodata_load_start__, (uintptr_t)__rodata_size__);
+  memcpy((void *)&_rodata, (void *)__rodata_load_start__, (uintptr_t)__rodata_size__);
 	// uintptr_t runtime_rodata_start = (uintptr_t)__runtime_text_start__ + 
 	// 	((uintptr_t)&_rodata - (uintptr_t)&_text);
 	// memcpy((void*)runtime_rodata_start, (void *)__rodata_load_start__,
