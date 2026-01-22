@@ -4,7 +4,7 @@ ENTRY(_start)
 MEMORY {
   mrom : ORIGIN = 0x20000000, LENGTH = 4K
   sram : ORIGIN = 0x0f000000, LENGTH = 8K
-	flash : ORIGIN = 0x30000000, LENGTH = 4M
+	flash : ORIGIN = 0x30000000, LENGTH = 1M
 	psram : ORIGIN = 0x80000000, LENGTH = 4M
 }
 
