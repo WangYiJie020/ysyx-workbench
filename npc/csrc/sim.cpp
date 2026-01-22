@@ -430,7 +430,7 @@ sdb::vlen_inst_code inst_fetcher(sdb::paddr_t pc) {
 	} else if (pc>=SRAM_BASE&&pc<SRAM_END) {
 		printf("[W] inst_fetcher fetch from sram @pc=%08x\n",pc);
 		// for debug
-		inst = img[(pc - MADDR_BASE) / 4];
+		inst = img[(pc - SRAM_BASE) / 4];
 	} else {
 		printf("[W] inst_fetcher don't support fetch @pc=%08x\n",pc);
 		inst = 0;
