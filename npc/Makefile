@@ -183,6 +183,7 @@ ARGS?=
 sim: $(SIM_BIN)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	@echo "Run the simulation"
+	@echo "-OPT=$(VSIM_OPT) -ENABLE_VPI=$(ENABLE_VPI) -ENABLE_WAVE=$(ENABLE_WAVE)"
 	@LSAN_OPTIONS=suppressions=asan_suppress.txt $^ $(ARGS) $(SIM_IMG)
 
 -include ../Makefile
