@@ -52,12 +52,6 @@ void putch(char ch) {
   *(volatile uint8_t *)(UART_BASE + 0x00) = ch;
 }
 
-BOOT_TEXT void boot_putch(char ch) {
-  while (!(*UART_LSR & 0x20)) {
-  }
-  *(volatile uint8_t *)(UART_BASE + 0x00) = ch;
-}
-#define boot_putstr(s) putstr(_boot_rodata_rawpos(s))
 
 void halt(int code) {
   asm volatile("mv a0, %0; ebreak" : : "r"(code));
@@ -113,12 +107,14 @@ typedef int (*entry_func_t)(const char *args);
 BOOT_TEXT static const char *_boot_rodata_rawpos(const char *ptr) {
   return ptr - (uintptr_t)_rodata_start + (uintptr_t)__rodata_load_start__;
 }
+#define boot_putstr(s) putstr(_boot_rodata_rawpos(s))
+#define boot_log(s) boot_putstr("[BOOT] " s)
 
 #define _TOSTR(x) #x
 #define BOOT_ASSERT(cond)                                                      \
   do {                                                                         \
     if (!(cond)) {                                                             \
-      boot_putstr("BOOT ASSERTION FAILED: " _TOSTR(cond) "\n");                \
+      boot_putstr("ASSERTION FAILED: " _TOSTR(cond) "\n");                \
       halt(-1);                                                                \
     }                                                                          \
   } while (0)
@@ -149,16 +145,16 @@ BOOT_TEXT void boot_clear(void *dst, size_t n) {
 
 BOOT_TEXT void _trm_init() {
   init_serial();
-  boot_putstr("serial initialized.\n");
+  boot_log("serial initialized.\n");
 
   boot_memcpy(_text_start, __text_load_start__, (size_t)__text_size__);
-	boot_putstr(".text copied.\n");
+	boot_log(".text copied.\n");
   boot_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
-	boot_putstr(".rodata copied.\n");
+	boot_log(".rodata copied.\n");
   boot_memcpy(_data_start, __data_load_start__, (size_t)__data_size__);
-	boot_putstr(".data copied.\n");
-
+	boot_log(".data copied.\n");
   boot_clear(_bss_start, (size_t)(_bss_end - _bss_start));
+	boot_log(".bss cleared.\n");
 
   int ret = main(mainargs);
   halt(ret);
