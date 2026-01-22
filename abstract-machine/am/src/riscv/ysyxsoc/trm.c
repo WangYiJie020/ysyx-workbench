@@ -151,7 +151,8 @@ BOOT_TEXT void boot_clear(void *dst, size_t n) {
 BOOT_TEXT void _trm_init() {
   init_serial();
 
-  // putstr("xxx");
+	boot_putstr("test");
+
 
   boot_memcpy(_text_start, __text_load_start__, (size_t)__text_size__);
   boot_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
