@@ -19,7 +19,8 @@ SECTIONS {
 	} > flash AT> flash
 
   .text : {
-		_text_start = . + SIZEOF(.boot);
+		. = ORIGIN(psram) + SIZEOF(.boot);
+		_text_start = .;
     *(.text*)
 		_text_end = .;
   } > psram AT> flash
