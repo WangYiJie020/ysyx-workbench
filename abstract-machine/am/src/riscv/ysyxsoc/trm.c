@@ -112,12 +112,13 @@ typedef int (*entry_func_t)(const char *args);
 
 #define IS_4BYTE_ALIGNED(x) ((((uintptr_t)(x)) & 0x3) == 0)
 
+			// char msg[] = "@line " _TOSTR(__LINE__) ": ASSERTION FAILED : " #cond "\n"; 
+
 #define _TOSTR(x) #x
 #define BOOT_ASSERT(cond) \
 	do { \
 		if (!(cond)) { \
-			char msg[] = "@line " _TOSTR(__LINE__) ": ASSERTION FAILED : " #cond "\n"; \
-			boot_putstr(msg); \
+			boot_putstr(""); \
 			halt(-1); \
 		} \
 	} while (0)
