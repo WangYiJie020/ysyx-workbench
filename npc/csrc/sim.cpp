@@ -186,6 +186,10 @@ extern "C" void psram_write(int32_t addr,char strb8, int32_t data,int32_t*) {
 	// printf("[DPI] psram_write addr=%08x data=%08x (strb %X)\n", addr + PSRAM_BASE, data, (uint32_t)strb8);
 }
 
+constexpr uint32_t SRAM_BASE = 0x0f000000u;
+constexpr uint32_t SRAM_END = 0x10000000u;
+
+
 uint8_t *mem_atguest(word_t addr) {
 	uint32_t *ptr = nullptr;
 	if(addr>=MROM_BASE&&addr<MROM_END){
@@ -423,8 +427,12 @@ sdb::vlen_inst_code inst_fetcher(sdb::paddr_t pc) {
 	} else if (pc>=FLASH_BASE&&pc<FLASH_END) {
 		flash_read(pc - FLASH_BASE, (int *)&inst);
 		// printf("[DPI] inst_fetcher fetch from flash @pc=%08x get %08x\n",pc,inst);
+	} else if (pc>=SRAM_BASE&&pc<SRAM_END) {
+		printf("[W] inst_fetcher fetch from sram @pc=%08x\n",pc);
+		// for debug
+		inst = img[(pc - MADDR_BASE) / 4];
 	} else {
-		printf("[W] inst_fetcher don't support fetch out of mrom @pc=%08x\n",pc);
+		printf("[W] inst_fetcher don't support fetch @pc=%08x\n",pc);
 		inst = 0;
 	}
 
