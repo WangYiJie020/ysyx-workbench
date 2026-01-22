@@ -95,17 +95,20 @@ extern char __sram_end__[];
 extern char __psram_start__[];
 extern char __psram_end__[];
 
+extern char __runtime_ptext_start__[];
+
 typedef int (*entry_func_t)(const char *args);
 
 void _trm_init() {
   init_serial();
 
   // print_csr();
+	
 
   memcpy((void *)&_data, (void *)__data_load_start__, (uintptr_t)__data_size__);
   putstr("Data segment loaded.\n");
 
-  memcpy((void *)__psram_start__, __text_load_start__,
+  memcpy((void *)__runtime_ptext_start__, (void *)__text_load_start__,
          (uintptr_t)__text_size__);
   putstr("Text segment copied (");
   putnum_base16((uintptr_t)__text_size__);
@@ -117,7 +120,7 @@ void _trm_init() {
 
   uintptr_t main_offset = (uintptr_t)main - (uintptr_t)&_text;
 
-  entry_func_t entry = (entry_func_t)(__psram_start__ + main_offset);
+  entry_func_t entry = (entry_func_t)(__runtime_ptext_start__ + main_offset);
   // printf("%d\n",(uintptr_t)&__data_size__);
 
   memset((void *)&_bss, 0, (uintptr_t)&_ebss - (uintptr_t)&_bss);
