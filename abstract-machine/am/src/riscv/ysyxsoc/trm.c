@@ -81,6 +81,12 @@ extern char _bss, _ebss;
 extern char __data_load_start__[];
 extern char __data_size__[];
 
+extern char __sram_start__[];
+extern char __sram_end__[];
+
+extern char __psram_start__[];
+extern char __psram_end__[];
+
 void _trm_init() {
   init_serial();
 
