@@ -146,8 +146,7 @@ BOOT_TEXT void _trm_init() {
   init_serial();
   boot_log("serial initialized.\n");
 
-	putnum_base16((uintptr_t)__text_load_start__);
-	// boot_memcpy(_text_start, __text_load_start__, (size_t)__text_size__);
+	boot_memcpy(_text_start, __text_load_start__, (size_t)__text_size__);
   // boot_log(".text copied.\n");
   boot_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
   boot_log(".rodata copied.\n");
@@ -157,6 +156,7 @@ BOOT_TEXT void _trm_init() {
   boot_log(".bss cleared.\n");
 
 	boot_log("enter main function.\n");
+	putnum_base16((uintptr_t)__text_load_start__);
   int ret = main(mainargs);
   halt(ret);
 }
