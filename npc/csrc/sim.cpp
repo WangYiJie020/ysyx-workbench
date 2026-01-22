@@ -147,7 +147,7 @@ extern "C" void flash_read(int32_t addr, int32_t *data) {
 	addr &= ~0x3;
 	uintptr_t ptr = (uintptr_t)flash_data + addr;
 	*data = *(int32_t *)ptr;
-	printf("[DPI] flash_read addr=%08x data=%08x\n", addr + FLASH_BASE, *data);
+	// printf("[DPI] flash_read addr=%08x data=%08x\n", addr + FLASH_BASE, *data);
 }
 
 constexpr uint32_t PSRAM_BASE = 0x80000000u;
@@ -183,7 +183,7 @@ extern "C" void psram_write(int32_t addr,char strb8, int32_t data,int32_t*) {
 	*ptr &= ~shMask;
 	*ptr |= (shData & shMask);
 	
-	printf("[DPI] psram_write addr=%08x data=%08x (strb %X)\n", addr + PSRAM_BASE, data, (uint32_t)strb8);
+	// printf("[DPI] psram_write addr=%08x data=%08x (strb %X)\n", addr + PSRAM_BASE, data, (uint32_t)strb8);
 }
 
 constexpr uint32_t SRAM_BASE = 0x0f000000u;
