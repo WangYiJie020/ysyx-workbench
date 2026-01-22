@@ -146,8 +146,8 @@ BOOT_TEXT void _trm_init() {
   init_serial();
   boot_log("serial initialized.\n");
 
-	boot_memcpy(_text_start, __text_load_start__, (size_t)__text_size__);
-  boot_log(".text copied.\n");
+	// boot_memcpy(_text_start, __text_load_start__, (size_t)__text_size__);
+ //  boot_log(".text copied.\n");
   boot_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
   boot_log(".rodata copied.\n");
   boot_memcpy(_data_start, __data_load_start__, (size_t)__data_size__);
