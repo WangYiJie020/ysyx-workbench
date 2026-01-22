@@ -107,7 +107,7 @@ void _trm_init() {
 
 	uintptr_t main_offset = (uintptr_t)main - (uintptr_t)&_text;
 
-	entry_func_t entry = (entry_func_t)(__sram_start__ + main_offset);
+	entry_func_t entry = (entry_func_t)(__psram_start__ + main_offset);
   // printf("%d\n",(uintptr_t)&__data_size__);
 
   memset((void *)&_bss, 0, (uintptr_t)&_ebss - (uintptr_t)&_bss);
