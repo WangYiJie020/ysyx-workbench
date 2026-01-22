@@ -18,7 +18,7 @@ SECTIONS {
 		_boot_end = .;
 	} > flash AT> flash
 
-	_flash_offset = . - ORIGIN(flash);
+	_flash_offset = SIZEOF(.boot);
 
 	.psram_padding (NOLOAD) : {
 			. = . + _flash_offset;
