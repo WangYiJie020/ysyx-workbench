@@ -118,7 +118,8 @@ typedef int (*entry_func_t)(const char *args);
 #define BOOT_ASSERT(cond) \
 	do { \
 		if (!(cond)) { \
-			boot_putstr("sss"); \
+			char msg[] = "sss";\
+			boot_putstr(msg); \
 			halt(-1); \
 		} \
 	} while (0)
