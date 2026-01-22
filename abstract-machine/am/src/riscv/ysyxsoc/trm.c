@@ -155,7 +155,7 @@ BOOT_TEXT void _trm_init() {
   boot_clear(_bss_start, (size_t)(_bss_end - _bss_start));
   boot_log(".bss cleared.\n");
 
-	boot_log("jump to main()\n");
+	boot_log("enter main function.\n");
   int ret = main(mainargs);
   halt(ret);
 }
