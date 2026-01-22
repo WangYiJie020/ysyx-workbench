@@ -115,11 +115,11 @@ void _trm_init() {
          (uintptr_t)__text_size__);
   putstr(".text copied.\n");
 
-	uintptr_t runtime_rodata_start = (uintptr_t)__runtime_text_start__ + 
-		((uintptr_t)&_rodata - (uintptr_t)&_text);
-	memcpy((void*)runtime_rodata_start, (void *)__rodata_load_start__,
-				 (uintptr_t)__rodata_size__);
-	putstr(".rodata copied.\n");
+	// uintptr_t runtime_rodata_start = (uintptr_t)__runtime_text_start__ + 
+	// 	((uintptr_t)&_rodata - (uintptr_t)&_text);
+	// memcpy((void*)runtime_rodata_start, (void *)__rodata_load_start__,
+	// 			 (uintptr_t)__rodata_size__);
+	// putstr(".rodata copied.\n");
 
   uintptr_t main_offset = (uintptr_t)main - (uintptr_t)&_text;
 
