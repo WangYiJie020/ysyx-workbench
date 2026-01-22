@@ -15,7 +15,7 @@ SECTIONS {
     *(entry)
     *(.text*)
 		_etext = .;
-  } > flash
+  } > psram AT> flash
 
 	__text_load_start__ = LOADADDR(.text); /* flash addr */
 	__text_size__       = SIZEOF(.text);   /* LEN */
@@ -23,7 +23,7 @@ SECTIONS {
   .rodata : {
 		_rodata = .;
     *(.rodata*)
-  } > flash
+  } > psram AT> flash
 
 	__rodata_load_start__ = LOADADDR(.rodata);
 	__rodata_size__       = SIZEOF(.rodata);
@@ -46,7 +46,6 @@ SECTIONS {
 		_ebss = .;
   } > psram
 
-	__runtime_text_start__ = _ebss;
 
 	__sram_start__ = ORIGIN(sram);
 	__sram_size__ = LENGTH(sram);
@@ -59,6 +58,6 @@ SECTIONS {
   _stack_top = __sram_end__ - _stack_size;
   _stack_pointer  = _stack_top + _stack_size;
 
-  _heap_start = __runtime_text_start__ + SIZEOF(.text);
+  _heap_start = _ebss;
 	_heap_end = __psram_end__;
 }
