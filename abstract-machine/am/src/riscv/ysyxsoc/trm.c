@@ -78,6 +78,9 @@ void print_csr() {
 extern char _data, _edata, _text, _etext;
 extern char _bss, _ebss;
 
+extern char __text_load_start__[];
+extern char __text_size__[];
+
 extern char __data_load_start__[];
 extern char __data_size__[];
 
@@ -95,7 +98,8 @@ void _trm_init() {
   memcpy((void *)&_data, (void *)__data_load_start__,
          (uintptr_t)__data_size__);
 
-	// memcpy((void *)__sram_start__, (void *)&_text, 
+	memcpy((void *)__sram_start__, __text_load_start__,
+				 (uintptr_t)__text_size__);
 
   // printf("%d\n",(uintptr_t)&__data_size__);
 
