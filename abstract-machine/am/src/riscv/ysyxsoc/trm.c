@@ -99,9 +99,11 @@ void _trm_init() {
 
   memcpy((void *)&_data, (void *)__data_load_start__,
          (uintptr_t)__data_size__);
+	putstr("Data segment loaded.\n");
 
-	memcpy((void *)__sram_start__, __text_load_start__,
+	memcpy((void *)__psram_start__, __text_load_start__,
 				 (uintptr_t)__text_size__);
+	putstr("Text segment copied.\n");
 
 	uintptr_t main_offset = (uintptr_t)main - (uintptr_t)&_text;
 
