@@ -183,7 +183,7 @@ extern "C" void psram_write(int32_t addr,char strb8, int32_t data,int32_t*) {
 	*ptr &= ~shMask;
 	*ptr |= (shData & shMask);
 	
-	// printf("[DPI] psram_write addr=%08x data=%08x (strb %X)\n", addr + PSRAM_BASE, data, (uint32_t)strb8);
+	printf("[DPI] psram_write addr=%08x data=%08x (strb %X)\n", addr + PSRAM_BASE, data, (uint32_t)strb8);
 }
 
 constexpr uint32_t SRAM_BASE = 0x0f000000u;
