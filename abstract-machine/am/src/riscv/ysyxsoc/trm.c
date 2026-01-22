@@ -112,12 +112,31 @@ typedef int (*entry_func_t)(const char *args);
 
 #define IS_4BYTE_ALIGNED(x) ((((uintptr_t)(x)) & 0x3) == 0)
 
-BOOT_TEXT void boot_memcpy(void *dst, const void *src, size_t n) {
-	uint8_t *d = (uint8_t *)dst;
-	const uint8_t *s = (const uint8_t *)src;
-	for (size_t i = 0; i < n; i++) {
-		d[i] = s[i];
+BOOT_TEXT static void _boot_failed(const char *msg) {
+	boot_putstr("BOOT FAILED: ");
+	boot_putstr(msg);
+	boot_putch('\n');
+	halt(-1);
+}
+#define BOOT_ASSERT(cond) \
+	do { \
+		if (!(cond)) { \
+			_boot_failed(#cond); \
+		} \
+	} while (0)
+
+BOOT_TEXT static void _word_memcpy(uint32_t *dst, const uint32_t *src, size_t wn) {
+	for (size_t i = 0; i < wn; i++) {
+		dst[i] = src[i];
 	}
+}
+
+BOOT_TEXT void boot_memcpy(void *dst, const void *src, size_t n) {
+	BOOT_ASSERT(IS_4BYTE_ALIGNED(dst));
+	BOOT_ASSERT(IS_4BYTE_ALIGNED(src));
+	BOOT_ASSERT(IS_4BYTE_ALIGNED(n));
+	size_t wn = n / 4;
+	_word_memcpy((uint32_t *)dst, (const uint32_t *)src, wn);
 }
 BOOT_TEXT void boot_clear(void *dst, size_t n) {
 	assert(IS_4BYTE_ALIGNED(dst));
