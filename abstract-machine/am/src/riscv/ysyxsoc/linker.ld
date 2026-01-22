@@ -15,7 +15,7 @@ SECTIONS {
     *(entry)
     *(.text*)
 		_etext = .;
-  } > flash AT> flash
+  } > flash
 
 	__text_load_start__ = LOADADDR(.text); /* flash addr */
 	__text_size__       = SIZEOF(.text);   /* LEN */
@@ -23,7 +23,7 @@ SECTIONS {
   .rodata : {
 		_rodata = .;
     *(.rodata*)
-  } > psram AT> flash
+  } > flash
 
 	__rodata_load_start__ = LOADADDR(.rodata);
 	__rodata_size__       = SIZEOF(.rodata);
