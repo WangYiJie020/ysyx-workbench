@@ -11,6 +11,13 @@ MEMORY {
 SECTIONS {
 	. = ORIGIN(flash);
 
+	.boot : {
+		_boot_start = .;
+		*(entry)
+		*(.boot_text)
+		_boot_end = .;
+	} > flash AT> flash
+
   .text : {
 		_text_start = .;
     *(.text*)
@@ -19,13 +26,6 @@ SECTIONS {
 
 	__text_load_start__ = LOADADDR(.text); /* flash addr */
 	__text_size__       = SIZEOF(.text);   /* LEN */
-
-	.boot : {
-		_boot_start = .;
-		*(entry)
-		*(.boot_text)
-		_boot_end = .;
-	} > flash AT> flash
 
   .rodata : {
 		_rodata_start = .;
