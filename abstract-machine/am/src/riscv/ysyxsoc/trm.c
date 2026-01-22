@@ -22,6 +22,7 @@ Area heap = RANGE(&_heap_start, &_heap_end);
 static const char mainargs[MAINARGS_MAX_LEN] =
     TOSTRING(MAINARGS_PLACEHOLDER); // defined in CFLAGS
 
+__attribute__((section(".boot_text")))
 void init_serial() {
 
   // set UART to 8 bits, no parity, one stop bit
