@@ -118,7 +118,7 @@ typedef int (*entry_func_t)(const char *args);
 #define BOOT_ASSERT(cond) \
 	do { \
 		if (!(cond)) { \
-			char msg[] = "sss";\
+			char msg[] = #cond; \
 			boot_putstr(msg); \
 			halt(-1); \
 		} \
