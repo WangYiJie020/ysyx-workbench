@@ -79,10 +79,15 @@ void print_csr() {
   putch('\n');
 }
 
-extern char _text_start[], _text_end[];
-extern char _rodata_start[], _rodata_end[];
-extern char _data_start[], _data_end[];
-extern char _bss_start[], _bss_end[];
+extern char _text_start[];
+extern char _rodata_start[];
+extern char _data_start[];
+
+extern char _bss_start[];
+extern char __bss_size__[];
+
+extern char _data_extra_start[];
+extern char _bss_extra_start[];
 
 extern char _ssbl_start[], _ssbl_end[];
 extern char __ssbl_load_start__[];
@@ -96,6 +101,12 @@ extern char __rodata_size__[];
 
 extern char __data_load_start__[];
 extern char __data_size__[];
+
+extern char __data_extra_load_start__[];
+extern char __data_extra_size__[];
+
+extern char __bss_extra_load_start__[];
+extern char __bss_extra_size__[];
 
 extern char __sram_start__[];
 extern char __sram_end__[];
@@ -150,8 +161,16 @@ SSBL_TEXT void _second_boot(){
   boot_log(".rodata copied.\n");
   _ssbl_memcpy(_data_start, __data_load_start__, (size_t)__data_size__);
   boot_log(".data copied.\n");
-  _ssbl_clear(_bss_start, (size_t)(_bss_end - _bss_start));
+  _ssbl_clear(_bss_start, (size_t)__bss_size__);
   boot_log(".bss cleared.\n");
+	if((size_t)__data_extra_size__){
+		_ssbl_memcpy(_data_extra_start, __data_extra_load_start__, (size_t)__data_extra_size__);
+		boot_log(".data.extra copied.\n");
+	}
+	if((size_t)__bss_extra_size__){
+		_ssbl_clear(_bss_extra_start, (size_t)__bss_extra_size__);
+		boot_log(".bss.extra cleared.\n");
+	}
 
 	boot_log("enter main function.\n");
   int ret = main(mainargs);

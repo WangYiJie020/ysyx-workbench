@@ -50,7 +50,8 @@ SECTIONS {
 	__rodata_load_start__ = LOADADDR(.rodata);
 	__rodata_size__       = SIZEOF(.rodata);
 
-	PROVIDE(__data_extra_start__ = .);
+	PROVIDE(_data_extra_start = .);
+	PROVIDE(__data_extra_load_start__ = .);
   PROVIDE(__data_extra_size__ = 0);
 
   .data : {
@@ -71,6 +72,11 @@ SECTIONS {
     *(.scommon)
 		_bss_end = .;
   } > psram
+
+	__bss_size__ = SIZEOF(.bss);
+
+	PROVIDE(_bss_extra_start = .);
+	PROVIDE(__bss_extra_size__ = 0);
 
 
 	__sram_start__ = ORIGIN(sram);
