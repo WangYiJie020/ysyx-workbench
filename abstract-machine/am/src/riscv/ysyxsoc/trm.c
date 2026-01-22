@@ -52,7 +52,6 @@ void putch(char ch) {
   *(volatile uint8_t *)(UART_BASE + 0x00) = ch;
 }
 
-
 void halt(int code) {
   asm volatile("mv a0, %0; ebreak" : : "r"(code));
   while (1) {
@@ -114,7 +113,7 @@ BOOT_TEXT static const char *_boot_rodata_rawpos(const char *ptr) {
 #define BOOT_ASSERT(cond)                                                      \
   do {                                                                         \
     if (!(cond)) {                                                             \
-      boot_putstr("ASSERTION FAILED: " _TOSTR(cond) "\n");                \
+      boot_putstr("ASSERTION FAILED: " _TOSTR(cond) "\n");                     \
       halt(-1);                                                                \
     }                                                                          \
   } while (0)
@@ -148,13 +147,13 @@ BOOT_TEXT void _trm_init() {
   boot_log("serial initialized.\n");
 
   boot_memcpy(_text_start, __text_load_start__, (size_t)__text_size__);
-	boot_log(".text copied.\n");
+  boot_log(".text copied.\n");
   boot_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
-	boot_log(".rodata copied.\n");
+  boot_log(".rodata copied.\n");
   boot_memcpy(_data_start, __data_load_start__, (size_t)__data_size__);
-	boot_log(".data copied.\n");
+  boot_log(".data copied.\n");
   boot_clear(_bss_start, (size_t)(_bss_end - _bss_start));
-	boot_log(".bss cleared.\n");
+  boot_log(".bss cleared.\n");
 
   int ret = main(mainargs);
   halt(ret);
