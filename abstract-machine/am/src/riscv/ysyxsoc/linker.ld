@@ -25,7 +25,7 @@ SECTIONS {
 		*(entry)
 		*(.boot_text)
 		_boot_end = .;
-	} > flash
+	} > flash AT> flash
 
   .rodata : {
 		_rodata_start = .;
