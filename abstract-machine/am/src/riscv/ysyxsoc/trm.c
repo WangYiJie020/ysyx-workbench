@@ -136,7 +136,7 @@ FSBL_TEXT void boot_memcpy(void *dst, const void *src, size_t n) {
   size_t wn = n / 4;
   _word_memcpy((uint32_t *)dst, (const uint32_t *)src, wn);
 }
-FSBL_TEXT void boot_clear(void *dst, size_t n) {
+SSBL_TEXT void _ssbl_clear(void *dst, size_t n) {
   assert(IS_4BYTE_ALIGNED(dst));
   assert(IS_4BYTE_ALIGNED(n));
   size_t wn = n / 4;
@@ -163,7 +163,7 @@ SSBL_TEXT void _second_boot(){
   boot_log(".rodata copied.\n");
   _ssbl_memcpy(_data_start, __data_load_start__, (size_t)__data_size__);
   boot_log(".data copied.\n");
-  boot_clear(_bss_start, (size_t)(_bss_end - _bss_start));
+  _ssbl_clear(_bss_start, (size_t)(_bss_end - _bss_start));
   boot_log(".bss cleared.\n");
 
 	boot_log("enter main function.\n");
