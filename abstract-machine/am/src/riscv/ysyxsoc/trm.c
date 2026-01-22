@@ -112,16 +112,14 @@ typedef int (*entry_func_t)(const char *args);
 
 #define IS_4BYTE_ALIGNED(x) ((((uintptr_t)(x)) & 0x3) == 0)
 
-BOOT_TEXT static void _boot_failed(const char *msg) {
-	boot_putstr("BOOT FAILED: ");
-	boot_putstr(msg);
-	boot_putch('\n');
+BOOT_TEXT static void _boot_failed(int line) {
+	boot_putstr("BOOT FAILED\n");
 	halt(-1);
 }
 #define BOOT_ASSERT(cond) \
 	do { \
 		if (!(cond)) { \
-			_boot_failed(#cond); \
+			_boot_failed(__LINE__); \
 		} \
 	} while (0)
 
