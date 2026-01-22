@@ -113,15 +113,11 @@ typedef int (*entry_func_t)(const char *args);
 #define IS_4BYTE_ALIGNED(x) ((((uintptr_t)(x)) & 0x3) == 0)
 
 BOOT_TEXT void boot_memcpy(void *dst, const void *src, size_t n) {
-  assert(IS_4BYTE_ALIGNED(dst));
-  assert(IS_4BYTE_ALIGNED(src));
-  assert(IS_4BYTE_ALIGNED(n));
-  uint32_t *d = (uint32_t *)dst;
-  const uint32_t *s = (const uint32_t *)src;
-  size_t wn = n / 4;
-  for (size_t i = 0; i < wn; i++) {
-    d[i] = s[i];
-  }
+	uint8_t *d = (uint8_t *)dst;
+	const uint8_t *s = (const uint8_t *)src;
+	for (size_t i = 0; i < n; i++) {
+		d[i] = s[i];
+	}
 }
 BOOT_TEXT void boot_clear(void *dst, size_t n) {
 	assert(IS_4BYTE_ALIGNED(dst));
