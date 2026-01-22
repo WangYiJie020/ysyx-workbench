@@ -11,7 +11,6 @@ MEMORY {
 SECTIONS {
 	. = ORIGIN(flash);
 
-	. = ALIGN(8);
 	.boot : {
 		_boot_start = .;
 		*(entry)
@@ -19,7 +18,6 @@ SECTIONS {
 		_boot_end = .;
 	} > flash
 
-	. = ALIGN(8);
   .text : {
 		_text_start = .;
     *(.text*)
@@ -29,7 +27,6 @@ SECTIONS {
 	__text_load_start__ = LOADADDR(.text); /* flash addr */
 	__text_size__       = SIZEOF(.text);   /* LEN */
 
-	. = ALIGN(8);
   .rodata : {
 		_rodata_start = .;
     *(.rodata*)
@@ -40,7 +37,6 @@ SECTIONS {
 	__rodata_load_start__ = LOADADDR(.rodata);
 	__rodata_size__       = SIZEOF(.rodata);
 
-	. = ALIGN(8);
   .data : {
 		_data_start = .;
     *(.sdata*)
@@ -51,7 +47,6 @@ SECTIONS {
 	__data_load_start__ = LOADADDR(.data); /* MA */
 	__data_size__       = SIZEOF(.data);   /* LEN */
 
-	. = ALIGN(8);
   .bss : {
 		_bss_start = .;
     *(.bss*)
