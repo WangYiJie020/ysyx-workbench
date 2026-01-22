@@ -90,6 +90,8 @@ extern char __sram_end__[];
 extern char __psram_start__[];
 extern char __psram_end__[];
 
+typedef int(*entry_func_t)(const char *args);
+
 void _trm_init() {
   init_serial();
 
@@ -101,9 +103,12 @@ void _trm_init() {
 	memcpy((void *)__sram_start__, __text_load_start__,
 				 (uintptr_t)__text_size__);
 
+	entry_func_t entry = (entry_func_t)(__sram_start__);
   // printf("%d\n",(uintptr_t)&__data_size__);
 
   memset((void *)&_bss, 0, (uintptr_t)&_ebss - (uintptr_t)&_bss);
-  int ret = main(mainargs);
+
+  // int ret = main(mainargs);
+	int ret = entry(mainargs);
   halt(ret);
 }
