@@ -44,7 +44,8 @@ void init_serial() {
 }
 
 void putch(char ch) {
-  while (!(*UART_LSR & 0x20)) {}
+  while (!(*UART_LSR & 0x20)) {
+  }
   *(volatile uint8_t *)(UART_BASE + 0x00) = ch;
 }
 
@@ -76,10 +77,14 @@ void print_csr() {
 }
 
 extern char _data, _edata, _text, _etext;
+extern char _rodata;
 extern char _bss, _ebss;
 
 extern char __text_load_start__[];
 extern char __text_size__[];
+
+extern char __rodata_load_start__[];
+extern char __rodata_size__[];
 
 extern char __data_load_start__[];
 extern char __data_size__[];
@@ -90,29 +95,34 @@ extern char __sram_end__[];
 extern char __psram_start__[];
 extern char __psram_end__[];
 
-typedef int(*entry_func_t)(const char *args);
+typedef int (*entry_func_t)(const char *args);
 
 void _trm_init() {
   init_serial();
 
-	// print_csr();
+  // print_csr();
 
-  memcpy((void *)&_data, (void *)__data_load_start__,
-         (uintptr_t)__data_size__);
-	putstr("Data segment loaded.\n");
+  memcpy((void *)&_data, (void *)__data_load_start__, (uintptr_t)__data_size__);
+  putstr("Data segment loaded.\n");
 
-	memcpy((void *)__psram_start__, __text_load_start__,
-				 (uintptr_t)__text_size__);
-	putstr("Text segment copied.\n");
+  memcpy((void *)__psram_start__, __text_load_start__,
+         (uintptr_t)__text_size__);
+  putstr("Text segment copied (");
+  putnum_base16((uintptr_t)__text_size__);
+  putstr(" bytes).\n");
 
-	uintptr_t main_offset = (uintptr_t)main - (uintptr_t)&_text;
+	memcpy((void *)&_rodata, (void *)__rodata_load_start__,
+				 (uintptr_t)__rodata_size__);
+	putstr("ROData segment loaded.\n");
 
-	entry_func_t entry = (entry_func_t)(__psram_start__ + main_offset);
+  uintptr_t main_offset = (uintptr_t)main - (uintptr_t)&_text;
+
+  entry_func_t entry = (entry_func_t)(__psram_start__ + main_offset);
   // printf("%d\n",(uintptr_t)&__data_size__);
 
   memset((void *)&_bss, 0, (uintptr_t)&_ebss - (uintptr_t)&_bss);
 
   // int ret = main(mainargs);
-	int ret = entry(mainargs);
+  int ret = entry(mainargs);
   halt(ret);
 }

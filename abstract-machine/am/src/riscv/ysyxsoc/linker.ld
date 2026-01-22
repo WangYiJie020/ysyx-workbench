@@ -20,9 +20,14 @@ SECTIONS {
 	__text_load_start__ = LOADADDR(.text); /* flash addr */
 	__text_size__       = SIZEOF(.text);   /* LEN */
 
-  /* .rodata : { */
-  /*   *(.rodata*) */
-  /* } > mrom AT> mrom */
+  .rodata : {
+		_rodata = .;
+    *(.rodata*)
+  } > psram AT > flash
+
+	__rodata_load_start__ = LOADADDR(.rodata);
+	__rodata_size__       = SIZEOF(.rodata);
+
   .data : {
 		_data = .;
     *(.sdata*)
