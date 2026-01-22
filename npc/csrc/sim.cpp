@@ -432,9 +432,7 @@ sdb::vlen_inst_code inst_fetcher(sdb::paddr_t pc) {
 		// for debug
 		inst = img[(pc - SRAM_BASE) / 4];
 	} else if (pc>=PSRAM_BASE&&pc<PSRAM_END) {
-		// printf("[W] inst_fetcher fetch from psram @pc=%08x (ret as img)\n",pc);
-		// for debug
-		inst = img[(pc - PSRAM_BASE) / 4];
+		psram_read(pc - PSRAM_BASE, (int *)&inst);
 	} else {
 		printf("[W] inst_fetcher don't support fetch @pc=%08x\n",pc);
 		inst = 0;
