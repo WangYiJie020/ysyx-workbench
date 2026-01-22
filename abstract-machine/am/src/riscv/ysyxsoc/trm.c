@@ -78,16 +78,16 @@ void print_csr() {
 extern char _data, _edata, _text, _etext;
 extern char _bss, _ebss;
 
-extern char __data_load_start__;
-extern char __data_size__;
+extern char __data_load_start__[];
+extern char __data_size__[];
 
 void _trm_init() {
   init_serial();
 
 	// print_csr();
 
-  memcpy((void *)&_data, (void *)&__data_load_start__,
-         (uintptr_t)&__data_size__);
+  memcpy((void *)&_data, (void *)__data_load_start__,
+         (uintptr_t)__data_size__);
 
   // printf("%d\n",(uintptr_t)&__data_size__);
 
