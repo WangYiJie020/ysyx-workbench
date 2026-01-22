@@ -102,14 +102,23 @@ extern char __psram_end__[];
 typedef int (*entry_func_t)(const char *args);
 
 __attribute__((section(".boot_text")))
+void boot_memcpy(void *dst, const void *src, size_t n) {
+	uint8_t *d = (uint8_t *)dst;
+	const uint8_t *s = (const uint8_t *)src;
+	for (size_t i = 0; i < n; i++) {
+		d[i] = s[i];
+	}
+}
+
+__attribute__((section(".boot_text")))
 void _trm_init() {
   init_serial();
 
-	memcpy(_text_start, __text_load_start__, (size_t)__text_size__);
-	memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
-	memcpy(_data_start, __data_load_start__, (size_t)__data_size__);
+	boot_memcpy(_text_start, __text_load_start__, (size_t)__text_size__);
+	boot_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
+	boot_memcpy(_data_start, __data_load_start__, (size_t)__data_size__);
 
-	memset(_bss_start, 0, _bss_end - _bss_start);
+	// memset(_bss_start, 0, _bss_end - _bss_start);
 
 	int ret = main(mainargs);
   halt(ret);
