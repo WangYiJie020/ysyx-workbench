@@ -92,7 +92,7 @@ void* _wordcpy(uint32_t* out, const uint32_t* in, const uint32_t* iend){
 }
 
 void *memcpy(void *out, const void *in, size_t n) {
-	if(((((uintptr_t)out)&0xf)==0)&&((((uintptr_t)in)&0xf)==0) && ((n&0xf)==0)){
+	if(((((uintptr_t)out)&0x3)==0)&&((((uintptr_t)in)&0x3)==0) && ((n&0x3)==0)){
 		return _wordcpy((uint32_t*)out, (const uint32_t*)in, (const uint32_t*)((uintptr_t)in+n));
 	}
 	const char* ibeg=in;
