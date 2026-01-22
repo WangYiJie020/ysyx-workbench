@@ -15,7 +15,7 @@ SECTIONS {
     *(entry)
     *(.text*)
 		_etext = .;
-  } > flash
+  } > sram AT> flash
 
 	__text_load_start__ = LOADADDR(.text); /* flash addr */
 	__text_size__       = SIZEOF(.text);   /* LEN */
