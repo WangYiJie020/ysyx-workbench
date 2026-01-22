@@ -19,8 +19,8 @@ SECTIONS {
 	} > flash AT> flash
 
   .text : {
-		_boot_size = _boot_end - _boot_start;
-		. = ORIGIN(psram) + _boot_size;
+		/* _boot_size = _boot_end - _boot_start; */
+		/* . = ORIGIN(psram) + _boot_size; */
 		_text_start = .;
     *(.text*)
 		_text_end = .;
