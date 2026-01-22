@@ -50,6 +50,9 @@ SECTIONS {
 	__rodata_load_start__ = LOADADDR(.rodata);
 	__rodata_size__       = SIZEOF(.rodata);
 
+	PROVIDE(__data_extra_start__ = .);
+  PROVIDE(__data_extra_size__ = 0);
+
   .data : {
 		_data_start = .;
     *(.sdata*)
@@ -59,6 +62,7 @@ SECTIONS {
 
 	__data_load_start__ = LOADADDR(.data); /* MA */
 	__data_size__       = SIZEOF(.data);   /* LEN */
+
 
   .bss : {
 		_bss_start = .;
