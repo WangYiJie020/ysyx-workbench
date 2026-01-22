@@ -58,7 +58,7 @@ SECTIONS {
   _stack_top = __sram_end__ - _stack_size;
   _stack_pointer  = _stack_top + _stack_size;
 
-	__runtime_text_start__ = _ebss;
+	__runtime_text_start__ = __psram_start__;
 
   _heap_start = _ebss + SIZEOF(.text);
 	_heap_end = __psram_end__;
