@@ -22,10 +22,10 @@ Area heap = RANGE(&_heap_start, &_heap_end);
 static const char mainargs[MAINARGS_MAX_LEN] =
     TOSTRING(MAINARGS_PLACEHOLDER); // defined in CFLAGS
 
-#define BOOT_TEXT __attribute__((section(".boot_text")))
-#define BOOT_RODATA __attribute__((section(".boot_rodata")))
+#define FSBL_TEXT __attribute__((section(".fsbl_text")))
+#define SSBL_TEXT __attribute__((section(".ssbl_text")))
 
-BOOT_TEXT void init_serial() {
+FSBL_TEXT void init_serial() {
 
   // set UART to 8 bits, no parity, one stop bit
   // 0x3 = 0b11 : Select each character 8 bits
@@ -84,6 +84,10 @@ extern char _rodata_start[], _rodata_end[];
 extern char _data_start[], _data_end[];
 extern char _bss_start[], _bss_end[];
 
+extern char _ssbl_start[], _ssbl_end[];
+extern char __ssbl_load_start__[];
+extern char __ssbl_size__[];
+
 extern char __text_load_start__[];
 extern char __text_size__[];
 
@@ -103,7 +107,7 @@ typedef int (*entry_func_t)(const char *args);
 
 #define IS_4BYTE_ALIGNED(x) ((((uintptr_t)(x)) & 0x3) == 0)
 
-BOOT_TEXT static const char *_boot_rodata_rawpos(const char *ptr) {
+FSBL_TEXT static const char *_boot_rodata_rawpos(const char *ptr) {
   return ptr - (uintptr_t)_rodata_start + (uintptr_t)__rodata_load_start__;
 }
 #define boot_putstr(s) putstr(_boot_rodata_rawpos(s))
@@ -118,21 +122,21 @@ BOOT_TEXT static const char *_boot_rodata_rawpos(const char *ptr) {
     }                                                                          \
   } while (0)
 
-BOOT_TEXT static void _word_memcpy(uint32_t *dst, const uint32_t *src,
+FSBL_TEXT static void _word_memcpy(uint32_t *dst, const uint32_t *src,
                                    size_t wn) {
   for (size_t i = 0; i < wn; i++) {
     dst[i] = src[i];
   }
 }
 
-BOOT_TEXT void boot_memcpy(void *dst, const void *src, size_t n) {
+FSBL_TEXT void boot_memcpy(void *dst, const void *src, size_t n) {
   BOOT_ASSERT(IS_4BYTE_ALIGNED(dst));
   BOOT_ASSERT(IS_4BYTE_ALIGNED(src));
   BOOT_ASSERT(IS_4BYTE_ALIGNED(n));
   size_t wn = n / 4;
   _word_memcpy((uint32_t *)dst, (const uint32_t *)src, wn);
 }
-BOOT_TEXT void boot_clear(void *dst, size_t n) {
+FSBL_TEXT void boot_clear(void *dst, size_t n) {
   assert(IS_4BYTE_ALIGNED(dst));
   assert(IS_4BYTE_ALIGNED(n));
   size_t wn = n / 4;
@@ -142,10 +146,7 @@ BOOT_TEXT void boot_clear(void *dst, size_t n) {
   }
 }
 
-BOOT_TEXT void _trm_init() {
-  init_serial();
-  boot_log("serial initialized.\n");
-
+SSBL_TEXT void _second_boot(){
 	boot_memcpy(_text_start, __text_load_start__, (size_t)__text_size__);
   boot_log(".text copied.\n");
   boot_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
@@ -156,7 +157,16 @@ BOOT_TEXT void _trm_init() {
   boot_log(".bss cleared.\n");
 
 	boot_log("enter main function.\n");
-	// putnum_base16((uintptr_t)__text_load_start__);
   int ret = main(mainargs);
   halt(ret);
+}
+
+FSBL_TEXT void _trm_init() {
+  init_serial();
+  boot_log("serial initialized.\n");
+
+	boot_memcpy(_ssbl_start, __ssbl_load_start__, (size_t)__ssbl_size__);
+	boot_log("SSBL copied.\n");
+
+	_second_boot();
 }

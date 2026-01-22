@@ -14,9 +14,18 @@ SECTIONS {
 	.boot : {
 		_boot_start = .;
 		*(entry)
-		*(.boot_text)
+		*(.fsbl_text)
 		_boot_end = .;
 	} > flash AT> flash
+
+	.secondary_boot : {
+		_ssbl_start = .;
+		*(.ssbl_text)
+		_ssbl_end = .;
+	} > sram AT> flash
+
+	__ssbl_load_start__ = LOADADDR(.secondary_boot);
+	__ssbl_size__       = SIZEOF(.secondary_boot);
 
 	/* .psram_padding (NOLOAD) : { */
 	/* 		. = ORIGIN(psram) + SIZEOF(.boot) + 4; */
