@@ -146,12 +146,22 @@ FSBL_TEXT void boot_clear(void *dst, size_t n) {
   }
 }
 
+SSBL_TEXT void _ssbl_memcpy(void* dst, const void *src, size_t n) {
+	BOOT_ASSERT(IS_4BYTE_ALIGNED(dst));
+	BOOT_ASSERT(IS_4BYTE_ALIGNED(src));
+	BOOT_ASSERT(IS_4BYTE_ALIGNED(n));
+	size_t wn = n / 4;
+	for(size_t i = 0; i < wn; i++) {
+		((uint32_t*)dst)[i] = ((const uint32_t*)src)[i];
+	}
+}
+
 SSBL_TEXT void _second_boot(){
-	boot_memcpy(_text_start, __text_load_start__, (size_t)__text_size__);
+	_ssbl_memcpy(_text_start, __text_load_start__, (size_t)__text_size__);
   boot_log(".text copied.\n");
-  boot_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
+  _ssbl_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
   boot_log(".rodata copied.\n");
-  boot_memcpy(_data_start, __data_load_start__, (size_t)__data_size__);
+  _ssbl_memcpy(_data_start, __data_load_start__, (size_t)__data_size__);
   boot_log(".data copied.\n");
   boot_clear(_bss_start, (size_t)(_bss_end - _bss_start));
   boot_log(".bss cleared.\n");
