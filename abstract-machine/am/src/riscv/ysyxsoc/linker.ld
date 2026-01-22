@@ -10,40 +10,50 @@ MEMORY {
 
 SECTIONS {
 	. = ORIGIN(flash);
+
+	.boot : {
+		_boot_start = .;
+		*(entry)
+		*(.boot_text)
+		*(.boot_rodata)
+		_boot_end = .;
+	} > flash
+
   .text : {
-		_text = .;
-    *(entry)
+		_text_start = .;
     *(.text*)
-		_etext = .;
+		_text_end = .;
   } > psram AT> flash
 
 	__text_load_start__ = LOADADDR(.text); /* flash addr */
 	__text_size__       = SIZEOF(.text);   /* LEN */
 
   .rodata : {
-		_rodata = .;
+		_rodata_start = .;
     *(.rodata*)
-  } > flash
+		*(.srodata*)
+		_rodata_end = .;
+  } > psram AT> flash
 
 	__rodata_load_start__ = LOADADDR(.rodata);
 	__rodata_size__       = SIZEOF(.rodata);
 
   .data : {
-		_data = .;
+		_data_start = .;
     *(.sdata*)
     *(.data*)
-		_edata = .;
+		_data_end = .;
   } > psram AT> flash
 
 	__data_load_start__ = LOADADDR(.data); /* MA */
 	__data_size__       = SIZEOF(.data);   /* LEN */
 
   .bss : {
-		_bss = .;
+		_bss_start = .;
     *(.bss*)
     *(.sbss*)
     *(.scommon)
-		_ebss = .;
+		_bss_end = .;
   } > psram
 
 
@@ -55,11 +65,9 @@ SECTIONS {
 	__psram_size__ = LENGTH(psram);
 	__psram_end__ = __psram_start__ + __psram_size__;
 
-  _stack_top = __sram_end__ - _stack_size;
-  _stack_pointer  = _stack_top + _stack_size;
+  _stack_top = __sram_end__;
+  _stack_pointer  = _stack_top;
 
-	__runtime_text_start__ = __psram_start__;
-
-  _heap_start = _ebss + SIZEOF(.text);
+  _heap_start = _bss_end;
 	_heap_end = __psram_end__;
 }

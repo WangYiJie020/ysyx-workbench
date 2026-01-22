@@ -76,9 +76,10 @@ void print_csr() {
   putch('\n');
 }
 
-extern char _data, _edata, _text, _etext;
-extern char _rodata;
-extern char _bss, _ebss;
+extern char _text_start[], _text_end[];
+extern char _rodata_start[], _rodata_end[];
+extern char _data_start[], _data_end[];
+extern char _bss_start[], _bss_end[];
 
 extern char __text_load_start__[];
 extern char __text_size__[];
@@ -95,47 +96,20 @@ extern char __sram_end__[];
 extern char __psram_start__[];
 extern char __psram_end__[];
 
-extern char __runtime_text_start__[];
 
 
 typedef int (*entry_func_t)(const char *args);
 
+__attribute__((section(".boot_text")))
 void _trm_init() {
   init_serial();
 
-  // print_csr();
+	memcpy(_text_start, __text_load_start__, (size_t)__text_size__);
+	memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
+	memcpy(_data_start, __data_load_start__, (size_t)__data_size__);
 
-	putstr("data");
-	putnum_base16((uint32_t)&_data);
-	putch('\n');
-	putnum_base16((uint32_t)__data_load_start__);
-	putch('\n');
-  memcpy((void *)&_data, (void *)__data_load_start__, (uintptr_t)__data_size__);
-  putstr(".data loaded.\n");
+	memset(_bss_start, 0, _bss_end - _bss_start);
 
-	putstr("text");
-	putnum_base16((uint32_t)&__runtime_text_start__);
-	putch('\n');
-	putnum_base16((uint32_t)__text_load_start__);
-	putch('\n');
-  memcpy((void *)&__runtime_text_start__, (void *)__text_load_start__, (uintptr_t)__text_size__);
-  putstr(".text copied.\n");
-
-  // memcpy((void *)&_rodata, (void *)__rodata_load_start__, (uintptr_t)__rodata_size__);
-	// uintptr_t runtime_rodata_start = (uintptr_t)__runtime_text_start__ + 
-	// 	((uintptr_t)&_rodata - (uintptr_t)&_text);
-	// memcpy((void*)runtime_rodata_start, (void *)__rodata_load_start__,
-	// 			 (uintptr_t)__rodata_size__);
-	// putstr(".rodata copied.\n");
-
-  uintptr_t main_offset = (uintptr_t)main - (uintptr_t)&_text;
-
-  entry_func_t entry = (entry_func_t)(__runtime_text_start__ + main_offset);
-  // printf("%d\n",(uintptr_t)&__data_size__);
-
-  // memset((void *)&_bss, 0, (uintptr_t)&_ebss - (uintptr_t)&_bss);
-
-  // int ret = main(mainargs);
-  int ret = entry(mainargs);
+	int ret = main(mainargs);
   halt(ret);
 }
