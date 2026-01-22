@@ -52,6 +52,15 @@ void putch(char ch) {
   *(volatile uint8_t *)(UART_BASE + 0x00) = ch;
 }
 
+BOOT_TEXT void boot_putch(char ch) {
+  while (!(*UART_LSR & 0x20)) {
+  }
+  *(volatile uint8_t *)(UART_BASE + 0x00) = ch;
+}
+#define boot_putstr(s) \
+  ({ for (const char *p = s; *p; p++) boot_putch(*p); })
+
+
 void halt(int code) {
   asm volatile("mv a0, %0; ebreak" : : "r"(code));
   while (1) {
@@ -99,22 +108,20 @@ extern char __sram_end__[];
 extern char __psram_start__[];
 extern char __psram_end__[];
 
-
-
 typedef int (*entry_func_t)(const char *args);
 
 #define IS_4BYTE_ALIGNED(x) ((((uintptr_t)(x)) & 0x3) == 0)
 
 BOOT_TEXT void boot_memcpy(void *dst, const void *src, size_t n) {
-	assert(IS_4BYTE_ALIGNED(dst));
-	assert(IS_4BYTE_ALIGNED(src));
-	assert(IS_4BYTE_ALIGNED(n));
-	uint32_t *d = (uint32_t *)dst;
-	const uint32_t *s = (const uint32_t *)src;
-	size_t wn = n / 4;
-	for (size_t i = 0; i < wn; i++) {
-		d[i] = s[i];
-	}
+  assert(IS_4BYTE_ALIGNED(dst));
+  assert(IS_4BYTE_ALIGNED(src));
+  assert(IS_4BYTE_ALIGNED(n));
+  uint32_t *d = (uint32_t *)dst;
+  const uint32_t *s = (const uint32_t *)src;
+  size_t wn = n / 4;
+  for (size_t i = 0; i < wn; i++) {
+    d[i] = s[i];
+  }
 }
 
 BOOT_RODATA const char msg1[] = "test123\n";
@@ -122,15 +129,14 @@ BOOT_RODATA const char msg1[] = "test123\n";
 BOOT_TEXT void _trm_init() {
   init_serial();
 
-	putstr(msg1);
+  boot_putstr(msg1);
 
+  boot_memcpy(_text_start, __text_load_start__, (size_t)__text_size__);
+  boot_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
+  boot_memcpy(_data_start, __data_load_start__, (size_t)__data_size__);
 
-	boot_memcpy(_text_start, __text_load_start__, (size_t)__text_size__);
-	boot_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
-	boot_memcpy(_data_start, __data_load_start__, (size_t)__data_size__);
+  // memset(_bss_start, 0, _bss_end - _bss_start);
 
-	// memset(_bss_start, 0, _bss_end - _bss_start);
-
-	int ret = main(mainargs);
+  int ret = main(mainargs);
   halt(ret);
 }
