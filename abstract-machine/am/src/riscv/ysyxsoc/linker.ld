@@ -16,17 +16,12 @@ SECTIONS {
 		*(entry)
 		*(.boot_text)
 		_boot_end = .;
-	} > flash
+	} > flash AT> flash
 
   .text : {
 		_text_start = .;
     *(.text*)
 		_text_end = .;
-  } > psram AT> flash
-
-	.rtthread_extra : {
-        *(.data.extra)
-        *(.rodata.extra)
   } > psram AT> flash
 
 	__text_load_start__ = LOADADDR(.text); /* flash addr */
@@ -42,23 +37,75 @@ SECTIONS {
 	__rodata_load_start__ = LOADADDR(.rodata);
 	__rodata_size__       = SIZEOF(.rodata);
 
-  .data : {
-		_data_start = .;
-    *(.sdata*)
+  /* .data : { */
+		/* _data_start = .; */
+  /*   *(.sdata*) */
+  /*   *(.data*) */
+		/* _data_end = .; */
+  /* } > psram AT> flash */
+  .data :
+  {
+    _data_start = .;
     *(.data*)
-		_data_end = .;
+    *(.sdata*)
+
+    /* for rt-thread */
+    __fsymtab_start = .;
+    KEEP(*(FSymTab))
+    __fsymtab_end = .;
+    . = ALIGN(8);
+    __vsymtab_start = .;
+    KEEP(*(VSymTab))
+    __vsymtab_end = .;
+    . = ALIGN(8);
+
+    . = ALIGN(8);
+    __rt_init_start = .;
+    KEEP(*(SORT(.rti_fn*)))
+    __rt_init_end = .;
+    . = ALIGN(8);
+
+    __rt_utest_tc_tab_start = .;
+    KEEP(*(UtestTcTab))
+
+    . = ALIGN(8);
+    __am_apps_data_start = .;
+    *(__am_apps.data*)
+    *(__am_apps.sdata*)
+    __am_apps_data_end = .;
+    . = ALIGN(8);
+    __rt_utest_tc_tab_end = .;
+    /* end for rt-thread */
+	} > psram AT> flash
+  _data_end = ADDR(.bss);
+  _data_load_start = LOADADDR(.data);
+  .bss :
+  {
+    _bss_start = .;
+    *(.bss*)
+    *(.sbss*)
+    *(.scommon)
+		_bss_end = .;
+  } > psram AT> flash
+  .bss.extra :
+  {
+    __am_apps_bss_start = .;
+    *(__am_apps.bss*)
+    *(__am_apps.sbss*)
+    *(__am_apps.scommon*)
+    __am_apps_bss_end = .;
   } > psram AT> flash
 
 	__data_load_start__ = LOADADDR(.data); /* MA */
 	__data_size__       = SIZEOF(.data);   /* LEN */
 
-  .bss : {
-		_bss_start = .;
-    *(.bss*)
-    *(.sbss*)
-    *(.scommon)
-		_bss_end = .;
-  } > psram
+  /* .bss : { */
+		/* _bss_start = .; */
+  /*   *(.bss*) */
+  /*   *(.sbss*) */
+  /*   *(.scommon) */
+		/* _bss_end = .; */
+  /* } > psram */
 
 
 	__sram_start__ = ORIGIN(sram);
