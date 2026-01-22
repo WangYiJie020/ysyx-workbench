@@ -39,7 +39,7 @@ SECTIONS {
     *(.sbss*)
     *(.scommon)
 		_ebss = .;
-  } > psram
+  } > sram
 
 	__sram_start__ = ORIGIN(sram);
 	__sram_size__ = LENGTH(sram);
@@ -49,9 +49,9 @@ SECTIONS {
 	__psram_size__ = LENGTH(psram);
 	__psram_end__ = __psram_start__ + __psram_size__;
 
-  _stack_top = __psram_end__ - _stack_size;
+  _stack_top = __sram_end__ - _stack_size;
   _stack_pointer  = _stack_top + _stack_size;
 
   _heap_start = _ebss;
-	_heap_end = __psram_end__;
+	_heap_end = __sram_end__;
 }
