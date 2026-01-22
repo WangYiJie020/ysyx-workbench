@@ -57,8 +57,7 @@ BOOT_TEXT void boot_putch(char ch) {
   }
   *(volatile uint8_t *)(UART_BASE + 0x00) = ch;
 }
-#define boot_putstr(s) \
-  ({ for (const char *p = s; *p; p++) boot_putch(*p); })
+#define boot_putstr(s) putstr(_boot_rodata_rawpos(s))
 
 
 void halt(int code) {
@@ -112,14 +111,15 @@ typedef int (*entry_func_t)(const char *args);
 
 #define IS_4BYTE_ALIGNED(x) ((((uintptr_t)(x)) & 0x3) == 0)
 
-			// char msg[] = "@line " _TOSTR(__LINE__) ": ASSERTION FAILED : " #cond "\n"; 
+BOOT_TEXT static const char* _boot_rodata_rawpos(const char* ptr){
+	return ptr - (uintptr_t)_rodata_start + (uintptr_t)__rodata_load_start__;
+}
 
 #define _TOSTR(x) #x
 #define BOOT_ASSERT(cond) \
 	do { \
 		if (!(cond)) { \
-			char msg[] = #cond; \
-			boot_putstr(msg); \
+			boot_putstr("BOOT ASSERTION FAILED: " _TOSTR(cond) "\n"); \
 			halt(-1); \
 		} \
 	} while (0)
@@ -147,12 +147,11 @@ BOOT_TEXT void boot_clear(void *dst, size_t n) {
 	}
 }
 
-BOOT_RODATA const char msg1[] = "test123\n";
 
 BOOT_TEXT void _trm_init() {
   init_serial();
 
-  putstr(msg1);
+  putstr("xxx");
 
   boot_memcpy(_text_start, __text_load_start__, (size_t)__text_size__);
   boot_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);

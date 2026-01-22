@@ -15,7 +15,6 @@ SECTIONS {
 		_boot_start = .;
 		*(entry)
 		*(.boot_text)
-		*(.boot_rodata)
 		_boot_end = .;
 	} > flash
 
