@@ -384,7 +384,7 @@ static void init_flash(){
 	// for debug
 	// since memcpy in boot is very slow
 	// TODO: remove this
-	memcpy(psram_data+12, img, img_size);
+	memcpy(psram_data, img, img_size);
 }
 
 // ARG

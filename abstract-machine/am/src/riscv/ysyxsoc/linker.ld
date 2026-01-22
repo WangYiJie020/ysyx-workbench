@@ -19,7 +19,7 @@ SECTIONS {
 	} > flash AT> flash
 
 	.psram_padding (NOLOAD) : {
-			. = ORIGIN(psram) + SIZEOF(.boot) - 12;
+			. = ORIGIN(psram) + SIZEOF(.boot) - 4;
 	} > psram
 
   .text : {
