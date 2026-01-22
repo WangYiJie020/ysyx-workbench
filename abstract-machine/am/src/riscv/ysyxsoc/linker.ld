@@ -24,6 +24,11 @@ SECTIONS {
 		_text_end = .;
   } > psram AT> flash
 
+	.rtthread_extra : {
+        *(.data.extra)
+        *(.rodata.extra)
+  } > psram AT> flash
+
 	__text_load_start__ = LOADADDR(.text); /* flash addr */
 	__text_size__       = SIZEOF(.text);   /* LEN */
 
