@@ -156,7 +156,7 @@ BOOT_TEXT void _trm_init() {
   boot_log(".bss cleared.\n");
 
 	boot_log("enter main function.\n");
-	putnum_base16((uintptr_t)__text_load_start__);
+	// putnum_base16((uintptr_t)__text_load_start__);
   int ret = main(mainargs);
   halt(ret);
 }
