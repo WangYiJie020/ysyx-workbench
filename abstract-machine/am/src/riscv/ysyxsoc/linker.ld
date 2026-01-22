@@ -18,9 +18,9 @@ SECTIONS {
 		_boot_end = .;
 	} > flash AT> flash
 
-	.psram_padding (NOLOAD) : {
-			. = ORIGIN(psram) + SIZEOF(.boot) + 4;
-	} > psram
+	/* .psram_padding (NOLOAD) : { */
+	/* 		. = ORIGIN(psram) + SIZEOF(.boot) + 4; */
+	/* } > psram */
 
   .text : {
 		_text_start = .;
