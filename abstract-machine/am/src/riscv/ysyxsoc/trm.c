@@ -95,6 +95,8 @@ void _trm_init() {
   memcpy((void *)&_data, (void *)__data_load_start__,
          (uintptr_t)__data_size__);
 
+	// memcpy((void *)__sram_start__, (void *)&_text, 
+
   // printf("%d\n",(uintptr_t)&__data_size__);
 
   memset((void *)&_bss, 0, (uintptr_t)&_ebss - (uintptr_t)&_bss);
