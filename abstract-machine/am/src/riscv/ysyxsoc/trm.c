@@ -129,9 +129,9 @@ BOOT_TEXT static void _word_memcpy(uint32_t *dst, const uint32_t *src, size_t wn
 }
 
 BOOT_TEXT void boot_memcpy(void *dst, const void *src, size_t n) {
-	// BOOT_ASSERT(IS_4BYTE_ALIGNED(dst));
-	// BOOT_ASSERT(IS_4BYTE_ALIGNED(src));
-	// BOOT_ASSERT(IS_4BYTE_ALIGNED(n));
+	BOOT_ASSERT(IS_4BYTE_ALIGNED(dst));
+	BOOT_ASSERT(IS_4BYTE_ALIGNED(src));
+	BOOT_ASSERT(IS_4BYTE_ALIGNED(n));
 	size_t wn = n / 4;
 	_word_memcpy((uint32_t *)dst, (const uint32_t *)src, wn);
 }
