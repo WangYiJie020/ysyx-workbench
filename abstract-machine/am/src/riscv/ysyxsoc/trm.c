@@ -129,7 +129,7 @@ BOOT_RODATA const char msg1[] = "test123\n";
 BOOT_TEXT void _trm_init() {
   init_serial();
 
-  boot_putstr(msg1);
+  // boot_putstr(msg1);
 
   boot_memcpy(_text_start, __text_load_start__, (size_t)__text_size__);
   boot_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
