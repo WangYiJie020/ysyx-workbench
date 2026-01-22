@@ -59,7 +59,6 @@ BOOT_TEXT void boot_putch(char ch) {
 }
 #define boot_putstr(s) putstr(_boot_rodata_rawpos(s))
 
-
 void halt(int code) {
   asm volatile("mv a0, %0; ebreak" : : "r"(code));
   while (1) {
@@ -111,48 +110,53 @@ typedef int (*entry_func_t)(const char *args);
 
 #define IS_4BYTE_ALIGNED(x) ((((uintptr_t)(x)) & 0x3) == 0)
 
-BOOT_TEXT static const char* _boot_rodata_rawpos(const char* ptr){
-	return ptr - (uintptr_t)_rodata_start + (uintptr_t)__rodata_load_start__;
+BOOT_TEXT static const char *_boot_rodata_rawpos(const char *ptr) {
+  return ptr - (uintptr_t)_rodata_start + (uintptr_t)__rodata_load_start__;
 }
 
 #define _TOSTR(x) #x
-#define BOOT_ASSERT(cond) \
-	do { \
-		if (!(cond)) { \
-			boot_putstr("BOOT ASSERTION FAILED: " _TOSTR(cond) "\n"); \
-			halt(-1); \
-		} \
-	} while (0)
+#define BOOT_ASSERT(cond)                                                      \
+  do {                                                                         \
+    if (!(cond)) {                                                             \
+      boot_putstr("BOOT ASSERTION FAILED: " _TOSTR(cond) "\n");                \
+      halt(-1);                                                                \
+    }                                                                          \
+  } while (0)
 
-BOOT_TEXT static void _word_memcpy(uint32_t *dst, const uint32_t *src, size_t wn) {
-	for (size_t i = 0; i < wn; i++) {
-		dst[i] = src[i];
-	}
+BOOT_TEXT static void _word_memcpy(uint32_t *dst, const uint32_t *src,
+                                   size_t wn) {
+  for (size_t i = 0; i < wn; i++) {
+    dst[i] = src[i];
+  }
 }
 
 BOOT_TEXT void boot_memcpy(void *dst, const void *src, size_t n) {
-	BOOT_ASSERT(IS_4BYTE_ALIGNED(dst));
-	BOOT_ASSERT(IS_4BYTE_ALIGNED(src));
-	BOOT_ASSERT(IS_4BYTE_ALIGNED(n));
-	size_t wn = n / 4;
-	_word_memcpy((uint32_t *)dst, (const uint32_t *)src, wn);
+  BOOT_ASSERT(IS_4BYTE_ALIGNED(dst));
+  BOOT_ASSERT(IS_4BYTE_ALIGNED(src));
+  BOOT_ASSERT(IS_4BYTE_ALIGNED(n));
+  size_t wn = n / 4;
+  _word_memcpy((uint32_t *)dst, (const uint32_t *)src, wn);
 }
 BOOT_TEXT void boot_clear(void *dst, size_t n) {
-	assert(IS_4BYTE_ALIGNED(dst));
-	assert(IS_4BYTE_ALIGNED(n));
-	size_t wn = n / 4;
-	uint32_t *d = (uint32_t *)dst;
-	for (size_t i = 0; i < wn; i++) {
-		d[i] = 0;
-	}
+  assert(IS_4BYTE_ALIGNED(dst));
+  assert(IS_4BYTE_ALIGNED(n));
+  size_t wn = n / 4;
+  uint32_t *d = (uint32_t *)dst;
+  for (size_t i = 0; i < wn; i++) {
+    d[i] = 0;
+  }
 }
-
 
 BOOT_TEXT void _trm_init() {
   init_serial();
+  boot_putstr("serial initialized.\n");
+
   boot_memcpy(_text_start, __text_load_start__, (size_t)__text_size__);
+	boot_putstr(".text copied.\n");
   boot_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
+	boot_putstr(".rodata copied.\n");
   boot_memcpy(_data_start, __data_load_start__, (size_t)__data_size__);
+	boot_putstr(".data copied.\n");
 
   boot_clear(_bss_start, (size_t)(_bss_end - _bss_start));
 
