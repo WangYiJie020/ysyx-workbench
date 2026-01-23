@@ -190,8 +190,8 @@ constexpr uint32_t SDRAM_BASE = 0xa0000000u;
 constexpr uint32_t SDRAM_END = 0xb0000000u;
 
 extern "C" void sdram_read(char bank, short row, short col, short* data) {
-	printf("[DPI] [clk %ld] sdram_read bank=%02x row=%04x col=%04x\n",sim_time,bank,row,col);
 	*data = 0x1234;
+	printf("[DPI] [clk %ld] sdram_read bank=%02x row=%04x col=%04x data=%04x\n", sim_time, bank, row, col, *data);
 }
 
 constexpr uint32_t SRAM_BASE = 0x0f000000u;
