@@ -186,9 +186,15 @@ extern "C" void psram_write(int32_t addr,char strb8, int32_t data,int32_t*) {
 	// printf("[DPI] psram_write addr=%08x data=%08x (strb %X)\n", addr + PSRAM_BASE, data, (uint32_t)strb8);
 }
 
+constexpr uint32_t SDRAM_BASE = 0xa0000000u;
+constexpr uint32_t SDRAM_END = 0xb0000000u;
+
+extern "C" void sdram_read(char bank, short row, short col, short* data) {
+	printf("[DPI] sdram_read bank=%02x row=%04x col=%04x\n",bank,row,col);
+}
+
 constexpr uint32_t SRAM_BASE = 0x0f000000u;
 constexpr uint32_t SRAM_END = 0x10000000u;
-
 
 uint8_t *mem_atguest(word_t addr) {
 	uint32_t *ptr = nullptr;
