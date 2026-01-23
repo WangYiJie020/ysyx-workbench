@@ -3,9 +3,13 @@
 
 #include <stdint.h>
 
-typedef volatile uint8_t* dev_reg8_ptr;
-typedef volatile uint16_t* dev_reg16_ptr;
-typedef volatile uint32_t* dev_reg32_ptr;
+typedef volatile uint8_t*  volatile_u8ptr;
+typedef volatile uint16_t* volatile_u16ptr;
+typedef volatile uint32_t* volatile_u32ptr;
+
+typedef volatile_u8ptr dev_reg8_ptr;
+typedef volatile_u16ptr dev_reg16_ptr;
+typedef volatile_u32ptr dev_reg32_ptr;
 
 #define DEV_REG8(addr)  ((dev_reg8_ptr)(addr))
 #define DEV_REG16(addr) ((dev_reg16_ptr)(addr))

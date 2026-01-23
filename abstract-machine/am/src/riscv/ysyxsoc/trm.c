@@ -7,16 +7,10 @@
 
 #include "soc_devreg.h"
 
-extern char _heap_start;
-extern char _heap_end;
-
-typedef int (*mainfunc_t)(const char *args);
-
 int main(const char *args);
 
-extern char _pmem_start;
-#define PMEM_SIZE (8 * 1024)
-#define PMEM_END ((uintptr_t) & _pmem_start + PMEM_SIZE)
+extern char _heap_start;
+extern char _heap_end;
 
 Area heap = RANGE(&_heap_start, &_heap_end);
 static const char mainargs[MAINARGS_MAX_LEN] =
@@ -118,7 +112,7 @@ typedef int (*entry_func_t)(const char *args);
 
 #define IS_4BYTE_ALIGNED(x) ((((uintptr_t)(x)) & 0x3) == 0)
 
-FSBL_TEXT static const char *_boot_rodata_rawpos(const char *ptr) {
+FSBL_TEXT static inline const char *_boot_rodata_rawpos(const char *ptr) {
   return ptr - (uintptr_t)_rodata_start + (uintptr_t)__rodata_load_start__;
 }
 #define boot_putstr(s) putstr(_boot_rodata_rawpos(s))
