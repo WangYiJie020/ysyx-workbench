@@ -189,8 +189,11 @@ extern "C" void psram_write(int32_t addr,char strb8, int32_t data,int32_t*) {
 constexpr uint32_t SDRAM_BASE = 0xa0000000u;
 constexpr uint32_t SDRAM_END = 0xb0000000u;
 
+uint32_t sdram_data[1024 * 1024];
+
 extern "C" void sdram_read(char bank, short row, short col, short* data) {
-	*data = 0x1234;
+	uint32_t addr = ((uint32_t)bank << 22) | ((uint32_t)row << 9) | ((uint32_t)col);
+	*data = sdram_data[addr / 4];
 	printf("[DPI] [clk %ld] sdram_read bank=%02x row=%04x col=%04x data=%04x\n", sim_time, bank, row, col, *data);
 }
 
@@ -391,6 +394,9 @@ static void init_flash(){
 	// for debug
 	// TODO: remove this
 	memset(psram_data, 0xcc, sizeof(psram_data));
+	sdram_data[0]=0x12345678;
+	sdram_data[1]=0x9abcdef0;
+	sdram_data[2]=0xdeadbeef;
 }
 
 // ARG
