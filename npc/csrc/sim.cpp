@@ -198,6 +198,13 @@ extern "C" void sdram_read(char bank, short row, short col, short* data) {
 	*data = sdram_data[bank][row][col];
 	printf("[DPI] [clk %ld] sdram_read bank=%02x row=%04x col=%04x data=%04x\n", sim_time, bank, row, col, (uint16_t)*data);
 }
+extern "C" void sdram_write(char bank, short row, short col, short data) {
+	assert(bank>=0&&bank<4);
+	assert(row>=0&&row<8192);
+	assert(col>=0&&col<512);
+	sdram_data[bank][row][col] = data;
+	printf("[DPI] [clk %ld] sdram_write bank=%02x row=%04x col=%04x data=%04x\n", sim_time, bank, row, col, (uint16_t)data);
+}
 
 constexpr uint32_t SRAM_BASE = 0x0f000000u;
 constexpr uint32_t SRAM_END = 0x10000000u;
