@@ -191,7 +191,11 @@ constexpr uint32_t SDRAM_END = 0xb0000000u;
 
 uint16_t sdram_data[4][8192][512];
 
-extern "C" void sdram_read(char bank, short row, short col, short* data) {
+extern "C" void sdram_read(char en,char bank, short row, short col, short* data) {
+	if(!en){
+		printf("[DPI] [clk %ld] sdram_read disabled\n", sim_time);
+		return;
+	}
 	assert(bank>=0&&bank<4);
 	assert(row>=0&&row<8192);
 	assert(col>=0&&col<512);
