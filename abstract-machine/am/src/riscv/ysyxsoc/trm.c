@@ -149,12 +149,12 @@ SSBL_TEXT void _ssbl_memcpy(void* dst, const void *src, size_t n) {
 }
 
 SSBL_TEXT void _second_boot(){
-	_ssbl_memcpy(_text_start, __text_load_start__, (size_t)__text_size__);
-  boot_log(".text copied.\n");
   _ssbl_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
   boot_log(".rodata copied.\n");
+	_ssbl_memcpy(_text_start, __text_load_start__, (size_t)__text_size__);
+  putstr(".text copied.\n");
   _ssbl_memcpy(_data_start, __data_load_start__, (size_t)__data_size__);
-  boot_log(".data copied.\n");
+  putstr(".data copied.\n");
   _ssbl_clear(_bss_start, (size_t)__bss_size__);
   boot_log(".bss cleared.\n");
 	if((size_t)__data_extra_size__){
