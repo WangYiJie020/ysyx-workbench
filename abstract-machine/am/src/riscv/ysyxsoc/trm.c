@@ -112,12 +112,11 @@ typedef int (*entry_func_t)(const char *args);
 
 #define IS_4BYTE_ALIGNED(x) ((((uintptr_t)(x)) & 0x3) == 0)
 
-static bool rodata_copied = false;
-FSBL_TEXT static inline const char *_readable_rodata(const char *ptr) {
+FSBL_TEXT static inline const char *_rodata_loadpos(const char *ptr) {
   return ptr - (uintptr_t)_rodata_start +
                              (uintptr_t)__rodata_load_start__;
 }
-#define boot_putstr(s) putstr(_readable_rodata(s))
+#define boot_putstr(s) putstr(_rodata_loadpos(s))
 #define boot_log(s) boot_putstr("[FSBL] " s)
 
 #define _TOSTR(x) #x
@@ -151,7 +150,6 @@ SSBL_TEXT void _ssbl_memcpy(void *dst, const void *src, size_t n) {
 
 SSBL_TEXT void _second_boot() {
   _ssbl_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
-	rodata_copied = true;
   boot_log(".rodata copied.\n");
   _ssbl_memcpy(_text_start, __text_load_start__, (size_t)__text_size__);
   boot_log(".text copied.\n");
