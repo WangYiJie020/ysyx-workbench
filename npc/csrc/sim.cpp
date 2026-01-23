@@ -198,11 +198,20 @@ extern "C" void sdram_read(char bank, short row, short col, short* data) {
 	*data = sdram_data[bank][row][col];
 	printf("[DPI] [clk %ld] sdram_read bank=%02x row=%04x col=%04x data=%04x\n", sim_time, bank, row, col, (uint16_t)*data);
 }
-extern "C" void sdram_write(char bank, short row, short col, short data) {
+extern "C" void sdram_write(char bank, short row, short col, short data, char mask) {
 	assert(bank>=0&&bank<4);
 	assert(row>=0&&row<8192);
 	assert(col>=0&&col<512);
-	sdram_data[bank][row][col] = data;
+	// mask [0] = 0: write low byte
+	// mask [1] = 0: write high byte
+	if ((mask & 0x1) == 0) {
+		sdram_data[bank][row][col] &= 0xff00;
+		sdram_data[bank][row][col] |= (data & 0x00ff);
+	}
+	if ((mask & 0x2) == 0) {
+		sdram_data[bank][row][col] &= 0x00ff;
+		sdram_data[bank][row][col] |= (data & 0xff00);
+	}
 	printf("[DPI] [clk %ld] sdram_write bank=%02x row=%04x col=%04x data=%04x\n", sim_time, bank, row, col, (uint16_t)data);
 }
 
