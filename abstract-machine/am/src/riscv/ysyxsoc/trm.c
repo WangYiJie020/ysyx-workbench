@@ -114,8 +114,7 @@ typedef int (*entry_func_t)(const char *args);
 
 static bool rodata_copied = false;
 FSBL_TEXT static inline const char *_readable_rodata(const char *ptr) {
-  return rodata_copied ? ptr
-                       : ptr - (uintptr_t)_rodata_start +
+  return ptr - (uintptr_t)_rodata_start +
                              (uintptr_t)__rodata_load_start__;
 }
 #define boot_putstr(s) putstr(_readable_rodata(s))
