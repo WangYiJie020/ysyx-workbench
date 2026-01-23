@@ -117,7 +117,7 @@ FSBL_TEXT static inline const char *_rodata_loadpos(const char *ptr) {
                              (uintptr_t)__rodata_load_start__;
 }
 #define boot_putstr(s) putstr(_rodata_loadpos(s))
-#define boot_log(s) boot_putstr("[FSBL] " s)
+#define boot_log(s) boot_putstr("[BOOT] " s)
 
 #define _TOSTR(x) #x
 #define BOOT_ASSERT(cond)                                                      \
@@ -139,9 +139,9 @@ SSBL_TEXT void _ssbl_clear(void *dst, size_t n) {
 }
 
 SSBL_TEXT void _ssbl_memcpy(void *dst, const void *src, size_t n) {
-  BOOT_ASSERT(IS_4BYTE_ALIGNED(dst));
-  BOOT_ASSERT(IS_4BYTE_ALIGNED(src));
-  BOOT_ASSERT(IS_4BYTE_ALIGNED(n));
+  assert(IS_4BYTE_ALIGNED(dst));
+  assert(IS_4BYTE_ALIGNED(src));
+  assert(IS_4BYTE_ALIGNED(n));
   size_t wn = n / 4;
   for (size_t i = 0; i < wn; i++) {
     ((uint32_t *)dst)[i] = ((const uint32_t *)src)[i];
