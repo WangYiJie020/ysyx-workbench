@@ -494,17 +494,20 @@ static void parse_args(int argc, char **argv) {
   }
 }
 
+const char* _get_env_or_default(const char* env_name, const char* default_value) {
+		const char* env_value = std::getenv(env_name);
+		return env_value ? env_value : default_value;
+}
+
 void _init_dpi_logger() {
   auto formatter = std::make_unique<spdlog::pattern_formatter>();
   formatter->add_flag<sim_time_formatter>('&');
-  // (sim_time) [DPI ] [log_level] log_msg
+  // (sim_time) [DPI] [log_level] log_msg
   formatter->set_pattern("(%&) [%n] [%^%l%$] %v");
 
   auto out_file = "dpiout.log";
-  auto _env_con_lvl_str = std::getenv("DPI_CONSOLE_LVL");
-  auto _env_file_lvl_str = std::getenv("DPI_FILE_LVL");
-  auto con_lvl_str = _env_con_lvl_str ? _env_con_lvl_str : "info";
-  auto file_lvl_str = _env_file_lvl_str ? _env_file_lvl_str : "trace";
+  auto con_lvl_str = _get_env_or_default("DPI_CONSOLE_LVL", "info");
+  auto file_lvl_str = _get_env_or_default("DPI_FILE_LVL", "info");
 
   auto console_lvl = spdlog::level::from_str(con_lvl_str);
   auto file_lvl = spdlog::level::from_str(file_lvl_str);
