@@ -146,8 +146,8 @@ constexpr uint32_t MROM_END = 0x20010000u;
 word_t mrom_data[(MROM_END - MROM_BASE) / 4];
 extern "C" void mrom_read(int32_t addr, int32_t *data) {
   if (addr < MROM_BASE) {
-    printf("[clk %zu] [DPI] mrom_read addr=%08x ERROR BELOW MROM_BASE\n",
-           sim_time, addr);
+		_dpi_logger->error("[clk {}] [DPI] mrom_read addr={:08x} ERROR BELOW MROM_BASE",
+										 sim_time, addr);
   }
   assert(addr >= MROM_BASE);
   addr -= MROM_BASE;
@@ -225,7 +225,7 @@ extern "C" void sdram_read(char bank, short row, short col, short *data) {
   *data = sdram_data[bank][row][col];
   // printf("[DPI] [clk %ld] sdram_read bank=%02x row=%04x col=%04x data=%04x\n",
   //        sim_time, bank, row, col, (uint16_t)*data);
-	_dpi_logger->trace("[clk {}] sdram_read bank={:02x} row={:04x} col={:04x} data={:04x}",
+	_dpi_logger->trace("sdram_read bank={:02x} row={:04x} col={:04x} data={:04x}",
 										 sim_time, bank, row, col, (uint16_t)*data);
 }
 extern "C" void sdram_write(char bank, short row, short col, short data,
@@ -238,17 +238,20 @@ extern "C" void sdram_write(char bank, short row, short col, short data,
   if ((mask & 0x1) == 0) {
     sdram_data[bank][row][col] &= 0xff00;
     sdram_data[bank][row][col] |= (data & 0x00ff);
-    printf("sdram write low byte %02x\n", (uint8_t)(data & 0x00ff));
+		_dpi_logger->trace("sdram write low byte {:02x}", (uint8_t)(data & 0x00ff));
   }
   if ((mask & 0x2) == 0) {
     sdram_data[bank][row][col] &= 0x00ff;
     sdram_data[bank][row][col] |= (data & 0xff00);
-    printf("sdram write high byte %02x\n", (uint8_t)((data & 0xff00) >> 8));
+		_dpi_logger->trace("sdram write high byte {:02x}", (uint8_t)((data & 0xff00) >> 8));
   }
-  printf("[DPI] [clk %ld] sdram_write bank=%02x row=%04x col=%04x data=%04x "
-         "mask=%02x ",
-         sim_time, bank, row, col, (uint16_t)data, (uint8_t)mask);
-  printf("now sdram[b][r][c]=%04x\n", sdram_data[bank][row][col]);
+	_dpi_logger->trace("sdram_write bank={:02x} row={:04x} col={:04x} data={:04x} mask={:02x} now sdram[b][r][c]={:04x}",
+									 sim_time, bank, row, col, (uint16_t)data, (uint8_t)mask,
+									 sdram_data[bank][row][col]);
+  // printf("[DPI] [clk %ld] sdram_write bank=%02x row=%04x col=%04x data=%04x "
+  //        "mask=%02x ",
+  //        sim_time, bank, row, col, (uint16_t)data, (uint8_t)mask);
+  // printf("now sdram[b][r][c]=%04x\n", sdram_data[bank][row][col]);
 }
 
 constexpr uint32_t SRAM_BASE = 0x0f000000u;
