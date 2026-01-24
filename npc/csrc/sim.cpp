@@ -4,6 +4,7 @@
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
+#include <spdlog/pattern_formatter.h>
 
 #include <cassert>
 #include <cstdint>
@@ -46,6 +47,18 @@ static auto _console_sink =
 static auto _dpiout_file_sink =
     std::make_shared<spdlog::sinks::basic_file_sink_mt>("dpiout.log", true);
 static std::shared_ptr<spdlog::logger> _dpi_logger;
+
+class sim_time_formatter : public spdlog::custom_flag_formatter {
+public:
+    void format(const spdlog::details::log_msg &, const std::tm &, spdlog::memory_buf_t &dest) override {
+        std::string s = "clk " + std::to_string(sim_time);
+        dest.append(s.data(), s.data() + s.size());
+    }
+
+    std::unique_ptr<custom_flag_formatter> clone() const override {
+        return spdlog::details::make_unique<sim_time_formatter>();
+    }
+};
 
 static void _sim_eval() {
   dut.eval();
@@ -492,6 +505,16 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   _init_flash();
 
   dbg_init(INITIAL_PC, img_size, img_file, setting);
+
+	auto formatter = std::make_unique<spdlog::pattern_formatter>();
+    
+  formatter->add_flag<sim_time_formatter>('&');
+    
+	// 3. 设置模式，用 %& 代替标准时间 %T
+	// 注意：保留了 [重复日志折叠] 等功能所需的内部逻辑
+	formatter->set_pattern("[%&] [%^%l%$] %v");
+	
+	_dpi_logger->set_formatter(std::move(formatter));
 
   bool show_dpi_log = true;
   _console_sink->set_level(spdlog::level::trace);
