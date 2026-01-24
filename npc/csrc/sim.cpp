@@ -171,7 +171,7 @@ extern "C" void flash_read(int32_t addr, int32_t *data) {
   addr &= ~0x3;
   uintptr_t ptr = (uintptr_t)flash_data + addr;
   *data = *(int32_t *)ptr;
-	_dpi_logger->trace("flash_read addr={:08x} data={:08x}", addr + FLASH_BASE, *data);
+	// _dpi_logger->trace("flash_read addr={:08x} data={:08x}", addr + FLASH_BASE, (uint32_t)*data);
 }
 
 constexpr uint32_t PSRAM_BASE = 0x80000000u;
