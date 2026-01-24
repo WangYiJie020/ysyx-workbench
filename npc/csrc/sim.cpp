@@ -235,17 +235,25 @@ extern "C" void sdram_write(char bank, short row, short col, short data,
   if ((mask & 0x1) == 0) {
     sdram_data[bank][row][col] &= 0xff00;
     sdram_data[bank][row][col] |= (data & 0x00ff);
-    _dpi_logger->trace("sdram_write low byte {:02x}", (uint8_t)(data & 0x00ff));
+    // _dpi_logger->trace("sdram_write low byte {:02x}", (uint8_t)(data &
+    // 0x00ff));
   }
   if ((mask & 0x2) == 0) {
     sdram_data[bank][row][col] &= 0x00ff;
     sdram_data[bank][row][col] |= (data & 0xff00);
-    _dpi_logger->trace("sdram_write high byte {:02x}",
-                       (uint8_t)((data & 0xff00) >> 8));
+    // _dpi_logger->trace("sdram_write high byte {:02x}", (uint8_t)((data &
+    // 0xff00) >> 8));
   }
+
+  char human_friendly_mask[3] = {'-', '-', '\0'};
+  if ((mask & 0x1) == 0)
+    human_friendly_mask[0] = 'L';
+  if ((mask & 0x2) == 0)
+    human_friendly_mask[1] = 'H';
+
   _dpi_logger->trace("sdram_write bank={:02x} row={:04x} col={:04x} "
-                     "data={:04x} mask={:02x} newdata={:04x}",
-                     bank, row, col, (uint16_t)data, (uint8_t)mask,
+                     "data={:04x} mask={} newdata={:04x}",
+                     bank, row, col, (uint16_t)data, human_friendly_mask,
                      sdram_data[bank][row][col]);
 }
 
@@ -494,13 +502,14 @@ void _init_dpi_logger() {
 
   auto out_file = "dpiout.log";
   auto _env_con_lvl_str = std::getenv("DPI_CONSOLE_LVL");
-	auto _env_file_lvl_str = std::getenv("DPI_FILE_LVL");
+  auto _env_file_lvl_str = std::getenv("DPI_FILE_LVL");
   auto con_lvl_str = _env_con_lvl_str ? _env_con_lvl_str : "info";
-	auto file_lvl_str = _env_file_lvl_str ? _env_file_lvl_str : "trace";
+  auto file_lvl_str = _env_file_lvl_str ? _env_file_lvl_str : "trace";
 
   auto console_lvl = spdlog::level::from_str(con_lvl_str);
-	auto file_lvl = spdlog::level::from_str(file_lvl_str);
-  spdlog::info("DPI log lvl = {}, out file = {} lvl = {}", con_lvl_str, out_file, file_lvl_str);
+  auto file_lvl = spdlog::level::from_str(file_lvl_str);
+  spdlog::info("DPI log lvl = {}, out file = {} lvl = {}", con_lvl_str,
+               out_file, file_lvl_str);
 
   static auto console_sink =
       std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
