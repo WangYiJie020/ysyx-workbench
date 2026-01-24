@@ -31,16 +31,22 @@ static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 #define MROM_BASE 0x20000000u
 #define FLASH_BASE 0x30000000u
 #define FLASH_END 0x40000000u
+#define SDRAM_BASE 0xa0000000u
+#define SDRAM_END 0xb0000000u
 
 static uint8_t mrom[0x1000] PG_ALIGN; // 4KB
 static uint8_t sram[0x2000] PG_ALIGN; // 8KB
 
 static uint8_t flash[0x100000] PG_ALIGN; // 1MB
+static uint8_t sdram[0x800000] PG_ALIGN; // 8MB
 
 static bool in_mrom(paddr_t addr) { return addr - MROM_BASE < sizeof(mrom); }
 static bool in_sram(paddr_t addr) { return addr - SRAM_BASE < sizeof(sram); }
 static bool in_flash(paddr_t addr) { 
 	return FLASH_BASE <= addr && addr < FLASH_END;
+}
+static bool in_sdram(paddr_t addr) { 
+	return SDRAM_BASE <= addr && addr < SDRAM_END;
 }
 
 uint8_t *guest_to_host(paddr_t paddr) {
@@ -56,6 +62,12 @@ uint8_t *guest_to_host(paddr_t paddr) {
 			return NULL;
 		}
 	  return flash + paddr - FLASH_BASE;
+	} else if (in_sdram(paddr)) {
+		if(paddr - SDRAM_BASE >= sizeof(sdram)) {
+			printf("SDRAM address out of range: " FMT_PADDR, paddr);
+			return NULL;
+		}
+	  return sdram + paddr - SDRAM_BASE;
 	}
 	printf("Failed to translate guest to host address: " FMT_PADDR, paddr);
   return NULL;
@@ -69,6 +81,8 @@ paddr_t host_to_guest(uint8_t *haddr) {
 		return haddr - sram + SRAM_BASE;
 	} else if (haddr >= flash && haddr < flash + sizeof(flash)) {
 		return haddr - flash + FLASH_BASE;
+	} else if (haddr >= sdram && haddr < sdram + sizeof(sdram)) {
+		return haddr - sdram + SDRAM_BASE;
 	}
 	printf("Failed to translate host to guest address: %p", haddr);
 	return 0;
