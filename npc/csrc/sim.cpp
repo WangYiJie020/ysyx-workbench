@@ -154,8 +154,8 @@ extern "C" void mrom_read(int32_t addr, int32_t *data) {
   addr &= ~0x3;
   uintptr_t ptr = (uintptr_t)img + addr;
   *data = *(int32_t *)ptr;
-  // printf("[DPI] mrom_read addr=%08x data=%08x alignedd=%08X\n", addr +
-  // MROM_BASE, *data,aligned_data);
+  _dpi_logger->trace("mrom_read addr={:08x} data={:08x}", addr + MROM_BASE,
+                     *data);
 }
 
 constexpr uint32_t FLASH_BASE = 0x30000000u;
@@ -172,7 +172,8 @@ extern "C" void flash_read(int32_t addr, int32_t *data) {
   addr &= ~0x3;
   uintptr_t ptr = (uintptr_t)flash_data + addr;
   *data = *(int32_t *)ptr;
-  // printf("[DPI] flash_read addr=%08x data=%08x\n", addr + FLASH_BASE, *data);
+  // _dpi_logger->trace("flash_read addr={:08x} data={:08x}", addr + FLASH_BASE,
+  // (uint32_t)*data);
 }
 
 constexpr uint32_t PSRAM_BASE = 0x80000000u;
@@ -275,7 +276,7 @@ uint8_t *sim_guest_to_host(uint32_t addr) {
 }
 word_t guest_to_host(word_t addr) {
   // printf("raw addr %08X\n",addr);
-  // assert(addr>=MADDR_BASE);
+  assert(addr>=MADDR_BASE);
   word_t res = addr - MADDR_BASE;
   return res;
 }
@@ -381,8 +382,17 @@ bool sim_read_vmem(word_t addr, word_t *data) {
     *data = img[(addr - SRAM_BASE) / 4];
   } else if (addr >= PSRAM_BASE && addr < PSRAM_END) {
     psram_read(addr - PSRAM_BASE, (int *)data);
+  } else if (addr >= SDRAM_BASE && addr < SDRAM_END) {
+		char bank = (addr - SDRAM_BASE) / (8192 * 512 * 2);
+		short row = ((addr - SDRAM_BASE) % (8192 * 512 * 2)) / (512 * 2);
+		short col = ((addr - SDRAM_BASE) % (8192 * 512 * 2)) % (512 * 2) / 2;
+		uint16_t half1, half2;
+		half1 = sdram_data[bank][row][col];
+		half2 = sdram_data[bank][row][col + 1];
+		*data = ((word_t)half2 << 16) | (word_t)half1;
   } else {
     // TODO: gen error
+		_dpi_logger->error("sim_read_vmem addr={:08x} INVALID", addr);
     return false;
   }
   return true;
@@ -462,15 +472,10 @@ static long load_img() {
   return img_size;
 }
 
-static void _init_flash() {
-  memcpy(flash_data, img, img_size);
-  // for debug
-  // TODO: remove this
+static void _init_flash() { memcpy(flash_data, img, img_size); }
+static void _fill_rams_uninit() {
   memset(psram_data, 0xcc, sizeof(psram_data));
-  sdram_data[0][0][0] = 0x1234;
-  sdram_data[0][0][1] = 0x5678;
-  sdram_data[0][0][2] = 0x9abc;
-  sdram_data[0][0][3] = 0xdef0;
+  memset(sdram_data, 0xdd, sizeof(sdram_data));
 }
 
 // ARG
@@ -494,9 +499,10 @@ static void parse_args(int argc, char **argv) {
   }
 }
 
-const char* _get_env_or_default(const char* env_name, const char* default_value) {
-		const char* env_value = std::getenv(env_name);
-		return env_value ? env_value : default_value;
+const char *_get_env_or_default(const char *env_name,
+                                const char *default_value) {
+  const char *env_value = std::getenv(env_name);
+  return env_value ? env_value : default_value;
 }
 
 void _init_dpi_logger() {
@@ -549,9 +555,11 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   load_img();
 
   _init_flash();
+  _fill_rams_uninit();
+  _init_dpi_logger(); // should before dbg_init(which may preload data with func
+                      // call dpis)
 
   dbg_init(INITIAL_PC, img_size, img_file, setting);
-  _init_dpi_logger();
 
 #if ENABLE_WAVE
   if (setting.en_waveform) {
