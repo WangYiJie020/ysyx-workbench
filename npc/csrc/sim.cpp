@@ -214,7 +214,8 @@ extern "C" void sdram_write(char bank, short row, short col, short data, char ma
 		sdram_data[bank][row][col] |= (data & 0xff00);
 		printf("sdram write high byte %02x\n", (uint8_t)((data & 0xff00)>>8));
 	}
-	printf("[DPI] [clk %ld] sdram_write bank=%02x row=%04x col=%04x data=%04x mask=%02x\n", sim_time, bank, row, col, (uint16_t)data, (uint8_t)mask);
+	printf("[DPI] [clk %ld] sdram_write bank=%02x row=%04x col=%04x data=%04x mask=%02x ", sim_time, bank, row, col, (uint16_t)data, (uint8_t)mask);
+	printf("now sdram[b][r][c]=%04x\n", sdram_data[bank][row][col]);
 }
 
 constexpr uint32_t SRAM_BASE = 0x0f000000u;
