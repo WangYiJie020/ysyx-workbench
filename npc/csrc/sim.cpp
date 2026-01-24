@@ -1,6 +1,8 @@
 #include "sim.hpp"
 #include "dbg.hpp"
 
+#include <spdlog/spdlog.h>
+
 #include <array>
 #include <cassert>
 #include <cstdint>
