@@ -1,18 +1,19 @@
 #include "sim.hpp"
 #include "dbg.hpp"
 
-#include <spdlog/sinks/basic_file_sink.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
-#include <spdlog/sinks/dup_filter_sink.h>
-#include <spdlog/spdlog.h>
 #include <spdlog/pattern_formatter.h>
+#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/dup_filter_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/spdlog.h>
 
 #include <cassert>
+#include <chrono>
 #include <cstdint>
 #include <cstdio>
 #include <string_view>
-#include <chrono>
 
+#include "spdlog/common.h"
 #include "spdlog/logger.h"
 #include "verilated_fst_c.h"
 
@@ -44,22 +45,19 @@ std::shared_ptr<VerilatedFstC> tfp;
 static uint64_t sim_time = 0;
 static uint64_t cycle_count = 0;
 
-static auto _console_sink =
-    std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-static auto _dpiout_file_sink =
-    std::make_shared<spdlog::sinks::basic_file_sink_mt>("dpiout.log", true);
 static std::shared_ptr<spdlog::logger> _dpi_logger;
 
 class sim_time_formatter : public spdlog::custom_flag_formatter {
 public:
-    void format(const spdlog::details::log_msg &, const std::tm &, spdlog::memory_buf_t &dest) override {
-        std::string s = std::to_string(sim_time) + "ps";
-        dest.append(s.data(), s.data() + s.size());
-    }
+  void format(const spdlog::details::log_msg &, const std::tm &,
+              spdlog::memory_buf_t &dest) override {
+    std::string s = std::to_string(sim_time) + "ps";
+    dest.append(s.data(), s.data() + s.size());
+  }
 
-    std::unique_ptr<custom_flag_formatter> clone() const override {
-        return spdlog::details::make_unique<sim_time_formatter>();
-    }
+  std::unique_ptr<custom_flag_formatter> clone() const override {
+    return spdlog::details::make_unique<sim_time_formatter>();
+  }
 };
 
 static void _sim_eval() {
@@ -148,8 +146,9 @@ constexpr uint32_t MROM_END = 0x20010000u;
 word_t mrom_data[(MROM_END - MROM_BASE) / 4];
 extern "C" void mrom_read(int32_t addr, int32_t *data) {
   if (addr < MROM_BASE) {
-		_dpi_logger->error("[clk {}] [DPI] mrom_read addr={:08x} ERROR BELOW MROM_BASE",
-										 sim_time, addr);
+    _dpi_logger->error(
+        "[clk {}] [DPI] mrom_read addr={:08x} ERROR BELOW MROM_BASE", sim_time,
+        addr);
   }
   assert(addr >= MROM_BASE);
   addr -= MROM_BASE;
@@ -225,10 +224,11 @@ extern "C" void sdram_read(char bank, short row, short col, short *data) {
   assert(row >= 0 && row < 8192);
   assert(col >= 0 && col < 512);
   *data = sdram_data[bank][row][col];
-  // printf("[DPI] [clk %ld] sdram_read bank=%02x row=%04x col=%04x data=%04x\n",
+  // printf("[DPI] [clk %ld] sdram_read bank=%02x row=%04x col=%04x
+  // data=%04x\n",
   //        sim_time, bank, row, col, (uint16_t)*data);
-	_dpi_logger->trace("sdram_read bank={:02x} row={:04x} col={:04x} data={:04x}",
-										 bank, row, col, (uint16_t)*data);
+  _dpi_logger->trace("sdram_read bank={:02x} row={:04x} col={:04x} data={:04x}",
+                     bank, row, col, (uint16_t)*data);
 }
 extern "C" void sdram_write(char bank, short row, short col, short data,
                             char mask) {
@@ -240,16 +240,18 @@ extern "C" void sdram_write(char bank, short row, short col, short data,
   if ((mask & 0x1) == 0) {
     sdram_data[bank][row][col] &= 0xff00;
     sdram_data[bank][row][col] |= (data & 0x00ff);
-		_dpi_logger->trace("sdram write low byte {:02x}", (uint8_t)(data & 0x00ff));
+    _dpi_logger->trace("sdram write low byte {:02x}", (uint8_t)(data & 0x00ff));
   }
   if ((mask & 0x2) == 0) {
     sdram_data[bank][row][col] &= 0x00ff;
     sdram_data[bank][row][col] |= (data & 0xff00);
-		_dpi_logger->trace("sdram write high byte {:02x}", (uint8_t)((data & 0xff00) >> 8));
+    _dpi_logger->trace("sdram write high byte {:02x}",
+                       (uint8_t)((data & 0xff00) >> 8));
   }
-	_dpi_logger->trace("sdram_write bank={:02x} row={:04x} col={:04x} data={:04x} mask={:02x} now sdram[b][r][c]={:04x}",
-									 bank, row, col, (uint16_t)data, (uint8_t)mask,
-									 sdram_data[bank][row][col]);
+  _dpi_logger->trace("sdram_write bank={:02x} row={:04x} col={:04x} "
+                     "data={:04x} mask={:02x} now sdram[b][r][c]={:04x}",
+                     bank, row, col, (uint16_t)data, (uint8_t)mask,
+                     sdram_data[bank][row][col]);
   // printf("[DPI] [clk %ld] sdram_write bank=%02x row=%04x col=%04x data=%04x "
   //        "mask=%02x ",
   //        sim_time, bank, row, col, (uint16_t)data, (uint8_t)mask);
@@ -493,25 +495,29 @@ static void parse_args(int argc, char **argv) {
   }
 }
 
-void _init_dpi_logger(){
-	auto formatter = std::make_unique<spdlog::pattern_formatter>();
+void _init_dpi_logger() {
+  auto formatter = std::make_unique<spdlog::pattern_formatter>();
   formatter->add_flag<sim_time_formatter>('&');
-	formatter->set_pattern("[%&][%n][%^%L%$] %v");
+  formatter->set_pattern("(%&)[%n][%^%L%$] %v");
 
-  bool show_dpi_log = true;
-  _console_sink->set_level(spdlog::level::trace);
-	auto dup_console =
-    std::make_shared<spdlog::sinks::dup_filter_sink_mt>(std::chrono::seconds(3));
-	dup_console->add_sink(_console_sink);
-	dup_console->set_level(spdlog::level::trace);
+  static auto console_sink =
+      std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+  static auto file_sink =
+      std::make_shared<spdlog::sinks::basic_file_sink_mt>("dpiout.log", true);
 
-  _dpiout_file_sink->set_level(spdlog::level::trace);
-	auto dpi_sink_list = show_dpi_log
-												? spdlog::sinks_init_list{dup_console, _dpiout_file_sink}
-												: spdlog::sinks_init_list{_dpiout_file_sink};
+	auto lvl_str = std::getenv("DPI_CONSOLE_LVL");
+	auto dpi_console_lvl = spdlog::level::from_str(lvl_str ? lvl_str : "info");
+  console_sink->set_level(dpi_console_lvl);
+  auto dup_console = std::make_shared<spdlog::sinks::dup_filter_sink_mt>(
+      std::chrono::seconds(3));
+  dup_console->add_sink(console_sink);
+  dup_console->set_level(dpi_console_lvl);
+
+  file_sink->set_level(spdlog::level::trace);
+  auto dpi_sink_list = spdlog::sinks_init_list{dup_console, file_sink};
   _dpi_logger = std::make_shared<spdlog::logger>("DPI", dpi_sink_list);
-	_dpi_logger->set_level(spdlog::level::trace);
-	_dpi_logger->set_formatter(std::move(formatter));
+  _dpi_logger->set_level(spdlog::level::trace);
+  _dpi_logger->set_formatter(std::move(formatter));
 
   spdlog::register_logger(_dpi_logger);
 }
@@ -533,8 +539,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   _init_flash();
 
   dbg_init(INITIAL_PC, img_size, img_file, setting);
-	_init_dpi_logger();
-
+  _init_dpi_logger();
 
 #if ENABLE_WAVE
   if (setting.en_waveform) {
