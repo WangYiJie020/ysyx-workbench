@@ -154,7 +154,8 @@ extern "C" void mrom_read(int32_t addr, int32_t *data) {
   addr &= ~0x3;
   uintptr_t ptr = (uintptr_t)img + addr;
   *data = *(int32_t *)ptr;
-	_dpi_logger->trace("mrom_read addr={:08x} data={:08x}", addr + MROM_BASE, *data);
+  _dpi_logger->trace("mrom_read addr={:08x} data={:08x}", addr + MROM_BASE,
+                     *data);
 }
 
 constexpr uint32_t FLASH_BASE = 0x30000000u;
@@ -171,7 +172,8 @@ extern "C" void flash_read(int32_t addr, int32_t *data) {
   addr &= ~0x3;
   uintptr_t ptr = (uintptr_t)flash_data + addr;
   *data = *(int32_t *)ptr;
-	// _dpi_logger->trace("flash_read addr={:08x} data={:08x}", addr + FLASH_BASE, (uint32_t)*data);
+  // _dpi_logger->trace("flash_read addr={:08x} data={:08x}", addr + FLASH_BASE,
+  // (uint32_t)*data);
 }
 
 constexpr uint32_t PSRAM_BASE = 0x80000000u;
@@ -380,6 +382,11 @@ bool sim_read_vmem(word_t addr, word_t *data) {
     *data = img[(addr - SRAM_BASE) / 4];
   } else if (addr >= PSRAM_BASE && addr < PSRAM_END) {
     psram_read(addr - PSRAM_BASE, (int *)data);
+  } else if (addr >= SDRAM_BASE && addr < SDRAM_END) {
+		char bank = (addr - SDRAM_BASE) / (8192 * 512 * 2);
+		short row = ((addr - SDRAM_BASE) % (8192 * 512 * 2)) / (512 * 2);
+		short col = ((addr - SDRAM_BASE) % (8192 * 512 * 2)) % (512 * 2) / 2;
+		sdram_read(bank, row, col, (short *)data);
   } else {
     // TODO: gen error
     return false;
@@ -461,12 +468,10 @@ static long load_img() {
   return img_size;
 }
 
-static void _init_flash() {
-  memcpy(flash_data, img, img_size);
-}
+static void _init_flash() { memcpy(flash_data, img, img_size); }
 static void _fill_rams_uninit() {
-	memset(psram_data, 0xcc, sizeof(psram_data));
-	memset(sdram_data, 0xdd, sizeof(sdram_data));
+  memset(psram_data, 0xcc, sizeof(psram_data));
+  memset(sdram_data, 0xdd, sizeof(sdram_data));
 }
 
 // ARG
@@ -490,9 +495,10 @@ static void parse_args(int argc, char **argv) {
   }
 }
 
-const char* _get_env_or_default(const char* env_name, const char* default_value) {
-		const char* env_value = std::getenv(env_name);
-		return env_value ? env_value : default_value;
+const char *_get_env_or_default(const char *env_name,
+                                const char *default_value) {
+  const char *env_value = std::getenv(env_name);
+  return env_value ? env_value : default_value;
 }
 
 void _init_dpi_logger() {
@@ -545,8 +551,9 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   load_img();
 
   _init_flash();
-	_fill_rams_uninit();
-  _init_dpi_logger(); // should before dbg_init(which may preload data with func call dpis)
+  _fill_rams_uninit();
+  _init_dpi_logger(); // should before dbg_init(which may preload data with func
+                      // call dpis)
 
   dbg_init(INITIAL_PC, img_size, img_file, setting);
 
