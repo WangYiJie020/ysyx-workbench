@@ -51,7 +51,7 @@ static std::shared_ptr<spdlog::logger> _dpi_logger;
 class sim_time_formatter : public spdlog::custom_flag_formatter {
 public:
     void format(const spdlog::details::log_msg &, const std::tm &, spdlog::memory_buf_t &dest) override {
-        std::string s = "T" + std::to_string(sim_time) + "ps";
+        std::string s = std::to_string(sim_time) + "ps";
         dest.append(s.data(), s.data() + s.size());
     }
 
