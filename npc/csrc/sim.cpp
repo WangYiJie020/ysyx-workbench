@@ -389,6 +389,7 @@ bool sim_read_vmem(word_t addr, word_t *data) {
 		sdram_read(bank, row, col, (short *)data);
   } else {
     // TODO: gen error
+		_dpi_logger->error("sim_read_vmem addr={:08x} INVALID", addr);
     return false;
   }
   return true;
