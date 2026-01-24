@@ -498,15 +498,20 @@ static void parse_args(int argc, char **argv) {
 void _init_dpi_logger() {
   auto formatter = std::make_unique<spdlog::pattern_formatter>();
   formatter->add_flag<sim_time_formatter>('&');
-  formatter->set_pattern("(%&)[%n][%^%L%$] %v");
+  formatter->set_pattern("(%&)[%n] [%^%L%$] %v");
+
+  auto out_file = "dpiout.log";
+  auto _env_lvl_str = std::getenv("DPI_CONSOLE_LVL");
+  auto lvl_str = _env_lvl_str ? _env_lvl_str : "info";
+  auto dpi_console_lvl = spdlog::level::from_str(lvl_str);
+  spdlog::info("DPI logger output lvl = {}, output file = {}", lvl_str,
+               out_file);
 
   static auto console_sink =
       std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
   static auto file_sink =
-      std::make_shared<spdlog::sinks::basic_file_sink_mt>("dpiout.log", true);
+      std::make_shared<spdlog::sinks::basic_file_sink_mt>(out_file, true);
 
-	auto lvl_str = std::getenv("DPI_CONSOLE_LVL");
-	auto dpi_console_lvl = spdlog::level::from_str(lvl_str ? lvl_str : "info");
   console_sink->set_level(dpi_console_lvl);
   auto dup_console = std::make_shared<spdlog::sinks::dup_filter_sink_mt>(
       std::chrono::seconds(3));
