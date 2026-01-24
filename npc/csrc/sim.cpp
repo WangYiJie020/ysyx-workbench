@@ -465,7 +465,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 
   load_img();
 
-	// _init_flash();
+	_init_flash();
 
 	dbg_init(INITIAL_PC, img_size, img_file, setting);
 
