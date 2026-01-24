@@ -493,23 +493,27 @@ void _init_dpi_logger() {
   formatter->set_pattern("(%&) [%n] [%^%l%$] %v");
 
   auto out_file = "dpiout.log";
-  auto _env_lvl_str = std::getenv("DPI_CONSOLE_LVL");
-  auto lvl_str = _env_lvl_str ? _env_lvl_str : "info";
-  auto dpi_console_lvl = spdlog::level::from_str(lvl_str);
-  spdlog::info("DPI log lvl = {}, out file = {}", lvl_str, out_file);
+  auto _env_con_lvl_str = std::getenv("DPI_CONSOLE_LVL");
+	auto _env_file_lvl_str = std::getenv("DPI_FILE_LVL");
+  auto con_lvl_str = _env_con_lvl_str ? _env_con_lvl_str : "info";
+	auto file_lvl_str = _env_file_lvl_str ? _env_file_lvl_str : "trace";
+
+  auto console_lvl = spdlog::level::from_str(con_lvl_str);
+	auto file_lvl = spdlog::level::from_str(file_lvl_str);
+  spdlog::info("DPI log lvl = {}, out file = {} lvl = {}", con_lvl_str, out_file, file_lvl_str);
 
   static auto console_sink =
       std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
   static auto file_sink =
       std::make_shared<spdlog::sinks::basic_file_sink_mt>(out_file, true);
 
-  console_sink->set_level(dpi_console_lvl);
+  console_sink->set_level(console_lvl);
   auto dup_console = std::make_shared<spdlog::sinks::dup_filter_sink_mt>(
       std::chrono::seconds(3));
   dup_console->add_sink(console_sink);
-  dup_console->set_level(dpi_console_lvl);
+  dup_console->set_level(console_lvl);
 
-  file_sink->set_level(spdlog::level::trace);
+  file_sink->set_level(file_lvl);
   auto dpi_sink_list = spdlog::sinks_init_list{dup_console, file_sink};
   _dpi_logger = std::make_shared<spdlog::logger>("DPI", dpi_sink_list);
   _dpi_logger->set_level(spdlog::level::trace);
