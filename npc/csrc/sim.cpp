@@ -494,11 +494,13 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   dbg_init(INITIAL_PC, img_size, img_file, setting);
 
   bool show_dpi_log = true;
-  _console_sink->set_level(show_dpi_log ? spdlog::level::trace
-                                        : spdlog::level::off);
+  _console_sink->set_level(spdlog::level::trace);
   _dpiout_file_sink->set_level(spdlog::level::trace);
-  _dpi_logger = std::make_shared<spdlog::logger>(
-      "dpi", spdlog::sinks_init_list{_console_sink, _dpiout_file_sink});
+	auto dpi_sink_list = show_dpi_log
+												? spdlog::sinks_init_list{_console_sink, _dpiout_file_sink}
+												: spdlog::sinks_init_list{_dpiout_file_sink};
+  _dpi_logger = std::make_shared<spdlog::logger>("dpi", dpi_sink_list);
+	_dpi_logger->set_level(spdlog::level::trace);
 	_dpi_logger->info("DPI logger initialized");
 	_dpi_logger->trace("DPI logger trace enabled");
   spdlog::register_logger(_dpi_logger);
