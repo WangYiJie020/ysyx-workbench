@@ -546,9 +546,9 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 
   _init_flash();
 	_fill_rams_uninit();
+  _init_dpi_logger(); // should before dbg_init(which may preload data with func call dpis)
 
   dbg_init(INITIAL_PC, img_size, img_file, setting);
-  _init_dpi_logger();
 
 #if ENABLE_WAVE
   if (setting.en_waveform) {
