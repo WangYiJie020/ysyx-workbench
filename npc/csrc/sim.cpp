@@ -3,6 +3,7 @@
 
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/sinks/dup_filter_sink.h>
 #include <spdlog/spdlog.h>
 #include <spdlog/pattern_formatter.h>
 
@@ -10,6 +11,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <string_view>
+#include <chrono>
 
 #include "spdlog/logger.h"
 #include "verilated_fst_c.h"
@@ -226,7 +228,7 @@ extern "C" void sdram_read(char bank, short row, short col, short *data) {
   // printf("[DPI] [clk %ld] sdram_read bank=%02x row=%04x col=%04x data=%04x\n",
   //        sim_time, bank, row, col, (uint16_t)*data);
 	_dpi_logger->trace("sdram_read bank={:02x} row={:04x} col={:04x} data={:04x}",
-										 sim_time, bank, row, col, (uint16_t)*data);
+										 bank, row, col, (uint16_t)*data);
 }
 extern "C" void sdram_write(char bank, short row, short col, short data,
                             char mask) {
@@ -246,7 +248,7 @@ extern "C" void sdram_write(char bank, short row, short col, short data,
 		_dpi_logger->trace("sdram write high byte {:02x}", (uint8_t)((data & 0xff00) >> 8));
   }
 	_dpi_logger->trace("sdram_write bank={:02x} row={:04x} col={:04x} data={:04x} mask={:02x} now sdram[b][r][c]={:04x}",
-									 sim_time, bank, row, col, (uint16_t)data, (uint8_t)mask,
+									 bank, row, col, (uint16_t)data, (uint8_t)mask,
 									 sdram_data[bank][row][col]);
   // printf("[DPI] [clk %ld] sdram_write bank=%02x row=%04x col=%04x data=%04x "
   //        "mask=%02x ",
@@ -498,9 +500,14 @@ void _init_dpi_logger(){
 
   bool show_dpi_log = true;
   _console_sink->set_level(spdlog::level::trace);
+	auto dup_console =
+    std::make_shared<spdlog::sinks::dup_filter_sink_mt>(std::chrono::seconds(3));
+	dup_console->add_sink(_console_sink);
+	dup_console->set_level(spdlog::level::trace);
+
   _dpiout_file_sink->set_level(spdlog::level::trace);
 	auto dpi_sink_list = show_dpi_log
-												? spdlog::sinks_init_list{_console_sink, _dpiout_file_sink}
+												? spdlog::sinks_init_list{dup_console, _dpiout_file_sink}
 												: spdlog::sinks_init_list{_dpiout_file_sink};
   _dpi_logger = std::make_shared<spdlog::logger>("DPI", dpi_sink_list);
 	_dpi_logger->set_level(spdlog::level::trace);
