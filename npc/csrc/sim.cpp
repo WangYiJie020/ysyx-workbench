@@ -51,7 +51,7 @@ static std::shared_ptr<spdlog::logger> _dpi_logger;
 class sim_time_formatter : public spdlog::custom_flag_formatter {
 public:
     void format(const spdlog::details::log_msg &, const std::tm &, spdlog::memory_buf_t &dest) override {
-        std::string s = "clk " + std::to_string(sim_time);
+        std::string s = "T" + std::to_string(sim_time) + "ps";
         dest.append(s.data(), s.data() + s.size());
     }
 
@@ -488,6 +488,24 @@ static void parse_args(int argc, char **argv) {
   }
 }
 
+void _init_dpi_logger(){
+	auto formatter = std::make_unique<spdlog::pattern_formatter>();
+  formatter->add_flag<sim_time_formatter>('&');
+	formatter->set_pattern("[%&][%n][%^%L%$] %v");
+
+  bool show_dpi_log = true;
+  _console_sink->set_level(spdlog::level::trace);
+  _dpiout_file_sink->set_level(spdlog::level::trace);
+	auto dpi_sink_list = show_dpi_log
+												? spdlog::sinks_init_list{_console_sink, _dpiout_file_sink}
+												: spdlog::sinks_init_list{_dpiout_file_sink};
+  _dpi_logger = std::make_shared<spdlog::logger>("DPI", dpi_sink_list);
+	_dpi_logger->set_level(spdlog::level::trace);
+	_dpi_logger->set_formatter(std::move(formatter));
+
+  spdlog::register_logger(_dpi_logger);
+}
+
 bool sim_init(int argc, char **argv, sim_setting setting) {
   Verilated::commandArgs(argc, argv);
   sim_settings = setting;
@@ -505,28 +523,8 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   _init_flash();
 
   dbg_init(INITIAL_PC, img_size, img_file, setting);
+	_init_dpi_logger();
 
-	auto formatter = std::make_unique<spdlog::pattern_formatter>();
-    
-  formatter->add_flag<sim_time_formatter>('&');
-    
-	// 3. 设置模式，用 %& 代替标准时间 %T
-	// 注意：保留了 [重复日志折叠] 等功能所需的内部逻辑
-	formatter->set_pattern("[%&] [%^%l%$] %v");
-	
-
-  bool show_dpi_log = true;
-  _console_sink->set_level(spdlog::level::trace);
-  _dpiout_file_sink->set_level(spdlog::level::trace);
-	auto dpi_sink_list = show_dpi_log
-												? spdlog::sinks_init_list{_console_sink, _dpiout_file_sink}
-												: spdlog::sinks_init_list{_dpiout_file_sink};
-  _dpi_logger = std::make_shared<spdlog::logger>("dpi", dpi_sink_list);
-	_dpi_logger->set_level(spdlog::level::trace);
-	_dpi_logger->set_formatter(std::move(formatter));
-	_dpi_logger->info("DPI logger initialized");
-	_dpi_logger->trace("DPI logger trace enabled");
-  spdlog::register_logger(_dpi_logger);
 
 #if ENABLE_WAVE
   if (setting.en_waveform) {
