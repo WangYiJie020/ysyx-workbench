@@ -3,7 +3,6 @@
 
 #include <spdlog/spdlog.h>
 
-#include <array>
 #include <cassert>
 #include <cstdint>
 #include <cstdio>
@@ -411,6 +410,7 @@ static long load_img() {
   img_size = ftell(fp);
 
   Log("The image is %s, size = %ld", img_file, img_size);
+	spdlog::info("The image is {}, size = {}", img_file, img_size);
 
   fseek(fp, 0, SEEK_SET);
   int ret = fread(img, img_size, 1, fp);
