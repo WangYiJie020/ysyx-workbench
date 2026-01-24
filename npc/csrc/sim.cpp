@@ -498,7 +498,7 @@ static void parse_args(int argc, char **argv) {
 void _init_dpi_logger() {
   auto formatter = std::make_unique<spdlog::pattern_formatter>();
   formatter->add_flag<sim_time_formatter>('&');
-  formatter->set_pattern("(%&) [%n] [%^%L%$] %v");
+  formatter->set_pattern("(%&) [%n] [%^%l%$] %v");
 
   auto out_file = "dpiout.log";
   auto _env_lvl_str = std::getenv("DPI_CONSOLE_LVL");
