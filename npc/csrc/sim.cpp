@@ -386,7 +386,10 @@ bool sim_read_vmem(word_t addr, word_t *data) {
 		char bank = (addr - SDRAM_BASE) / (8192 * 512 * 2);
 		short row = ((addr - SDRAM_BASE) % (8192 * 512 * 2)) / (512 * 2);
 		short col = ((addr - SDRAM_BASE) % (8192 * 512 * 2)) % (512 * 2) / 2;
-		sdram_read(bank, row, col, (short *)data);
+		uint16_t half1, half2;
+		half1 = sdram_data[bank][row][col];
+		half2 = sdram_data[bank][row][col + 1];
+		*data = ((word_t)half2 << 16) | (word_t)half1;
   } else {
     // TODO: gen error
 		_dpi_logger->error("sim_read_vmem addr={:08x} INVALID", addr);
