@@ -88,20 +88,24 @@ word_t sim_current_pc() { return current_pc; }
 void raise_ebreak(int a0) {
   is_running = false;
 
-	dbg_set_halt(a0);
+  dbg_set_halt(a0);
 
-#define ANSI_FG_RED "\33[1;31m"
-#define ANSI_FG_GREEN "\33[1;32m"
-#define ANSI_FG_YELLOW "\33[1;33m"
-#define ANSI_NONE "\33[0m"
+  constexpr std::string_view fg_red = "\33[1;31m", fg_green = "\33[1;32m",
+                             fg_yellow = "\33[1;33m", ansi_none = "\33[0m";
 
-  if (a0 == 0) {
-    printf(ANSI_FG_GREEN "HIT GOOD TRAP" ANSI_NONE);
-    is_good_trap = true;
-  } else {
-    printf(ANSI_FG_RED "HIT BAD TRAP" ANSI_NONE " a0 = %d", a0);
-  }
-  printf(" @pc = 0x%08x cyc %lu\n", current_pc, cycle_count);
+  is_good_trap = (a0 == 0);
+
+  // if (a0 == 0) {
+  // spdlog::info("{}HIT GOOD TRAP{}", fg_green, ansi_none);
+  //   is_good_trap = true;
+  // } else {
+  // spdlog::info("{}HIT BAD TRAP{} a0 = {}", fg_red, ansi_none, a0);
+  // }
+  // printf(" @pc = 0x%08x cyc %lu\n", current_pc, cycle_count);
+  //
+  spdlog::info("{}HIT {} TRAP{} a0 = {} @pc = 0x{:08x} cyc {}",
+               is_good_trap ? fg_green : fg_red, is_good_trap ? "GOOD" : "BAD",
+               ansi_none, a0, current_pc, cycle_count);
 }
 bool sim_halted() { return !is_running; }
 bool sim_hit_good_trap() { return is_good_trap; }
@@ -115,74 +119,76 @@ word_t img[60 * 1024 * 1024 / 4] = {
     0x12345678,
 };
 
-
 constexpr uint32_t MROM_BASE = 0x20000000u;
 constexpr uint32_t MROM_END = 0x20010000u;
 word_t mrom_data[(MROM_END - MROM_BASE) / 4];
 extern "C" void mrom_read(int32_t addr, int32_t *data) {
-	if(addr<MROM_BASE) {
-		printf("[clk %zu] [DPI] mrom_read addr=%08x ERROR BELOW MROM_BASE\n", sim_time,addr);
-	}
+  if (addr < MROM_BASE) {
+    printf("[clk %zu] [DPI] mrom_read addr=%08x ERROR BELOW MROM_BASE\n",
+           sim_time, addr);
+  }
   assert(addr >= MROM_BASE);
   addr -= MROM_BASE;
-	assert(addr < sizeof(img));
-	addr &= ~0x3;
-	uintptr_t ptr = (uintptr_t)img + addr;
-	*data = *(int32_t *)ptr;
-	// printf("[DPI] mrom_read addr=%08x data=%08x alignedd=%08X\n", addr + MROM_BASE, *data,aligned_data);
+  assert(addr < sizeof(img));
+  addr &= ~0x3;
+  uintptr_t ptr = (uintptr_t)img + addr;
+  *data = *(int32_t *)ptr;
+  // printf("[DPI] mrom_read addr=%08x data=%08x alignedd=%08X\n", addr +
+  // MROM_BASE, *data,aligned_data);
 }
 
 constexpr uint32_t FLASH_BASE = 0x30000000u;
 constexpr uint32_t FLASH_END = 0x40000000u;
-uint32_t flash_data[sizeof(img)/4];
+uint32_t flash_data[sizeof(img) / 4];
 static void _init_flash();
 extern "C" void flash_read(int32_t addr, int32_t *data) {
-	// in spi
-	//   .addr({8'b0, in_paddr[23:2], 2'b0}),
-	// so the high 8 bits are ignored
-	// 0x3XXXXXXX -> 0x0XXXXXXX
-	// no need to minus FLASH_BASE
-	assert(addr < sizeof(flash_data));
-	addr &= ~0x3;
-	uintptr_t ptr = (uintptr_t)flash_data + addr;
-	*data = *(int32_t *)ptr;
-	// printf("[DPI] flash_read addr=%08x data=%08x\n", addr + FLASH_BASE, *data);
+  // in spi
+  //   .addr({8'b0, in_paddr[23:2], 2'b0}),
+  // so the high 8 bits are ignored
+  // 0x3XXXXXXX -> 0x0XXXXXXX
+  // no need to minus FLASH_BASE
+  assert(addr < sizeof(flash_data));
+  addr &= ~0x3;
+  uintptr_t ptr = (uintptr_t)flash_data + addr;
+  *data = *(int32_t *)ptr;
+  // printf("[DPI] flash_read addr=%08x data=%08x\n", addr + FLASH_BASE, *data);
 }
 
 constexpr uint32_t PSRAM_BASE = 0x80000000u;
 constexpr uint32_t PSRAM_END = 0xA0000000u;
-uint32_t psram_data[8*1024*1024/4];
+uint32_t psram_data[8 * 1024 * 1024 / 4];
 extern "C" void psram_read(int32_t addr, int32_t *data) {
-	// in psram high 8bit addr are 0
-	// no need to minus PSRAM_BASE
-	assert(addr < sizeof(psram_data));
-	addr &= ~0x3;
-	uintptr_t ptr = (uintptr_t)psram_data + addr;
-	*data = *(int32_t *)ptr;
-	// printf("[DPI] psram_read addr=%08x data=%08x\n", addr + PSRAM_BASE, *data);
+  // in psram high 8bit addr are 0
+  // no need to minus PSRAM_BASE
+  assert(addr < sizeof(psram_data));
+  addr &= ~0x3;
+  uintptr_t ptr = (uintptr_t)psram_data + addr;
+  *data = *(int32_t *)ptr;
+  // printf("[DPI] psram_read addr=%08x data=%08x\n", addr + PSRAM_BASE, *data);
 }
-extern "C" void psram_write(int32_t addr,char strb8, int32_t data,int32_t*) {
-	assert(addr < sizeof(psram_data));
-	uint8_t shift = (addr & 0x3) * 8;
-	uint32_t aligned_addr = addr & (~0x3);
-	auto ptr = &psram_data[aligned_addr / 4];
+extern "C" void psram_write(int32_t addr, char strb8, int32_t data, int32_t *) {
+  assert(addr < sizeof(psram_data));
+  uint8_t shift = (addr & 0x3) * 8;
+  uint32_t aligned_addr = addr & (~0x3);
+  auto ptr = &psram_data[aligned_addr / 4];
 
-	uint32_t strb32 = 0;
-	if (strb8 & 0x1)
-		strb32 |= 0x000000ff;
-	if (strb8 & 0x2)
-		strb32 |= 0x0000ff00;
-	if (strb8 & 0x4)
-		strb32 |= 0x00ff0000;
-	if (strb8 & 0x8)
-		strb32 |= 0xff000000;
-	uint32_t shMask = strb32 << shift;
-	uint32_t shData = data << shift;
+  uint32_t strb32 = 0;
+  if (strb8 & 0x1)
+    strb32 |= 0x000000ff;
+  if (strb8 & 0x2)
+    strb32 |= 0x0000ff00;
+  if (strb8 & 0x4)
+    strb32 |= 0x00ff0000;
+  if (strb8 & 0x8)
+    strb32 |= 0xff000000;
+  uint32_t shMask = strb32 << shift;
+  uint32_t shData = data << shift;
 
-	*ptr &= ~shMask;
-	*ptr |= (shData & shMask);
-	
-	// printf("[DPI] psram_write addr=%08x data=%08x (strb %X)\n", addr + PSRAM_BASE, data, (uint32_t)strb8);
+  *ptr &= ~shMask;
+  *ptr |= (shData & shMask);
+
+  // printf("[DPI] psram_write addr=%08x data=%08x (strb %X)\n", addr +
+  // PSRAM_BASE, data, (uint32_t)strb8);
 }
 
 constexpr uint32_t SDRAM_BASE = 0xa0000000u;
@@ -190,48 +196,52 @@ constexpr uint32_t SDRAM_END = 0xb0000000u;
 
 uint16_t sdram_data[4][8192][512];
 
-extern "C" void sdram_read(char bank, short row, short col, short* data) {
-	assert(bank>=0&&bank<4);
-	assert(row>=0&&row<8192);
-	assert(col>=0&&col<512);
-	*data = sdram_data[bank][row][col];
-	printf("[DPI] [clk %ld] sdram_read bank=%02x row=%04x col=%04x data=%04x\n", sim_time, bank, row, col, (uint16_t)*data);
+extern "C" void sdram_read(char bank, short row, short col, short *data) {
+  assert(bank >= 0 && bank < 4);
+  assert(row >= 0 && row < 8192);
+  assert(col >= 0 && col < 512);
+  *data = sdram_data[bank][row][col];
+  printf("[DPI] [clk %ld] sdram_read bank=%02x row=%04x col=%04x data=%04x\n",
+         sim_time, bank, row, col, (uint16_t)*data);
 }
-extern "C" void sdram_write(char bank, short row, short col, short data, char mask) {
-	assert(bank>=0&&bank<4);
-	assert(row>=0&&row<8192);
-	assert(col>=0&&col<512);
-	// mask [0] = 0: write low byte
-	// mask [1] = 0: write high byte
-	if ((mask & 0x1) == 0) {
-		sdram_data[bank][row][col] &= 0xff00;
-		sdram_data[bank][row][col] |= (data & 0x00ff);
-		printf("sdram write low byte %02x\n", (uint8_t)(data & 0x00ff));
-	}
-	if ((mask & 0x2) == 0) {
-		sdram_data[bank][row][col] &= 0x00ff;
-		sdram_data[bank][row][col] |= (data & 0xff00);
-		printf("sdram write high byte %02x\n", (uint8_t)((data & 0xff00)>>8));
-	}
-	printf("[DPI] [clk %ld] sdram_write bank=%02x row=%04x col=%04x data=%04x mask=%02x ", sim_time, bank, row, col, (uint16_t)data, (uint8_t)mask);
-	printf("now sdram[b][r][c]=%04x\n", sdram_data[bank][row][col]);
+extern "C" void sdram_write(char bank, short row, short col, short data,
+                            char mask) {
+  assert(bank >= 0 && bank < 4);
+  assert(row >= 0 && row < 8192);
+  assert(col >= 0 && col < 512);
+  // mask [0] = 0: write low byte
+  // mask [1] = 0: write high byte
+  if ((mask & 0x1) == 0) {
+    sdram_data[bank][row][col] &= 0xff00;
+    sdram_data[bank][row][col] |= (data & 0x00ff);
+    printf("sdram write low byte %02x\n", (uint8_t)(data & 0x00ff));
+  }
+  if ((mask & 0x2) == 0) {
+    sdram_data[bank][row][col] &= 0x00ff;
+    sdram_data[bank][row][col] |= (data & 0xff00);
+    printf("sdram write high byte %02x\n", (uint8_t)((data & 0xff00) >> 8));
+  }
+  printf("[DPI] [clk %ld] sdram_write bank=%02x row=%04x col=%04x data=%04x "
+         "mask=%02x ",
+         sim_time, bank, row, col, (uint16_t)data, (uint8_t)mask);
+  printf("now sdram[b][r][c]=%04x\n", sdram_data[bank][row][col]);
 }
 
 constexpr uint32_t SRAM_BASE = 0x0f000000u;
 constexpr uint32_t SRAM_END = 0x10000000u;
 
 uint8_t *sim_guest_to_host(uint32_t addr) {
-	uint32_t *ptr = nullptr;
-	if(addr>=MROM_BASE&&addr<MROM_END){
-		ptr=img + (addr - MROM_BASE);
-	} else if (addr>=FLASH_BASE&&addr<FLASH_END) {
-		ptr=flash_data + (addr - FLASH_BASE);
-	} else {
-		printf("[W] mem_atguest don't support addr=%08x\n",addr);
-		assert(0);
-	}
-	// printf("[DPI] mem_atguest addr=%08x get %08x\n",addr,*ptr);
-	return (uint8_t *)ptr;
+  uint32_t *ptr = nullptr;
+  if (addr >= MROM_BASE && addr < MROM_END) {
+    ptr = img + (addr - MROM_BASE);
+  } else if (addr >= FLASH_BASE && addr < FLASH_END) {
+    ptr = flash_data + (addr - FLASH_BASE);
+  } else {
+    printf("[W] mem_atguest don't support addr=%08x\n", addr);
+    assert(0);
+  }
+  // printf("[DPI] mem_atguest addr=%08x get %08x\n",addr,*ptr);
+  return (uint8_t *)ptr;
 }
 word_t guest_to_host(word_t addr) {
   // printf("raw addr %08X\n",addr);
@@ -241,9 +251,7 @@ word_t guest_to_host(word_t addr) {
 }
 
 word_t gpr_snap[32];
-word_t* sim_current_gpr() {
-	return gpr_snap;
-}
+word_t *sim_current_gpr() { return gpr_snap; }
 
 void gpr_upd(int regno, int data) {
   if (regno == 0)
@@ -262,7 +270,7 @@ void skip_difftest_ref() {
   if (sim_settings.trace_difftest_skip) {
     printf("[DPI] skip_difftest_ref called\n");
   }
-	dbg_skip_difftest_ref();
+  dbg_skip_difftest_ref();
 }
 
 #define MMIO_SERIAL_PORT 0x10000000u
@@ -332,27 +340,27 @@ void pmem_write(int addr, int data, int mask) {
 }
 
 bool sim_read_vmem(word_t addr, word_t *data) {
-	if(addr>=MROM_BASE&&addr<MROM_END){
-		mrom_read(addr, (int *)data);
-	} else if (addr>=FLASH_BASE&&addr<FLASH_END) {
-		flash_read(addr - FLASH_BASE, (int *)data);
-	} else if (addr>=SRAM_BASE&&addr<SRAM_END) {
-		// TODO: shouldn't read directly
-		// should gen warn and return nothing
-		// for debug
-		*data = img[(addr - SRAM_BASE) / 4];
-	} else if (addr>=PSRAM_BASE&&addr<PSRAM_END) {
-		psram_read(addr - PSRAM_BASE, (int *)data);
-	} else {
-		// TODO: gen error
-		return false;
-	}
-	return true;
+  if (addr >= MROM_BASE && addr < MROM_END) {
+    mrom_read(addr, (int *)data);
+  } else if (addr >= FLASH_BASE && addr < FLASH_END) {
+    flash_read(addr - FLASH_BASE, (int *)data);
+  } else if (addr >= SRAM_BASE && addr < SRAM_END) {
+    // TODO: shouldn't read directly
+    // should gen warn and return nothing
+    // for debug
+    *data = img[(addr - SRAM_BASE) / 4];
+  } else if (addr >= PSRAM_BASE && addr < PSRAM_END) {
+    psram_read(addr - PSRAM_BASE, (int *)data);
+  } else {
+    // TODO: gen error
+    return false;
+  }
+  return true;
 }
 
 void sim_step_inst() {
   size_t cnt = 0;
-	// SPI flash may need many cycles to respond
+  // SPI flash may need many cycles to respond
   constexpr size_t MAYBE_DEADLOOP_THRESHOLD = 8192;
   while (!pc_changed) {
     sim_step_cycle();
@@ -362,11 +370,12 @@ void sim_step_inst() {
     }
     cnt++;
     if (cnt >= MAYBE_DEADLOOP_THRESHOLD) {
-			dbg_dump_recent_info();
-      printf(ANSI_FG_YELLOW "[WARN] " ANSI_NONE);
-      printf("simulation has stepped %zu cycles without pc change, maybe lock "
-             "happened\n",
-             cnt);
+      dbg_dump_recent_info();
+      // printf(ANSI_FG_YELLOW "[WARN] " ANSI_NONE);
+      // printf("simulation has stepped %zu cycles without pc change, maybe lock "
+      //        "happened\n",
+      //        cnt);
+			spdlog::warn("simulation has stepped {} cycles without pc change, maybe lock happened", cnt);
       printf("wanting to continue? (y/[n]) ");
       char c = getchar();
       if (c == 'y' || c == 'Y') {
@@ -375,7 +384,8 @@ void sim_step_inst() {
         }
         continue;
       } else {
-        printf("sim exit\n");
+        // printf("sim exit\n");
+				spdlog::info("sim exit due to possible deadloop");
         exit(1);
       }
     }
@@ -390,7 +400,6 @@ static size_t img_size;
 static bool batch_mode = false;
 
 static long load_img() {
-#define Log(fmt, ...) printf(fmt "\n", ##__VA_ARGS__)
 #define Assert(expr, ...)                                                      \
   do {                                                                         \
     if (!(expr)) {                                                             \
@@ -399,7 +408,7 @@ static long load_img() {
   } while (0)
 
   if (img_file == NULL) {
-    Log("No image is given. Use the default build-in image.");
+    spdlog::warn("No image is given. Use the default build-in image.");
     return img_size = 4096; // built-in image size
   }
 
@@ -409,8 +418,7 @@ static long load_img() {
   fseek(fp, 0, SEEK_END);
   img_size = ftell(fp);
 
-  Log("The image is %s, size = %ld", img_file, img_size);
-	spdlog::info("The image is {}, size = {}", img_file, img_size);
+  spdlog::info("The image is {}, size = {}", img_file, img_size);
 
   fseek(fp, 0, SEEK_SET);
   int ret = fread(img, img_size, 1, fp);
@@ -421,15 +429,15 @@ static long load_img() {
   return img_size;
 }
 
-static void _init_flash(){
-	memcpy(flash_data, img, img_size);
-	// for debug
-	// TODO: remove this
-	memset(psram_data, 0xcc, sizeof(psram_data));
-	sdram_data[0][0][0]=0x1234;
-	sdram_data[0][0][1]=0x5678;
-	sdram_data[0][0][2]=0x9abc;
-	sdram_data[0][0][3]=0xdef0;
+static void _init_flash() {
+  memcpy(flash_data, img, img_size);
+  // for debug
+  // TODO: remove this
+  memset(psram_data, 0xcc, sizeof(psram_data));
+  sdram_data[0][0][0] = 0x1234;
+  sdram_data[0][0][1] = 0x5678;
+  sdram_data[0][0][2] = 0x9abc;
+  sdram_data[0][0][3] = 0xdef0;
 }
 
 // ARG
@@ -467,9 +475,9 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 
   load_img();
 
-	_init_flash();
+  _init_flash();
 
-	dbg_init(INITIAL_PC, img_size, img_file, setting);
+  dbg_init(INITIAL_PC, img_size, img_file, setting);
 
 #if ENABLE_WAVE
   if (setting.en_waveform) {
@@ -484,13 +492,11 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   reset(10);
 
   if (batch_mode && !setting.no_batch) {
-		dbg_exec("c");
+    dbg_exec("c");
     return dbg_is_hitbadtrap() ? 1 : 0;
   }
 
   return 0;
 }
 
-void sim_exec_sdbcmd(std::string_view cmd, bool &quit) {
-	dbg_exec(cmd, &quit);
-}
+void sim_exec_sdbcmd(std::string_view cmd, bool &quit) { dbg_exec(cmd, &quit); }
