@@ -276,7 +276,7 @@ uint8_t *sim_guest_to_host(uint32_t addr) {
 }
 word_t guest_to_host(word_t addr) {
   // printf("raw addr %08X\n",addr);
-  // assert(addr>=MADDR_BASE);
+  assert(addr>=MADDR_BASE);
   word_t res = addr - MADDR_BASE;
   return res;
 }
