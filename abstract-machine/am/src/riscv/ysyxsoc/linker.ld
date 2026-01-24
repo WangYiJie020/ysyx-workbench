@@ -88,9 +88,13 @@ SECTIONS {
 	__psram_size__ = LENGTH(psram);
 	__psram_end__ = __psram_start__ + __psram_size__;
 
+	__dsram_start__ = ORIGIN(sdram);
+	__dsram_size__ = LENGTH(sdram);
+	__dsram_end__ = __dsram_start__ + __dsram_size__;
+
   _stack_top = __sram_end__;
   _stack_pointer  = _stack_top;
 
   _heap_start = _bss_end;
-	_heap_end = __psram_end__;
+	_heap_end = __dsram_end__;
 }
