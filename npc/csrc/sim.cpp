@@ -464,13 +464,10 @@ static long load_img() {
 
 static void _init_flash() {
   memcpy(flash_data, img, img_size);
-  // for debug
-  // TODO: remove this
-  memset(psram_data, 0xcc, sizeof(psram_data));
-  sdram_data[0][0][0] = 0x1234;
-  sdram_data[0][0][1] = 0x5678;
-  sdram_data[0][0][2] = 0x9abc;
-  sdram_data[0][0][3] = 0xdef0;
+}
+static void _fill_rams_uninit() {
+	memset(psram_data, 0xcc, sizeof(psram_data));
+	memset(sdram_data, 0xdd, sizeof(sdram_data));
 }
 
 // ARG
@@ -549,6 +546,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   load_img();
 
   _init_flash();
+	_fill_rams_uninit();
 
   dbg_init(INITIAL_PC, img_size, img_file, setting);
   _init_dpi_logger();
