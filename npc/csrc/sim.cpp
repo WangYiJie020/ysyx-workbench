@@ -1,4 +1,5 @@
 #include "sim.hpp"
+#include "dbg.hpp"
 
 #include <array>
 #include <cassert>
@@ -6,9 +7,6 @@
 #include <cstdio>
 #include <string_view>
 
-#include "elf_tool.hpp"
-#include "sdb.hpp"
-#include "tracers.hpp"
 #include "verilated_fst_c.h"
 
 #ifdef ENABLE_NVBOARD
@@ -34,8 +32,6 @@ typedef uint32_t addr_t;
 // #define TRACE_PMEM_CALL
 // #define TRACE_SHOW_ALL_INST
 
-std::shared_ptr<sdb::debuger> dbg;
-sdb::difftest_trace_handler_ptr diff_handler;
 std::shared_ptr<VerilatedFstC> tfp;
 
 static uint64_t sim_time = 0;
@@ -86,10 +82,12 @@ static bool is_running = true;
 static bool is_good_trap = false;
 
 word_t current_pc = INITIAL_PC;
+word_t sim_current_pc() { return current_pc; }
+
 void raise_ebreak(int a0) {
   is_running = false;
 
-  dbg->state().halt(a0);
+	dbg_set_halt(a0);
 
 #define ANSI_FG_RED "\33[1;31m"
 #define ANSI_FG_GREEN "\33[1;32m"
@@ -136,7 +134,7 @@ extern "C" void mrom_read(int32_t addr, int32_t *data) {
 constexpr uint32_t FLASH_BASE = 0x30000000u;
 constexpr uint32_t FLASH_END = 0x40000000u;
 uint32_t flash_data[sizeof(img)/4];
-static void init_flash();
+static void _init_flash();
 extern "C" void flash_read(int32_t addr, int32_t *data) {
 	// in spi
 	//   .addr({8'b0, in_paddr[23:2], 2'b0}),
@@ -221,7 +219,7 @@ extern "C" void sdram_write(char bank, short row, short col, short data, char ma
 constexpr uint32_t SRAM_BASE = 0x0f000000u;
 constexpr uint32_t SRAM_END = 0x10000000u;
 
-uint8_t *mem_atguest(word_t addr) {
+uint8_t *sim_guest_to_host(uint32_t addr) {
 	uint32_t *ptr = nullptr;
 	if(addr>=MROM_BASE&&addr<MROM_END){
 		ptr=img + (addr - MROM_BASE);
@@ -242,19 +240,14 @@ word_t guest_to_host(word_t addr) {
 }
 
 word_t gpr_snap[32];
+word_t* sim_current_gpr() {
+	return gpr_snap;
+}
+
 void gpr_upd(int regno, int data) {
   if (regno == 0)
     return;
   gpr_snap[regno] = data;
-}
-std::array<std::string_view, 32> reg_names = {
-    "$0", "ra", "sp", "gp", "tp",  "t0",  "t1", "t2", "s0", "s1", "a0",
-    "a1", "a2", "a3", "a4", "a5",  "a6",  "a7", "s2", "s3", "s4", "s5",
-    "s6", "s7", "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"};
-void dump_regs() {
-  for (int i = 0; i < 32; i++) {
-    printf("%s: %08x\n", reg_names[i].data(), gpr_snap[i]);
-  }
 }
 
 bool pc_changed = false;
@@ -262,15 +255,13 @@ void pc_upd(int pc, int npc) {
   //	printf("pc upd pc=%08x npc=%08x\n",pc,npc);
   pc_changed = true;
   current_pc = npc;
-  // dump_regs();
 }
 
 void skip_difftest_ref() {
   if (sim_settings.trace_difftest_skip) {
     printf("[DPI] skip_difftest_ref called\n");
   }
-  if (diff_handler)
-    diff_handler->skip_ref();
+	dbg_skip_difftest_ref();
 }
 
 #define MMIO_SERIAL_PORT 0x10000000u
@@ -339,7 +330,26 @@ void pmem_write(int addr, int data, int mask) {
   }
 }
 
-void step_inst() {
+bool sim_read_vmem(word_t addr, word_t *data) {
+	if(addr>=MROM_BASE&&addr<MROM_END){
+		mrom_read(addr, (int *)data);
+	} else if (addr>=FLASH_BASE&&addr<FLASH_END) {
+		flash_read(addr - FLASH_BASE, (int *)data);
+	} else if (addr>=SRAM_BASE&&addr<SRAM_END) {
+		// TODO: shouldn't read directly
+		// should gen warn and return nothing
+		// for debug
+		*data = img[(addr - SRAM_BASE) / 4];
+	} else if (addr>=PSRAM_BASE&&addr<PSRAM_END) {
+		psram_read(addr - PSRAM_BASE, (int *)data);
+	} else {
+		// TODO: gen error
+		return false;
+	}
+	return true;
+}
+
+void sim_step_inst() {
   size_t cnt = 0;
 	// SPI flash may need many cycles to respond
   constexpr size_t MAYBE_DEADLOOP_THRESHOLD = 8192;
@@ -351,7 +361,7 @@ void step_inst() {
     }
     cnt++;
     if (cnt >= MAYBE_DEADLOOP_THRESHOLD) {
-			dbg->dump_all();
+			dbg_dump_recent_info();
       printf(ANSI_FG_YELLOW "[WARN] " ANSI_NONE);
       printf("simulation has stepped %zu cycles without pc change, maybe lock "
              "happened\n",
@@ -370,7 +380,6 @@ void step_inst() {
     }
   }
   pc_changed = false;
-  //	dump_regs();
 }
 
 // IMG
@@ -410,7 +419,7 @@ static long load_img() {
   return img_size;
 }
 
-static void init_flash(){
+static void _init_flash(){
 	memcpy(flash_data, img, img_size);
 	// for debug
 	// TODO: remove this
@@ -441,46 +450,6 @@ static void parse_args(int argc, char **argv) {
     }
   }
 }
-// SDB
-
-namespace sdbwrap {
-sdb::paddr_t cpu_exec(size_t n) {
-  while (n-- > 0) {
-    step_inst();
-    if (sim_halted())
-      break;
-  }
-  return current_pc;
-}
-void shot_regsnap(sdb::reg_snapshot_t &regsnap) {
-  for (size_t i = 0; i < 32; i++) {
-    regsnap[i] = gpr_snap[i];
-  }
-}
-sdb::vlen_inst_code inst_fetcher(sdb::paddr_t pc) {
-  word_t inst;
-	if(pc>=MROM_BASE&&pc<MROM_END){
-		mrom_read(pc, (int *)&inst);
-		// printf("[DPI] inst_fetcher fetch from mrom @pc=%08x get %08x\n",pc,inst);
-	} else if (pc>=FLASH_BASE&&pc<FLASH_END) {
-		flash_read(pc - FLASH_BASE, (int *)&inst);
-		// printf("[DPI] inst_fetcher fetch from flash @pc=%08x get %08x\n",pc,inst);
-	} else if (pc>=SRAM_BASE&&pc<SRAM_END) {
-		// printf("[W] inst_fetcher fetch from sram @pc=%08x (ret as img)\n",pc);
-		// for debug
-		inst = img[(pc - SRAM_BASE) / 4];
-	} else if (pc>=PSRAM_BASE&&pc<PSRAM_END) {
-		psram_read(pc - PSRAM_BASE, (int *)&inst);
-	} else {
-		printf("[W] inst_fetcher don't support fetch @pc=%08x\n",pc);
-		inst = 0;
-	}
-
-  uint8_t *p = (uint8_t *)&inst;
-  return sdb::vlen_inst_code(p, p + 4);
-}
-uint8_t *loadmem(sdb::paddr_t addr, size_t nbyte) { return mem_atguest(addr); }
-} // namespace sdbwrap
 
 bool sim_init(int argc, char **argv, sim_setting setting) {
   Verilated::commandArgs(argc, argv);
@@ -492,47 +461,13 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 
   parse_args(argc, argv);
   using std::string;
-  using namespace std::views;
   using namespace std::ranges;
 
   load_img();
 
-	init_flash();
+	// _init_flash();
 
-  dbg = std::make_shared<sdb::debuger>(
-      INITIAL_PC, INITIAL_PC, img_size, sdbwrap::cpu_exec, sdbwrap::loadmem,
-      sdbwrap::shot_regsnap,
-      std::vector<std::string_view>(reg_names.begin(), reg_names.end()),
-      sdbwrap::inst_fetcher);
-
-  dbg->enable_inst_trace = setting.en_inst_trace;
-
-  if (setting.en_inst_trace) {
-    if (setting.showdisasm) {
-      size_t inst_show_limit = setting.always_showdisasm ? SIZE_MAX : 16;
-      dbg->add_trace(sdb::make_disasm_trace_handler(sdb::default_inst_disasm,
-                                                    inst_show_limit));
-    }
-    if (setting.etrace)
-      dbg->add_trace(sdb::make_etrace_handler());
-    if (setting.iringbuf)
-      dbg->add_trace(sdb::make_iringbuf_trace_handler());
-
-    if (img_file && setting.ftrace) {
-      auto elf_file = try_find_elf_file_of(img_file);
-
-      if (!elf_file.empty()) {
-        printf("Found ELF file: %s\n", elf_file.c_str());
-        dbg->add_trace(sdb::make_ftrace_handler(elf_file));
-      }
-    }
-
-    if (setting.difftest) {
-      diff_handler = sdb::make_difftest_trace_handler(
-          "../nemu/build/riscv32-nemu-interpreter-so", 0);
-      dbg->add_trace(diff_handler);
-    }
-  }
+	dbg_init(INITIAL_PC, img_size, img_file, setting);
 
 #if ENABLE_WAVE
   if (setting.en_waveform) {
@@ -547,16 +482,13 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   reset(10);
 
   if (batch_mode && !setting.no_batch) {
-    dbg->exec_command("c");
-    return dbg->state().is_badexit();
+		dbg_exec("c");
+    return dbg_is_hitbadtrap() ? 1 : 0;
   }
 
   return 0;
 }
 
 void sim_exec_sdbcmd(std::string_view cmd, bool &quit) {
-  dbg->exec_command(cmd);
-  if (dbg->state().state == sdb::run_state::quit) {
-    quit = true;
-  }
+	dbg_exec(cmd, &quit);
 }
