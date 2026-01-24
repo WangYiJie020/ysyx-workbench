@@ -207,10 +207,12 @@ extern "C" void sdram_write(char bank, short row, short col, short data, char ma
 	if ((mask & 0x1) == 0) {
 		sdram_data[bank][row][col] &= 0xff00;
 		sdram_data[bank][row][col] |= (data & 0x00ff);
+		printf("sdram write low byte %02x\n", (uint8_t)(data & 0x00ff));
 	}
 	if ((mask & 0x2) == 0) {
 		sdram_data[bank][row][col] &= 0x00ff;
 		sdram_data[bank][row][col] |= (data & 0xff00);
+		printf("sdram write high byte %02x\n", (uint8_t)((data & 0xff00)>>8));
 	}
 	printf("[DPI] [clk %ld] sdram_write bank=%02x row=%04x col=%04x data=%04x mask=%02x\n", sim_time, bank, row, col, (uint16_t)data, (uint8_t)mask);
 }
