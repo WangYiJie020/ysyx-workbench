@@ -499,6 +499,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   _dpiout_file_sink->set_level(spdlog::level::trace);
   _dpi_logger = std::make_shared<spdlog::logger>(
       "dpi", spdlog::sinks_init_list{_console_sink, _dpiout_file_sink});
+	_dpi_logger->info("DPI logger initialized");
   spdlog::register_logger(_dpi_logger);
 
 #if ENABLE_WAVE
