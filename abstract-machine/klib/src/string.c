@@ -82,19 +82,7 @@ void *memmove(void *dst, const void *src, size_t n) {
 	return dst;
 }
 
-void* _wordcpy(uint32_t* out, const uint32_t* in, const uint32_t* iend){
-		while(in!=iend){
-				*out=*in;
-				in++;
-				out++;
-		}
-		return out;
-}
-
 void *memcpy(void *out, const void *in, size_t n) {
-	if(((((uintptr_t)out)&0x3)==0)&&((((uintptr_t)in)&0x3)==0) && ((n&0x3)==0)){
-		return _wordcpy((uint32_t*)out, (const uint32_t*)in, (const uint32_t*)((uintptr_t)in+n));
-	}
 	const char* ibeg=in;
 	char* obeg=out;
 	const char* iend=ibeg+n;
