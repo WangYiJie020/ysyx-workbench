@@ -222,7 +222,7 @@ extern "C" void sdram_read(char bank, short row, short col, short *data) {
   assert(row >= 0 && row < 8192);
   assert(col >= 0 && col < 512);
   *data = sdram_data[bank][row][col];
-  _dpi_logger->trace("R bank={:02x} row={:04x} col={:04x} data={:04x}",
+  _dpi_logger->trace("sdram_read bank={:02x} row={:04x} col={:04x} data={:04x}",
                      bank, row, col, (uint16_t)*data);
 }
 extern "C" void sdram_write(char bank, short row, short col, short data,
@@ -235,22 +235,18 @@ extern "C" void sdram_write(char bank, short row, short col, short data,
   if ((mask & 0x1) == 0) {
     sdram_data[bank][row][col] &= 0xff00;
     sdram_data[bank][row][col] |= (data & 0x00ff);
-    _dpi_logger->trace("W low byte {:02x}", (uint8_t)(data & 0x00ff));
+    _dpi_logger->trace("sdram_write low byte {:02x}", (uint8_t)(data & 0x00ff));
   }
   if ((mask & 0x2) == 0) {
     sdram_data[bank][row][col] &= 0x00ff;
     sdram_data[bank][row][col] |= (data & 0xff00);
-    _dpi_logger->trace("W high byte {:02x}",
+    _dpi_logger->trace("sdram_write high byte {:02x}",
                        (uint8_t)((data & 0xff00) >> 8));
   }
-  _dpi_logger->trace("W bank={:02x} row={:04x} col={:04x} "
+  _dpi_logger->trace("sdram_write bank={:02x} row={:04x} col={:04x} "
                      "data={:04x} mask={:02x} newdata={:04x}",
                      bank, row, col, (uint16_t)data, (uint8_t)mask,
                      sdram_data[bank][row][col]);
-  // printf("[DPI] [clk %ld] sdram_write bank=%02x row=%04x col=%04x data=%04x "
-  //        "mask=%02x ",
-  //        sim_time, bank, row, col, (uint16_t)data, (uint8_t)mask);
-  // printf("now sdram[b][r][c]=%04x\n", sdram_data[bank][row][col]);
 }
 
 constexpr uint32_t SRAM_BASE = 0x0f000000u;
@@ -493,10 +489,8 @@ static void parse_args(int argc, char **argv) {
 void _init_dpi_logger() {
   auto formatter = std::make_unique<spdlog::pattern_formatter>();
   formatter->add_flag<sim_time_formatter>('&');
-  // (sim_time) [DPI function_name] [log_level] log_msg
-  // example:
-  // (12345ps) [DPI sdram_read] [info] bank=00 row=0000 col=0000 data=1234
-  formatter->set_pattern("(%&) [%n %!] [%^%l%$] %v");
+  // (sim_time) [DPI ] [log_level] log_msg
+  formatter->set_pattern("(%&) [%n] [%^%l%$] %v");
 
   auto out_file = "dpiout.log";
   auto _env_lvl_str = std::getenv("DPI_CONSOLE_LVL");
