@@ -1,6 +1,8 @@
 #include "sim.hpp"
 #include "dbg.hpp"
 
+#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
 #include <cassert>
@@ -8,6 +10,7 @@
 #include <cstdio>
 #include <string_view>
 
+#include "spdlog/logger.h"
 #include "verilated_fst_c.h"
 
 #ifdef ENABLE_NVBOARD
@@ -37,6 +40,12 @@ std::shared_ptr<VerilatedFstC> tfp;
 
 static uint64_t sim_time = 0;
 static uint64_t cycle_count = 0;
+
+static auto _console_sink =
+    std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+static auto _dpiout_file_sink =
+    std::make_shared<spdlog::sinks::basic_file_sink_mt>("dpiout.log", true);
+static std::shared_ptr<spdlog::logger> _dpi_logger;
 
 static void _sim_eval() {
   dut.eval();
@@ -201,8 +210,10 @@ extern "C" void sdram_read(char bank, short row, short col, short *data) {
   assert(row >= 0 && row < 8192);
   assert(col >= 0 && col < 512);
   *data = sdram_data[bank][row][col];
-  printf("[DPI] [clk %ld] sdram_read bank=%02x row=%04x col=%04x data=%04x\n",
-         sim_time, bank, row, col, (uint16_t)*data);
+  // printf("[DPI] [clk %ld] sdram_read bank=%02x row=%04x col=%04x data=%04x\n",
+  //        sim_time, bank, row, col, (uint16_t)*data);
+	_dpi_logger->trace("[clk {}] sdram_read bank={:02x} row={:04x} col={:04x} data={:04x}",
+										 sim_time, bank, row, col, (uint16_t)*data);
 }
 extern "C" void sdram_write(char bank, short row, short col, short data,
                             char mask) {
@@ -372,10 +383,13 @@ void sim_step_inst() {
     if (cnt >= MAYBE_DEADLOOP_THRESHOLD) {
       dbg_dump_recent_info();
       // printf(ANSI_FG_YELLOW "[WARN] " ANSI_NONE);
-      // printf("simulation has stepped %zu cycles without pc change, maybe lock "
+      // printf("simulation has stepped %zu cycles without pc change, maybe lock
+      // "
       //        "happened\n",
       //        cnt);
-			spdlog::warn("simulation has stepped {} cycles without pc change, maybe lock happened", cnt);
+      spdlog::warn("simulation has stepped {} cycles without pc change, maybe "
+                   "lock happened",
+                   cnt);
       printf("wanting to continue? (y/[n]) ");
       char c = getchar();
       if (c == 'y' || c == 'Y') {
@@ -385,7 +399,7 @@ void sim_step_inst() {
         continue;
       } else {
         // printf("sim exit\n");
-				spdlog::info("sim exit due to possible deadloop");
+        spdlog::info("sim exit due to possible deadloop");
         exit(1);
       }
     }
@@ -478,6 +492,14 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   _init_flash();
 
   dbg_init(INITIAL_PC, img_size, img_file, setting);
+
+  bool show_dpi_log = true;
+  _console_sink->set_level(show_dpi_log ? spdlog::level::info
+                                        : spdlog::level::off);
+  _dpiout_file_sink->set_level(spdlog::level::trace);
+  _dpi_logger = std::make_shared<spdlog::logger>(
+      "dpi", spdlog::sinks_init_list{_console_sink, _dpiout_file_sink});
+  spdlog::register_logger(_dpi_logger);
 
 #if ENABLE_WAVE
   if (setting.en_waveform) {
