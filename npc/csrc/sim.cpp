@@ -494,7 +494,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   dbg_init(INITIAL_PC, img_size, img_file, setting);
 
   bool show_dpi_log = true;
-  _console_sink->set_level(show_dpi_log ? spdlog::level::info
+  _console_sink->set_level(show_dpi_log ? spdlog::level::trace
                                         : spdlog::level::off);
   _dpiout_file_sink->set_level(spdlog::level::trace);
   _dpi_logger = std::make_shared<spdlog::logger>(
