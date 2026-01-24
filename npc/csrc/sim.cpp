@@ -154,8 +154,7 @@ extern "C" void mrom_read(int32_t addr, int32_t *data) {
   addr &= ~0x3;
   uintptr_t ptr = (uintptr_t)img + addr;
   *data = *(int32_t *)ptr;
-  // printf("[DPI] mrom_read addr=%08x data=%08x alignedd=%08X\n", addr +
-  // MROM_BASE, *data,aligned_data);
+	_dpi_logger->trace("mrom_read addr={:08x} data={:08x}", addr + MROM_BASE, *data);
 }
 
 constexpr uint32_t FLASH_BASE = 0x30000000u;
@@ -172,7 +171,7 @@ extern "C" void flash_read(int32_t addr, int32_t *data) {
   addr &= ~0x3;
   uintptr_t ptr = (uintptr_t)flash_data + addr;
   *data = *(int32_t *)ptr;
-  // printf("[DPI] flash_read addr=%08x data=%08x\n", addr + FLASH_BASE, *data);
+	_dpi_logger->trace("flash_read addr={:08x} data={:08x}", addr + FLASH_BASE, *data);
 }
 
 constexpr uint32_t PSRAM_BASE = 0x80000000u;
