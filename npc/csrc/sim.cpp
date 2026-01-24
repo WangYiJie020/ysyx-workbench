@@ -514,7 +514,6 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 	// 注意：保留了 [重复日志折叠] 等功能所需的内部逻辑
 	formatter->set_pattern("[%&] [%^%l%$] %v");
 	
-	_dpi_logger->set_formatter(std::move(formatter));
 
   bool show_dpi_log = true;
   _console_sink->set_level(spdlog::level::trace);
@@ -524,6 +523,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 												: spdlog::sinks_init_list{_dpiout_file_sink};
   _dpi_logger = std::make_shared<spdlog::logger>("dpi", dpi_sink_list);
 	_dpi_logger->set_level(spdlog::level::trace);
+	_dpi_logger->set_formatter(std::move(formatter));
 	_dpi_logger->info("DPI logger initialized");
 	_dpi_logger->trace("DPI logger trace enabled");
   spdlog::register_logger(_dpi_logger);
