@@ -54,6 +54,18 @@ void putch(char ch) {
   }
 	*UART_TX = ch;
 }
+char try_getch() {
+	if (IS_UART_RECEIVE_READY()) {
+		return *UART_RX;
+	} else {
+		return 0xff;
+	}
+}
+char getch() {
+	while (!IS_UART_RECEIVE_READY()) {
+	}
+	return *UART_RX;
+}
 
 void halt(int code) {
   asm volatile("mv a0, %0; ebreak" : : "r"(code));
