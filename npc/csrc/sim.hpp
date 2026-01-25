@@ -31,7 +31,10 @@ struct sim_setting {
 
   bool trace_clock_cycle = false;
 
-#define _GEN_DPI_FLAG(name) bool trace_dpi_##name = false
+#define TRACE_DPI_FLAG(name) trace_dpi_##name
+
+#define _GEN_DPI_FLAG(name) bool TRACE_DPI_FLAG(name) = false;
+	_GEN_DPI_FLAG(mrom_read);
 	_GEN_DPI_FLAG(sdram_read);
 	_GEN_DPI_FLAG(sdram_write);
 	_GEN_DPI_FLAG(flash_read);
