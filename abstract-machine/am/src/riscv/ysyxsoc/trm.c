@@ -113,8 +113,7 @@ typedef int (*entry_func_t)(const char *args);
 #define IS_4BYTE_ALIGNED(x) ((((uintptr_t)(x)) & 0x3) == 0)
 
 FSBL_TEXT static inline const char *_rodata_loadpos(const char *ptr) {
-  return ptr - (uintptr_t)_rodata_start +
-                             (uintptr_t)__rodata_load_start__;
+  return ptr - (uintptr_t)_rodata_start + (uintptr_t)__rodata_load_start__;
 }
 #define boot_putstr(s) putstr(_rodata_loadpos(s))
 #define boot_log(s) boot_putstr("[BOOT] " s)
@@ -123,7 +122,7 @@ FSBL_TEXT static inline const char *_rodata_loadpos(const char *ptr) {
 #define BOOT_ASSERT(cond)                                                      \
   do {                                                                         \
     if (!(cond)) {                                                             \
-      boot_log("ASSERTION FAILED: " _TOSTR(cond) "\n");                     \
+      boot_log("ASSERTION FAILED: " _TOSTR(cond) "\n");                        \
       halt(-1);                                                                \
     }                                                                          \
   } while (0)
@@ -167,6 +166,9 @@ SSBL_TEXT void _second_boot() {
     boot_log(".bss.extra cleared.\n");
   }
 
+	boot_log("checking memory regions...\n");
+  assert(heap.start < heap.end);
+
   boot_log("enter main function.\n");
   int ret = main(mainargs);
   halt(ret);
@@ -184,8 +186,6 @@ FSBL_TEXT void boot_memcpy(void *dst, const void *src, size_t n) {
 FSBL_TEXT void _trm_init() {
   init_serial();
   boot_log("serial initialized.\n");
-
-	assert(heap.start < heap.end);
 
   boot_memcpy(_ssbl_start, __ssbl_load_start__, (size_t)__ssbl_size__);
   boot_log("SSBL copied.\n");
