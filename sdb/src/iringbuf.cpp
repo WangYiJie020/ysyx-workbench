@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <tracers.hpp>
 #include <ansi_col.h>
 #include <deque>
@@ -50,9 +51,9 @@ class sdb::iringbuf_trace_handler : public disasm_trace_handler {
 
 		void _dump_using_reg(_irb_inst_ctx& ctx){
 			auto dump_one_reg=[&](uint8_t r){
-				_dump("{}={:08x} ",ctx.reg_names[r],ctx.regs[r]);
+				_dump(ANSI_FG_BLUE "{}" ANSI_NONE "=0x{:08x} ",ctx.reg_names[r],ctx.regs[r]);
 			};
-			uint32_t code=ctx.inst.data()[0];
+			uint32_t code=*(uint32_t*)ctx.inst.data();
 			uint8_t rd=(code>>7)&0x1f;
 			uint8_t rs1=(code>>15)&0x1f;
 			uint8_t rs2=(code>>20)&0x1f;
