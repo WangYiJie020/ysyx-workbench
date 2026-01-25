@@ -36,4 +36,12 @@ void load_sim_setting_from_env(sim_setting &setting) {
   GET(trace_pmem_writecall);
   GET(trace_inst_fetchcall);
   GET(trace_mmio_write);
+
+#define GET_DPI_FLAG(name) GET(trace_dpi_##name);
+	GET_DPI_FLAG(sdram_read);
+	GET_DPI_FLAG(sdram_write);
+	GET_DPI_FLAG(flash_read);
+	GET_DPI_FLAG(psram_read);
+	GET_DPI_FLAG(psram_write);
+
 }

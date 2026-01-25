@@ -1,12 +1,12 @@
 #include "sim.hpp"
 #include "dbg.hpp"
 
+#include <spdlog/mdc.h>
 #include <spdlog/pattern_formatter.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/dup_filter_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
-#include <spdlog/mdc.h>
 
 #include <cassert>
 #include <chrono>
@@ -132,11 +132,19 @@ word_t img[60 * 1024 * 1024 / 4] = {
     0x12345678,
 };
 
+#define _EXPAND(x) x
+#define DPI_TRACE(fmt, ...)                                                    \
+  do {                                                                         \
+    auto _loger = spdlog::get(__func__);                                       \
+    if (_loger)                                                                \
+      _loger->trace(fmt, ##__VA_ARGS__);                                       \
+  } while (0)
+
 constexpr uint32_t MROM_BASE = 0x20000000u;
 constexpr uint32_t MROM_END = 0x20010000u;
 word_t mrom_data[(MROM_END - MROM_BASE) / 4];
 extern "C" void mrom_read(int32_t addr, int32_t *data) {
-	spdlog::mdc::put("testkey", "testvalue");
+  spdlog::mdc::put("testkey", "testvalue");
   if (addr < MROM_BASE) {
     _dpi_logger->error("addr={:08x} ERROR BELOW MROM_BASE", sim_time, addr);
   }
@@ -146,8 +154,11 @@ extern "C" void mrom_read(int32_t addr, int32_t *data) {
   addr &= ~0x3;
   uintptr_t ptr = (uintptr_t)img + addr;
   *data = *(int32_t *)ptr;
-  _dpi_logger->trace("mrom_read addr={:08x} data={:08x}", addr + MROM_BASE,
-                     *data);
+
+  DPI_TRACE("R addr={:08x} data={:08x}", addr + MROM_BASE, *data);
+
+  // _dpi_logger->trace("mrom_read addr={:08x} data={:08x}", addr + MROM_BASE,
+  // *data);
 }
 
 constexpr uint32_t FLASH_BASE = 0x30000000u;
@@ -375,7 +386,7 @@ bool sim_read_vmem(word_t addr, word_t *data) {
   } else if (addr >= PSRAM_BASE && addr < PSRAM_END) {
     psram_read(addr - PSRAM_BASE, (int *)data);
   } else if (addr >= SDRAM_BASE && addr < SDRAM_END) {
-		word_t in_sdram_addr = addr - SDRAM_BASE;
+    word_t in_sdram_addr = addr - SDRAM_BASE;
     char bank = (in_sdram_addr >> 10) & 0x3;
     short row = (in_sdram_addr >> 12) & 0x1fff;
     short col = (in_sdram_addr >> 1) & 0x1ff;
@@ -499,7 +510,7 @@ void _init_dpi_logger() {
   auto formatter = std::make_unique<spdlog::pattern_formatter>();
   formatter->add_flag<sim_time_formatter>('&');
   // (sim_time) [DPI] [log_level] log_msg
-  formatter->set_pattern("(%&) [%n] [%^%l%$] %v");
+  // formatter->set_pattern("(%&) [%n] [%^%l%$] %v");
 
   auto out_file = "dpiout.log";
   auto con_lvl_str = _get_env_or_default("DPI_CONSOLE_LVL", "info");
@@ -520,12 +531,20 @@ void _init_dpi_logger() {
       std::chrono::seconds(3));
   dup_console->add_sink(console_sink);
   dup_console->set_level(console_lvl);
+  dup_console->set_pattern("(%&) [%n] [%^%l%$] %v");
 
   file_sink->set_level(file_lvl);
   auto dpi_sink_list = spdlog::sinks_init_list{dup_console, file_sink};
+
   _dpi_logger = std::make_shared<spdlog::logger>("DPI", dpi_sink_list);
   _dpi_logger->set_level(spdlog::level::trace);
   _dpi_logger->set_formatter(std::move(formatter));
+
+#define _REG_DPI_FUNC_LOGGER(func)\
+	do {\
+		auto func_logger = _dpi_logger->clone(func);\
+
+		// func_logger->set_level(spdlog::level::trace);\
 
   spdlog::register_logger(_dpi_logger);
 }
