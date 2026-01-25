@@ -598,9 +598,13 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
                                          [](VerilatedFstC *p) { p->close(); });
     dut.trace(tfp.get(), 99);
     tfp->open(setting.wave_fst_file.c_str());
+		spdlog::info("wave enabled, output file: {}", setting.wave_fst_file);
   }
 
   reset(10);
+
+	spdlog::info("sim reset done, entering {} mode",
+							 batch_mode ? "batch" : "interactive");
 
   if (batch_mode && !setting.no_batch) {
     dbg_exec("c");
