@@ -31,7 +31,7 @@ FSBL_TEXT void init_serial() {
 
   // set baud rate to 115200
   *UART_DL_MSB = 0;
-  *UART_DL_LSB = 1;
+  *UART_DL_LSB = 200;
   // clear DLAB bit
   *UART_LCR = 0x3;
   // enable FIFO with 14-byte threshold
