@@ -258,7 +258,7 @@ extern "C" void sdram_write(char bank, short row, short col, short data,
   if ((mask & 0x2) == 0)
     human_friendly_mask[0] = 'H';
 
-  DPI_TRACE("sdram_write bank={:02x} row={:04x} col={:04x} "
+  DPI_TRACE("W bank={:02x} row={:04x} col={:04x} "
             "data={:04x} mask={} newdata={:04x}",
             bank, row, col, (uint16_t)data, human_friendly_mask,
             sdram_data[bank][row][col]);
