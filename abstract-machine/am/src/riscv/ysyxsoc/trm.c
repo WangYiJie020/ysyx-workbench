@@ -31,12 +31,13 @@ FSBL_TEXT void init_serial() {
   }
 
   // NVBOARD divider is 16 times here DL
-	// set here 1 and 16 in NVBOARD to make simulation faster
-	
-	// see DOCUMENATION page 18:
-	// 	Remember that (Input Clock Speed)/(Divisor Latch value) = 16 x the communication baud rate.
-	
-	// MSB first LSB next!!!
+  // set here 1 and 16 in NVBOARD to make simulation faster
+
+  // see DOCUMENATION page 18:
+  // 	Remember that (Input Clock Speed)/(Divisor Latch value) = 16 x the
+  // communication baud rate.
+
+  // MSB first LSB next!!!
   *UART_DL_MSB = 0;
   *UART_DL_LSB = 1;
 
@@ -49,9 +50,9 @@ FSBL_TEXT void init_serial() {
 }
 
 void putch(char ch) {
-  while (!(*UART_LSR & 0x20)) {
+  while (!IS_UART_TRANSMIT_EMPTY()) {
   }
-  *(volatile uint8_t *)(UART_BASE + 0x00) = ch;
+	*UART_TX = ch;
 }
 
 void halt(int code) {
@@ -62,8 +63,8 @@ void halt(int code) {
 
 void print_csr() {
   uint32_t mvendor_id, marchid;
-	mvendor_id = get_mvendorid();
-	marchid = get_marchid();
+  mvendor_id = get_mvendorid();
+  marchid = get_marchid();
   char *vendor = (char *)&mvendor_id;
   putstr("mvendor: 0x");
   putnum_base16(mvendor_id);
@@ -155,7 +156,6 @@ SSBL_TEXT void _ssbl_memcpy(void *dst, const void *src, size_t n) {
   }
 }
 
-
 FSBL_TEXT void boot_memcpy(void *dst, const void *src, size_t n) {
   BOOT_ASSERT(IS_4BYTE_ALIGNED(dst));
   BOOT_ASSERT(IS_4BYTE_ALIGNED(src));
@@ -177,7 +177,6 @@ FSBL_TEXT void _trm_init() {
   _second_boot();
 }
 
-
 SSBL_TEXT void _second_boot() {
   _ssbl_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
   boot_log(".rodata copied.\n");
@@ -193,16 +192,19 @@ SSBL_TEXT void _second_boot() {
   // _ssbl_clear(_bss_start, (size_t)__bss_size__);
   // boot_log(".bss cleared.\n");
   if ((size_t)__data_extra_size__) {
+    boot_log("copying .data.extra...\n");
     _ssbl_memcpy(_data_extra_start, __data_extra_load_start__,
                  (size_t)__data_extra_size__);
     boot_log(".data.extra copied.\n");
   }
   if ((size_t)__bss_extra_size__) {
-    _ssbl_clear(_bss_extra_start, (size_t)__bss_extra_size__);
+    boot_log("clearing .bss.extra...\n");
+    boot_log(" skipping .bss.extra clear");
+    // _ssbl_clear(_bss_extra_start, (size_t)__bss_extra_size__);
     boot_log(".bss.extra cleared.\n");
   }
 
-	boot_log("checking memory regions...\n");
+  boot_log("checking memory regions...\n");
   assert(heap.start < heap.end);
 
   boot_log("enter main function.\n");

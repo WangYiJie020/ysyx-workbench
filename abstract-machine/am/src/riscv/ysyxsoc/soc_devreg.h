@@ -24,6 +24,12 @@ typedef volatile_u32ptr dev_reg32_ptr;
 #define UART_IER       _UART_R(0x01)
 #define UART_LSR       _UART_R(0x05)
 
+#define UART_TX 			 _UART_R(0x00)
+#define UART_RX 			 _UART_R(0x00)
+
+#define IS_UART_TRANSMIT_EMPTY()  ((*UART_LSR)&0b00100000)
+#define IS_UART_RECEIVE_READY()   ((*UART_LSR)&0b00000001)
+
 
 #define SPI_BASE 0x10001000u
 #define _SPI_R(x)    (DEV_REG32(SPI_BASE + (x)*4))
