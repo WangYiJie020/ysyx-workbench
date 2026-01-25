@@ -52,7 +52,7 @@ class sdb::iringbuf_trace_handler : public disasm_trace_handler {
 		void _dump_using_reg(_irb_inst_ctx& ctx){
 			auto dump_one_reg=[&](uint8_t r){
 				if(r==0)return;
-				_dump(ANSI_FG_BLUE " {}" ANSI_NONE "=0x{:08x}",ctx.reg_names[r],ctx.regs[r]);
+				_dump(ANSI_FG_BLUE " {}" ANSI_NONE ": 0x{:08x}",ctx.reg_names[r],ctx.regs[r]);
 			};
 			uint32_t code=*(uint32_t*)ctx.inst.data();
 			uint8_t rd=(code>>7)&0x1f;
