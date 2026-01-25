@@ -276,7 +276,7 @@ uint8_t *sim_guest_to_host(uint32_t addr) {
 }
 word_t guest_to_host(word_t addr) {
   // printf("raw addr %08X\n",addr);
-  assert(addr>=MADDR_BASE);
+  assert(addr >= MADDR_BASE);
   word_t res = addr - MADDR_BASE;
   return res;
 }
@@ -383,16 +383,20 @@ bool sim_read_vmem(word_t addr, word_t *data) {
   } else if (addr >= PSRAM_BASE && addr < PSRAM_END) {
     psram_read(addr - PSRAM_BASE, (int *)data);
   } else if (addr >= SDRAM_BASE && addr < SDRAM_END) {
-		char bank = (addr - SDRAM_BASE) / (8192 * 512 * 2);
-		short row = ((addr - SDRAM_BASE) % (8192 * 512 * 2)) / (512 * 2);
-		short col = ((addr - SDRAM_BASE) % (8192 * 512 * 2)) % (512 * 2) / 2;
-		uint16_t half1, half2;
-		half1 = sdram_data[bank][row][col];
-		half2 = sdram_data[bank][row][col + 1];
-		*data = ((word_t)half2 << 16) | (word_t)half1;
+		word_t in_sdram_addr = addr - SDRAM_BASE;
+    char bank = (in_sdram_addr >> 10) & 0x3;
+    short row = (in_sdram_addr >> 12) & 0x1fff;
+    short col = (in_sdram_addr >> 1) & 0x1ff;
+    uint16_t half1, half2;
+    half1 = sdram_data[bank][row][col];
+    half2 = sdram_data[bank][row][col + 1];
+    *data = ((word_t)half2 << 16) | (word_t)half1;
+    spdlog::trace("sim_read_vmem addr={:08x} -> "
+                  "sdram[{:02x}][{:04x}][{:04x},{:04x}] = {:08x} (pc={:08x})",
+                  addr, bank, row, col, col + 1, *data, current_pc);
   } else {
     // TODO: gen error
-		_dpi_logger->error("sim_read_vmem addr={:08x} INVALID", addr);
+    _dpi_logger->error("sim_read_vmem addr={:08x} INVALID", addr);
     return false;
   }
   return true;
@@ -558,6 +562,8 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   _fill_rams_uninit();
   _init_dpi_logger(); // should before dbg_init(which may preload data with func
                       // call dpis)
+
+  spdlog::set_level(spdlog::level::trace);
 
   dbg_init(INITIAL_PC, img_size, img_file, setting);
 
