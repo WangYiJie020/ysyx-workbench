@@ -7,6 +7,8 @@ MEMORY {
 	flash : ORIGIN = 0x30000000, LENGTH = 1M
 	psram : ORIGIN = 0x80000000, LENGTH = 4M
 	sdram : ORIGIN = 0xa0000000, LENGTH = 8M
+
+	runtime : ORIGIN = ORIGIN(psram), LENGTH = LENGTH(psram)
 }
 
 SECTIONS {
@@ -36,7 +38,7 @@ SECTIONS {
 		_text_start = .;
     *(.text*)
 		_text_end = .;
-  } > sdram AT> flash
+  } > runtime AT> flash
 
 	__text_load_start__ = LOADADDR(.text); /* flash addr */
 	__text_size__       = SIZEOF(.text);   /* LEN */
@@ -46,7 +48,7 @@ SECTIONS {
     *(.rodata*)
 		*(.srodata*)
 		_rodata_end = .;
-  } > sdram AT> flash
+  } > runtime AT> flash
 
 	__rodata_load_start__ = LOADADDR(.rodata);
 	__rodata_size__       = SIZEOF(.rodata);
@@ -60,7 +62,7 @@ SECTIONS {
     *(.sdata*)
     *(.data*)
 		_data_end = .;
-  } > sdram AT> flash
+  } > runtime AT> flash
 
 	__data_load_start__ = LOADADDR(.data); /* MA */
 	__data_size__       = SIZEOF(.data);   /* LEN */
@@ -72,7 +74,7 @@ SECTIONS {
     *(.sbss*)
     *(.scommon)
 		_bss_end = .;
-  } > sdram
+  } > runtime
 
 	__bss_size__ = SIZEOF(.bss);
 
@@ -92,9 +94,12 @@ SECTIONS {
 	__sdram_size__ = LENGTH(sdram);
 	__sdram_end__ = __sdram_start__ + __sdram_size__;
 
+	__runtime_addr_start__ = ORIGIN(runtime);
+	__runtime_addr_end__ = ORIGIN(runtime) + LENGTH(runtime);
+
   _stack_top = __sram_end__;
   _stack_pointer  = _stack_top;
 
   _heap_start = _bss_end;
-	_heap_end = __sdram_end__;
+	_heap_end = __runtime_addr_end__;
 }
