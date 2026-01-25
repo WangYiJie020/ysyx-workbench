@@ -395,8 +395,8 @@ bool sim_read_vmem(word_t addr, word_t *data) {
     psram_read(addr - PSRAM_BASE, (int *)data);
   } else if (addr >= SDRAM_BASE && addr < SDRAM_END) {
     word_t in_sdram_addr = addr - SDRAM_BASE;
-    char bank = (in_sdram_addr >> 10) & 0x3;
-    short row = (in_sdram_addr >> 12) & 0x1fff;
+    char bank = (in_sdram_addr >> 10) & 0x7;
+    short row = (in_sdram_addr >> 13) & 0x1fff;
     short col = (in_sdram_addr >> 1) & 0x1ff;
     uint16_t half1, half2;
     half1 = sdram_data[bank][row][col][0];
