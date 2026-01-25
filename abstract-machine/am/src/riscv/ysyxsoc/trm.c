@@ -147,9 +147,37 @@ SSBL_TEXT void _ssbl_memcpy(void *dst, const void *src, size_t n) {
   }
 }
 
+
+FSBL_TEXT void boot_memcpy(void *dst, const void *src, size_t n) {
+  BOOT_ASSERT(IS_4BYTE_ALIGNED(dst));
+  BOOT_ASSERT(IS_4BYTE_ALIGNED(src));
+  BOOT_ASSERT(IS_4BYTE_ALIGNED(n));
+  size_t wn = n / 4;
+  for (size_t i = 0; i < wn; i++) {
+    ((uint32_t *)dst)[i] = ((const uint32_t *)src)[i];
+  }
+}
+
+SSBL_TEXT void _second_boot();
+FSBL_TEXT void _trm_init() {
+  init_serial();
+  boot_log("serial initialized.\n");
+
+  boot_memcpy(_ssbl_start, __ssbl_load_start__, (size_t)__ssbl_size__);
+  boot_log("SSBL copied.\n");
+
+  _second_boot();
+}
+
+
 SSBL_TEXT void _second_boot() {
   _ssbl_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
   boot_log(".rodata copied.\n");
+
+// after rodata copy, we can use putstr directly
+#undef boot_log
+#define boot_log(s) putstr("[BOOT] " s)
+
   _ssbl_memcpy(_text_start, __text_load_start__, (size_t)__text_size__);
   boot_log(".text copied.\n");
   _ssbl_memcpy(_data_start, __data_load_start__, (size_t)__data_size__);
@@ -172,23 +200,4 @@ SSBL_TEXT void _second_boot() {
   boot_log("enter main function.\n");
   int ret = main(mainargs);
   halt(ret);
-}
-
-FSBL_TEXT void boot_memcpy(void *dst, const void *src, size_t n) {
-  BOOT_ASSERT(IS_4BYTE_ALIGNED(dst));
-  BOOT_ASSERT(IS_4BYTE_ALIGNED(src));
-  BOOT_ASSERT(IS_4BYTE_ALIGNED(n));
-  size_t wn = n / 4;
-  for (size_t i = 0; i < wn; i++) {
-    ((uint32_t *)dst)[i] = ((const uint32_t *)src)[i];
-  }
-}
-FSBL_TEXT void _trm_init() {
-  init_serial();
-  boot_log("serial initialized.\n");
-
-  boot_memcpy(_ssbl_start, __ssbl_load_start__, (size_t)__ssbl_size__);
-  boot_log("SSBL copied.\n");
-
-  _second_boot();
 }
