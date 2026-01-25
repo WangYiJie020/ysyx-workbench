@@ -51,10 +51,10 @@ typedef volatile_u32ptr dev_reg32_ptr;
 #define IS_SPI_BUSY()  ((*SPI_CTRL)&SPI_CTRL_GOBSY)
 
 #define GPIO_BASE 0x10002000u
-#define _GPIO_R(x) (DEV_REG32(GPIO_BASE + (x)*4))
-#define GPIO_LED   _GPIO_R(0)
-#define GPIO_BTN   _GPIO_R(1)
-#define GPIO_SEG   _GPIO_R(2)
+#define _GPIO_R(x)  (DEV_REG32(GPIO_BASE + (x)*4))
+#define GPIO_LED    _GPIO_R(0)
+#define GPIO_SWITCH _GPIO_R(1)
+#define GPIO_SEG    _GPIO_R(2)
 
 
 #endif // __DEV_REG_H__
