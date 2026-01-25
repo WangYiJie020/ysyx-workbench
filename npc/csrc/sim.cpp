@@ -578,12 +578,13 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 
   load_img();
 
+  spdlog::set_level(spdlog::level::trace); // will modify all registered loggers
+
   _init_flash();
   _fill_rams_uninit();
   _init_dpi_logger(); // should before dbg_init(which may preload data with func
                       // call dpis)
 
-  spdlog::set_level(spdlog::level::trace);
 
   dbg_init(INITIAL_PC, img_size, img_file, setting);
 
