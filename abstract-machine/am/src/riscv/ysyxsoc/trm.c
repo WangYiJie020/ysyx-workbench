@@ -185,6 +185,8 @@ FSBL_TEXT void _trm_init() {
   init_serial();
   boot_log("serial initialized.\n");
 
+	assert(heap.start < heap.end);
+
   boot_memcpy(_ssbl_start, __ssbl_load_start__, (size_t)__ssbl_size__);
   boot_log("SSBL copied.\n");
 
