@@ -96,5 +96,5 @@ SECTIONS {
   _stack_pointer  = _stack_top;
 
   _heap_start = _bss_end;
-	_heap_end = __psram_end__;
+	_heap_end = __sdram_end__;
 }
