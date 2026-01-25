@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include <my_putnum.h>
+#include <my_utils.h>
 
 #include "soc_devreg.h"
 
@@ -29,9 +30,16 @@ FSBL_TEXT void init_serial() {
     halt(-114514);
   }
 
-  // set baud rate to 115200
+  // NVBOARD divider is 16 times here DL
+	// set here 1 and 16 in NVBOARD to make simulation faster
+	
+	// see DOCUMENATION page 18:
+	// 	Remember that (Input Clock Speed)/(Divisor Latch value) = 16 x the communication baud rate.
+	
+	// MSB first LSB next!!!
   *UART_DL_MSB = 0;
-  *UART_DL_LSB = 3;
+  *UART_DL_LSB = 1;
+
   // clear DLAB bit
   *UART_LCR = 0x3;
   // enable FIFO with 14-byte threshold
@@ -54,8 +62,8 @@ void halt(int code) {
 
 void print_csr() {
   uint32_t mvendor_id, marchid;
-  asm volatile("csrr %0, mvendorid" : "=r"(mvendor_id));
-  asm volatile("csrr %0, marchid" : "=r"(marchid));
+	mvendor_id = get_mvendorid();
+	marchid = get_marchid();
   char *vendor = (char *)&mvendor_id;
   putstr("mvendor: 0x");
   putnum_base16(mvendor_id);
