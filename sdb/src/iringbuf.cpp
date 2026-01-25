@@ -71,6 +71,7 @@ class sdb::iringbuf_trace_handler : public disasm_trace_handler {
 				);
 				_dump(_dump_inst(*it,it==last));
 				_dump_using_reg(*it);
+				_dump("\n");
 			}
 		}
 
