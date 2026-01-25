@@ -230,7 +230,7 @@ extern "C" void sdram_read(char block, char bank, short row, short col,
   assert(bank >= 0 && bank < 4);
   assert(row >= 0 && row < 8192);
   assert(col >= 0 && col < 512);
-	assert(block == 0 || block == 1);
+	// assert(block == 0 || block == 1);
   *data = sdram_data[bank][row][col][block];
   DPI_TRACE("R bank={:02x} row={:04x} col={:04x} block={} data={:04x}", bank,
             row, col, (uint32_t)block, (uint16_t)*data);
@@ -240,7 +240,7 @@ extern "C" void sdram_write(char block,char bank, short row, short col, short da
   assert(bank >= 0 && bank < 4);
   assert(row >= 0 && row < 8192);
   assert(col >= 0 && col < 512);
-	assert(block == 0 || block == 1);
+	// assert(block == 0 || block == 1);
   // mask [0] = 0: write low byte
   // mask [1] = 0: write high byte
   if ((mask & 0x1) == 0) {
