@@ -398,8 +398,9 @@ bool sim_read_vmem(word_t addr, word_t *data) {
     half2 = sdram_data[bank][row][col + 1];
     *data = ((word_t)half2 << 16) | (word_t)half1;
     // spdlog::trace("sim_read_vmem addr={:08x} -> "
-    //               "sdram[{:02x}][{:04x}][{:04x},{:04x}] = {:08x} (pc={:08x})",
-    //               addr, bank, row, col, col + 1, *data, current_pc);
+    //               "sdram[{:02x}][{:04x}][{:04x},{:04x}] = {:08x}
+    //               (pc={:08x})", addr, bank, row, col, col + 1, *data,
+    //               current_pc);
   } else {
     // TODO: gen error
     _dpi_logger->error("sim_read_vmem addr={:08x} INVALID", addr);
@@ -543,6 +544,8 @@ void _init_dpi_logger() {
     auto func_logger = std::make_shared<spdlog::logger>(#func, dpi_sink_list); \
     auto lvl = sim_settings.TRACE_DPI_FLAG(func) ? spdlog::level::trace        \
                                                  : spdlog::level::info;        \
+    spdlog::info("DPI func logger '{}' level set to {}", #func,                \
+                 spdlog::level::to_string_view(lvl));                          \
     func_logger->set_level(lvl);                                               \
     func_logger->set_formatter(formatter->clone());                            \
     spdlog::register_logger(func_logger);                                      \
