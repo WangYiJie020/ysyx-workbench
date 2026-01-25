@@ -223,7 +223,7 @@ extern "C" void psram_write(int32_t addr, char strb8, int32_t data, int32_t *) {
 constexpr uint32_t SDRAM_BASE = 0xa0000000u;
 constexpr uint32_t SDRAM_END = 0xb0000000u;
 
-uint16_t sdram_data[4][8192][512][2];
+uint16_t sdram_data[4][8192][512][4];
 
 extern "C" void sdram_read(char block, char bank, short row, short col,
                            short *data) {
