@@ -19,7 +19,7 @@ static void __am_input_uart(AM_UART_RX_T *uart) {
   if (IS_UART_RECEIVE_READY())
     uart->data = *UART_RX;
   else
-    uart->data = *UART_RX;
+    uart->data = 0xff;
 }
 
 typedef void (*handler_t)(void *buf);
