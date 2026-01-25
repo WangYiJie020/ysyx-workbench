@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include <my_putnum.h>
+#include <my_utils.h>
 
 #include "soc_devreg.h"
 
@@ -29,9 +30,17 @@ FSBL_TEXT void init_serial() {
     halt(-114514);
   }
 
-  // set baud rate to 115200
+  // NVBOARD divider is 16 times here DL
+  // set here 1 and 16 in NVBOARD to make simulation faster
+
+  // see DOCUMENATION page 18:
+  // 	Remember that (Input Clock Speed)/(Divisor Latch value) = 16 x the
+  // communication baud rate.
+
+  // MSB first LSB next!!!
   *UART_DL_MSB = 0;
   *UART_DL_LSB = 1;
+
   // clear DLAB bit
   *UART_LCR = 0x3;
   // enable FIFO with 14-byte threshold
@@ -41,9 +50,9 @@ FSBL_TEXT void init_serial() {
 }
 
 void putch(char ch) {
-  while (!(*UART_LSR & 0x20)) {
+  while (!IS_UART_TRANSMIT_EMPTY()) {
   }
-  *(volatile uint8_t *)(UART_BASE + 0x00) = ch;
+	*UART_TX = ch;
 }
 
 void halt(int code) {
@@ -54,8 +63,8 @@ void halt(int code) {
 
 void print_csr() {
   uint32_t mvendor_id, marchid;
-  asm volatile("csrr %0, mvendorid" : "=r"(mvendor_id));
-  asm volatile("csrr %0, marchid" : "=r"(marchid));
+  mvendor_id = get_mvendorid();
+  marchid = get_marchid();
   char *vendor = (char *)&mvendor_id;
   putstr("mvendor: 0x");
   putnum_base16(mvendor_id);
@@ -113,8 +122,7 @@ typedef int (*entry_func_t)(const char *args);
 #define IS_4BYTE_ALIGNED(x) ((((uintptr_t)(x)) & 0x3) == 0)
 
 FSBL_TEXT static inline const char *_rodata_loadpos(const char *ptr) {
-  return ptr - (uintptr_t)_rodata_start +
-                             (uintptr_t)__rodata_load_start__;
+  return ptr - (uintptr_t)_rodata_start + (uintptr_t)__rodata_load_start__;
 }
 #define boot_putstr(s) putstr(_rodata_loadpos(s))
 #define boot_log(s) boot_putstr("[BOOT] " s)
@@ -123,7 +131,7 @@ FSBL_TEXT static inline const char *_rodata_loadpos(const char *ptr) {
 #define BOOT_ASSERT(cond)                                                      \
   do {                                                                         \
     if (!(cond)) {                                                             \
-      boot_log("ASSERTION FAILED: " _TOSTR(cond) "\n");                     \
+      boot_log("ASSERTION FAILED: " _TOSTR(cond) "\n");                        \
       halt(-1);                                                                \
     }                                                                          \
   } while (0)
@@ -148,30 +156,6 @@ SSBL_TEXT void _ssbl_memcpy(void *dst, const void *src, size_t n) {
   }
 }
 
-SSBL_TEXT void _second_boot() {
-  _ssbl_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
-  boot_log(".rodata copied.\n");
-  _ssbl_memcpy(_text_start, __text_load_start__, (size_t)__text_size__);
-  boot_log(".text copied.\n");
-  _ssbl_memcpy(_data_start, __data_load_start__, (size_t)__data_size__);
-  boot_log(".data copied.\n");
-  _ssbl_clear(_bss_start, (size_t)__bss_size__);
-  boot_log(".bss cleared.\n");
-  if ((size_t)__data_extra_size__) {
-    _ssbl_memcpy(_data_extra_start, __data_extra_load_start__,
-                 (size_t)__data_extra_size__);
-    boot_log(".data.extra copied.\n");
-  }
-  if ((size_t)__bss_extra_size__) {
-    _ssbl_clear(_bss_extra_start, (size_t)__bss_extra_size__);
-    boot_log(".bss.extra cleared.\n");
-  }
-
-  boot_log("enter main function.\n");
-  int ret = main(mainargs);
-  halt(ret);
-}
-
 FSBL_TEXT void boot_memcpy(void *dst, const void *src, size_t n) {
   BOOT_ASSERT(IS_4BYTE_ALIGNED(dst));
   BOOT_ASSERT(IS_4BYTE_ALIGNED(src));
@@ -181,6 +165,8 @@ FSBL_TEXT void boot_memcpy(void *dst, const void *src, size_t n) {
     ((uint32_t *)dst)[i] = ((const uint32_t *)src)[i];
   }
 }
+
+SSBL_TEXT void _second_boot();
 FSBL_TEXT void _trm_init() {
   init_serial();
   boot_log("serial initialized.\n");
@@ -189,4 +175,39 @@ FSBL_TEXT void _trm_init() {
   boot_log("SSBL copied.\n");
 
   _second_boot();
+}
+
+SSBL_TEXT void _second_boot() {
+  _ssbl_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
+  boot_log(".rodata copied.\n");
+
+// after rodata copy, we can use putstr directly
+#undef boot_log
+#define boot_log(s) putstr("[BOOT] " s)
+
+  _ssbl_memcpy(_text_start, __text_load_start__, (size_t)__text_size__);
+  boot_log(".text copied.\n");
+  _ssbl_memcpy(_data_start, __data_load_start__, (size_t)__data_size__);
+  boot_log(".data copied.\n");
+  // _ssbl_clear(_bss_start, (size_t)__bss_size__);
+  // boot_log(".bss cleared.\n");
+  if ((size_t)__data_extra_size__) {
+    boot_log("copying .data.extra...\n");
+    _ssbl_memcpy(_data_extra_start, __data_extra_load_start__,
+                 (size_t)__data_extra_size__);
+    boot_log(".data.extra copied.\n");
+  }
+  if ((size_t)__bss_extra_size__) {
+    boot_log("clearing .bss.extra...\n");
+    boot_log(" skipping .bss.extra clear");
+    // _ssbl_clear(_bss_extra_start, (size_t)__bss_extra_size__);
+    boot_log(".bss.extra cleared.\n");
+  }
+
+  boot_log("checking memory regions...\n");
+  assert(heap.start < heap.end);
+
+  boot_log("enter main function.\n");
+  int ret = main(mainargs);
+  halt(ret);
 }
