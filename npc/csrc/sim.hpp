@@ -31,9 +31,20 @@ struct sim_setting {
 
   bool trace_clock_cycle = false;
 
+#define TRACE_DPI_FLAG(name) trace_dpi_##name
+
+#define _GEN_DPI_FLAG(name) bool TRACE_DPI_FLAG(name) = false;
+	_GEN_DPI_FLAG(mrom_read);
+	_GEN_DPI_FLAG(sdram_read);
+	_GEN_DPI_FLAG(sdram_write);
+	_GEN_DPI_FLAG(flash_read);
+
+	_GEN_DPI_FLAG(psram_read);
+	_GEN_DPI_FLAG(psram_write);
+
   cycle_end_callback_t cycle_finish_cb = nullptr;
 
-  bool en_waveform = true;
+  bool en_wave = false;
 
   std::string wave_fst_file = "build/wave.fst";
 };

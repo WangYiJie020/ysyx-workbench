@@ -1,6 +1,7 @@
 #include "sim.hpp"
 #include "dbg.hpp"
 
+#include <spdlog/mdc.h>
 #include <spdlog/pattern_formatter.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/dup_filter_sink.h>
@@ -63,11 +64,9 @@ public:
 static void _sim_eval() {
   dut.eval();
   sim_time++;
-#if ENABLE_WAVE
   if (tfp) {
     tfp->dump(sim_time);
   }
-#endif
 }
 
 void sim_step_cycle() {
@@ -117,14 +116,6 @@ void raise_ebreak(int a0) {
 
   is_good_trap = (a0 == 0);
 
-  // if (a0 == 0) {
-  // spdlog::info("{}HIT GOOD TRAP{}", fg_green, ansi_none);
-  //   is_good_trap = true;
-  // } else {
-  // spdlog::info("{}HIT BAD TRAP{} a0 = {}", fg_red, ansi_none, a0);
-  // }
-  // printf(" @pc = 0x%08x cyc %lu\n", current_pc, cycle_count);
-  //
   spdlog::info("{}HIT {} TRAP{} a0 = {} @pc = 0x{:08x} cyc {}",
                is_good_trap ? fg_green : fg_red, is_good_trap ? "GOOD" : "BAD",
                ansi_none, a0, current_pc, cycle_count);
@@ -141,10 +132,19 @@ word_t img[60 * 1024 * 1024 / 4] = {
     0x12345678,
 };
 
+#define _EXPAND(x) x
+#define DPI_TRACE(fmt, ...)                                                    \
+  do {                                                                         \
+    auto _loger = spdlog::get(__func__);                                       \
+    if (_loger)                                                                \
+      _loger->trace(fmt, ##__VA_ARGS__);                                       \
+  } while (0)
+
 constexpr uint32_t MROM_BASE = 0x20000000u;
 constexpr uint32_t MROM_END = 0x20010000u;
 word_t mrom_data[(MROM_END - MROM_BASE) / 4];
 extern "C" void mrom_read(int32_t addr, int32_t *data) {
+  spdlog::mdc::put("testkey", "testvalue");
   if (addr < MROM_BASE) {
     _dpi_logger->error("addr={:08x} ERROR BELOW MROM_BASE", sim_time, addr);
   }
@@ -154,8 +154,11 @@ extern "C" void mrom_read(int32_t addr, int32_t *data) {
   addr &= ~0x3;
   uintptr_t ptr = (uintptr_t)img + addr;
   *data = *(int32_t *)ptr;
-  _dpi_logger->trace("mrom_read addr={:08x} data={:08x}", addr + MROM_BASE,
-                     *data);
+
+  DPI_TRACE("R addr={:08x} data={:08x}", addr + MROM_BASE, *data);
+
+  // _dpi_logger->trace("mrom_read addr={:08x} data={:08x}", addr + MROM_BASE,
+  // *data);
 }
 
 constexpr uint32_t FLASH_BASE = 0x30000000u;
@@ -172,6 +175,7 @@ extern "C" void flash_read(int32_t addr, int32_t *data) {
   addr &= ~0x3;
   uintptr_t ptr = (uintptr_t)flash_data + addr;
   *data = *(int32_t *)ptr;
+	DPI_TRACE("R addr={:08x} data={:08x}", addr + FLASH_BASE, *data);
   // _dpi_logger->trace("flash_read addr={:08x} data={:08x}", addr + FLASH_BASE,
   // (uint32_t)*data);
 }
@@ -186,6 +190,7 @@ extern "C" void psram_read(int32_t addr, int32_t *data) {
   addr &= ~0x3;
   uintptr_t ptr = (uintptr_t)psram_data + addr;
   *data = *(int32_t *)ptr;
+	DPI_TRACE("R addr={:08x} data={:08x}", addr + PSRAM_BASE, *data);
   // printf("[DPI] psram_read addr=%08x data=%08x\n", addr + PSRAM_BASE, *data);
 }
 extern "C" void psram_write(int32_t addr, char strb8, int32_t data, int32_t *) {
@@ -209,6 +214,8 @@ extern "C" void psram_write(int32_t addr, char strb8, int32_t data, int32_t *) {
   *ptr &= ~shMask;
   *ptr |= (shData & shMask);
 
+	DPI_TRACE("W addr={:08x} data={:08x} (strb {:02x}) newdata={:08x}",
+						addr + PSRAM_BASE, data, (uint32_t)strb8, *ptr);
   // printf("[DPI] psram_write addr=%08x data=%08x (strb %X)\n", addr +
   // PSRAM_BASE, data, (uint32_t)strb8);
 }
@@ -223,8 +230,8 @@ extern "C" void sdram_read(char bank, short row, short col, short *data) {
   assert(row >= 0 && row < 8192);
   assert(col >= 0 && col < 512);
   *data = sdram_data[bank][row][col];
-  _dpi_logger->trace("sdram_read bank={:02x} row={:04x} col={:04x} data={:04x}",
-                     bank, row, col, (uint16_t)*data);
+  DPI_TRACE("R bank={:02x} row={:04x} col={:04x} data={:04x}", bank, row, col,
+            (uint16_t)*data);
 }
 extern "C" void sdram_write(char bank, short row, short col, short data,
                             char mask) {
@@ -252,10 +259,10 @@ extern "C" void sdram_write(char bank, short row, short col, short data,
   if ((mask & 0x2) == 0)
     human_friendly_mask[0] = 'H';
 
-  _dpi_logger->trace("sdram_write bank={:02x} row={:04x} col={:04x} "
-                     "data={:04x} mask={} newdata={:04x}",
-                     bank, row, col, (uint16_t)data, human_friendly_mask,
-                     sdram_data[bank][row][col]);
+  DPI_TRACE("W bank={:02x} row={:04x} col={:04x} "
+            "data={:04x} mask={} newdata={:04x}",
+            bank, row, col, (uint16_t)data, human_friendly_mask,
+            sdram_data[bank][row][col]);
 }
 
 constexpr uint32_t SRAM_BASE = 0x0f000000u;
@@ -383,7 +390,7 @@ bool sim_read_vmem(word_t addr, word_t *data) {
   } else if (addr >= PSRAM_BASE && addr < PSRAM_END) {
     psram_read(addr - PSRAM_BASE, (int *)data);
   } else if (addr >= SDRAM_BASE && addr < SDRAM_END) {
-		word_t in_sdram_addr = addr - SDRAM_BASE;
+    word_t in_sdram_addr = addr - SDRAM_BASE;
     char bank = (in_sdram_addr >> 10) & 0x3;
     short row = (in_sdram_addr >> 12) & 0x1fff;
     short col = (in_sdram_addr >> 1) & 0x1ff;
@@ -391,9 +398,10 @@ bool sim_read_vmem(word_t addr, word_t *data) {
     half1 = sdram_data[bank][row][col];
     half2 = sdram_data[bank][row][col + 1];
     *data = ((word_t)half2 << 16) | (word_t)half1;
-    spdlog::trace("sim_read_vmem addr={:08x} -> "
-                  "sdram[{:02x}][{:04x}][{:04x},{:04x}] = {:08x} (pc={:08x})",
-                  addr, bank, row, col, col + 1, *data, current_pc);
+    // spdlog::trace("sim_read_vmem addr={:08x} -> "
+    //               "sdram[{:02x}][{:04x}][{:04x},{:04x}] = {:08x}
+    //               (pc={:08x})", addr, bank, row, col, col + 1, *data,
+    //               current_pc);
   } else {
     // TODO: gen error
     _dpi_logger->error("sim_read_vmem addr={:08x} INVALID", addr);
@@ -415,11 +423,6 @@ void sim_step_inst() {
     cnt++;
     if (cnt >= MAYBE_DEADLOOP_THRESHOLD) {
       dbg_dump_recent_info();
-      // printf(ANSI_FG_YELLOW "[WARN] " ANSI_NONE);
-      // printf("simulation has stepped %zu cycles without pc change, maybe lock
-      // "
-      //        "happened\n",
-      //        cnt);
       spdlog::warn("simulation has stepped {} cycles without pc change, maybe "
                    "lock happened",
                    cnt);
@@ -431,7 +434,6 @@ void sim_step_inst() {
         }
         continue;
       } else {
-        // printf("sim exit\n");
         spdlog::info("sim exit due to possible deadloop");
         exit(1);
       }
@@ -521,8 +523,8 @@ void _init_dpi_logger() {
 
   auto console_lvl = spdlog::level::from_str(con_lvl_str);
   auto file_lvl = spdlog::level::from_str(file_lvl_str);
-  spdlog::info("DPI log lvl = {}, out file = {} lvl = {}", con_lvl_str,
-               out_file, file_lvl_str);
+  spdlog::info("DPI logger out console lvl {}, out file '{}' lvl {}",
+               con_lvl_str, out_file, file_lvl_str);
 
   static auto console_sink =
       std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
@@ -537,10 +539,29 @@ void _init_dpi_logger() {
 
   file_sink->set_level(file_lvl);
   auto dpi_sink_list = spdlog::sinks_init_list{dup_console, file_sink};
+
+#define _REG_DPI_FUNC_LOGGER(func)                                             \
+  do {                                                                         \
+    auto func_logger = std::make_shared<spdlog::logger>(#func, dpi_sink_list); \
+    auto lvl = sim_settings.TRACE_DPI_FLAG(func) ? spdlog::level::trace        \
+                                                 : spdlog::level::info;        \
+    spdlog::info("DPI func '{}' logger lvl {}", #func,                         \
+                 spdlog::level::to_string_view(lvl));                          \
+    func_logger->set_level(lvl);                                               \
+    func_logger->set_formatter(formatter->clone());                            \
+    spdlog::register_logger(func_logger);                                      \
+  } while (0)
+
+  _REG_DPI_FUNC_LOGGER(mrom_read);
+  _REG_DPI_FUNC_LOGGER(flash_read);
+  _REG_DPI_FUNC_LOGGER(psram_read);
+  _REG_DPI_FUNC_LOGGER(psram_write);
+  _REG_DPI_FUNC_LOGGER(sdram_read);
+  _REG_DPI_FUNC_LOGGER(sdram_write);
+
   _dpi_logger = std::make_shared<spdlog::logger>("DPI", dpi_sink_list);
   _dpi_logger->set_level(spdlog::level::trace);
   _dpi_logger->set_formatter(std::move(formatter));
-
   spdlog::register_logger(_dpi_logger);
 }
 
@@ -558,24 +579,22 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 
   load_img();
 
+  spdlog::set_level(spdlog::level::trace); // will modify all registered loggers
+
   _init_flash();
   _fill_rams_uninit();
   _init_dpi_logger(); // should before dbg_init(which may preload data with func
                       // call dpis)
 
-  spdlog::set_level(spdlog::level::trace);
-
   dbg_init(INITIAL_PC, img_size, img_file, setting);
 
-#if ENABLE_WAVE
-  if (setting.en_waveform) {
+  if (setting.en_wave) {
     Verilated::traceEverOn(true);
     tfp = std::shared_ptr<VerilatedFstC>(new VerilatedFstC,
                                          [](VerilatedFstC *p) { p->close(); });
     dut.trace(tfp.get(), 99);
     tfp->open(setting.wave_fst_file.c_str());
   }
-#endif
 
   reset(10);
 

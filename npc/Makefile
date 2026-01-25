@@ -22,7 +22,7 @@ VERILATOR_CFLAGS ?=
 ENABLE_VPI ?= 0
 ENABLE_NVBOARD ?= 0
 
-ENABLE_WAVE ?= 0
+# ENABLE_WAVE ?= 0
 
 # spdlog
 SPDLOG_PATH ?= /home/wuser/gitclones/spdlog
@@ -31,9 +31,9 @@ INC_PATH += $(abspath $(SPDLOG_PATH)/include)
 LDFLAGS += -L$(abspath $(SPDLOG_LIBPATH)) -lspdlog
 CXXFLAGS += -DSPDLOG_COMPILED_LIB
 
-ifeq ($(ENABLE_WAVE), 1)
+# ifeq ($(ENABLE_WAVE), 1)
 VERILATOR_CFLAGS += --trace-fst --trace-structs
-endif
+# endif
 
 ifeq ($(ENABLE_VPI), 1)
 VERILATOR_CFLAGS += --vpi
@@ -140,7 +140,7 @@ VERILATOR_CONTROL_FILE = verilator.vlt
 
 
 INCFLAGS = $(addprefix -I, $(INC_PATH))
-CXXFLAGS += $(INCFLAGS) -DTOP_NAME=V$(TOP_NAME) -DENABLE_VPI=$(ENABLE_VPI) -DENABLE_WAVE=$(ENABLE_WAVE)
+CXXFLAGS += $(INCFLAGS) -DTOP_NAME=V$(TOP_NAME) -DENABLE_VPI=$(ENABLE_VPI)# -DENABLE_WAVE=$(ENABLE_WAVE)
 CXXFLAGS += $(SAN_FLAGS) -std=c++20 -g # -fno-inline -O0
 
 # make link faster
@@ -193,7 +193,6 @@ sim: $(SIM_BIN)
 	@echo "=== ENV ==="
 	@echo "VSIM_OPT=$(VSIM_OPT)"
 	@echo "ENABLE_VPI=$(ENABLE_VPI)"
-	@echo "ENABLE_WAVE=$(ENABLE_WAVE)"
 	@echo "=== SIM BEGIN ==="
 	@LSAN_OPTIONS=suppressions=asan_suppress.txt $^ $(ARGS) $(SIM_IMG)
 
