@@ -223,14 +223,14 @@ extern "C" void psram_write(int32_t addr, char strb8, int32_t data, int32_t *) {
 constexpr uint32_t SDRAM_BASE = 0xa0000000u;
 constexpr uint32_t SDRAM_END = 0xb0000000u;
 
-uint16_t sdram_data[4][8192][512][2];
+uint16_t sdram_data[4][8192][512][4];
 
 extern "C" void sdram_read(char block, char bank, short row, short col,
                            short *data) {
   assert(bank >= 0 && bank < 4);
   assert(row >= 0 && row < 8192);
   assert(col >= 0 && col < 512);
-	assert(block == 0 || block == 1);
+	// assert(block == 0 || block == 1);
   *data = sdram_data[bank][row][col][block];
   DPI_TRACE("R bank={:02x} row={:04x} col={:04x} block={} data={:04x}", bank,
             row, col, (uint32_t)block, (uint16_t)*data);
@@ -240,7 +240,7 @@ extern "C" void sdram_write(char block,char bank, short row, short col, short da
   assert(bank >= 0 && bank < 4);
   assert(row >= 0 && row < 8192);
   assert(col >= 0 && col < 512);
-	assert(block == 0 || block == 1);
+	// assert(block == 0 || block == 1);
   // mask [0] = 0: write low byte
   // mask [1] = 0: write high byte
   if ((mask & 0x1) == 0) {
@@ -395,12 +395,14 @@ bool sim_read_vmem(word_t addr, word_t *data) {
     psram_read(addr - PSRAM_BASE, (int *)data);
   } else if (addr >= SDRAM_BASE && addr < SDRAM_END) {
     word_t in_sdram_addr = addr - SDRAM_BASE;
-    char bank = (in_sdram_addr >> 10) & 0x3;
-    short row = (in_sdram_addr >> 12) & 0x1fff;
+    char raw_bank = (in_sdram_addr >> 10) & 0x7;
+    short row = (in_sdram_addr >> 13) & 0x1fff;
     short col = (in_sdram_addr >> 1) & 0x1ff;
     uint16_t half1, half2;
-    half1 = sdram_data[bank][row][col][0];
-    half2 = sdram_data[bank][row][col][1];
+		char bank = raw_bank % 4;
+		char block_offset = (raw_bank & 0x4) ? 1 : 0;
+    half1 = sdram_data[bank][row][col][block_offset];
+    half2 = sdram_data[bank][row][col][block_offset + 1];
     *data = ((word_t)half2 << 16) | (word_t)half1;
     // spdlog::trace("sim_read_vmem addr={:08x} -> "
     //               "sdram[{:02x}][{:04x}][{:04x},{:04x}] = {:08x}
