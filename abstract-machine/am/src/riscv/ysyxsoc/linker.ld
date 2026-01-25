@@ -8,7 +8,8 @@ MEMORY {
 	psram : ORIGIN = 0x80000000, LENGTH = 4M
 	sdram : ORIGIN = 0xa0000000, LENGTH = 8M
 
-	runtime : ORIGIN = ORIGIN(psram), LENGTH = LENGTH(psram)
+	/* runtime : ORIGIN = ORIGIN(psram), LENGTH = LENGTH(psram) */
+	runtime : ORIGIN = ORIGIN(sdram), LENGTH = LENGTH(sdram)
 }
 
 SECTIONS {
