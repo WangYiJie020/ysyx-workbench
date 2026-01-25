@@ -2,7 +2,9 @@ AM_SRCS := riscv/ysyxsoc/start.S \
 					 riscv/ysyxsoc/trm.c \
            riscv/npc/ioe.c \
            riscv/npc/timer.c \
-           riscv/npc/input.c 
+           riscv/npc/input.c \
+           platform/dummy/vme.c \
+           platform/dummy/mpe.c
 
 CFLAGS    += -fdata-sections -ffunction-sections
 LDSCRIPTS += $(AM_HOME)/am/src/riscv/ysyxsoc/linker.ld
