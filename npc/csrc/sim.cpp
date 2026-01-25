@@ -390,8 +390,8 @@ bool sim_read_vmem(word_t addr, word_t *data) {
 		half1 = sdram_data[bank][row][col];
 		half2 = sdram_data[bank][row][col + 1];
 		*data = ((word_t)half2 << 16) | (word_t)half1;
-		spdlog::trace("sim_read_vmem addr={:08x} -> bank={:02x} row={:04x} col={:04x} data={:08x}",
-									addr, bank, row, col, *data);
+		spdlog::trace("sim_read_vmem addr={:08x} -> bank={:02x} row={:04x} col={:04x},{:04x} data={:08x}",
+									addr, bank, row, col,col+1, *data);
   } else {
     // TODO: gen error
 		_dpi_logger->error("sim_read_vmem addr={:08x} INVALID", addr);
