@@ -400,7 +400,7 @@ bool sim_read_vmem(word_t addr, word_t *data) {
     short col = (in_sdram_addr >> 1) & 0x1ff;
     uint16_t half1, half2;
     half1 = sdram_data[bank][row][col][0];
-    half2 = sdram_data[bank][row][col+1][0];
+    half2 = sdram_data[bank][row][col][1];
     *data = ((word_t)half2 << 16) | (word_t)half1;
     // spdlog::trace("sim_read_vmem addr={:08x} -> "
     //               "sdram[{:02x}][{:04x}][{:04x},{:04x}] = {:08x}
