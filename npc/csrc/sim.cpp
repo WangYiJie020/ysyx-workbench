@@ -395,12 +395,14 @@ bool sim_read_vmem(word_t addr, word_t *data) {
     psram_read(addr - PSRAM_BASE, (int *)data);
   } else if (addr >= SDRAM_BASE && addr < SDRAM_END) {
     word_t in_sdram_addr = addr - SDRAM_BASE;
-    char bank = (in_sdram_addr >> 10) & 0x7;
+    char raw_bank = (in_sdram_addr >> 10) & 0x7;
     short row = (in_sdram_addr >> 13) & 0x1fff;
     short col = (in_sdram_addr >> 1) & 0x1ff;
     uint16_t half1, half2;
-    half1 = sdram_data[bank][row][col][0];
-    half2 = sdram_data[bank][row][col][1];
+		char bank = raw_bank % 4;
+		char block_offset = (raw_bank & 0x4) ? 1 : 0;
+    half1 = sdram_data[bank][row][col][block_offset];
+    half2 = sdram_data[bank][row][col][block_offset + 1];
     *data = ((word_t)half2 << 16) | (word_t)half1;
     // spdlog::trace("sim_read_vmem addr={:08x} -> "
     //               "sdram[{:02x}][{:04x}][{:04x},{:04x}] = {:08x}
