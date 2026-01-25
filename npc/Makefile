@@ -193,7 +193,6 @@ sim: $(SIM_BIN)
 	@echo "=== ENV ==="
 	@echo "VSIM_OPT=$(VSIM_OPT)"
 	@echo "ENABLE_VPI=$(ENABLE_VPI)"
-	@echo "ENABLE_WAVE=$(ENABLE_WAVE)"
 	@echo "=== SIM BEGIN ==="
 	@LSAN_OPTIONS=suppressions=asan_suppress.txt $^ $(ARGS) $(SIM_IMG)
 
