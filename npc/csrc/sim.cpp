@@ -6,6 +6,7 @@
 #include <spdlog/sinks/dup_filter_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
+#include <spdlog/mdc.h>
 
 #include <cassert>
 #include <chrono>
@@ -63,11 +64,9 @@ public:
 static void _sim_eval() {
   dut.eval();
   sim_time++;
-#if ENABLE_WAVE
   if (tfp) {
     tfp->dump(sim_time);
   }
-#endif
 }
 
 void sim_step_cycle() {
@@ -117,14 +116,6 @@ void raise_ebreak(int a0) {
 
   is_good_trap = (a0 == 0);
 
-  // if (a0 == 0) {
-  // spdlog::info("{}HIT GOOD TRAP{}", fg_green, ansi_none);
-  //   is_good_trap = true;
-  // } else {
-  // spdlog::info("{}HIT BAD TRAP{} a0 = {}", fg_red, ansi_none, a0);
-  // }
-  // printf(" @pc = 0x%08x cyc %lu\n", current_pc, cycle_count);
-  //
   spdlog::info("{}HIT {} TRAP{} a0 = {} @pc = 0x{:08x} cyc {}",
                is_good_trap ? fg_green : fg_red, is_good_trap ? "GOOD" : "BAD",
                ansi_none, a0, current_pc, cycle_count);
@@ -145,6 +136,7 @@ constexpr uint32_t MROM_BASE = 0x20000000u;
 constexpr uint32_t MROM_END = 0x20010000u;
 word_t mrom_data[(MROM_END - MROM_BASE) / 4];
 extern "C" void mrom_read(int32_t addr, int32_t *data) {
+	spdlog::mdc::put("testkey", "testvalue");
   if (addr < MROM_BASE) {
     _dpi_logger->error("addr={:08x} ERROR BELOW MROM_BASE", sim_time, addr);
   }
@@ -415,11 +407,6 @@ void sim_step_inst() {
     cnt++;
     if (cnt >= MAYBE_DEADLOOP_THRESHOLD) {
       dbg_dump_recent_info();
-      // printf(ANSI_FG_YELLOW "[WARN] " ANSI_NONE);
-      // printf("simulation has stepped %zu cycles without pc change, maybe lock
-      // "
-      //        "happened\n",
-      //        cnt);
       spdlog::warn("simulation has stepped {} cycles without pc change, maybe "
                    "lock happened",
                    cnt);
@@ -431,7 +418,6 @@ void sim_step_inst() {
         }
         continue;
       } else {
-        // printf("sim exit\n");
         spdlog::info("sim exit due to possible deadloop");
         exit(1);
       }
@@ -567,15 +553,13 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 
   dbg_init(INITIAL_PC, img_size, img_file, setting);
 
-#if ENABLE_WAVE
-  if (setting.en_waveform) {
+  if (setting.en_wave) {
     Verilated::traceEverOn(true);
     tfp = std::shared_ptr<VerilatedFstC>(new VerilatedFstC,
                                          [](VerilatedFstC *p) { p->close(); });
     dut.trace(tfp.get(), 99);
     tfp->open(setting.wave_fst_file.c_str());
   }
-#endif
 
   reset(10);
 

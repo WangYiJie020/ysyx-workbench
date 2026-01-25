@@ -22,6 +22,7 @@ static void _Get(std::string &field, const char *env_p) {
   } while (0)
 
 void load_sim_setting_from_env(sim_setting &setting) {
+	GET(en_wave);
   GET(en_inst_trace);
   GET(showdisasm);
   GET(always_showdisasm);

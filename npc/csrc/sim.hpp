@@ -33,7 +33,7 @@ struct sim_setting {
 
   cycle_end_callback_t cycle_finish_cb = nullptr;
 
-  bool en_waveform = true;
+  bool en_wave = true;
 
   std::string wave_fst_file = "build/wave.fst";
 };
