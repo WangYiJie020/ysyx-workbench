@@ -56,5 +56,4 @@ typedef volatile_u32ptr dev_reg32_ptr;
 #define GPIO_SWITCH _GPIO_R(1)
 #define GPIO_SEG    _GPIO_R(2)
 
-
 #endif // __DEV_REG_H__
