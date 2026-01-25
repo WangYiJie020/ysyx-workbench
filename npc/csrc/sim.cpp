@@ -175,6 +175,7 @@ extern "C" void flash_read(int32_t addr, int32_t *data) {
   addr &= ~0x3;
   uintptr_t ptr = (uintptr_t)flash_data + addr;
   *data = *(int32_t *)ptr;
+	DPI_TRACE("R addr={:08x} data={:08x}", addr + FLASH_BASE, *data);
   // _dpi_logger->trace("flash_read addr={:08x} data={:08x}", addr + FLASH_BASE,
   // (uint32_t)*data);
 }
@@ -189,6 +190,7 @@ extern "C" void psram_read(int32_t addr, int32_t *data) {
   addr &= ~0x3;
   uintptr_t ptr = (uintptr_t)psram_data + addr;
   *data = *(int32_t *)ptr;
+	DPI_TRACE("R addr={:08x} data={:08x}", addr + PSRAM_BASE, *data);
   // printf("[DPI] psram_read addr=%08x data=%08x\n", addr + PSRAM_BASE, *data);
 }
 extern "C" void psram_write(int32_t addr, char strb8, int32_t data, int32_t *) {
@@ -212,6 +214,8 @@ extern "C" void psram_write(int32_t addr, char strb8, int32_t data, int32_t *) {
   *ptr &= ~shMask;
   *ptr |= (shData & shMask);
 
+	DPI_TRACE("W addr={:08x} data={:08x} (strb {:02x}) newdata={:08x}",
+						addr + PSRAM_BASE, data, (uint32_t)strb8, *ptr);
   // printf("[DPI] psram_write addr=%08x data=%08x (strb %X)\n", addr +
   // PSRAM_BASE, data, (uint32_t)strb8);
 }
@@ -226,9 +230,6 @@ extern "C" void sdram_read(char bank, short row, short col, short *data) {
   assert(row >= 0 && row < 8192);
   assert(col >= 0 && col < 512);
   *data = sdram_data[bank][row][col];
-  // _dpi_logger->trace("sdram_read bank={:02x} row={:04x} col={:04x}
-  // data={:04x}",
-  //                    bank, row, col, (uint16_t)*data);
   DPI_TRACE("R bank={:02x} row={:04x} col={:04x} data={:04x}", bank, row, col,
             (uint16_t)*data);
 }
@@ -522,8 +523,8 @@ void _init_dpi_logger() {
 
   auto console_lvl = spdlog::level::from_str(con_lvl_str);
   auto file_lvl = spdlog::level::from_str(file_lvl_str);
-  spdlog::info("DPI log lvl = {}, out file = {} lvl = {}", con_lvl_str,
-               out_file, file_lvl_str);
+  spdlog::info("DPI logger out console lvl {}, out file '{}' lvl {}",
+               con_lvl_str, out_file, file_lvl_str);
 
   static auto console_sink =
       std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
@@ -544,7 +545,7 @@ void _init_dpi_logger() {
     auto func_logger = std::make_shared<spdlog::logger>(#func, dpi_sink_list); \
     auto lvl = sim_settings.TRACE_DPI_FLAG(func) ? spdlog::level::trace        \
                                                  : spdlog::level::info;        \
-    spdlog::info("DPI func logger '{}' level set to {}", #func,                \
+    spdlog::info("DPI func '{}' logger lvl {}", #func,                         \
                  spdlog::level::to_string_view(lvl));                          \
     func_logger->set_level(lvl);                                               \
     func_logger->set_formatter(formatter->clone());                            \
@@ -584,7 +585,6 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   _fill_rams_uninit();
   _init_dpi_logger(); // should before dbg_init(which may preload data with func
                       // call dpis)
-
 
   dbg_init(INITIAL_PC, img_size, img_file, setting);
 
