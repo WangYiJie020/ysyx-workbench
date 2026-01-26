@@ -32,5 +32,6 @@ class CLINTUnit extends Module {
   mtime := mtime + 1.U
 
   sio.rresp := AXI4IO.RResp.OKAY
-  sio.rdata := Mux(sio.araddr === 0x10000048.U, mtime(31, 0), Mux(sio.araddr === 0x1000004c.U, mtime(63, 32), 0.U))
+  // h02000000-h0200ffff
+  sio.rdata := Mux(sio.araddr === 0x02000048.U, mtime(31, 0), Mux(sio.araddr === 0x0200004c.U, mtime(63, 32), 0.U))
 }

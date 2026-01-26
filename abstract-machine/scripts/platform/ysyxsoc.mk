@@ -1,10 +1,15 @@
 AM_SRCS := riscv/ysyxsoc/start.S \
 					 riscv/ysyxsoc/trm.c \
            riscv/ysyxsoc/ioe.c \
-           riscv/npc/timer.c \
+           riscv/ysyxsoc/gpu.c \
            riscv/ysyxsoc/input.c \
+           riscv/ysyxsoc/timer.c \
            platform/dummy/vme.c \
            platform/dummy/mpe.c
+
+ifeq ($(SKIP_BSS_CLEAR), 1)
+CFLAGS += -DSKIP_BSS_CLEAR
+endif
 
 CFLAGS    += -fdata-sections -ffunction-sections
 LDSCRIPTS += $(AM_HOME)/am/src/riscv/ysyxsoc/linker.ld

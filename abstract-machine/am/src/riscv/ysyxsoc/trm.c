@@ -52,19 +52,19 @@ FSBL_TEXT void init_serial() {
 void putch(char ch) {
   while (!IS_UART_TRANSMIT_EMPTY()) {
   }
-	*UART_TX = ch;
+  *UART_TX = ch;
 }
 char try_getch() {
-	if (IS_UART_RECEIVE_READY()) {
-		return *UART_RX;
-	} else {
-		return 0xff;
-	}
+  if (IS_UART_RECEIVE_READY()) {
+    return *UART_RX;
+  } else {
+    return 0xff;
+  }
 }
 char getch() {
-	while (!IS_UART_RECEIVE_READY()) {
-	}
-	return *UART_RX;
+  while (!IS_UART_RECEIVE_READY()) {
+  }
+  return *UART_RX;
 }
 
 void halt(int code) {
@@ -148,13 +148,42 @@ FSBL_TEXT static inline const char *_rodata_loadpos(const char *ptr) {
     }                                                                          \
   } while (0)
 
-SSBL_TEXT void _ssbl_clear(void *dst, size_t n) {
+SSBL_TEXT void _ssbl_clear_word_aligned(void *dst, size_t n) {
   assert(IS_4BYTE_ALIGNED(dst));
   assert(IS_4BYTE_ALIGNED(n));
   size_t wn = n / 4;
   uint32_t *d = (uint32_t *)dst;
   for (size_t i = 0; i < wn; i++) {
     d[i] = 0;
+  }
+}
+
+SSBL_TEXT void _ssbl_clear(void *dst, size_t n) {
+	if(n==0) return;
+  uintptr_t dptr = (uintptr_t)dst;
+  // if (dptr & 0x3) {
+  //   uint8_t* byte_pre = (uint8_t *)dptr;
+		// size_t pre_bytes = 4 - (dptr & 0x3);
+		// putnum_base16(pre_bytes);
+		// putch('\n');
+		// putnum_base16(n);
+		// putch('\n');
+		// assert(n >= pre_bytes);
+		// for (size_t i = 0; i < pre_bytes; i++) {
+		// 	byte_pre[i] = 0;
+		// }
+		// dptr += pre_bytes;
+		// n -= pre_bytes;
+  // }
+	assert(IS_4BYTE_ALIGNED(dptr));
+  size_t aligned_n = n & (~0x3);
+  _ssbl_clear_word_aligned((void *)dptr, aligned_n);
+  size_t remaining = n - aligned_n;
+  if (remaining) {
+    uint8_t *byte_dst = (uint8_t *)(dptr + aligned_n);
+    for (size_t i = 0; i < remaining; i++) {
+      byte_dst[i] = 0;
+    }
   }
 }
 
@@ -189,6 +218,7 @@ FSBL_TEXT void _trm_init() {
   _second_boot();
 }
 
+
 SSBL_TEXT void _second_boot() {
   _ssbl_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
   boot_log(".rodata copied.\n");
@@ -201,19 +231,26 @@ SSBL_TEXT void _second_boot() {
   boot_log(".text copied.\n");
   _ssbl_memcpy(_data_start, __data_load_start__, (size_t)__data_size__);
   boot_log(".data copied.\n");
+
+
+#ifndef SKIP_BSS_CLEAR
   _ssbl_clear(_bss_start, (size_t)__bss_size__);
   boot_log(".bss cleared.\n");
+  if ((size_t)__bss_extra_size__) {
+    boot_log("clearing .bss.extra...\n");
+    _ssbl_clear(_bss_extra_start, (size_t)__bss_extra_size__);
+    boot_log(".bss.extra cleared.\n");
+  }
+#else
+	boot_log(" skipping .bss clear\n");
+  boot_log(" skipping .bss.extra clear\n");
+#endif
+
   if ((size_t)__data_extra_size__) {
     boot_log("copying .data.extra...\n");
     _ssbl_memcpy(_data_extra_start, __data_extra_load_start__,
                  (size_t)__data_extra_size__);
     boot_log(".data.extra copied.\n");
-  }
-  if ((size_t)__bss_extra_size__) {
-    boot_log("clearing .bss.extra...\n");
-    // boot_log(" skipping .bss.extra clear");
-    _ssbl_clear(_bss_extra_start, (size_t)__bss_extra_size__);
-    boot_log(".bss.extra cleared.\n");
   }
 
   boot_log("checking memory regions...\n");

@@ -4,7 +4,7 @@ TOP_NAME = ysyxSoCFull
 #ysyx_25100261
 
 SIM_CSRC_DIR = ./csrc
-VSIM_OPT?= -O0
+VSIM_OPT?= -O3
 SIM_BIN_DIR = $(BUILD_DIR)/bin
 SIM_BIN = $(SIM_BIN_DIR)/$(TOP_NAME)$(VSIM_OPT)
 
@@ -18,11 +18,16 @@ SOC_HOME ?= ../ysyxSoC
 
 SAN_FLAGS?= -fsanitize=address
 
-VERILATOR_CFLAGS ?=
+VERILATOR_FLAGS ?=
 ENABLE_VPI ?= 0
 ENABLE_NVBOARD ?= 1
 
 # ENABLE_WAVE ?= 0
+
+SKIP_BSS_CLEAR ?= 1
+ifeq ($(SKIP_BSS_CLEAR), 1)
+CXXFLAGS += -D_TRM_SKIP_BSS_CLEAR
+endif
 
 # spdlog
 SPDLOG_PATH ?= /home/wuser/gitclones/spdlog
@@ -32,11 +37,11 @@ LDFLAGS += -L$(abspath $(SPDLOG_LIBPATH)) -lspdlog
 CXXFLAGS += -DSPDLOG_COMPILED_LIB
 
 # ifeq ($(ENABLE_WAVE), 1)
-VERILATOR_CFLAGS += --trace-fst --trace-structs
+VERILATOR_FLAGS += --trace-fst --trace-structs
 # endif
 
 ifeq ($(ENABLE_VPI), 1)
-VERILATOR_CFLAGS += --vpi
+VERILATOR_FLAGS += --vpi
 endif
 
 # Chisel
@@ -120,18 +125,18 @@ SIM_VSRCS += $(SOC_PERIP_VSRCS)
 VERILATOR_INCDIRS += $(abspath $(SOC_HOME)/perip/uart16550/rtl)
 VERILATOR_INCDIRS += $(abspath $(SOC_HOME)/perip/spi/rtl)
 
-VERILATOR_CFLAGS += --timescale "1ns/1ns" --no-timing 
-VERILATOR_CFLAGS += -Wno-SYMRSVDWORD # make uart verilog happy
-# VERILATOR_CFLAGS += -Wno-UNOPTFLAT
+VERILATOR_FLAGS += --timescale "1ns/1ns" --no-timing 
+VERILATOR_FLAGS += -Wno-SYMRSVDWORD # make uart verilog happy
+# VERILATOR_FLAGS += -Wno-UNOPTFLAT
 # rules for verilator
 
-VERILATOR_CFLAGS += -MMD -cc \
+VERILATOR_FLAGS += -MMD -cc \
 										--x-assign fast --x-initial fast \
 										--autoflush \
 										--compiler clang \
 										$(addprefix -I,$(VERILATOR_INCDIRS)) \
 
-VERILATOR_CFLAGS += --hierarchical
+VERILATOR_FLAGS += --hierarchical
 										# --output-split 20000 
 
 VERILATOR_CONTROL_FILE = verilator.vlt
@@ -149,7 +154,7 @@ LDFLAGS += -fuse-ld=mold
 
 $(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) $(CHISEL2V_DONE) $(VPI_DONE) $(SIM_HEADERS) $(VERILATOR_CONTROL_FILE)
 	@rm -rf $(V2CXX_EMIT_DIR)
-	@$(VERILATOR) $(VERILATOR_CFLAGS) \
+	@$(VERILATOR) $(VERILATOR_FLAGS) \
 		$(SIM_CSRCS) $(NVBOARD_ARCHIVE) \
 		--top-module $(TOP_NAME) $(VERILATOR_CONTROL_FILE) $(SIM_VSRCS) \
 		$(addprefix -CFLAGS , $(CXXFLAGS)) \
