@@ -36,15 +36,15 @@ void __am_gpu_config(AM_GPU_CONFIG_T *cfg) {
                            .vmemsz = 0};
 }
 void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl) {
-	return;
+#define ADDR_ONE_ROW_OFFSET 1024
 
   uint32_t *row_beg = fb_as_u32 + ctl->y * gpu_w + ctl->x;
-  uint32_t *row_end = row_beg + ctl->h * gpu_w;
+  uint32_t *row_end = row_beg + ctl->h * ADDR_ONE_ROW_OFFSET;
   uint32_t *pix = ctl->pixels;
   while (row_beg != row_end) {
     memcpy(row_beg, pix, ctl->w * sizeof(uint32_t));
     pix += ctl->w;
-    row_beg += 256; 
+    row_beg += ADDR_ONE_ROW_OFFSET;
   }
   if (ctl->sync) {
     // 由于NVBoard提供的VGA机制是自动刷新的, 因此无需实现AM中的画面同步功能
