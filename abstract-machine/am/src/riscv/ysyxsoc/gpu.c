@@ -8,14 +8,20 @@
 
 static uint16_t gpu_w, gpu_h;
 
+// addr bit [1:0] are ignored
+// bit [19:10] are y
+// bit [9:2] are x
+#define AT_FB_ADDR(x, y) (fb_as_u32 + (((y)<<10)|((x)<<2)))
+
 void __am_gpu_init() {
   gpu_w = io_read(AM_GPU_CONFIG).width;
   gpu_h = io_read(AM_GPU_CONFIG).height;
 
-  uint32_t *fb = fb_as_u32;
-
-  for (int i = 0; i < gpu_w * gpu_h; i++)
-    fb[i] = i;
+	for(int y=0;y<gpu_h;y++) {
+		for(int x=0;x<gpu_w;x++) {
+			AT_FB_ADDR(x,y)[0] = y*gpu_w + x;
+		}
+	}
 }
 
 void __am_gpu_config(AM_GPU_CONFIG_T *cfg) {
