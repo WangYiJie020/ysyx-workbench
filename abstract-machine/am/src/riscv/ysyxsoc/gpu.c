@@ -19,9 +19,9 @@ void __am_gpu_init() {
   gpu_h = io_read(AM_GPU_CONFIG).height;
 
 	for(int y=0;y<gpu_h;y++) {
-		printf("init line %d\n", y);
+		// printf("init line %d\n", y);
 		for(int x=0;x<gpu_w;x++) {
-			AT_FB_ADDR(x,y)[0] = 0x00ff0000;
+			AT_FB_ADDR(x,y)[0] = x<320?0x00ff0000:0x0000ff00;
 		}
 	}
 }
