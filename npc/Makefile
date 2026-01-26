@@ -24,7 +24,10 @@ ENABLE_NVBOARD ?= 1
 
 # ENABLE_WAVE ?= 0
 
+SKIP_BSS_CLEAR ?= 1
+ifeq ($(SKIP_BSS_CLEAR), 1)
 CXXFLAGS += -D_TRM_SKIP_BSS_CLEAR
+endif
 
 # spdlog
 SPDLOG_PATH ?= /home/wuser/gitclones/spdlog

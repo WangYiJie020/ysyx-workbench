@@ -7,6 +7,10 @@ AM_SRCS := riscv/ysyxsoc/start.S \
            platform/dummy/vme.c \
            platform/dummy/mpe.c
 
+ifeq ($(SKIP_BSS_CLEAR), 1)
+CFLAGS += -DSKIP_BSS_CLEAR
+endif
+
 CFLAGS    += -fdata-sections -ffunction-sections
 LDSCRIPTS += $(AM_HOME)/am/src/riscv/ysyxsoc/linker.ld
 LDFLAGS	  += --defsym=_pmem_start=0x20000000

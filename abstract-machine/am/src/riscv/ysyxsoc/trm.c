@@ -232,7 +232,7 @@ SSBL_TEXT void _second_boot() {
   _ssbl_memcpy(_data_start, __data_load_start__, (size_t)__data_size__);
   boot_log(".data copied.\n");
 
-#ifndef _TRM_SKIP_BSS_CLEAR
+#ifndef SKIP_BSS_CLEAR
   _ssbl_clear(_bss_start, (size_t)__bss_size__);
   boot_log(".bss cleared.\n");
   if ((size_t)__bss_extra_size__) {
