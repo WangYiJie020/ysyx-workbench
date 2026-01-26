@@ -3,7 +3,7 @@ AM_SRCS := riscv/ysyxsoc/start.S \
            riscv/ysyxsoc/ioe.c \
            riscv/ysyxsoc/gpu.c \
            riscv/ysyxsoc/input.c \
-           riscv/npc/timer.c \
+           riscv/ysyxsoc/timer.c \
            platform/dummy/vme.c \
            platform/dummy/mpe.c
 
