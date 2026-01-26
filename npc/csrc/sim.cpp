@@ -610,15 +610,9 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 
   if (batch_mode && !setting.no_batch) {
     dbg_exec("c");
-#ifdef ENABLE_NVBOARD
-		nvboard_quit();
-#endif
     return dbg_is_hitbadtrap() ? 1 : 0;
   }
 
-#ifdef ENABLE_NVBOARD
-		nvboard_quit();
-#endif
   return 0;
 }
 
