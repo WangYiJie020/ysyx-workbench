@@ -20,7 +20,7 @@ void __am_gpu_init() {
 
 	for(int y=0;y<gpu_h;y++) {
 		for(int x=0;x<gpu_w;x++) {
-			AT_FB_ADDR(x,y)[0] = y*gpu_w + x;
+			AT_FB_ADDR(x,y)[0] = 0x00ff0000;
 		}
 	}
 }
