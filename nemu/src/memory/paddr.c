@@ -34,6 +34,11 @@ static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 // #define SDRAM_BASE 0xa0000000u
 // #define SDRAM_END 0xb0000000u
 
+// NEMU device is conflicted with SDRAM
+#define NEMU_DEVICE_BASE 0xa0000000u
+#define NEMU_DEVICE_END 0xb0000000u
+
+// dummy SDRAM region
 #define SDRAM_BASE 0xc0000000u
 #define SDRAM_END 0xd0000000u
 
@@ -71,6 +76,8 @@ uint8_t *guest_to_host(paddr_t paddr) {
 			return NULL;
 		}
 	  return sdram + paddr - SDRAM_BASE;
+	} else if (NEMU_DEVICE_BASE <= paddr && paddr < NEMU_DEVICE_END) {
+		return NULL;
 	}
 	printf("Failed to translate guest to host address: " FMT_PADDR, paddr);
   return NULL;
@@ -87,7 +94,7 @@ paddr_t host_to_guest(uint8_t *haddr) {
 	} else if (haddr >= sdram && haddr < sdram + sizeof(sdram)) {
 		return haddr - sdram + SDRAM_BASE;
 	}
-	// printf("Failed to translate host to guest address: %p", haddr);
+	printf("Failed to translate host to guest address: %p", haddr);
 	return 0;
 }
 
