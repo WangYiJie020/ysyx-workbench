@@ -18,12 +18,12 @@ void __am_gpu_init() {
   gpu_w = io_read(AM_GPU_CONFIG).width;
   gpu_h = io_read(AM_GPU_CONFIG).height;
 
-	for(int y=0;y<gpu_h;y++) {
-		// printf("init line %d\n", y);
-		for(int x=0;x<gpu_w;x++) {
-			AT_FB_ADDR(x,y)[0] = x<320?0x00ff0000:0x0000ff00;
-		}
-	}
+	// for(int y=0;y<gpu_h;y++) {
+	// 	// printf("init line %d\n", y);
+	// 	for(int x=0;x<gpu_w;x++) {
+	// 		AT_FB_ADDR(x,y)[0] = x<320?0x00ff0000:0x0000ff00;
+	// 	}
+	// }
 }
 
 void __am_gpu_config(AM_GPU_CONFIG_T *cfg) {
@@ -44,7 +44,7 @@ void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl) {
   while (row_beg != row_end) {
     memcpy(row_beg, pix, ctl->w * sizeof(uint32_t));
     pix += ctl->w;
-    row_beg += gpu_w;
+    row_beg += 256; 
   }
   if (ctl->sync) {
     // 由于NVBoard提供的VGA机制是自动刷新的, 因此无需实现AM中的画面同步功能
