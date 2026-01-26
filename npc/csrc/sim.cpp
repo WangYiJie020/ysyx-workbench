@@ -616,6 +616,9 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
     return dbg_is_hitbadtrap() ? 1 : 0;
   }
 
+#ifdef ENABLE_NVBOARD
+		nvboard_quit();
+#endif
   return 0;
 }
 
