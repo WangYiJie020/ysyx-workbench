@@ -163,6 +163,10 @@ SSBL_TEXT void _ssbl_clear(void *dst, size_t n) {
   if (dptr & 0x3) {
     uint8_t* byte_pre = (uint8_t *)dptr;
 		size_t pre_bytes = 4 - (dptr & 0x3);
+		putnum_base16(pre_bytes);
+		putch('\n');
+		putnum_base16(n);
+		putch('\n');
 		assert(n >= pre_bytes);
 		for (size_t i = 0; i < pre_bytes; i++) {
 			byte_pre[i] = 0;
