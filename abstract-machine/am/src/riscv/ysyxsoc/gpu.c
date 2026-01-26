@@ -19,10 +19,10 @@ void __am_gpu_init() {
 }
 
 void __am_gpu_config(AM_GPU_CONFIG_T *cfg) {
-  // gpu_h = 480;
-  // gpu_w = 640;
-	gpu_h = 525;
-	gpu_w = 800;
+  gpu_h = 480;
+  gpu_w = 640;
+	// gpu_h = 525;
+	// gpu_w = 800;
   *cfg = (AM_GPU_CONFIG_T){.present = true,
                            .has_accel = false,
                            .width = gpu_w,
@@ -30,7 +30,7 @@ void __am_gpu_config(AM_GPU_CONFIG_T *cfg) {
                            .vmemsz = 0};
 }
 void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl) {
-	return;
+	// return;
 
   uint32_t *row_beg = fb_as_u32 + ctl->y * gpu_w + ctl->x;
   uint32_t *row_end = row_beg + ctl->h * gpu_w;
