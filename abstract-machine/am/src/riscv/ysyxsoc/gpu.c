@@ -42,7 +42,10 @@ void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl) {
   uint32_t *row_end = row_beg + ctl->h * ADDR_ONE_ROW_OFFSET;
   uint32_t *pix = ctl->pixels;
   while (row_beg != row_end) {
-    memcpy(row_beg, pix, ctl->w * sizeof(uint32_t));
+    // memcpy(row_beg, pix, ctl->w * sizeof(uint32_t));
+		for (int i = 0; i < ctl->w; i++) {
+			row_beg[i] = pix[i];
+		}
     pix += ctl->w;
     row_beg += ADDR_ONE_ROW_OFFSET;
   }
