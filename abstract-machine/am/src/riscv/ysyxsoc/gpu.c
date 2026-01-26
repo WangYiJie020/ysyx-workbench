@@ -38,7 +38,7 @@ void __am_gpu_config(AM_GPU_CONFIG_T *cfg) {
 void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl) {
 #define ADDR_ONE_ROW_OFFSET 1024
 
-  uint32_t *row_beg = fb_as_u32 + ctl->y * gpu_w + ctl->x;
+  uint32_t *row_beg = fb_as_u32 + ctl->y * ADDR_ONE_ROW_OFFSET + ctl->x;
   uint32_t *row_end = row_beg + ctl->h * ADDR_ONE_ROW_OFFSET;
   uint32_t *pix = ctl->pixels;
   while (row_beg != row_end) {
