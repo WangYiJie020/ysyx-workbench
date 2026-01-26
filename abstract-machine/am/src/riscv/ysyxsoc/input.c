@@ -1,6 +1,7 @@
 #include "soc_devreg.h"
 #include "ps2keys.h"
 #include <am.h>
+#include <stdint.h>
 
 void __am_input_uart(AM_UART_RX_T *uart) {
   if (IS_UART_RECEIVE_READY())
@@ -15,6 +16,14 @@ static const int _ps2amkey_lut[512] = {
 	AM_KEYS(_GEN_LUT_ITEM)
 };
 
+static inline uint8_t _wait_code(){
+	uint8_t code;
+	do{
+		code = *PS2_KEYINPUT;
+	}while(code == 0);
+	return code;
+}
+
 void __am_input_keybrd(AM_INPUT_KEYBRD_T *kbd) {
   uint8_t code = *PS2_KEYINPUT;
   if (code == 0) {
@@ -27,12 +36,13 @@ void __am_input_keybrd(AM_INPUT_KEYBRD_T *kbd) {
   // extended key
   if (code == 0xe0) {
 		is_extended = true;
-		code = *PS2_KEYINPUT;
+		code = _wait_code();
   }
+
   // key release
   if (code == 0xf0) {
 		is_release = true;
-		code = *PS2_KEYINPUT;
+		code = _wait_code();
   }
 	kbd->keydown = !is_release;
 	kbd->keycode = _ps2amkey_lut[is_extended ? (code + 256) : code];
