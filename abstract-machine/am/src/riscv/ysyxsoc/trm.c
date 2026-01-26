@@ -94,8 +94,6 @@ void print_csr() {
   putch('\n');
 }
 
-extern char __is_runtime_on_flash__[];
-
 extern char _text_start[];
 extern char _rodata_start[];
 extern char _data_start[];
@@ -220,6 +218,7 @@ FSBL_TEXT void _trm_init() {
   _second_boot();
 }
 
+
 SSBL_TEXT void _second_boot() {
   _ssbl_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
   boot_log(".rodata copied.\n");
@@ -232,19 +231,25 @@ SSBL_TEXT void _second_boot() {
   boot_log(".text copied.\n");
   _ssbl_memcpy(_data_start, __data_load_start__, (size_t)__data_size__);
   boot_log(".data copied.\n");
+
+#ifndef _TRM_SKIP_BSS_CLEAR
   _ssbl_clear(_bss_start, (size_t)__bss_size__);
   boot_log(".bss cleared.\n");
+  if ((size_t)__bss_extra_size__) {
+    boot_log("clearing .bss.extra...\n");
+    _ssbl_clear(_bss_extra_start, (size_t)__bss_extra_size__);
+    boot_log(".bss.extra cleared.\n");
+  }
+#else
+	boot_log(" skipping .bss clear\n");
+  boot_log(" skipping .bss.extra clear\n");
+#endif
+
   if ((size_t)__data_extra_size__) {
     boot_log("copying .data.extra...\n");
     _ssbl_memcpy(_data_extra_start, __data_extra_load_start__,
                  (size_t)__data_extra_size__);
     boot_log(".data.extra copied.\n");
-  }
-  if ((size_t)__bss_extra_size__) {
-    boot_log("clearing .bss.extra...\n");
-    // boot_log(" skipping .bss.extra clear");
-    _ssbl_clear(_bss_extra_start, (size_t)__bss_extra_size__);
-    boot_log(".bss.extra cleared.\n");
   }
 
   boot_log("checking memory regions...\n");

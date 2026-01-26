@@ -486,8 +486,13 @@ static long load_img() {
 
 static void _init_flash() { memcpy(flash_data, img, img_size); }
 static void _fill_rams_uninit() {
+#ifdef _TRM_SKIP_BSS_CLEAR
+  memset(psram_data, 0, sizeof(psram_data));
+  memset(sdram_data, 0, sizeof(sdram_data));
+#else
   memset(psram_data, 0xcc, sizeof(psram_data));
   memset(sdram_data, 0xdd, sizeof(sdram_data));
+#endif
 }
 
 // ARG

@@ -24,6 +24,8 @@ ENABLE_NVBOARD ?= 1
 
 # ENABLE_WAVE ?= 0
 
+CXXFLAGS += -D_TRM_SKIP_BSS_CLEAR
+
 # spdlog
 SPDLOG_PATH ?= /home/wuser/gitclones/spdlog
 SPDLOG_LIBPATH ?= $(SPDLOG_PATH)/build
