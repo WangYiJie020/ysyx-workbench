@@ -94,6 +94,8 @@ void print_csr() {
   putch('\n');
 }
 
+extern char __is_runtime_on_flash__[];
+
 extern char _text_start[];
 extern char _rodata_start[];
 extern char _data_start[];
