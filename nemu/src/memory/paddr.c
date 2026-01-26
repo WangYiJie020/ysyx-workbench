@@ -87,7 +87,7 @@ paddr_t host_to_guest(uint8_t *haddr) {
 	} else if (haddr >= sdram && haddr < sdram + sizeof(sdram)) {
 		return haddr - sdram + SDRAM_BASE;
 	}
-	printf("Failed to translate host to guest address: %p", haddr);
+	// printf("Failed to translate host to guest address: %p", haddr);
 	return 0;
 }
 
