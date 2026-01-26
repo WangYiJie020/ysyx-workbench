@@ -610,7 +610,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 		spdlog::info("wave enabled, output file: {}", setting.wave_fst_file);
   }
 
-  reset(10);
+  reset(16);
 
 	spdlog::info("sim reset done, entering {} mode",
 							 batch_mode ? "batch" : "interactive");
