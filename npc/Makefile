@@ -16,7 +16,8 @@ SIM_IMG ?=
 
 SOC_HOME ?= ../ysyxSoC
 
-SAN_FLAGS?= -fsanitize=address
+SAN_FLAGS?=
+# SAN_FLAGS?= -fsanitize=address
 
 VERILATOR_FLAGS ?=
 ENABLE_VPI ?= 0
