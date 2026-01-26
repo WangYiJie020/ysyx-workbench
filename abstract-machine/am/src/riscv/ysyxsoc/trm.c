@@ -52,19 +52,19 @@ FSBL_TEXT void init_serial() {
 void putch(char ch) {
   while (!IS_UART_TRANSMIT_EMPTY()) {
   }
-	*UART_TX = ch;
+  *UART_TX = ch;
 }
 char try_getch() {
-	if (IS_UART_RECEIVE_READY()) {
-		return *UART_RX;
-	} else {
-		return 0xff;
-	}
+  if (IS_UART_RECEIVE_READY()) {
+    return *UART_RX;
+  } else {
+    return 0xff;
+  }
 }
 char getch() {
-	while (!IS_UART_RECEIVE_READY()) {
-	}
-	return *UART_RX;
+  while (!IS_UART_RECEIVE_READY()) {
+  }
+  return *UART_RX;
 }
 
 void halt(int code) {
@@ -148,18 +148,38 @@ FSBL_TEXT static inline const char *_rodata_loadpos(const char *ptr) {
     }                                                                          \
   } while (0)
 
-SSBL_TEXT void _ssbl_clear(void *dst, size_t n) {
+SSBL_TEXT void _ssbl_clear_word_aligned(void *dst, size_t n) {
   assert(IS_4BYTE_ALIGNED(dst));
+  assert(IS_4BYTE_ALIGNED(n));
   size_t wn = n / 4;
   uint32_t *d = (uint32_t *)dst;
   for (size_t i = 0; i < wn; i++) {
     d[i] = 0;
   }
-	uint8_t* db = (uint8_t *)dst;
-	size_t nb = n & 0x3;
-	for (size_t i = 0; i < nb; i++) {
-		db[wn * 4 + i] = 0;
-	}
+}
+
+SSBL_TEXT void _ssbl_clear(void *dst, size_t n) {
+  uintptr_t dptr = (uintptr_t)dst;
+  if (dptr & 0x3) {
+    uint8_t* byte_pre = (uint8_t *)dptr;
+		size_t pre_bytes = 4 - (dptr & 0x3);
+		assert(n >= pre_bytes);
+		for (size_t i = 0; i < pre_bytes; i++) {
+			byte_pre[i] = 0;
+		}
+		dptr += pre_bytes;
+		n -= pre_bytes;
+  }
+	assert(IS_4BYTE_ALIGNED(dptr));
+  size_t aligned_n = n & (~0x3);
+  _ssbl_clear_word_aligned((void *)dptr, aligned_n);
+  size_t remaining = n - aligned_n;
+  if (remaining) {
+    uint8_t *byte_dst = (uint8_t *)(dptr + aligned_n);
+    for (size_t i = 0; i < remaining; i++) {
+      byte_dst[i] = 0;
+    }
+  }
 }
 
 SSBL_TEXT void _ssbl_memcpy(void *dst, const void *src, size_t n) {
