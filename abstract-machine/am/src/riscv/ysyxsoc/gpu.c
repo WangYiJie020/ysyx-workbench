@@ -19,8 +19,10 @@ void __am_gpu_init() {
 }
 
 void __am_gpu_config(AM_GPU_CONFIG_T *cfg) {
-  gpu_h = 480;
-  gpu_w = 640;
+  // gpu_h = 480;
+  // gpu_w = 640;
+	gpu_h = 525;
+	gpu_w = 800;
   *cfg = (AM_GPU_CONFIG_T){.present = true,
                            .has_accel = false,
                            .width = gpu_w,
