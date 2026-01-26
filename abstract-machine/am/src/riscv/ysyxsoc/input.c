@@ -9,7 +9,7 @@ void __am_input_uart(AM_UART_RX_T *uart) {
     uart->data = 0xff;
 }
 
-#define _REMAP_EXKEY(key) (((key)>0xff)?((key)-0xe000+0xff):(key))
+#define _REMAP_EXKEY(key) (((key)>0xff)?((key)-0xe000+256):(key))
 #define _GEN_LUT_ITEM(key) [_REMAP_EXKEY(PS2_CODE_##key)] = AM_KEY_##key,
 static const int _ps2amkey_lut[512] = {
 	AM_KEYS(_GEN_LUT_ITEM)
