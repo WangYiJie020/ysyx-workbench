@@ -66,4 +66,7 @@ typedef volatile_u32ptr dev_reg32_ptr;
 #define _PS2_R(x) (DEV_REG8(PS2_BASE + (x)))
 #define PS2_KEYINPUT   _PS2_R(0)
 
+#define VGA_FB_BEG 0x21000000u
+#define VGA_FB_END 0x211fffffu
+
 #endif // __DEV_REG_H__
