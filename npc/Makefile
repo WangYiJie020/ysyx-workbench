@@ -4,7 +4,7 @@ TOP_NAME = ysyxSoCFull
 #ysyx_25100261
 
 SIM_CSRC_DIR = ./csrc
-VSIM_OPT?= -O0
+VSIM_OPT?= -O3
 SIM_BIN_DIR = $(BUILD_DIR)/bin
 SIM_BIN = $(SIM_BIN_DIR)/$(TOP_NAME)$(VSIM_OPT)
 
