@@ -585,12 +585,14 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 #endif
 
   parse_args(argc, argv);
+
   using std::string;
   using namespace std::ranges;
 
   load_img();
 
   spdlog::set_level(spdlog::level::trace); // will modify all registered loggers
+	
 
   _init_flash();
   _fill_rams_uninit();

@@ -127,6 +127,8 @@ VERILATOR_INCDIRS += $(abspath $(SOC_HOME)/perip/spi/rtl)
 
 VERILATOR_FLAGS += --timescale "1ns/1ns" --no-timing 
 VERILATOR_FLAGS += -Wno-SYMRSVDWORD # make uart verilog happy
+
+VERILATOR_FLAGS += -Wno-WIDTHEXPAND # make chiplink happy
 # VERILATOR_FLAGS += -Wno-UNOPTFLAT
 # rules for verilator
 
