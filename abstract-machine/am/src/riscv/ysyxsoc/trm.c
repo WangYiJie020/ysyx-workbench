@@ -150,12 +150,16 @@ FSBL_TEXT static inline const char *_rodata_loadpos(const char *ptr) {
 
 SSBL_TEXT void _ssbl_clear(void *dst, size_t n) {
   assert(IS_4BYTE_ALIGNED(dst));
-  assert(IS_4BYTE_ALIGNED(n));
   size_t wn = n / 4;
   uint32_t *d = (uint32_t *)dst;
   for (size_t i = 0; i < wn; i++) {
     d[i] = 0;
   }
+	uint8_t* db = (uint8_t *)dst;
+	size_t nb = n & 0x3;
+	for (size_t i = 0; i < nb; i++) {
+		db[wn * 4 + i] = 0;
+	}
 }
 
 SSBL_TEXT void _ssbl_memcpy(void *dst, const void *src, size_t n) {
