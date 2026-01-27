@@ -159,23 +159,24 @@ SSBL_TEXT void _ssbl_clear_word_aligned(void *dst, size_t n) {
 }
 
 SSBL_TEXT void _ssbl_clear(void *dst, size_t n) {
-	if(n==0) return;
+  if (n == 0)
+    return;
   uintptr_t dptr = (uintptr_t)dst;
   // if (dptr & 0x3) {
   //   uint8_t* byte_pre = (uint8_t *)dptr;
-		// size_t pre_bytes = 4 - (dptr & 0x3);
-		// putnum_base16(pre_bytes);
-		// putch('\n');
-		// putnum_base16(n);
-		// putch('\n');
-		// assert(n >= pre_bytes);
-		// for (size_t i = 0; i < pre_bytes; i++) {
-		// 	byte_pre[i] = 0;
-		// }
-		// dptr += pre_bytes;
-		// n -= pre_bytes;
+  // size_t pre_bytes = 4 - (dptr & 0x3);
+  // putnum_base16(pre_bytes);
+  // putch('\n');
+  // putnum_base16(n);
+  // putch('\n');
+  // assert(n >= pre_bytes);
+  // for (size_t i = 0; i < pre_bytes; i++) {
+  // 	byte_pre[i] = 0;
   // }
-	assert(IS_4BYTE_ALIGNED(dptr));
+  // dptr += pre_bytes;
+  // n -= pre_bytes;
+  // }
+  assert(IS_4BYTE_ALIGNED(dptr));
   size_t aligned_n = n & (~0x3);
   _ssbl_clear_word_aligned((void *)dptr, aligned_n);
   size_t remaining = n - aligned_n;
@@ -218,7 +219,6 @@ FSBL_TEXT void _trm_init() {
   _second_boot();
 }
 
-
 SSBL_TEXT void _second_boot() {
   _ssbl_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
   boot_log(".rodata copied.\n");
@@ -227,30 +227,46 @@ SSBL_TEXT void _second_boot() {
 #undef boot_log
 #define boot_log(s) putstr("[BOOT] " s)
 
-  _ssbl_memcpy(_text_start, __text_load_start__, (size_t)__text_size__);
-  boot_log(".text copied.\n");
-  _ssbl_memcpy(_data_start, __data_load_start__, (size_t)__data_size__);
-  boot_log(".data copied.\n");
+#define LOG_STEP(msg, step, ...)                                               \
+  do {                                                                         \
+    boot_log(msg "...");                                                       \
+    step __VA_ARGS__;                                                          \
+    putstr(" done.\n");                                                        \
+  } while (0)
 
+  LOG_STEP("copy .text", _ssbl_memcpy(_text_start, __text_load_start__,
+                                      (size_t)__text_size__));
+  LOG_STEP("copy .data", _ssbl_memcpy(_data_start, __data_load_start__,
+                                      (size_t)__data_size__));
+
+  // _ssbl_memcpy(_text_start, __text_load_start__, (size_t)__text_size__);
+  // boot_log(".text copied.\n");
+  // _ssbl_memcpy(_data_start, __data_load_start__, (size_t)__data_size__);
+  // boot_log(".data copied.\n");
 
 #ifndef SKIP_BSS_CLEAR
   _ssbl_clear(_bss_start, (size_t)__bss_size__);
   boot_log(".bss cleared.\n");
   if ((size_t)__bss_extra_size__) {
-    boot_log("clearing .bss.extra...\n");
-    _ssbl_clear(_bss_extra_start, (size_t)__bss_extra_size__);
-    boot_log(".bss.extra cleared.\n");
+    LOG_STEP("clear .bss.extra",
+             _ssbl_clear(_bss_extra_start, (size_t)__bss_extra_size__));
+    // boot_log("clearing .bss.extra...");
+    // _ssbl_clear(_bss_extra_start, (size_t)__bss_extra_size__);
+    // putstr(" done.\n");
   }
 #else
-	boot_log(" skipping .bss clear\n");
-  boot_log(" skipping .bss.extra clear\n");
+  boot_log("skip clear .bss\n");
+  boot_log("skip clear .bss.extra\n");
 #endif
 
   if ((size_t)__data_extra_size__) {
-    boot_log("copying .data.extra...\n");
-    _ssbl_memcpy(_data_extra_start, __data_extra_load_start__,
-                 (size_t)__data_extra_size__);
-    boot_log(".data.extra copied.\n");
+    LOG_STEP("copy .data.extra",
+             _ssbl_memcpy(_data_extra_start, __data_extra_load_start__,
+                          (size_t)__data_extra_size__));
+    // boot_log("copying .data.extra...");
+    // _ssbl_memcpy(_data_extra_start, __data_extra_load_start__,
+    //              (size_t)__data_extra_size__);
+    // putstr(" done.\n");
   }
 
   boot_log("checking memory regions...\n");
