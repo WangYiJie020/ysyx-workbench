@@ -485,17 +485,17 @@ static long load_img() {
 
 static void _init_flash() { memcpy(flash_data, img, img_size); }
 static void _fill_rams_uninit() {
+  spdlog::info("ram initialization: zero_uninit_ram = {}",
+							 sim_settings.zero_uninit_ram ? "true" : "false");
   if (sim_settings.zero_uninit_ram) {
-		spdlog::info("Filling uninitialized RAM with zeros");
     memset(psram_data, 0, sizeof(psram_data));
     memset(sdram_data, 0, sizeof(sdram_data));
   } else {
-		spdlog::info("Filling uninitialized RAM with non-zero pattern");
     memset(psram_data, 0xcc, sizeof(psram_data));
-		spdlog::trace("psram_data filled with 0xcc");
+    spdlog::trace("psram_data filled with 0xcc");
     memset(sdram_data, 0xdd, sizeof(sdram_data));
-		spdlog::trace("sdram_data filled with 0xdd");
-		spdlog::info("hint: export VSIM_zero_uninit_ram=1 to fill uninit RAM with zeros");
+    spdlog::trace("sdram_data filled with 0xdd");
+    spdlog::info("RAMs uninitialized area filled with non-zero patterns");
   }
 }
 
@@ -584,7 +584,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   Verilated::commandArgs(argc, argv);
   sim_settings = setting;
 #ifdef ENABLE_NVBOARD
-	spdlog::info("initializing nvboard");
+  spdlog::info("initializing nvboard");
   nvboard_bind_all_pins(&dut);
   nvboard_init();
 #endif
