@@ -584,6 +584,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   Verilated::commandArgs(argc, argv);
   sim_settings = setting;
 #ifdef ENABLE_NVBOARD
+	spdlog::info("initializing nvboard");
   nvboard_bind_all_pins(&dut);
   nvboard_init();
 #endif
