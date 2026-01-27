@@ -230,17 +230,17 @@ extern "C" void sdram_read(char block, char bank, short row, short col,
   assert(bank >= 0 && bank < 4);
   assert(row >= 0 && row < 8192);
   assert(col >= 0 && col < 512);
-	// assert(block == 0 || block == 1);
+  // assert(block == 0 || block == 1);
   *data = sdram_data[bank][row][col][block];
   DPI_TRACE("R bank={:02x} row={:04x} col={:04x} block={} data={:04x}", bank,
             row, col, (uint32_t)block, (uint16_t)*data);
 }
-extern "C" void sdram_write(char block,char bank, short row, short col, short data,
-                            char mask) {
+extern "C" void sdram_write(char block, char bank, short row, short col,
+                            short data, char mask) {
   assert(bank >= 0 && bank < 4);
   assert(row >= 0 && row < 8192);
   assert(col >= 0 && col < 512);
-	// assert(block == 0 || block == 1);
+  // assert(block == 0 || block == 1);
   // mask [0] = 0: write low byte
   // mask [1] = 0: write high byte
   if ((mask & 0x1) == 0) {
@@ -264,9 +264,8 @@ extern "C" void sdram_write(char block,char bank, short row, short col, short da
 
   DPI_TRACE("W bank={:02x} row={:04x} col={:04x} block={} "
             "data={:04x} mask={} newdata={:04x}",
-            bank, row, col, (uint32_t)block,
-						(uint16_t)data, human_friendly_mask,
-            sdram_data[bank][row][col][block]);
+            bank, row, col, (uint32_t)block, (uint16_t)data,
+            human_friendly_mask, sdram_data[bank][row][col][block]);
 }
 
 constexpr uint32_t SRAM_BASE = 0x0f000000u;
@@ -399,8 +398,8 @@ bool sim_read_vmem(word_t addr, word_t *data) {
     short row = (in_sdram_addr >> 13) & 0x1fff;
     short col = (in_sdram_addr >> 1) & 0x1ff;
     uint16_t half1, half2;
-		char bank = raw_bank % 4;
-		char block_offset = (raw_bank & 0x4) ? 1 : 0;
+    char bank = raw_bank % 4;
+    char block_offset = (raw_bank & 0x4) ? 1 : 0;
     half1 = sdram_data[bank][row][col][block_offset];
     half2 = sdram_data[bank][row][col][block_offset + 1];
     *data = ((word_t)half2 << 16) | (word_t)half1;
@@ -486,13 +485,18 @@ static long load_img() {
 
 static void _init_flash() { memcpy(flash_data, img, img_size); }
 static void _fill_rams_uninit() {
-#ifdef _TRM_SKIP_BSS_CLEAR
-  memset(psram_data, 0, sizeof(psram_data));
-  memset(sdram_data, 0, sizeof(sdram_data));
-#else
-  memset(psram_data, 0xcc, sizeof(psram_data));
-  memset(sdram_data, 0xdd, sizeof(sdram_data));
-#endif
+  if (sim_settings.zero_uninit_ram) {
+		spdlog::info("Filling uninitialized RAM with zeros");
+    memset(psram_data, 0, sizeof(psram_data));
+    memset(sdram_data, 0, sizeof(sdram_data));
+  } else {
+		spdlog::info("Filling uninitialized RAM with non-zero pattern");
+    memset(psram_data, 0xcc, sizeof(psram_data));
+		spdlog::trace("psram_data filled with 0xcc");
+    memset(sdram_data, 0xdd, sizeof(sdram_data));
+		spdlog::trace("sdram_data filled with 0xdd");
+		spdlog::info("hint: export VSIM_zero_uninit_ram=1 to fill uninit RAM with zeros");
+  }
 }
 
 // ARG
@@ -592,7 +596,6 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   load_img();
 
   spdlog::set_level(spdlog::level::trace); // will modify all registered loggers
-	
 
   _init_flash();
   _fill_rams_uninit();
@@ -607,13 +610,13 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
                                          [](VerilatedFstC *p) { p->close(); });
     dut.trace(tfp.get(), 99);
     tfp->open(setting.wave_fst_file.c_str());
-		spdlog::info("wave enabled, output file: {}", setting.wave_fst_file);
+    spdlog::info("wave enabled, output file: {}", setting.wave_fst_file);
   }
 
   reset(30);
 
-	spdlog::info("sim reset done, entering {} mode",
-							 batch_mode ? "batch" : "interactive");
+  spdlog::info("sim reset done, entering {} mode",
+               batch_mode ? "batch" : "interactive");
 
   if (batch_mode && !setting.no_batch) {
     dbg_exec("c");

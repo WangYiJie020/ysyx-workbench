@@ -7,7 +7,7 @@ AM_SRCS := riscv/ysyxsoc/start.S \
            platform/dummy/vme.c \
            platform/dummy/mpe.c
 
-ifeq ($(SKIP_BSS_CLEAR), 1)
+ifeq ($(VSIM_zero_uninit_ram), 1)
 CFLAGS += -DSKIP_BSS_CLEAR
 endif
 
