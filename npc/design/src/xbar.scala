@@ -65,7 +65,7 @@ class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4IO.SlaveT)]) extends Module 
   master.rvalid := slaveIO(lastRdReqIdx).rvalid && hasLastRdReq
   AXI4IO.noShakeConnectR(master, slaveIO(lastRdReqIdx))
   for (i <- mappings.indices) {
-    slaveIO(i).rready := (i.U === lastRdReqIdx) && master.rready
+    slaveIO(i).rready := hasLastRdReq && (i.U === lastRdReqIdx) && master.rready
   }
 
   master.wready := slaveIO(lastWrReqIdx).wready && hasLastWrReq
@@ -77,7 +77,7 @@ class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4IO.SlaveT)]) extends Module 
   AXI4IO.noShakeConnectB(master, slaveIO(lastWrReqIdx))
 
   for (i <- mappings.indices) {
-    slaveIO(i).bready := hasLastWrReq && (i.U === lastWrReqIdx) && master.bready
+    slaveIO(i).bready := (i.U === lastWrReqIdx) && master.bready
   }
 
   when(master.rvalid && master.rready) {
