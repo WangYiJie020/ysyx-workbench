@@ -472,7 +472,7 @@ static long load_img() {
   fseek(fp, 0, SEEK_END);
   img_size = ftell(fp);
 
-  spdlog::info("The image is {}, size = {}", img_file, img_size);
+  spdlog::info("load image {}, size = {}", img_file, img_size);
 
   fseek(fp, 0, SEEK_SET);
   int ret = fread(img, img_size, 1, fp);
@@ -485,7 +485,7 @@ static long load_img() {
 
 static void _init_flash() { memcpy(flash_data, img, img_size); }
 static void _fill_rams_uninit() {
-  spdlog::info("ram initialization: zero_uninit_ram = {}",
+  spdlog::info("RAMs initialization: zero_uninit_ram = {}",
 							 sim_settings.zero_uninit_ram ? "true" : "false");
   if (sim_settings.zero_uninit_ram) {
     memset(psram_data, 0, sizeof(psram_data));
