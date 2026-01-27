@@ -239,20 +239,12 @@ SSBL_TEXT void _second_boot() {
   LOG_STEP("copy .data", _ssbl_memcpy(_data_start, __data_load_start__,
                                       (size_t)__data_size__));
 
-  // _ssbl_memcpy(_text_start, __text_load_start__, (size_t)__text_size__);
-  // boot_log(".text copied.\n");
-  // _ssbl_memcpy(_data_start, __data_load_start__, (size_t)__data_size__);
-  // boot_log(".data copied.\n");
-
 #ifndef SKIP_BSS_CLEAR
   _ssbl_clear(_bss_start, (size_t)__bss_size__);
   boot_log(".bss cleared.\n");
   if ((size_t)__bss_extra_size__) {
     LOG_STEP("clear .bss.extra",
              _ssbl_clear(_bss_extra_start, (size_t)__bss_extra_size__));
-    // boot_log("clearing .bss.extra...");
-    // _ssbl_clear(_bss_extra_start, (size_t)__bss_extra_size__);
-    // putstr(" done.\n");
   }
 #else
   boot_log("skip clear .bss\n");
@@ -263,10 +255,6 @@ SSBL_TEXT void _second_boot() {
     LOG_STEP("copy .data.extra",
              _ssbl_memcpy(_data_extra_start, __data_extra_load_start__,
                           (size_t)__data_extra_size__));
-    // boot_log("copying .data.extra...");
-    // _ssbl_memcpy(_data_extra_start, __data_extra_load_start__,
-    //              (size_t)__data_extra_size__);
-    // putstr(" done.\n");
   }
 
   boot_log("checking memory regions...\n");
