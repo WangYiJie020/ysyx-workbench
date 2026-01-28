@@ -397,7 +397,7 @@ bool sim_read_vmem(word_t addr, word_t *data) {
     short col = (in_sdram_addr >> 1) & 0x1ff;
     uint16_t half1, half2;
     char bank = raw_bank % 4;
-    char block_offset = (raw_bank & 0x4) ? 1 : 0;
+    char block_offset = (raw_bank & 0x4) ? 2 : 0;
     half1 = sdram_data[bank][row][col][block_offset];
     half2 = sdram_data[bank][row][col][block_offset + 1];
     *data = ((word_t)half2 << 16) | (word_t)half1;
