@@ -36,7 +36,7 @@ void sdb_exec(std::string_view cmd, bool *quit) {
 
 bool sdb_is_hitbadtrap() { return dbg->state().is_badexit(); }
 
-void sbd_set_halt(int a0) { dbg->state().halt(a0); }
+void sdb_set_halt(int a0) { dbg->state().halt(a0); }
 void sdb_dump_recent_info() { dbg->dump_all(); }
 
 namespace sdbwrap {
@@ -116,8 +116,8 @@ int sdb_mainloop() {
   spdlog::info("sim started in sdb debug mode");
 
   auto &cfg = *sim_get_config();
-	cfg.raise_halt_cb = sbd_set_halt;
-	spdlog::trace("setting raise_halt_cb to sbd_set_halt");
+	cfg.raise_halt_cb = sdb_set_halt;
+	spdlog::trace("setting raise_halt_cb to sdb_set_halt");
 
   sdb_init(cfg.init_pc, cfg.img_size, cfg.img_file_path, cfg.setting);
   spdlog::info("sdb entering {} mode",
