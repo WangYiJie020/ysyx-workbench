@@ -147,7 +147,7 @@ typedef bool (*mem_region_addr_mapper_tohost_t)(uint32_t addr,
 typedef bool (*mem_region_addr_mapper_toguest_t)(uint8_t *host_ptr,
                                                  uint32_t &addr);
 
-typedef bool (*mem_region_read_guest_t)(uint32_t addr, uint32_t &data);
+typedef bool (*mem_region_read_guest_t)(uint32_t addr, uint32_t *data);
 typedef bool (*mem_region_write_guest_t)(uint32_t addr, uint32_t data);
 
 struct mem_region {
@@ -192,7 +192,7 @@ struct mem_region {
 			return true;
 		} else {
 			assert(mapper.read_guest);
-			return mapper.read_guest(addr, data);
+			return mapper.read_guest(addr, &data);
 		}
 	}
 	bool write_guest(uint32_t addr, uint32_t data) const {
@@ -224,17 +224,6 @@ uint32_t flash_data[sizeof(img) / 4];
 constexpr uint32_t PSRAM_BASE = 0x80000000u;
 constexpr uint32_t PSRAM_END = 0xA0000000u;
 uint32_t psram_data[8 * 1024 * 1024 / 4];
-#define SIMPLE_REGION(name, base, end, array, enwrite)                         \
-  {                                                                            \
-    base, end, #name, {.arr = {.ptr = (void *)array, .size = sizeof(array)}},  \
-        true, enwrite                                                          \
-  }
-
-mem_region mem_regions[] = {
-    SIMPLE_REGION(mrom, MROM_BASE, MROM_END, mrom_data, false),
-    SIMPLE_REGION(flash, FLASH_BASE, FLASH_END, flash_data, false),
-    SIMPLE_REGION(psram, PSRAM_BASE, PSRAM_END, psram_data, true),
-};
 
 extern "C" void mrom_read(int32_t addr, int32_t *data) {
   spdlog::mdc::put("testkey", "testvalue");
@@ -347,8 +336,64 @@ extern "C" void sdram_write(char block, char bank, short row, short col,
             human_friendly_mask, sdram_data[bank][row][col][block]);
 }
 
+struct sdram_u32_data_ptr{
+	uint16_t* lowpart;
+	uint16_t* highpart;
+};
+sdram_u32_data_ptr get_sdram_data_at(word_t addr){
+	word_t in_sdram_addr = addr - SDRAM_BASE;
+	char raw_bank = (in_sdram_addr >> 10) & 0x7;
+	uint16_t row = (in_sdram_addr >> 13) & 0x1fff;
+	uint16_t col = (in_sdram_addr >> 1) & 0x1ff;
+	uint8_t bank = raw_bank % 4;
+	uint8_t block = (raw_bank & 0x4) ? 2 : 0;
+	assert(bank < 4);
+	assert(row < 8192);
+	assert(col < 512);
+	assert(block < 4);
+	return {
+		.lowpart = &sdram_data[bank][row][col][block],
+		.highpart = &sdram_data[bank][row][col][block + 1]
+	};
+}
+
+bool read_sdram(word_t addr, word_t* data) {
+	sdram_u32_data_ptr ptrs = get_sdram_data_at(addr);
+	*data = ((word_t)(*ptrs.highpart) << 16) | (word_t)(*ptrs.lowpart);
+	return true;
+}
+bool write_sdram(word_t addr, word_t data) {
+	sdram_u32_data_ptr ptrs = get_sdram_data_at(addr);
+	*ptrs.lowpart = (uint16_t)(data & 0xffff);
+	*ptrs.highpart = (uint16_t)((data >> 16) & 0xffff);
+	return true;
+}
 constexpr uint32_t SRAM_BASE = 0x0f000000u;
 constexpr uint32_t SRAM_END = 0x10000000u;
+
+#define SIMPLE_REGION(name, base, end, array, enwrite)                         \
+  {                                                                            \
+    base, end, #name, {.arr = {.ptr = (void *)array, .size = sizeof(array)}},  \
+        true, enwrite                                                          \
+  }
+
+mem_region mem_regions[] = {
+    SIMPLE_REGION(mrom, MROM_BASE, MROM_END, mrom_data, false),
+    SIMPLE_REGION(flash, FLASH_BASE, FLASH_END, flash_data, false),
+    SIMPLE_REGION(psram, PSRAM_BASE, PSRAM_END, psram_data, true),
+		{
+			SDRAM_BASE, SDRAM_END, "sdram",
+			{
+				.mapper = {
+					.tohost = nullptr,
+					.read_guest = read_sdram,
+					.write_guest = write_sdram,
+				}
+			},
+			false,
+			true
+		},
+};
 
 uint8_t *sim_guest_to_host(uint32_t addr) {
 	for (auto &r : mem_regions) {
@@ -454,38 +499,6 @@ extern "C" void skip_difftest_ref() {
 //   }
 // }
 
-struct sdram_u32_data_ptr{
-	uint16_t* lowpart;
-	uint16_t* highpart;
-};
-sdram_u32_data_ptr get_sdram_data_at(word_t addr){
-	word_t in_sdram_addr = addr - SDRAM_BASE;
-	char raw_bank = (in_sdram_addr >> 10) & 0x7;
-	uint16_t row = (in_sdram_addr >> 13) & 0x1fff;
-	uint16_t col = (in_sdram_addr >> 1) & 0x1ff;
-	uint8_t bank = raw_bank % 4;
-	uint8_t block = (raw_bank & 0x4) ? 2 : 0;
-	assert(bank < 4);
-	assert(row < 8192);
-	assert(col < 512);
-	assert(block < 4);
-	return {
-		.lowpart = &sdram_data[bank][row][col][block],
-		.highpart = &sdram_data[bank][row][col][block + 1]
-	};
-}
-
-bool read_sdram(word_t addr, word_t &data) {
-	sdram_u32_data_ptr ptrs = get_sdram_data_at(addr);
-	data = ((word_t)(*ptrs.highpart) << 16) | (word_t)(*ptrs.lowpart);
-	return true;
-}
-bool write_sdram(word_t addr, word_t data) {
-	sdram_u32_data_ptr ptrs = get_sdram_data_at(addr);
-	*ptrs.lowpart = (uint16_t)(data & 0xffff);
-	*ptrs.highpart = (uint16_t)((data >> 16) & 0xffff);
-	return true;
-}
 
 bool sim_read_vmem(word_t addr, word_t *data) {
 	for (auto &r : mem_regions) {
