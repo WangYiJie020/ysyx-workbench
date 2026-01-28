@@ -114,7 +114,7 @@ void gdbop_close() { gdbstub_close(&gdbstub); }
 int gdb_mainloop() {
   spdlog::info("sim started in gdb debug mode");
 
-  for (int i = 0; i < 5; i++){
+  for (int i = 0; i < 16; i++){
 		_logger->trace("run preload step {}", i);
     sim_step_inst();
 	}
