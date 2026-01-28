@@ -14,7 +14,7 @@ int gdb_mainloop();
 int main(int argc, char **argv) {
 	spdlog::set_default_logger(spdlog::stdout_color_mt("sim"));
   spdlog::set_level(spdlog::level::trace); // will modify all registered loggers
-	spdlog::set_pattern("[%H:%M:%S.%e][%^%L%$][%n] %v");
+	spdlog::set_pattern("[%H:%M:%S.%e][%^%l%$][%n] %v");
 
 	auto& setting = sim_get_config()->setting;
 	load_sim_setting_from_env(setting);
