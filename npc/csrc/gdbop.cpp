@@ -27,7 +27,7 @@ static int _op_read_reg(void *args, int regno, void *value) {
     return 0;
   } else {
     uint32_t r = sim_get_cpu_state()->gpr[regno];
-    _logger->trace("gdb read reg {} value {:08x}", regno, r);
+    // _logger->trace("gdb read reg {} value {:08x}", regno, r);
     *(uint32_t *)value = r;
     return 0;
   }
