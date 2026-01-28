@@ -7,6 +7,9 @@
 #include <spdlog/sinks/dup_filter_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
+#include <spdlog/common.h>
+#include <spdlog/logger.h>
+
 
 #include <cassert>
 #include <chrono>
@@ -14,8 +17,6 @@
 #include <cstdio>
 #include <string_view>
 
-#include "spdlog/common.h"
-#include "spdlog/logger.h"
 #include "verilated_fst_c.h"
 
 #include <nvboard.h>
@@ -492,8 +493,8 @@ static void _fill_rams_uninit() {
     memset(sdram_data, 0xdd, sizeof(sdram_data));
     spdlog::trace("sdram_data filled with 0xdd");
   }
-	spdlog::info("RAMs uninitialized area filled with {}", 
-		sim_settings.zero_uninit_ram ? "zeros" : "non-zero patterns");
+  spdlog::info("RAMs uninitialized area filled with {}",
+               sim_settings.zero_uninit_ram ? "zeros" : "non-zero patterns");
 }
 
 // ARG
@@ -625,3 +626,5 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 }
 
 void sim_exec_sdbcmd(std::string_view cmd, bool &quit) { dbg_exec(cmd, &quit); }
+
+

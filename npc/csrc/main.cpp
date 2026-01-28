@@ -7,14 +7,14 @@
 
 #include "sprobe.hpp"
 
-#include <gdbstub.h>
-
 SProbe sprobe;
 void cyc_callback() {
   if (sim_halted())
     return;
   sprobe.dump_watched();
 }
+
+bool gdbop_init(const char* socket);
 
 int main(int argc, char **argv) {
 	sim_setting setting;
@@ -24,6 +24,10 @@ int main(int argc, char **argv) {
 		get_dut()->final();
 		return 1;
 	}
+
+	gdbop_init(":1234");
+
+	while(1){}
 
   // get_dut()->contextp()->internalsDump(); // See scopes to help debug
   //
