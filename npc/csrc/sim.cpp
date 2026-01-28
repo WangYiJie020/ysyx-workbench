@@ -147,6 +147,9 @@ typedef bool (*mem_region_addr_mapper_tohost_t)(uint32_t addr,
 typedef bool (*mem_region_addr_mapper_toguest_t)(uint8_t *host_ptr,
                                                  uint32_t &addr);
 
+typedef bool (*mem_region_read_guest_t)(uint32_t addr, uint32_t &data);
+typedef bool (*mem_region_write_guest_t)(uint32_t addr, uint32_t data);
+
 struct mem_region {
   uint32_t base;
   uint32_t end;
@@ -156,6 +159,8 @@ struct mem_region {
   union {
     struct {
       mem_region_addr_mapper_tohost_t tohost;
+			mem_region_read_guest_t read_guest;
+			mem_region_write_guest_t write_guest;
       // mem_region_addr_mapper_toguest_t toguest;
     } mapper;
     struct {
@@ -179,6 +184,33 @@ struct mem_region {
       return mapped_addr;
     }
   }
+	bool read_guest(uint32_t addr, uint32_t &data) const {
+		if (simple_map) {
+			assert(addr - base < arr.size);
+			uint32_t *ptr = (uint32_t *)((uint8_t *)arr.ptr + (addr - base));
+			data = *ptr;
+			return true;
+		} else {
+			assert(mapper.read_guest);
+			return mapper.read_guest(addr, data);
+		}
+	}
+	bool write_guest(uint32_t addr, uint32_t data) const {
+		if (!enwrite) {
+			spdlog::error("addr {:08x} at region {} is not writable", addr, name);
+			return false;
+		}
+		if (simple_map) {
+			assert(addr - base < arr.size);
+			uint32_t *ptr = (uint32_t *)((uint8_t *)arr.ptr + (addr - base));
+			*ptr = data;
+			return true;
+		} else {
+			assert(mapper.write_guest);
+			return mapper.write_guest(addr, data);
+		}
+	}
+
 };
 
 constexpr uint32_t MROM_BASE = 0x20000000u;
@@ -199,9 +231,9 @@ uint32_t psram_data[8 * 1024 * 1024 / 4];
   }
 
 mem_region mem_regions[] = {
-    SIMPLE_REGION(MROM, MROM_BASE, MROM_END, mrom_data, false),
-    SIMPLE_REGION(FLASH, FLASH_BASE, FLASH_END, flash_data, false),
-    SIMPLE_REGION(PSRAM, PSRAM_BASE, PSRAM_END, psram_data, true),
+    SIMPLE_REGION(mrom, MROM_BASE, MROM_END, mrom_data, false),
+    SIMPLE_REGION(flash, FLASH_BASE, FLASH_END, flash_data, false),
+    SIMPLE_REGION(psram, PSRAM_BASE, PSRAM_END, psram_data, true),
 };
 
 extern "C" void mrom_read(int32_t addr, int32_t *data) {
@@ -349,16 +381,16 @@ extern "C" void pc_upd(int pc, int npc) {
   cpu.pc = npc;
 }
 
-void skip_difftest_ref() {
+extern "C" void skip_difftest_ref() {
   if (sim_settings.trace_difftest_skip) {
     printf("[DPI] skip_difftest_ref called\n");
   }
   sdb_skip_difftest_ref();
 }
 
-#define MMIO_SERIAL_PORT 0x10000000u
-#define MMIO_RTC_ADDR 0x10000048u
-
+// #define MMIO_SERIAL_PORT 0x10000000u
+// #define MMIO_RTC_ADDR 0x10000048u
+//
 // void pmem_read(int addr, int *out_data) {
 //   if (!is_running) {
 //     printf("warn: pmem_read when not running\n");
@@ -422,40 +454,93 @@ void skip_difftest_ref() {
 //   }
 // }
 
-bool sim_read_vmem(word_t addr, word_t *data) {
-  if (addr >= MROM_BASE && addr < MROM_END) {
-    mrom_read(addr, (int *)data);
-  } else if (addr >= FLASH_BASE && addr < FLASH_END) {
-    flash_read(addr - FLASH_BASE, (int *)data);
-  } else if (addr >= SRAM_BASE && addr < SRAM_END) {
-    // TODO: shouldn't read directly
-    // should gen warn and return nothing
-    // for debug
-    *data = img[(addr - SRAM_BASE) / 4];
-  } else if (addr >= PSRAM_BASE && addr < PSRAM_END) {
-    psram_read(addr - PSRAM_BASE, (int *)data);
-  } else if (addr >= SDRAM_BASE && addr < SDRAM_END) {
-    word_t in_sdram_addr = addr - SDRAM_BASE;
-    char raw_bank = (in_sdram_addr >> 10) & 0x7;
-    short row = (in_sdram_addr >> 13) & 0x1fff;
-    short col = (in_sdram_addr >> 1) & 0x1ff;
-    uint16_t half1, half2;
-    char bank = raw_bank % 4;
-    char block_offset = (raw_bank & 0x4) ? 2 : 0;
-    half1 = sdram_data[bank][row][col][block_offset];
-    half2 = sdram_data[bank][row][col][block_offset + 1];
-    *data = ((word_t)half2 << 16) | (word_t)half1;
-    // spdlog::trace("sim_read_vmem addr={:08x} -> "
-    //               "sdram[{:02x}][{:04x}][{:04x},{:04x}] = {:08x} "
-    //               "(pc={:08x})", addr, bank, row, col, col + 1, *data,
-    //               current_pc);
-  } else {
-    // TODO: gen error
-    _dpi_logger->error("sim_read_vmem addr={:08x} INVALID", addr);
-    return false;
-  }
-  return true;
+struct sdram_u32_data_ptr{
+	uint16_t* lowpart;
+	uint16_t* highpart;
+};
+sdram_u32_data_ptr get_sdram_data_at(word_t addr){
+	word_t in_sdram_addr = addr - SDRAM_BASE;
+	char raw_bank = (in_sdram_addr >> 10) & 0x7;
+	uint16_t row = (in_sdram_addr >> 13) & 0x1fff;
+	uint16_t col = (in_sdram_addr >> 1) & 0x1ff;
+	uint8_t bank = raw_bank % 4;
+	uint8_t block = (raw_bank & 0x4) ? 2 : 0;
+	assert(bank < 4);
+	assert(row < 8192);
+	assert(col < 512);
+	assert(block < 4);
+	return {
+		.lowpart = &sdram_data[bank][row][col][block],
+		.highpart = &sdram_data[bank][row][col][block + 1]
+	};
 }
+
+bool read_sdram(word_t addr, word_t &data) {
+	sdram_u32_data_ptr ptrs = get_sdram_data_at(addr);
+	data = ((word_t)(*ptrs.highpart) << 16) | (word_t)(*ptrs.lowpart);
+	return true;
+}
+bool write_sdram(word_t addr, word_t data) {
+	sdram_u32_data_ptr ptrs = get_sdram_data_at(addr);
+	*ptrs.lowpart = (uint16_t)(data & 0xffff);
+	*ptrs.highpart = (uint16_t)((data >> 16) & 0xffff);
+	return true;
+}
+
+bool sim_read_vmem(word_t addr, word_t *data) {
+	for (auto &r : mem_regions) {
+		if (r.contains(addr)) {
+			return r.read_guest(addr, *data);
+		}
+	}
+	spdlog::error("sim_read_vmem addr={:08x} no mapping region", addr);
+	return false;
+}
+bool sim_write_vmem(word_t addr, word_t data) {
+	for (auto &r : mem_regions) {
+		if (r.contains(addr)) {
+			return r.write_guest(addr, data);
+		}
+	}
+	spdlog::error("sim_write_vmem addr={:08x} no mapping region", addr);
+	return false;
+}
+
+
+// bool sim_read_vmem(word_t addr, word_t *data) {
+//   if (addr >= MROM_BASE && addr < MROM_END) {
+//     mrom_read(addr, (int *)data);
+//   } else if (addr >= FLASH_BASE && addr < FLASH_END) {
+//     flash_read(addr - FLASH_BASE, (int *)data);
+//   } else if (addr >= SRAM_BASE && addr < SRAM_END) {
+//     // TODO: shouldn't read directly
+//     // should gen warn and return nothing
+//     // for debug
+//     *data = img[(addr - SRAM_BASE) / 4];
+//   } else if (addr >= PSRAM_BASE && addr < PSRAM_END) {
+//     psram_read(addr - PSRAM_BASE, (int *)data);
+//   } else if (addr >= SDRAM_BASE && addr < SDRAM_END) {
+//     word_t in_sdram_addr = addr - SDRAM_BASE;
+//     char raw_bank = (in_sdram_addr >> 10) & 0x7;
+//     short row = (in_sdram_addr >> 13) & 0x1fff;
+//     short col = (in_sdram_addr >> 1) & 0x1ff;
+//     uint16_t half1, half2;
+//     char bank = raw_bank % 4;
+//     char block_offset = (raw_bank & 0x4) ? 2 : 0;
+//     half1 = sdram_data[bank][row][col][block_offset];
+//     half2 = sdram_data[bank][row][col][block_offset + 1];
+//     *data = ((word_t)half2 << 16) | (word_t)half1;
+//     // spdlog::trace("sim_read_vmem addr={:08x} -> "
+//     //               "sdram[{:02x}][{:04x}][{:04x},{:04x}] = {:08x} "
+//     //               "(pc={:08x})", addr, bank, row, col, col + 1, *data,
+//     //               current_pc);
+//   } else {
+//     // TODO: gen error
+//     _dpi_logger->error("sim_read_vmem addr={:08x} INVALID", addr);
+//     return false;
+//   }
+//   return true;
+// }
 
 void sim_step_inst() {
   size_t cnt = 0;
