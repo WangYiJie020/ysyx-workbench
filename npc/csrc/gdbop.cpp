@@ -56,6 +56,8 @@ static int _op_read_mem(void *args, size_t addr, size_t len, void *val) {
   if (len == 0)
     return 0;
 
+	_logger->trace("gdb read mem addr {:08x} len {}", addr, len);
+
   uint8_t *dest = (uint8_t *)val;
   size_t bytes_read = 0;
 
