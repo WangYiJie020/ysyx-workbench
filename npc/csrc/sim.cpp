@@ -609,8 +609,7 @@ int _dbg_by_gdb() {
 int _dbg_by_sdb() {
   spdlog::info("sim started in sdb debug mode");
   dbg_init(INITIAL_PC, img_size, img_file, sim_settings);
-  spdlog::info("sim reset done, entering {} mode",
-               batch_mode ? "batch" : "interactive");
+  spdlog::info("sdb entering {} mode", batch_mode ? "batch" : "interactive");
 
   if (batch_mode && !sim_settings.no_batch) {
     dbg_exec("c");
