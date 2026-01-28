@@ -20,13 +20,14 @@ static void _Get(std::string &field, const char *env_p) {
   do {                                                                         \
     const char *env_p = getenv(_STR(_CONCAT(VSIM_, v)));                       \
     _Get(setting.v, env_p);                                                    \
-    log_msg += (setting.v ? "[*] " : "[ ] ");                                  \
-    log_msg += #v;                                                             \
-    log_msg += "\n";                                                           \
+    log_msg += fmt::format("[{}] {:25}{}", setting.v ? '*' : ' ', #v,          \
+                           msg_line_first ? ' ' : '\n');                       \
+    msg_line_first = !msg_line_first;                                          \
   } while (0)
 
 void load_sim_setting_from_env(sim_setting &setting) {
   std::string log_msg = "sim_setting: \n";
+  bool msg_line_first = true;
   GET(en_wave);
   GET(en_inst_trace);
   GET(showdisasm);
@@ -52,5 +53,5 @@ void load_sim_setting_from_env(sim_setting &setting) {
   GET_DPI_FLAG(psram_read);
   GET_DPI_FLAG(psram_write);
 
-	spdlog::info("{}", log_msg);
+  spdlog::info("{}", log_msg);
 }
