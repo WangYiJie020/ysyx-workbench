@@ -68,6 +68,20 @@ static int _op_read_mem(void *args, size_t addr, size_t len, void *val) {
 		_logger->trace("gdb read mem addr {:08x} word {:08x}", addr, word);
 		return 0;
 	}
+	if((addr & 0x3) == 0 && (len & 0x3) == 0){
+		size_t words = len / 4;
+		uint32_t *dest = (uint32_t *)val;
+		for(size_t i=0;i<words;i++){
+			uint32_t word;
+			if(!sim_read_vmem(addr + i*4, &word)){
+				dest[i] = 0;
+				return (int)std::errc::address_family_not_supported;
+			}
+			dest[i] = word;
+			_logger->trace("gdb read mem addr {:08x} word {:08x}", addr + i*4, word);
+		}
+		return 0;
+	}
 
   uint8_t *dest = (uint8_t *)val;
   size_t bytes_read = 0;
