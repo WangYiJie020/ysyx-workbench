@@ -5,17 +5,22 @@ extern "C" {
 
 #include "common.hpp"
 
+#include "sim.hpp"
+
 static size_t _op_get_regbytes(int regno) { return 4; }
 
 static int _op_read_reg(void *args, int regno, void *value) {
-  *(uint32_t *)value = 0x12345678;
-  return 0;
+	return sim_get_cpu_state()->gpr[regno];
 }
 
-static int _op_write_reg(void *args, int regno, void *value) { return 0; }
+static int _op_write_reg(void *args, int regno, void *value) {
+	sim_get_cpu_state()->gpr[regno] = *(uint32_t *)value;
+	return 0;
+}
 
 static int _op_read_mem(void *args, size_t addr, size_t len, void *val) {
-  return 0;
+
+  
 }
 
 static int _op_write_mem(void *args, size_t addr, size_t len, void *val) {

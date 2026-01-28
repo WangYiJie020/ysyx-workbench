@@ -110,7 +110,7 @@ void raise_ebreak(int a0) {
   is_running = false;
 
   // sbd_set_halt(a0);
-	assert(sim_cfg.raise_halt_cb);
+  assert(sim_cfg.raise_halt_cb);
   sim_cfg.raise_halt_cb(a0);
 
   constexpr std::string_view fg_red = "\33[1;31m", fg_green = "\33[1;32m",
@@ -142,9 +142,68 @@ word_t img[60 * 1024 * 1024 / 4] = {
       _loger->trace(fmt, ##__VA_ARGS__);                                       \
   } while (0)
 
+typedef bool (*mem_region_addr_mapper_tohost_t)(uint32_t addr,
+                                                uint8_t *mapped_addr);
+typedef bool (*mem_region_addr_mapper_toguest_t)(uint8_t *host_ptr,
+                                                 uint32_t &addr);
+
+struct mem_region {
+  uint32_t base;
+  uint32_t end;
+
+  const char *name;
+
+  union {
+    struct {
+      mem_region_addr_mapper_tohost_t tohost;
+      // mem_region_addr_mapper_toguest_t toguest;
+    } mapper;
+    struct {
+      void *ptr;
+      size_t size;
+    } arr;
+  };
+  bool simple_map; // true: mapped_addr = addr - base + base_at_host
+  bool enwrite;
+
+  bool contains(uint32_t addr) const { return addr >= base && addr < end; }
+  uint8_t *at_host(uint32_t addr) const {
+    if (simple_map) {
+      assert(addr - base < arr.size);
+      return (uint8_t *)arr.ptr + (addr - base);
+    } else {
+      assert(mapper.tohost);
+      uint8_t *mapped_addr = nullptr;
+      bool ok = mapper.tohost(addr, mapped_addr);
+      assert(ok);
+      return mapped_addr;
+    }
+  }
+};
+
 constexpr uint32_t MROM_BASE = 0x20000000u;
 constexpr uint32_t MROM_END = 0x20010000u;
 word_t mrom_data[(MROM_END - MROM_BASE) / 4];
+
+constexpr uint32_t FLASH_BASE = 0x30000000u;
+constexpr uint32_t FLASH_END = 0x40000000u;
+uint32_t flash_data[sizeof(img) / 4];
+
+constexpr uint32_t PSRAM_BASE = 0x80000000u;
+constexpr uint32_t PSRAM_END = 0xA0000000u;
+uint32_t psram_data[8 * 1024 * 1024 / 4];
+#define SIMPLE_REGION(name, base, end, array, enwrite)                         \
+  {                                                                            \
+    base, end, #name, {.arr = {.ptr = (void *)array, .size = sizeof(array)}},  \
+        true, enwrite                                                          \
+  }
+
+mem_region mem_regions[] = {
+    SIMPLE_REGION(MROM, MROM_BASE, MROM_END, mrom_data, false),
+    SIMPLE_REGION(FLASH, FLASH_BASE, FLASH_END, flash_data, false),
+    SIMPLE_REGION(PSRAM, PSRAM_BASE, PSRAM_END, psram_data, true),
+};
+
 extern "C" void mrom_read(int32_t addr, int32_t *data) {
   spdlog::mdc::put("testkey", "testvalue");
   if (addr < MROM_BASE) {
@@ -158,14 +217,8 @@ extern "C" void mrom_read(int32_t addr, int32_t *data) {
   *data = *(int32_t *)ptr;
 
   DPI_TRACE("R addr={:08x} data={:08x}", addr + MROM_BASE, *data);
-
-  // _dpi_logger->trace("mrom_read addr={:08x} data={:08x}", addr + MROM_BASE,
-  // *data);
 }
 
-constexpr uint32_t FLASH_BASE = 0x30000000u;
-constexpr uint32_t FLASH_END = 0x40000000u;
-uint32_t flash_data[sizeof(img) / 4];
 static void _init_flash();
 extern "C" void flash_read(int32_t addr, int32_t *data) {
   // in spi
@@ -178,13 +231,8 @@ extern "C" void flash_read(int32_t addr, int32_t *data) {
   uintptr_t ptr = (uintptr_t)flash_data + addr;
   *data = *(int32_t *)ptr;
   DPI_TRACE("R addr={:08x} data={:08x}", addr + FLASH_BASE, *data);
-  // _dpi_logger->trace("flash_read addr={:08x} data={:08x}", addr + FLASH_BASE,
-  // (uint32_t)*data);
 }
 
-constexpr uint32_t PSRAM_BASE = 0x80000000u;
-constexpr uint32_t PSRAM_END = 0xA0000000u;
-uint32_t psram_data[8 * 1024 * 1024 / 4];
 extern "C" void psram_read(int32_t addr, int32_t *data) {
   // in psram high 8bit addr are 0
   // no need to minus PSRAM_BASE
@@ -193,7 +241,6 @@ extern "C" void psram_read(int32_t addr, int32_t *data) {
   uintptr_t ptr = (uintptr_t)psram_data + addr;
   *data = *(int32_t *)ptr;
   DPI_TRACE("R addr={:08x} data={:08x}", addr + PSRAM_BASE, *data);
-  // printf("[DPI] psram_read addr=%08x data=%08x\n", addr + PSRAM_BASE, *data);
 }
 extern "C" void psram_write(int32_t addr, char strb8, int32_t data, int32_t *) {
   assert(addr < sizeof(psram_data));
@@ -218,8 +265,6 @@ extern "C" void psram_write(int32_t addr, char strb8, int32_t data, int32_t *) {
 
   DPI_TRACE("W addr={:08x} data={:08x} (strb {:02x}) newdata={:08x}",
             addr + PSRAM_BASE, data, (uint32_t)strb8, *ptr);
-  // printf("[DPI] psram_write addr=%08x data=%08x (strb %X)\n", addr +
-  // PSRAM_BASE, data, (uint32_t)strb8);
 }
 
 constexpr uint32_t SDRAM_BASE = 0xa0000000u;
@@ -232,7 +277,7 @@ extern "C" void sdram_read(char block, char bank, short row, short col,
   assert(bank >= 0 && bank < 4);
   assert(row >= 0 && row < 8192);
   assert(col >= 0 && col < 512);
-  // assert(block == 0 || block == 1);
+	assert(block >= 0 && block < 4);
   *data = sdram_data[bank][row][col][block];
   DPI_TRACE("R bank={:02x} row={:04x} col={:04x} block={} data={:04x}", bank,
             row, col, (uint32_t)block, (uint16_t)*data);
@@ -274,24 +319,20 @@ constexpr uint32_t SRAM_BASE = 0x0f000000u;
 constexpr uint32_t SRAM_END = 0x10000000u;
 
 uint8_t *sim_guest_to_host(uint32_t addr) {
-  uint32_t *ptr = nullptr;
-  if (addr >= MROM_BASE && addr < MROM_END) {
-    ptr = img + (addr - MROM_BASE);
-  } else if (addr >= FLASH_BASE && addr < FLASH_END) {
-    ptr = flash_data + (addr - FLASH_BASE);
-  } else {
-    printf("[W] mem_atguest don't support addr=%08x\n", addr);
-    assert(0);
-  }
-  // printf("[DPI] mem_atguest addr=%08x get %08x\n",addr,*ptr);
-  return (uint8_t *)ptr;
+	for (auto &r : mem_regions) {
+		if (r.contains(addr)) {
+			return r.at_host(addr);
+		}
+	}
+	spdlog::error("sim_guest_to_host addr={:08x} no mapping region", addr);
+	return nullptr;
 }
-word_t guest_to_host(word_t addr) {
-  // printf("raw addr %08X\n",addr);
-  assert(addr >= MADDR_BASE);
-  word_t res = addr - MADDR_BASE;
-  return res;
-}
+// word_t guest_to_host(word_t addr) {
+//   // printf("raw addr %08X\n",addr);
+//   assert(addr >= MADDR_BASE);
+//   word_t res = addr - MADDR_BASE;
+//   return res;
+// }
 
 // word_t gpr_snap[32];
 // word_t *sim_current_gpr() { return gpr_snap; }
@@ -318,68 +359,68 @@ void skip_difftest_ref() {
 #define MMIO_SERIAL_PORT 0x10000000u
 #define MMIO_RTC_ADDR 0x10000048u
 
-void pmem_read(int addr, int *out_data) {
-  if (!is_running) {
-    printf("warn: pmem_read when not running\n");
-    *out_data = 0;
-    return;
-  }
-
-  if (addr == MMIO_RTC_ADDR || addr == MMIO_RTC_ADDR + 4) {
-    skip_difftest_ref();
-    static uint64_t time_in_us;
-    if (addr == MMIO_RTC_ADDR) {
-      struct timespec ts;
-      clock_gettime(CLOCK_MONOTONIC_COARSE, &ts);
-      time_in_us = ts.tv_sec * 1000000 + ts.tv_nsec / 1000;
-      *out_data = (uint32_t)(time_in_us & 0xffffffffu);
-    } else {
-      *out_data = time_in_us >> 32;
-    }
-    return;
-  }
-
-  if (sim_settings.trace_pmem_readcall) {
-    printf("[DPI] pmem_read addr=%08x get ", addr);
-  }
-
-  uint32_t host_aligned = guest_to_host(addr) & (~0x3);
-  *out_data = img[host_aligned / 4];
-
-  if (sim_settings.trace_pmem_readcall) {
-    printf("%08x\n", *out_data);
-  }
-}
-void pmem_write(int addr, int data, int mask) {
-  if (addr == MMIO_SERIAL_PORT) {
-    if (sim_settings.trace_mmio_write) {
-      printf("[DPI] MMIO write to serial port: %c\n", data & 0xff);
-    }
-    skip_difftest_ref();
-    putchar(data & 0xff);
-    fflush(stdout);
-    return;
-  }
-
-  if (sim_settings.trace_pmem_writecall) {
-    printf("[DPI] pmem write addr=%08x data=%08x mask=%02x\n", addr, data,
-           mask);
-  }
-
-  uint32_t host_aligned = guest_to_host(addr) & (~0x3);
-
-  uint8_t *p = (uint8_t *)(&img[host_aligned >> 2]);
-  uint32_t umask = mask, udata = data;
-
-  while (umask) {
-    if (umask & 1) {
-      *p = udata & 0xff;
-    }
-    p++;
-    umask >>= 1;
-    udata >>= 8;
-  }
-}
+// void pmem_read(int addr, int *out_data) {
+//   if (!is_running) {
+//     printf("warn: pmem_read when not running\n");
+//     *out_data = 0;
+//     return;
+//   }
+//
+//   if (addr == MMIO_RTC_ADDR || addr == MMIO_RTC_ADDR + 4) {
+//     skip_difftest_ref();
+//     static uint64_t time_in_us;
+//     if (addr == MMIO_RTC_ADDR) {
+//       struct timespec ts;
+//       clock_gettime(CLOCK_MONOTONIC_COARSE, &ts);
+//       time_in_us = ts.tv_sec * 1000000 + ts.tv_nsec / 1000;
+//       *out_data = (uint32_t)(time_in_us & 0xffffffffu);
+//     } else {
+//       *out_data = time_in_us >> 32;
+//     }
+//     return;
+//   }
+//
+//   if (sim_settings.trace_pmem_readcall) {
+//     printf("[DPI] pmem_read addr=%08x get ", addr);
+//   }
+//
+//   uint32_t host_aligned = guest_to_host(addr) & (~0x3);
+//   *out_data = img[host_aligned / 4];
+//
+//   if (sim_settings.trace_pmem_readcall) {
+//     printf("%08x\n", *out_data);
+//   }
+// }
+// void pmem_write(int addr, int data, int mask) {
+//   if (addr == MMIO_SERIAL_PORT) {
+//     if (sim_settings.trace_mmio_write) {
+//       printf("[DPI] MMIO write to serial port: %c\n", data & 0xff);
+//     }
+//     skip_difftest_ref();
+//     putchar(data & 0xff);
+//     fflush(stdout);
+//     return;
+//   }
+//
+//   if (sim_settings.trace_pmem_writecall) {
+//     printf("[DPI] pmem write addr=%08x data=%08x mask=%02x\n", addr, data,
+//            mask);
+//   }
+//
+//   uint32_t host_aligned = guest_to_host(addr) & (~0x3);
+//
+//   uint8_t *p = (uint8_t *)(&img[host_aligned >> 2]);
+//   uint32_t umask = mask, udata = data;
+//
+//   while (umask) {
+//     if (umask & 1) {
+//       *p = udata & 0xff;
+//     }
+//     p++;
+//     umask >>= 1;
+//     udata >>= 8;
+//   }
+// }
 
 bool sim_read_vmem(word_t addr, word_t *data) {
   if (addr >= MROM_BASE && addr < MROM_END) {
@@ -514,7 +555,7 @@ static void parse_args(int argc, char **argv) {
       sim_cfg.hope_batch_mode = true;
       break;
     case 1:
-			sim_cfg.img_file_path = optarg;
+      sim_cfg.img_file_path = optarg;
       break;
     default:
       printf("Bad option %c\n", o);
@@ -616,5 +657,5 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   reset(reset_cycles);
   spdlog::info("sim reset done ({} cycles)", reset_cycles);
 
-	return true;
+  return true;
 }
