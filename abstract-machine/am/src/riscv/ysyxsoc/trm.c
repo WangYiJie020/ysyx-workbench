@@ -264,9 +264,10 @@ SSBL_TEXT void _second_boot() {
 	putnum_base16((uint32_t)heap.start);
 	putstr(" heap.end = ");
 	putnum_base16((uint32_t)heap.end);
-
   assert(heap.start < heap.end);
-
+	putstr("\nheap size = ");
+	putnum_base16((uint32_t)(heap.end - heap.start));
+	putch('\n');
 
   boot_log("enter main function.\n");
   int ret = main(mainargs);
