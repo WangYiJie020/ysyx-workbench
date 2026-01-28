@@ -4,6 +4,7 @@
 #include <verilated_vpi.h>
 
 #include <spdlog/spdlog.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 
 #include "sim.hpp"
 #include "dbg.hpp"
@@ -11,6 +12,7 @@
 int gdb_mainloop();
 
 int main(int argc, char **argv) {
+	spdlog::set_default_logger(spdlog::stdout_color_mt("sim"));
   spdlog::set_level(spdlog::level::trace); // will modify all registered loggers
 	spdlog::set_pattern("[%H:%M:%S.%e] [%^%l%$] [%n] %v");
 
