@@ -17,6 +17,7 @@ int main(int argc, char **argv) {
 
   if(sim_init(argc, argv, setting)!=0){
 		get_dut()->final();
+		spdlog::error("sim_init failed");
 		return 1;
 	}
 
