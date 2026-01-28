@@ -49,11 +49,23 @@ FSBL_TEXT void init_serial() {
   *UART_IER = 0x0;
 }
 
+FSBL_TEXT void inline fsbl_putch(char ch) {
+	while (!IS_UART_TRANSMIT_EMPTY()) {
+	}
+	*UART_TX = ch;
+}
+SSBL_TEXT void inline ssbl_putch(char ch) {
+	while (!IS_UART_TRANSMIT_EMPTY()) {
+	}
+	*UART_TX = ch;
+}
+
 void putch(char ch) {
   while (!IS_UART_TRANSMIT_EMPTY()) {
   }
   *UART_TX = ch;
 }
+
 char try_getch() {
   if (IS_UART_RECEIVE_READY()) {
     return *UART_RX;
@@ -213,6 +225,7 @@ FSBL_TEXT void boot_memcpy(void *dst, const void *src, size_t n) {
 SSBL_TEXT void _second_boot();
 FSBL_TEXT void _trm_init() {
   init_serial();
+#define putch fsbl_putch
   boot_log("serial initialized.\n");
 
   boot_memcpy(_ssbl_start, __ssbl_load_start__, (size_t)__ssbl_size__);
@@ -222,6 +235,8 @@ FSBL_TEXT void _trm_init() {
 }
 
 SSBL_TEXT void _second_boot() {
+#undef putch
+#define putch ssbl_putch
   _ssbl_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
   boot_log(".rodata copied.\n");
 
