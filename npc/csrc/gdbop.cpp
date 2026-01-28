@@ -6,21 +6,25 @@ extern "C" {
 #include <stdint.h>
 
 #include "common.hpp"
+#include <spdlog/sinks/stdout_color_sinks.h>
 
 #include "sim.hpp"
+
+static std::shared_ptr<spdlog::logger> _logger =
+		spdlog::stdout_color_mt("gdbstub");
 
 static size_t _op_get_regbytes(int regno) { return 4; }
 
 static int _op_read_reg(void *args, int regno, void *value) {
   uint32_t r = sim_get_cpu_state()->gpr[regno];
-  spdlog::trace("gdb read reg {} value {:08x}", regno, r);
+  _logger->trace("gdb read reg {} value {:08x}", regno, r);
   *(uint32_t *)value = r;
   return 0;
 }
 
 static int _op_write_reg(void *args, int regno, void *value) {
   sim_get_cpu_state()->gpr[regno] = *(uint32_t *)value;
-	spdlog::trace("gdb write reg {} value {:08x}", regno,
+	_logger->trace("gdb write reg {} value {:08x}", regno,
 								sim_get_cpu_state()->gpr[regno]);
   return 0;
 }
@@ -53,17 +57,24 @@ static int _op_write_mem(void *args, size_t addr, size_t len, void *val) {
   return 0;
 }
 
-static bool _op_set_bp(void *args, size_t addr, bp_type_t type) { return true; }
+static bool _op_set_bp(void *args, size_t addr, bp_type_t type) { 
+	_logger->trace("gdb set bp at addr {:08x}", addr);
+	return true; }
 
-static bool _op_del_bp(void *args, size_t addr, bp_type_t type) { return true; }
+static bool _op_del_bp(void *args, size_t addr, bp_type_t type) {
+	_logger->trace("gdb del bp at addr {:08x}", addr);
+	return true; }
 
 static void _op_on_interrupt(void *args) {}
 
 static void _op_set_cpu(void *args, int cpuid) {}
 static int _op_get_cpu(void *args) { return 0; }
 
-static gdb_action_t _op_cont(void *args) { return ACT_RESUME; }
+static gdb_action_t _op_cont(void *args) {
+	_logger->trace("gdb cont called");
+	return ACT_RESUME; }
 static gdb_action_t _op_stepi(void *args) {
+	_logger->trace("gdb stepi called");
 	sim_step_inst();
 	return ACT_RESUME;
 }
