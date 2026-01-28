@@ -13,6 +13,8 @@ ifeq ($(VSIM_zero_uninit_ram), 1)
 CFLAGS += -DSKIP_BSS_CLEAR
 endif
 
+CFLAGS += -g
+
 CFLAGS    += -fdata-sections -ffunction-sections
 LDSCRIPTS += $(AM_HOME)/am/src/riscv/ysyxsoc/linker.ld
 LDFLAGS	  += --defsym=_pmem_start=0x20000000
