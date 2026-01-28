@@ -139,7 +139,7 @@ bool gdbop_init(const char *socket) {
 
   static arch_info_t arch = {
       .target_desc = (char *)TARGET_RV32,
-      .smp = 0,
+      .smp = 1,
       .reg_num = 32,
   };
 
