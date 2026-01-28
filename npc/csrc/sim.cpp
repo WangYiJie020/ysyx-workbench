@@ -758,5 +758,8 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   reset(reset_cycles);
   spdlog::info("sim reset done ({} cycles)", reset_cycles);
 
+	cpu.pc = sim_cfg.init_pc;
+	spdlog::info("set initial pc to {:08x}", cpu.pc);
+
   return true;
 }
