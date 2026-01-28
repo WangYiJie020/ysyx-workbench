@@ -1,5 +1,6 @@
 #include "elf_tool.hpp"
 #include "sim.hpp"
+#include "spdlog/spdlog.h"
 #include "tracers.hpp"
 #include <sdb.hpp>
 
@@ -114,6 +115,7 @@ void sdb_init(word_t init_pc, size_t img_size, const char *img_file,
 
 int sdb_mainloop() {
   spdlog::info("sim started in sdb debug mode");
+	spdlog::set_pattern("[%Y-%m-%d %H:%M:%S] [%^%l%$] %n %v");
 
   auto &cfg = *sim_get_config();
 	cfg.raise_halt_cb = sdb_set_halt;
