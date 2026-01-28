@@ -12,7 +12,7 @@ int gdb_mainloop();
 
 int main(int argc, char **argv) {
   spdlog::set_level(spdlog::level::trace); // will modify all registered loggers
-	spdlog::set_pattern("[%Y-%m-%d %H:%M:%S] [%^%l%$] %v");
+	// spdlog::set_pattern("[%Y-%m-%d %H:%M:%S] [%^%l%$] %v");
 
 	auto& setting = sim_get_config()->setting;
 	load_sim_setting_from_env(setting);
