@@ -24,7 +24,10 @@
 #include <unistd.h>
 
 TOP_NAME dut;
-sim_setting sim_settings;
+sim_config sim_cfg;
+sim_setting& sim_settings = sim_cfg.setting;
+
+sim_cpu_state cpu;
 
 TOP_NAME *get_dut() { return &dut; }
 
@@ -34,7 +37,6 @@ typedef uint32_t word_t;
 typedef uint32_t addr_t;
 
 #define MADDR_BASE 0x20000000u
-#define INITIAL_PC 0x30000000u
 
 // #define TRACE_PMEM_CALL
 // #define TRACE_SHOW_ALL_INST
@@ -45,6 +47,9 @@ static uint64_t sim_time = 0;
 static uint64_t cycle_count = 0;
 
 static std::shared_ptr<spdlog::logger> _dpi_logger;
+
+sim_config *sim_get_config() { return &sim_cfg; }
+sim_cpu_state *sim_get_cpu_state() { return &cpu; }
 
 class sim_time_formatter : public spdlog::custom_flag_formatter {
 public:
@@ -101,13 +106,12 @@ static void reset(int n) {
 static bool is_running = true;
 static bool is_good_trap = false;
 
-word_t current_pc = INITIAL_PC;
-word_t sim_current_pc() { return current_pc; }
 
 void raise_ebreak(int a0) {
   is_running = false;
 
-  dbg_set_halt(a0);
+  // sbd_set_halt(a0);
+	sim_cfg.raise_halt_cb(a0);
 
   constexpr std::string_view fg_red = "\33[1;31m", fg_green = "\33[1;32m",
                              fg_yellow = "\33[1;33m", ansi_none = "\33[0m";
@@ -116,7 +120,7 @@ void raise_ebreak(int a0) {
 
   spdlog::info("{}HIT {} TRAP{} a0 = {} @pc = 0x{:08x} cyc {}",
                is_good_trap ? fg_green : fg_red, is_good_trap ? "GOOD" : "BAD",
-               ansi_none, a0, current_pc, cycle_count);
+               ansi_none, a0, cpu.pc, cycle_count);
 }
 bool sim_halted() { return !is_running; }
 bool sim_hit_good_trap() { return is_good_trap; }
@@ -289,27 +293,26 @@ word_t guest_to_host(word_t addr) {
   return res;
 }
 
-word_t gpr_snap[32];
-word_t *sim_current_gpr() { return gpr_snap; }
+// word_t gpr_snap[32];
+// word_t *sim_current_gpr() { return gpr_snap; }
 
-void gpr_upd(int regno, int data) {
+extern "C" void gpr_upd(int regno, int data) {
   if (regno == 0)
     return;
-  gpr_snap[regno] = data;
+  cpu.gpr[regno] = data;
 }
 
 bool pc_changed = false;
-void pc_upd(int pc, int npc) {
-  //	printf("pc upd pc=%08x npc=%08x\n",pc,npc);
+extern "C" void pc_upd(int pc, int npc) {
   pc_changed = true;
-  current_pc = npc;
+  cpu.pc = npc;
 }
 
 void skip_difftest_ref() {
   if (sim_settings.trace_difftest_skip) {
     printf("[DPI] skip_difftest_ref called\n");
   }
-  dbg_skip_difftest_ref();
+  sdb_skip_difftest_ref();
 }
 
 #define MMIO_SERIAL_PORT 0x10000000u
@@ -420,12 +423,12 @@ void sim_step_inst() {
   while (!pc_changed) {
     sim_step_cycle();
     if (sim_halted()) {
-      current_pc += 4;
+      cpu.pc += 4;
       return;
     }
     cnt++;
     if (cnt >= MAYBE_DEADLOOP_THRESHOLD) {
-      dbg_dump_recent_info();
+      sdb_dump_recent_info();
       spdlog::warn("simulation has stepped {} cycles without pc change, maybe "
                    "lock happened",
                    cnt);
@@ -606,18 +609,6 @@ int _dbg_by_gdb() {
   spdlog::info("gdb session ended");
   return 0;
 }
-int _dbg_by_sdb() {
-  spdlog::info("sim started in sdb debug mode");
-  dbg_init(INITIAL_PC, img_size, img_file, sim_settings);
-  spdlog::info("sdb entering {} mode", batch_mode ? "batch" : "interactive");
-
-  if (batch_mode && !sim_settings.no_batch) {
-    dbg_exec("c");
-    return dbg_is_hitbadtrap() ? 1 : 0;
-  }
-
-  return 0;
-}
 
 bool sim_init(int argc, char **argv, sim_setting setting) {
   Verilated::commandArgs(argc, argv);
@@ -634,8 +625,6 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   using namespace std::ranges;
 
   load_img();
-
-  spdlog::set_level(spdlog::level::trace); // will modify all registered loggers
 
   _init_flash();
   _fill_rams_uninit();
@@ -657,8 +646,8 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   if (setting.gdb_mode) {
     return _dbg_by_gdb();
   } else {
-    return _dbg_by_sdb();
+    // return _dbg_by_sdb();
   }
 }
 
-void sim_exec_sdbcmd(std::string_view cmd, bool &quit) { dbg_exec(cmd, &quit); }
+// void sim_exec_sdbcmd(std::string_view cmd, bool &quit) { dbg_exec(cmd, &quit); }

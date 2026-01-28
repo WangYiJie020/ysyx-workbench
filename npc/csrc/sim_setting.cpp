@@ -28,6 +28,9 @@ static void _Get(std::string &field, const char *env_p) {
 void load_sim_setting_from_env(sim_setting &setting) {
   std::string log_msg = "sim_setting: \n";
   bool msg_line_first = true;
+
+	spdlog::info("loading sim_setting from env");
+
   GET(en_wave);
   GET(en_inst_trace);
   GET(showdisasm);

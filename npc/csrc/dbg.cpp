@@ -3,15 +3,30 @@
 #include "tracers.hpp"
 #include <sdb.hpp>
 
+#include "common.hpp"
+
+#include "sprobe.hpp"
+
+SProbe sprobe;
+cycle_end_callback_t _old_cycle_callback = nullptr;
+
+void cyc_callback() {
+  if (sim_halted())
+    return;
+  sprobe.dump_watched();
+	if (_old_cycle_callback)
+		_old_cycle_callback();
+}
+
 std::shared_ptr<sdb::debuger> dbg;
 sdb::difftest_trace_handler_ptr diff_handler;
 
-void dbg_skip_difftest_ref() {
+void sdb_skip_difftest_ref() {
   if (diff_handler)
     diff_handler->skip_ref();
 }
 
-void dbg_exec(std::string_view cmd, bool *quit) {
+void sdb_exec(std::string_view cmd, bool *quit) {
   dbg->exec_command(cmd);
   if (dbg->state().state == sdb::run_state::quit) {
     if (quit)
@@ -19,10 +34,10 @@ void dbg_exec(std::string_view cmd, bool *quit) {
   }
 }
 
-bool dbg_is_hitbadtrap() { return dbg->state().is_badexit(); }
+bool sdb_is_hitbadtrap() { return dbg->state().is_badexit(); }
 
-void dbg_set_halt(int a0) { dbg->state().halt(a0); }
-void dbg_dump_recent_info() { dbg->dump_all(); }
+void sbd_set_halt(int a0) { dbg->state().halt(a0); }
+void sdb_dump_recent_info() { dbg->dump_all(); }
 
 namespace sdbwrap {
 sdb::paddr_t cpu_exec(size_t n) {
@@ -31,11 +46,11 @@ sdb::paddr_t cpu_exec(size_t n) {
     if (sim_halted())
       break;
   }
-  return sim_current_pc();
+  return sim_get_cpu_state()->pc;
 }
 void shot_regsnap(sdb::reg_snapshot_t &regsnap) {
   for (size_t i = 0; i < 32; i++) {
-    regsnap[i] = sim_current_gpr()[i];
+    regsnap[i] = sim_get_cpu_state()->gpr[i];
   }
 }
 sdb::vlen_inst_code inst_fetcher(sdb::paddr_t pc) {
@@ -58,7 +73,7 @@ std::array<std::string_view, 32> reg_names = {
 //     printf("%s: %08x\n", reg_names[i].data(), gpr_snap[i]);
 //   }
 // }
-void dbg_init(word_t init_pc, size_t img_size, const char *img_file,
+void sdb_init(word_t init_pc, size_t img_size, const char *img_file,
               sim_setting setting) {
   dbg = std::make_shared<sdb::debuger>(
       init_pc, init_pc, img_size, sdbwrap::cpu_exec, sdbwrap::loadmem,
@@ -83,7 +98,8 @@ void dbg_init(word_t init_pc, size_t img_size, const char *img_file,
       auto elf_file = try_find_elf_file_of(img_file);
 
       if (!elf_file.empty()) {
-        printf("Found ELF file: %s\n", elf_file.c_str());
+        // printf("Found ELF file: %s\n", elf_file.c_str());
+				spdlog::info("Found ELF file {}", elf_file);
         dbg->add_trace(sdb::make_ftrace_handler(elf_file));
       }
     }
@@ -94,5 +110,53 @@ void dbg_init(word_t init_pc, size_t img_size, const char *img_file,
       dbg->add_trace(diff_handler);
     }
   }
+}
 
+int sdb_mainloop() {
+  spdlog::info("sim started in sdb debug mode");
+
+  auto &cfg = *sim_get_config();
+  sdb_init(cfg.init_pc, cfg.img_size, cfg.img_file_path, cfg.setting);
+  spdlog::info("sdb entering {} mode",
+               cfg.is_batch_mode() ? "batch" : "interactive");
+
+  if (cfg.is_batch_mode()) {
+    sdb_exec("c", nullptr);
+    return sdb_is_hitbadtrap() ? 1 : 0;
+  }
+
+	_old_cycle_callback = cfg.setting.cycle_finish_cb;
+	cfg.setting.cycle_finish_cb = cyc_callback;
+
+  std::string top_vpi_name =
+      std::string("TOP.") + std::string(_STR(TOP_NAME)).substr(1);
+
+  std::string cmd;
+  bool quit = false;
+  while (!sim_halted() && !quit) {
+    std::cout << "(sdb) ";
+    std::getline(std::cin, cmd);
+    if (cmd == "sc") {
+      sim_step_cycle();
+      continue;
+    }
+    if (cmd.size() > 3 && cmd.substr(0, 2) == "ps") {
+      std::string sig_name = cmd.substr(3);
+      if (sig_name == "*") {
+        sprobe.add_watch(top_vpi_name);
+        continue;
+      }
+      if (sig_name.starts_with("`c.")) {
+        sig_name = "asic.cpu.cpu." + sig_name.substr(3);
+      }
+
+      auto fullname = top_vpi_name + '.' + sig_name;
+      if (sprobe.add_watch(fullname))
+        printf("Added watch for '%s'\n", fullname.c_str());
+      continue;
+    }
+    sdb_exec(cmd, &quit);
+  }
+
+  return sim_hit_good_trap() ? 0 : 1;
 }
