@@ -1,7 +1,6 @@
 #include <am.h>
 #include <riscv/riscv.h>
 #include <klib.h>
-#include <stdio.h>
 
 static Context* (*user_handler)(Event, Context*) = NULL;
 
@@ -34,8 +33,6 @@ bool cte_init(Context*(*handler)(Event, Context*)) {
   // initialize exception entry
   asm volatile("csrw mtvec, %0" : : "r"(__am_asm_trap));
 
-	printf("cte_init done\n");
-
   // register event handler
   user_handler = handler;
 
@@ -53,6 +50,7 @@ Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
 }
 
 void yield() {
+	printf("yield called\n");
 #ifdef __riscv_e
   asm volatile("li a5, -1; ecall");
 #else
