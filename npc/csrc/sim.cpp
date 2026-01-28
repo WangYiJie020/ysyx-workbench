@@ -600,13 +600,15 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 
   spdlog::set_level(spdlog::level::trace); // will modify all registered loggers
 
-	spdlog::info("initializing gdbop");
-	bool res = gdbop_init("127.0.0.1:1234");
+	constexpr std::string_view gdb_socket = "127.0.0.1:1234";
+	spdlog::info("initializing gdbstub at {}", gdb_socket);
+	spdlog::info("init will stuck until gdb connects");
+	bool res = gdbop_init(gdb_socket.data());
 	if(!res){
 		spdlog::error("gdbop_init failed");
 		return 1;
 	}
-	spdlog::info("running gdbop");
+	spdlog::info("gdbstub initialized, waiting for gdb commands");
 	res = gdbop_run();
 	if(!res){
 		spdlog::error("gdbop_run failed");
