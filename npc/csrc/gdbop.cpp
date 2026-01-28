@@ -17,17 +17,17 @@ static size_t _op_get_regbytes(int regno) { return 4; }
 
 static int _op_read_reg(void *args, int regno, void *value) {
   if (regno < 0 || regno > 32) {
-    _logger->error("gdb read reg invalid regno {}", regno);
+    _logger->error("read reg invalid regno {}", regno);
     return (int)std::errc::invalid_argument;
   } else if (regno == 32) {
     // pc
     uint32_t pc = sim_get_cpu_state()->pc;
-    _logger->trace("gdb read reg pc value {:08x}", pc);
+    _logger->trace("read reg pc value {:08x}", pc);
     *(uint32_t *)value = pc;
     return 0;
   } else {
     uint32_t r = sim_get_cpu_state()->gpr[regno];
-    // _logger->trace("gdb read reg {} value {:08x}", regno, r);
+    // _logger->trace("read reg {} value {:08x}", regno, r);
     *(uint32_t *)value = r;
     return 0;
   }
@@ -35,17 +35,17 @@ static int _op_read_reg(void *args, int regno, void *value) {
 
 static int _op_write_reg(void *args, int regno, void *value) {
   if (regno < 0 || regno > 32) {
-    _logger->error("gdb write reg invalid regno {}", regno);
+    _logger->error("write reg invalid regno {}", regno);
     return (int)std::errc::invalid_argument;
   } else if (regno == 32) {
     // pc
     uint32_t pc = *(uint32_t *)value;
-    _logger->trace("gdb write reg pc value {:08x}", pc);
+    _logger->trace("write reg pc value {:08x}", pc);
     sim_get_cpu_state()->pc = pc;
     return 0;
   } else {
     uint32_t r = *(uint32_t *)value;
-    _logger->trace("gdb write reg {} value {:08x}", regno, r);
+    _logger->trace("write reg {} value {:08x}", regno, r);
     sim_get_cpu_state()->gpr[regno] = r;
     return 0;
   }
@@ -56,7 +56,7 @@ static int _op_read_mem(void *args, size_t addr, size_t len, void *val) {
   if (len == 0)
     return 0;
 
-	_logger->trace("gdb read mem addr {:08x} len {}", addr, len);
+	_logger->trace("read mem addr {:08x} len {}", addr, len);
 
 	if((addr & 0x3) == 0 && len == 4){
 		uint32_t word;
@@ -65,7 +65,7 @@ static int _op_read_mem(void *args, size_t addr, size_t len, void *val) {
 			return (int)std::errc::address_family_not_supported;
 		}
 		*(uint32_t *)val = word;
-		_logger->trace("gdb read mem addr {:08x} word {:08x}", addr, word);
+		_logger->trace("read mem addr {:08x} word {:08x}", addr, word);
 		return 0;
 	}
 	if((addr & 0x3) == 0 && (len & 0x3) == 0){
@@ -78,42 +78,15 @@ static int _op_read_mem(void *args, size_t addr, size_t len, void *val) {
 				return (int)std::errc::address_family_not_supported;
 			}
 			dest[i] = word;
-			// _logger->trace("gdb read mem addr {:08x} word {:08x}", addr + i*4, word);
+			// _logger->trace("read mem addr {:08x} word {:08x}", addr + i*4, word);
 		}
-		_logger->trace("gdb read mem addr {:08x} len {} words {}", addr, len, words);
+		_logger->trace("read mem addr {:08x} len {} words {}", addr, len, words);
 		return 0;
 	}
 
-  uint8_t *dest = (uint8_t *)val;
-  size_t bytes_read = 0;
+	_logger->error("read unaligned addr/len not supported addr {:08x} len {}", addr, len);
 
-  while (bytes_read < len) {
-    size_t current_addr = addr + bytes_read;
-
-    size_t aligned_addr = current_addr & ~0x3;
-
-    size_t offset = current_addr & 0x3;
-
-    uint32_t temp_word;
-    if (!sim_read_vmem(aligned_addr, &temp_word)) {
-      return -1;
-    }
-
-    size_t space_in_word = 4 - offset;
-    size_t copy_len =
-        (len - bytes_read < space_in_word) ? (len - bytes_read) : space_in_word;
-
-    uint8_t *word_ptr = (uint8_t *)&temp_word;
-    for (size_t i = 0; i < copy_len; i++) {
-      dest[bytes_read + i] = word_ptr[offset + i];
-			_logger->trace("gdb read mem addr {:08x} byte {:02x}", current_addr + i,
-												 word_ptr[offset + i]);
-    }
-
-    bytes_read += copy_len;
-  }
-
-  return 0;
+  return (int)std::errc::not_supported;
 }
 
 static int _op_write_mem(void *args, size_t addr, size_t len, void *val) {
@@ -123,20 +96,22 @@ static int _op_write_mem(void *args, size_t addr, size_t len, void *val) {
 static std::set<size_t> _breakpoints;
 
 static bool _op_set_bp(void *args, size_t addr, bp_type_t type) {
-  _logger->trace("gdb set bp at addr {:08x}", addr);
+  _logger->info("set bp at addr {:08x}", addr);
   _breakpoints.insert(addr);
-  _logger->trace("current breakpoints count {}", _breakpoints.size());
+  _logger->debug("current breakpoints count {}", _breakpoints.size());
   return true;
 }
 
 static bool _op_del_bp(void *args, size_t addr, bp_type_t type) {
-  _logger->trace("gdb del bp at addr {:08x}", addr);
+  _logger->info("del bp at addr {:08x}", addr);
   _breakpoints.erase(addr);
-  _logger->trace("current breakpoints count {}", _breakpoints.size());
+  _logger->debug("current breakpoints count {}", _breakpoints.size());
   return true;
 }
 
-static void _op_on_interrupt(void *args) {}
+static void _op_on_interrupt(void *args) {
+	_logger->warn("gdbstub on_interrupt called, but not implemented");
+}
 
 static void _op_set_cpu(void *args, int cpuid) {}
 static int _op_get_cpu(void *args) { return 0; }
@@ -146,7 +121,7 @@ static void _cb_on_halt(int a0) {
 }
 
 static gdb_action_t _op_cont(void *args) {
-  _logger->trace("gdb cont called");
+  _logger->trace("cont called");
   while (true) {
     uint32_t pc = sim_get_cpu_state()->pc;
     if (_breakpoints.count(pc)) {
@@ -163,7 +138,7 @@ static gdb_action_t _op_cont(void *args) {
   return ACT_RESUME;
 }
 static gdb_action_t _op_stepi(void *args) {
-  _logger->trace("gdb stepi called");
+  _logger->info("stepi called");
   sim_step_inst();
   return ACT_RESUME;
 }
@@ -223,6 +198,6 @@ int gdb_mainloop() {
     return 1;
   }
   gdbop_close();
-  spdlog::info("gdb session ended");
+  spdlog::info("session ended");
   return 0;
 }
