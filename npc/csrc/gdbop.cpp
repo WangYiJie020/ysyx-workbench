@@ -80,13 +80,19 @@ static int _op_write_mem(void *args, size_t addr, size_t len, void *val) {
   return 0;
 }
 
+static std::set<size_t> _breakpoints;
+
 static bool _op_set_bp(void *args, size_t addr, bp_type_t type) {
   _logger->trace("gdb set bp at addr {:08x}", addr);
+	_breakpoints.insert(addr);
+	_logger->trace("current breakpoints count {}", _breakpoints.size());
   return true;
 }
 
 static bool _op_del_bp(void *args, size_t addr, bp_type_t type) {
   _logger->trace("gdb del bp at addr {:08x}", addr);
+	_breakpoints.erase(addr);
+	_logger->trace("current breakpoints count {}", _breakpoints.size());
   return true;
 }
 
@@ -97,6 +103,14 @@ static int _op_get_cpu(void *args) { return 0; }
 
 static gdb_action_t _op_cont(void *args) {
   _logger->trace("gdb cont called");
+	while (true) {
+		uint32_t pc = sim_get_cpu_state()->pc;
+		if (_breakpoints.count(pc)) {
+			_logger->info("hit breakpoint at pc {:08x}", pc);
+			break;
+		}
+		sim_step_inst();
+	}
   return ACT_RESUME;
 }
 static gdb_action_t _op_stepi(void *args) {
