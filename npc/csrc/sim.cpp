@@ -483,7 +483,6 @@ static long load_img() {
 
 static void _init_flash() { memcpy(flash_data, img, img_size); }
 static void _fill_rams_uninit() {
-	spdlog::info("RAMs initializing");
   if (sim_settings.zero_uninit_ram) {
     memset(psram_data, 0, sizeof(psram_data));
     memset(sdram_data, 0, sizeof(sdram_data));
