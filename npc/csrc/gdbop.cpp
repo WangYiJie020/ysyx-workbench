@@ -11,7 +11,7 @@ extern "C" {
 #include "sim.hpp"
 
 static std::shared_ptr<spdlog::logger> _logger =
-		spdlog::stdout_color_mt("gdbstub");
+    spdlog::stdout_color_mt("gdbstub");
 
 static size_t _op_get_regbytes(int regno) { return 4; }
 
@@ -24,8 +24,8 @@ static int _op_read_reg(void *args, int regno, void *value) {
 
 static int _op_write_reg(void *args, int regno, void *value) {
   sim_get_cpu_state()->gpr[regno] = *(uint32_t *)value;
-	_logger->trace("gdb write reg {} value {:08x}", regno,
-								sim_get_cpu_state()->gpr[regno]);
+  _logger->trace("gdb write reg {} value {:08x}", regno,
+                 sim_get_cpu_state()->gpr[regno]);
   return 0;
 }
 
@@ -57,13 +57,15 @@ static int _op_write_mem(void *args, size_t addr, size_t len, void *val) {
   return 0;
 }
 
-static bool _op_set_bp(void *args, size_t addr, bp_type_t type) { 
-	_logger->trace("gdb set bp at addr {:08x}", addr);
-	return true; }
+static bool _op_set_bp(void *args, size_t addr, bp_type_t type) {
+  _logger->trace("gdb set bp at addr {:08x}", addr);
+  return true;
+}
 
 static bool _op_del_bp(void *args, size_t addr, bp_type_t type) {
-	_logger->trace("gdb del bp at addr {:08x}", addr);
-	return true; }
+  _logger->trace("gdb del bp at addr {:08x}", addr);
+  return true;
+}
 
 static void _op_on_interrupt(void *args) {}
 
@@ -71,12 +73,13 @@ static void _op_set_cpu(void *args, int cpuid) {}
 static int _op_get_cpu(void *args) { return 0; }
 
 static gdb_action_t _op_cont(void *args) {
-	_logger->trace("gdb cont called");
-	return ACT_RESUME; }
+  _logger->trace("gdb cont called");
+  return ACT_RESUME;
+}
 static gdb_action_t _op_stepi(void *args) {
-	_logger->trace("gdb stepi called");
-	sim_step_inst();
-	return ACT_RESUME;
+  _logger->trace("gdb stepi called");
+  sim_step_inst();
+  return ACT_RESUME;
 }
 
 static gdbstub_t gdbstub;
@@ -110,20 +113,27 @@ void gdbop_close() { gdbstub_close(&gdbstub); }
 
 int gdb_mainloop() {
   spdlog::info("sim started in gdb debug mode");
+
+  for (int i = 0; i < 5; i++){
+		_logger->trace("run preload step {}", i);
+    sim_step_inst();
+	}
+	_logger->info("preload steps done, pc={:08x}", sim_get_cpu_state()->pc);
+
   constexpr std::string_view gdb_socket = "127.0.0.1:1234";
-  spdlog::info("initializing gdbstub at {}", gdb_socket);
-  spdlog::info("this step will stuck until gdb connects");
-  spdlog::info("try use 'target remote {}' in gdb", gdb_socket);
+  _logger->info("initializing gdbstub at {}", gdb_socket);
+  _logger->info("this step will stuck until gdb connects");
+  _logger->info("try use 'target remote {}' in gdb", gdb_socket);
 
   bool res = gdbop_init(gdb_socket.data());
   if (!res) {
-    spdlog::error("gdbop_init failed");
+    _logger->error("gdbop_init failed");
     return 1;
   }
   spdlog::info("gdbstub initialized, waiting for gdb commands");
   res = gdbop_run();
   if (!res) {
-    spdlog::error("gdbop_run failed");
+		_logger->error("gdbop_run failed");
     return 1;
   }
   gdbop_close();
