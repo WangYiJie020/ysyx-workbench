@@ -15,7 +15,7 @@ int main(int argc, char **argv) {
 	auto& setting = sim_get_config()->setting;
 	load_sim_setting_from_env(setting);
 
-  if(sim_init(argc, argv, setting)!=0){
+  if(!sim_init(argc, argv, setting)){
 		get_dut()->final();
 		spdlog::error("sim_init failed");
 		return 1;
