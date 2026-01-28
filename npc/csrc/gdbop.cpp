@@ -101,6 +101,10 @@ static void _op_on_interrupt(void *args) {}
 static void _op_set_cpu(void *args, int cpuid) {}
 static int _op_get_cpu(void *args) { return 0; }
 
+static void _cb_on_halt(int a0) {
+	_logger->info("sim halted callback called with a0={}", a0);
+}
+
 static gdb_action_t _op_cont(void *args) {
   _logger->trace("gdb cont called");
 	while (true) {
@@ -110,6 +114,11 @@ static gdb_action_t _op_cont(void *args) {
 			break;
 		}
 		sim_step_inst();
+		if (sim_halted()) {
+			_logger->info("sim halted at pc {:08x}", sim_get_cpu_state()->pc);
+			return ACT_SHUTDOWN;
+			break;
+		}
 	}
   return ACT_RESUME;
 }
@@ -150,6 +159,9 @@ void gdbop_close() { gdbstub_close(&gdbstub); }
 
 int gdb_mainloop() {
   spdlog::info("sim started in gdb debug mode");
+
+	auto &cfg = *sim_get_config();
+	cfg.raise_halt_cb = _cb_on_halt;
 
   // for (int i = 0; i < 4; i++) {
   //   _logger->trace("run preload step {}", i);
