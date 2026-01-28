@@ -35,7 +35,7 @@ CXXFLAGS += -DSPDLOG_COMPILED_LIB
 GDBSTUB_PATH ?= /home/wuser/gitclones/mini-gdbstub
 GDBSTUB_LIBPATH ?= $(GDBSTUB_PATH)/build
 INC_PATH += $(abspath $(GDBSTUB_PATH)/include)
-LDFLAGS += -L'$(abspath $(GDBSTUB_LIBPATH))' -lgdbstub
+LDFLAGS += -L$(abspath $(GDBSTUB_LIBPATH)) -lgdbstub
 
 # ifeq ($(ENABLE_WAVE), 1)
 VERILATOR_FLAGS += --trace-fst --trace-structs
