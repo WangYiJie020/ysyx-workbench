@@ -8,6 +8,9 @@ MEMORY {
 	psram : ORIGIN = 0x80000000, LENGTH = 4M
 	sdram : ORIGIN = 0xa0000000, LENGTH = 8M
 
+	/* flash */
+	load_region : ORIGIN = 0x30000000, LENGTH = 1M
+
 	/* sdram */
 	runtime : ORIGIN = 0xa0000000, LENGTH = 8M
 

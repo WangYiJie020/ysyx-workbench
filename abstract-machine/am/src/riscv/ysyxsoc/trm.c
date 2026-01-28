@@ -129,6 +129,8 @@ extern char __sram_end__[];
 extern char __psram_start__[];
 extern char __psram_end__[];
 
+extern char _stack_top[];
+
 typedef int (*entry_func_t)(const char *args);
 
 #define IS_4BYTE_ALIGNED(x) ((((uintptr_t)(x)) & 0x3) == 0)
@@ -258,7 +260,13 @@ SSBL_TEXT void _second_boot() {
   }
 
   boot_log("checking memory regions...\n");
+	putstr("heap.start = ");
+	putnum_base16((uint32_t)heap.start);
+	putstr(" heap.end = ");
+	putnum_base16((uint32_t)heap.end);
+
   assert(heap.start < heap.end);
+
 
   boot_log("enter main function.\n");
   int ret = main(mainargs);
