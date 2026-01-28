@@ -14,9 +14,6 @@ void cyc_callback() {
   sprobe.dump_watched();
 }
 
-bool gdbop_init(const char* socket);
-bool gdbop_run();
-void gdbop_close();
 
 int main(int argc, char **argv) {
 	sim_setting setting;
@@ -27,8 +24,6 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	gdbop_init(":1234");
-	gdbop_run();
 
   // get_dut()->contextp()->internalsDump(); // See scopes to help debug
   //

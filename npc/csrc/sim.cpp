@@ -578,6 +578,10 @@ void _init_dpi_logger() {
   spdlog::register_logger(_dpi_logger);
 }
 
+bool gdbop_init(const char* socket);
+bool gdbop_run();
+void gdbop_close();
+
 bool sim_init(int argc, char **argv, sim_setting setting) {
   Verilated::commandArgs(argc, argv);
   sim_settings = setting;
@@ -595,6 +599,18 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   load_img();
 
   spdlog::set_level(spdlog::level::trace); // will modify all registered loggers
+
+	bool res = gdbop_init(":1234");
+	if(!res){
+		spdlog::error("gdbop_init failed");
+		return 1;
+	}
+	res = gdbop_run();
+	if(!res){
+		spdlog::error("gdbop_run failed");
+		return 1;
+	}
+
 
   _init_flash();
   _fill_rams_uninit();
