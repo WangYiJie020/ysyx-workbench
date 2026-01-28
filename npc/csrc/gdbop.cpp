@@ -78,6 +78,8 @@ static int _op_read_mem(void *args, size_t addr, size_t len, void *val) {
     uint8_t *word_ptr = (uint8_t *)&temp_word;
     for (size_t i = 0; i < copy_len; i++) {
       dest[bytes_read + i] = word_ptr[offset + i];
+			_logger->trace("gdb read mem addr {:08x} byte {:02x}", current_addr + i,
+												 word_ptr[offset + i]);
     }
 
     bytes_read += copy_len;
