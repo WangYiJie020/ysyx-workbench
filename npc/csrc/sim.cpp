@@ -600,11 +600,13 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 
   spdlog::set_level(spdlog::level::trace); // will modify all registered loggers
 
+	spdlog::info("initializing gdbop");
 	bool res = gdbop_init(":1234");
 	if(!res){
 		spdlog::error("gdbop_init failed");
 		return 1;
 	}
+	spdlog::info("running gdbop");
 	res = gdbop_run();
 	if(!res){
 		spdlog::error("gdbop_run failed");
