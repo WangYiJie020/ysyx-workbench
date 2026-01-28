@@ -34,65 +34,75 @@ static int _op_read_reg(void *args, int regno, void *value) {
 }
 
 static int _op_write_reg(void *args, int regno, void *value) {
-	if (regno < 0 || regno > 32) {
-		_logger->error("gdb write reg invalid regno {}", regno);
-		return (int)std::errc::invalid_argument;
-	} else if (regno == 32) {
-		// pc
-		uint32_t pc = *(uint32_t *)value;
-		_logger->trace("gdb write reg pc value {:08x}", pc);
-		sim_get_cpu_state()->pc = pc;
-		return 0;
-	} else {
-		uint32_t r = *(uint32_t *)value;
-		_logger->trace("gdb write reg {} value {:08x}", regno, r);
-		sim_get_cpu_state()->gpr[regno] = r;
-		return 0;
-	}
+  if (regno < 0 || regno > 32) {
+    _logger->error("gdb write reg invalid regno {}", regno);
+    return (int)std::errc::invalid_argument;
+  } else if (regno == 32) {
+    // pc
+    uint32_t pc = *(uint32_t *)value;
+    _logger->trace("gdb write reg pc value {:08x}", pc);
+    sim_get_cpu_state()->pc = pc;
+    return 0;
+  } else {
+    uint32_t r = *(uint32_t *)value;
+    _logger->trace("gdb write reg {} value {:08x}", regno, r);
+    sim_get_cpu_state()->gpr[regno] = r;
+    return 0;
+  }
   return 0;
 }
 
 static int _op_read_mem(void *args, size_t addr, size_t len, void *val) {
-  size_t end = addr + len;
-  uint32_t *p = (uint32_t *)val;
-  for (size_t offset = 0; offset < len; offset += 4) {
-    uint32_t data = 0;
-    bool ok = sim_read_vmem(addr + offset, &data);
-    if (!ok) {
-      return (int)std::errc::address_family_not_supported;
+  if (len == 0)
+    return 0;
+
+  uint8_t *dest = (uint8_t *)val;
+  size_t bytes_read = 0;
+
+  while (bytes_read < len) {
+    size_t current_addr = addr + bytes_read;
+
+    size_t aligned_addr = current_addr & ~0x3;
+
+    size_t offset = current_addr & 0x3;
+
+    uint32_t temp_word;
+    if (!sim_read_vmem(aligned_addr, &temp_word)) {
+      return -1;
     }
-    *p = data;
-    p++;
+
+    size_t space_in_word = 4 - offset;
+    size_t copy_len =
+        (len - bytes_read < space_in_word) ? (len - bytes_read) : space_in_word;
+
+    uint8_t *word_ptr = (uint8_t *)&temp_word;
+    for (size_t i = 0; i < copy_len; i++) {
+      dest[bytes_read + i] = word_ptr[offset + i];
+    }
+
+    bytes_read += copy_len;
   }
+
   return 0;
 }
 
 static int _op_write_mem(void *args, size_t addr, size_t len, void *val) {
-  size_t end = addr + len;
-  uint32_t *p = (uint32_t *)val;
-  for (size_t offset = 0; offset < len; offset += 4) {
-    bool ok = sim_write_vmem(addr + offset, *p);
-    if (!ok) {
-      return (int)std::errc::address_family_not_supported;
-    }
-    p++;
-  }
-  return 0;
+  return (int)std::errc::not_supported;
 }
 
 static std::set<size_t> _breakpoints;
 
 static bool _op_set_bp(void *args, size_t addr, bp_type_t type) {
   _logger->trace("gdb set bp at addr {:08x}", addr);
-	_breakpoints.insert(addr);
-	_logger->trace("current breakpoints count {}", _breakpoints.size());
+  _breakpoints.insert(addr);
+  _logger->trace("current breakpoints count {}", _breakpoints.size());
   return true;
 }
 
 static bool _op_del_bp(void *args, size_t addr, bp_type_t type) {
   _logger->trace("gdb del bp at addr {:08x}", addr);
-	_breakpoints.erase(addr);
-	_logger->trace("current breakpoints count {}", _breakpoints.size());
+  _breakpoints.erase(addr);
+  _logger->trace("current breakpoints count {}", _breakpoints.size());
   return true;
 }
 
@@ -102,24 +112,24 @@ static void _op_set_cpu(void *args, int cpuid) {}
 static int _op_get_cpu(void *args) { return 0; }
 
 static void _cb_on_halt(int a0) {
-	_logger->info("sim halted callback called with a0={}", a0);
+  _logger->info("sim halted callback called with a0={}", a0);
 }
 
 static gdb_action_t _op_cont(void *args) {
   _logger->trace("gdb cont called");
-	while (true) {
-		uint32_t pc = sim_get_cpu_state()->pc;
-		if (_breakpoints.count(pc)) {
-			_logger->info("hit breakpoint at pc {:08x}", pc);
-			break;
-		}
-		sim_step_inst();
-		if (sim_halted()) {
-			_logger->info("sim halted at pc {:08x}", sim_get_cpu_state()->pc);
-			return ACT_SHUTDOWN;
-			break;
-		}
-	}
+  while (true) {
+    uint32_t pc = sim_get_cpu_state()->pc;
+    if (_breakpoints.count(pc)) {
+      _logger->info("hit breakpoint at pc {:08x}", pc);
+      break;
+    }
+    sim_step_inst();
+    if (sim_halted()) {
+      _logger->info("sim halted at pc {:08x}", sim_get_cpu_state()->pc);
+      return ACT_SHUTDOWN;
+      break;
+    }
+  }
   return ACT_RESUME;
 }
 static gdb_action_t _op_stepi(void *args) {
@@ -160,8 +170,8 @@ void gdbop_close() { gdbstub_close(&gdbstub); }
 int gdb_mainloop() {
   spdlog::info("sim started in gdb debug mode");
 
-	auto &cfg = *sim_get_config();
-	cfg.raise_halt_cb = _cb_on_halt;
+  auto &cfg = *sim_get_config();
+  cfg.raise_halt_cb = _cb_on_halt;
 
   // for (int i = 0; i < 4; i++) {
   //   _logger->trace("run preload step {}", i);
