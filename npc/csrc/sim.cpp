@@ -433,72 +433,6 @@ extern "C" void skip_difftest_ref() {
   sdb_skip_difftest_ref();
 }
 
-// #define MMIO_SERIAL_PORT 0x10000000u
-// #define MMIO_RTC_ADDR 0x10000048u
-//
-// void pmem_read(int addr, int *out_data) {
-//   if (!is_running) {
-//     printf("warn: pmem_read when not running\n");
-//     *out_data = 0;
-//     return;
-//   }
-//
-//   if (addr == MMIO_RTC_ADDR || addr == MMIO_RTC_ADDR + 4) {
-//     skip_difftest_ref();
-//     static uint64_t time_in_us;
-//     if (addr == MMIO_RTC_ADDR) {
-//       struct timespec ts;
-//       clock_gettime(CLOCK_MONOTONIC_COARSE, &ts);
-//       time_in_us = ts.tv_sec * 1000000 + ts.tv_nsec / 1000;
-//       *out_data = (uint32_t)(time_in_us & 0xffffffffu);
-//     } else {
-//       *out_data = time_in_us >> 32;
-//     }
-//     return;
-//   }
-//
-//   if (sim_settings.trace_pmem_readcall) {
-//     printf("[DPI] pmem_read addr=%08x get ", addr);
-//   }
-//
-//   uint32_t host_aligned = guest_to_host(addr) & (~0x3);
-//   *out_data = img[host_aligned / 4];
-//
-//   if (sim_settings.trace_pmem_readcall) {
-//     printf("%08x\n", *out_data);
-//   }
-// }
-// void pmem_write(int addr, int data, int mask) {
-//   if (addr == MMIO_SERIAL_PORT) {
-//     if (sim_settings.trace_mmio_write) {
-//       printf("[DPI] MMIO write to serial port: %c\n", data & 0xff);
-//     }
-//     skip_difftest_ref();
-//     putchar(data & 0xff);
-//     fflush(stdout);
-//     return;
-//   }
-//
-//   if (sim_settings.trace_pmem_writecall) {
-//     printf("[DPI] pmem write addr=%08x data=%08x mask=%02x\n", addr, data,
-//            mask);
-//   }
-//
-//   uint32_t host_aligned = guest_to_host(addr) & (~0x3);
-//
-//   uint8_t *p = (uint8_t *)(&img[host_aligned >> 2]);
-//   uint32_t umask = mask, udata = data;
-//
-//   while (umask) {
-//     if (umask & 1) {
-//       *p = udata & 0xff;
-//     }
-//     p++;
-//     umask >>= 1;
-//     udata >>= 8;
-//   }
-// }
-
 bool sim_read_vmem(word_t addr, word_t *data) {
   for (auto &r : mem_regions) {
     if (r.contains(addr)) {
@@ -506,9 +440,10 @@ bool sim_read_vmem(word_t addr, word_t *data) {
     }
   }
   if (SRAM_BASE <= addr && addr < SRAM_END) {
+		spdlog::warn("sim_read_vmem addr={:08x} in SRAM region, direct read not allowed", addr);
     // TODO: handle sram read
   } else
-    spdlog::error("sim_read_vmem addr={:08x} no mapping region", addr);
+    spdlog::warn("sim_read_vmem addr={:08x} no mapping region", addr);
   return false;
 }
 bool sim_write_vmem(word_t addr, word_t data) {
@@ -517,7 +452,7 @@ bool sim_write_vmem(word_t addr, word_t data) {
       return r.write_guest(addr, data);
     }
   }
-  spdlog::error("sim_write_vmem addr={:08x} no mapping region", addr);
+  spdlog::warn("sim_write_vmem addr={:08x} no mapping region", addr);
   return false;
 }
 
@@ -636,9 +571,9 @@ static void _fill_rams_uninit() {
     memset(sdram_data, 0, sizeof(sdram_data));
   } else {
     memset(psram_data, 0xcc, sizeof(psram_data));
-    spdlog::trace("psram_data filled with 0xcc");
+    spdlog::debug("psram_data filled with 0xcc");
     memset(sdram_data, 0xdd, sizeof(sdram_data));
-    spdlog::trace("sdram_data filled with 0xdd");
+    spdlog::debug("sdram_data filled with 0xdd");
   }
   spdlog::info("RAMs uninitialized area filled with {}",
                sim_settings.zero_uninit_ram ? "zeros" : "non-zero patterns");
@@ -705,7 +640,7 @@ void _init_dpi_logger() {
     auto func_logger = std::make_shared<spdlog::logger>(#func, dpi_sink_list); \
     auto lvl = sim_settings.TRACE_DPI_FLAG(func) ? spdlog::level::trace        \
                                                  : spdlog::level::info;        \
-    spdlog::info("DPI func '{}' logger lvl {}", #func,                         \
+    spdlog::debug("DPI func '{}' logger lvl {}", #func,                         \
                  spdlog::level::to_string_view(lvl));                          \
     func_logger->set_level(lvl);                                               \
     func_logger->set_formatter(formatter->clone());                            \
