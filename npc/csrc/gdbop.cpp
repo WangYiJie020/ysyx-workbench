@@ -114,11 +114,11 @@ void gdbop_close() { gdbstub_close(&gdbstub); }
 int gdb_mainloop() {
   spdlog::info("sim started in gdb debug mode");
 
- //  for (int i = 0; i < 16; i++){
-	// 	_logger->trace("run preload step {}", i);
- //    sim_step_inst();
-	// }
-	// _logger->info("preload steps done, pc={:08x}", sim_get_cpu_state()->pc);
+  for (int i = 0; i < 4; i++){
+		_logger->trace("run preload step {}", i);
+    sim_step_inst();
+	}
+	_logger->info("preload steps done, pc={:08x}", sim_get_cpu_state()->pc);
 
   constexpr std::string_view gdb_socket = "127.0.0.1:1234";
   _logger->info("initializing gdbstub at {}", gdb_socket);
