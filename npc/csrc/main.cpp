@@ -27,8 +27,6 @@ int main(int argc, char **argv) {
 
 	gdbop_init(":1234");
 
-	while(1){}
-
   // get_dut()->contextp()->internalsDump(); // See scopes to help debug
   //
   std::string top_vpi_name =
