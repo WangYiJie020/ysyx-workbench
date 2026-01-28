@@ -25,7 +25,7 @@
 
 TOP_NAME dut;
 sim_config sim_cfg;
-sim_setting& sim_settings = sim_cfg.setting;
+sim_setting &sim_settings = sim_cfg.setting;
 
 sim_cpu_state cpu;
 
@@ -106,12 +106,11 @@ static void reset(int n) {
 static bool is_running = true;
 static bool is_good_trap = false;
 
-
 void raise_ebreak(int a0) {
   is_running = false;
 
   // sbd_set_halt(a0);
-	sim_cfg.raise_halt_cb(a0);
+  sim_cfg.raise_halt_cb(a0);
 
   constexpr std::string_view fg_red = "\33[1;31m", fg_green = "\33[1;32m",
                              fg_yellow = "\33[1;33m", ansi_none = "\33[0m";
@@ -450,11 +449,11 @@ void sim_step_inst() {
 
 // IMG
 
-static const char *img_file;
-static size_t img_size;
-static bool batch_mode = false;
+// static const char *img_file;
+// static size_t img_size;
+// static bool batch_mode = false;
 
-static long load_img() {
+static void load_img() {
 #define Assert(expr, ...)                                                      \
   do {                                                                         \
     if (!(expr)) {                                                             \
@@ -462,31 +461,31 @@ static long load_img() {
     }                                                                          \
   } while (0)
 
-  if (img_file == NULL) {
+  if (sim_cfg.img_file_path == NULL) {
     spdlog::warn("No image is given. Use the default build-in image.");
-    return img_size = 4096; // built-in image size
+    sim_cfg.img_size = 24;
+    return;
   }
 
-  FILE *fp = fopen(img_file, "rb");
-  Assert(fp, "Can not open '%s'", img_file);
+  FILE *fp = fopen(sim_cfg.img_file_path, "rb");
+  Assert(fp, "Can not open '%s'", sim_cfg.img_file_path);
 
   fseek(fp, 0, SEEK_END);
-  img_size = ftell(fp);
+  sim_cfg.img_size = ftell(fp);
 
-  spdlog::info("load image {}, size = {}", img_file, img_size);
+  spdlog::info("load image {}, size = {}", sim_cfg.img_file_path,
+               sim_cfg.img_size);
 
   fseek(fp, 0, SEEK_SET);
-  int ret = fread(img, img_size, 1, fp);
+  int ret = fread(img, sim_cfg.img_size, 1, fp);
   assert(ret == 1);
 
   fclose(fp);
-
-  return img_size;
 }
 
 static void _init_flash() {
   spdlog::info("init flash with image data");
-  memcpy(flash_data, img, img_size);
+  memcpy(flash_data, img, sim_cfg.img_size);
 }
 static void _fill_rams_uninit() {
   if (sim_settings.zero_uninit_ram) {
@@ -511,10 +510,10 @@ static void parse_args(int argc, char **argv) {
   while ((o = getopt_long(argc, argv, "-b", table, NULL)) != -1) {
     switch (o) {
     case 'b':
-      batch_mode = true;
+      sim_cfg.hope_batch_mode = true;
       break;
     case 1:
-      img_file = optarg;
+			sim_cfg.img_file_path = optarg;
       break;
     default:
       printf("Bad option %c\n", o);
@@ -643,11 +642,14 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   reset(reset_cycles);
   spdlog::info("sim reset done ({} cycles)", reset_cycles);
 
-  if (setting.gdb_mode) {
-    return _dbg_by_gdb();
-  } else {
-    // return _dbg_by_sdb();
-  }
+	return true;
+
+  // if (setting.gdb_mode) {
+  //   return _dbg_by_gdb();
+  // } else {
+  //   // return _dbg_by_sdb();
+  // }
 }
 
-// void sim_exec_sdbcmd(std::string_view cmd, bool &quit) { dbg_exec(cmd, &quit); }
+// void sim_exec_sdbcmd(std::string_view cmd, bool &quit) { dbg_exec(cmd,
+// &quit); }
