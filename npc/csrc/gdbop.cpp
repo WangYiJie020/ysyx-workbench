@@ -33,46 +33,7 @@ static gdb_action_t _op_cont(void *args) { return ACT_RESUME; }
 static gdb_action_t _op_stepi(void *args) { return ACT_RESUME; }
 
 static gdbstub_t gdbstub;
-#define MY_TARGET_RV32                                                         \
-  "<?xml version=\"1.0\"?>"                                                    \
-  "<!DOCTYPE target SYSTEM \"gdb-target.dtd\">"                                \
-  "<target>"                                                                   \
-  "  <architecture>riscv</architecture>"                                       \
-  "  <feature name=\"org.gnu.gdb.riscv.cpu\">"                                 \
-  "    <reg name=\"pc\" bitsize=\"32\" type=\"code_ptr\"/>"                    \
-  "    <reg name=\"ra\" bitsize=\"32\" type=\"data_ptr\"/>"                    \
-  "    <reg name=\"sp\" bitsize=\"32\" type=\"data_ptr\"/>"                    \
-  "    <reg name=\"gp\" bitsize=\"32\" type=\"data_ptr\"/>"                    \
-  "    <reg name=\"tp\" bitsize=\"32\" type=\"data_ptr\"/>"                    \
-  "    <reg name=\"t0\" bitsize=\"32\"/>"                                      \
-  "    <reg name=\"t1\" bitsize=\"32\"/>"                                      \
-  "    <reg name=\"t2\" bitsize=\"32\"/>"                                      \
-  "    <reg name=\"s0\" bitsize=\"32\"/>"                                      \
-  "    <reg name=\"s1\" bitsize=\"32\"/>"                                      \
-  "    <reg name=\"a0\" bitsize=\"32\"/>"                                      \
-  "    <reg name=\"a1\" bitsize=\"32\"/>"                                      \
-  "    <reg name=\"a2\" bitsize=\"32\"/>"                                      \
-  "    <reg name=\"a3\" bitsize=\"32\"/>"                                      \
-  "    <reg name=\"a4\" bitsize=\"32\"/>"                                      \
-  "    <reg name=\"a5\" bitsize=\"32\"/>"                                      \
-  "    <reg name=\"a6\" bitsize=\"32\"/>"                                      \
-  "    <reg name=\"a7\" bitsize=\"32\"/>"                                      \
-  "    <reg name=\"s2\" bitsize=\"32\"/>"                                      \
-  "    <reg name=\"s3\" bitsize=\"32\"/>"                                      \
-  "    <reg name=\"s4\" bitsize=\"32\"/>"                                      \
-  "    <reg name=\"s5\" bitsize=\"32\"/>"                                      \
-  "    <reg name=\"s6\" bitsize=\"32\"/>"                                      \
-  "    <reg name=\"s7\" bitsize=\"32\"/>"                                      \
-  "    <reg name=\"s8\" bitsize=\"32\"/>"                                      \
-  "    <reg name=\"s9\" bitsize=\"32\"/>"                                      \
-  "    <reg name=\"s10\" bitsize=\"32\"/>"                                     \
-  "    <reg name=\"s11\" bitsize=\"32\"/>"                                     \
-  "    <reg name=\"t3\" bitsize=\"32\"/>"                                      \
-  "    <reg name=\"t4\" bitsize=\"32\"/>"                                      \
-  "    <reg name=\"t5\" bitsize=\"32\"/>"                                      \
-  "    <reg name=\"t6\" bitsize=\"32\"/>"                                      \
-  "  </feature>"                                                               \
-  "</target>"
+
 bool gdbop_init(const char *socket) {
   static struct target_ops ops = {
       .cont = _op_cont,
@@ -90,7 +51,7 @@ bool gdbop_init(const char *socket) {
   };
 
   static arch_info_t arch = {
-      .target_desc = (char *)MY_TARGET_RV32,
+      .target_desc = (char *)TARGET_RV32,
       .smp = 0,
       .reg_num = 32,
   };
