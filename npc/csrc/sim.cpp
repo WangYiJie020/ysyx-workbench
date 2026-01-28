@@ -602,7 +602,8 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 
 	constexpr std::string_view gdb_socket = "127.0.0.1:1234";
 	spdlog::info("initializing gdbstub at {}", gdb_socket);
-	spdlog::info("init will stuck until gdb connects");
+	spdlog::info("this step will stuck until gdb connects");
+	spdlog::info("use\n\t>>> target remote {}\nin gdb to connect", gdb_socket);
 	bool res = gdbop_init(gdb_socket.data());
 	if(!res){
 		spdlog::error("gdbop_init failed");
