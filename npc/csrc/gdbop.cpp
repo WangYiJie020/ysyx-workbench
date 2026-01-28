@@ -16,16 +16,39 @@ static std::shared_ptr<spdlog::logger> _logger =
 static size_t _op_get_regbytes(int regno) { return 4; }
 
 static int _op_read_reg(void *args, int regno, void *value) {
-  uint32_t r = sim_get_cpu_state()->gpr[regno];
-  _logger->trace("gdb read reg {} value {:08x}", regno, r);
-  *(uint32_t *)value = r;
-  return 0;
+  if (regno < 0 || regno > 32) {
+    _logger->error("gdb read reg invalid regno {}", regno);
+    return (int)std::errc::invalid_argument;
+  } else if (regno == 32) {
+    // pc
+    uint32_t pc = sim_get_cpu_state()->pc;
+    _logger->trace("gdb read reg pc value {:08x}", pc);
+    *(uint32_t *)value = pc;
+    return 0;
+  } else {
+    uint32_t r = sim_get_cpu_state()->gpr[regno];
+    _logger->trace("gdb read reg {} value {:08x}", regno, r);
+    *(uint32_t *)value = r;
+    return 0;
+  }
 }
 
 static int _op_write_reg(void *args, int regno, void *value) {
-  sim_get_cpu_state()->gpr[regno] = *(uint32_t *)value;
-  _logger->trace("gdb write reg {} value {:08x}", regno,
-                 sim_get_cpu_state()->gpr[regno]);
+	if (regno < 0 || regno > 32) {
+		_logger->error("gdb write reg invalid regno {}", regno);
+		return (int)std::errc::invalid_argument;
+	} else if (regno == 32) {
+		// pc
+		uint32_t pc = *(uint32_t *)value;
+		_logger->trace("gdb write reg pc value {:08x}", pc);
+		sim_get_cpu_state()->pc = pc;
+		return 0;
+	} else {
+		uint32_t r = *(uint32_t *)value;
+		_logger->trace("gdb write reg {} value {:08x}", regno, r);
+		sim_get_cpu_state()->gpr[regno] = r;
+		return 0;
+	}
   return 0;
 }
 
@@ -114,11 +137,11 @@ void gdbop_close() { gdbstub_close(&gdbstub); }
 int gdb_mainloop() {
   spdlog::info("sim started in gdb debug mode");
 
-  for (int i = 0; i < 4; i++){
-		_logger->trace("run preload step {}", i);
-    sim_step_inst();
-	}
-	_logger->info("preload steps done, pc={:08x}", sim_get_cpu_state()->pc);
+  // for (int i = 0; i < 4; i++) {
+  //   _logger->trace("run preload step {}", i);
+  //   sim_step_inst();
+  // }
+  // _logger->info("preload steps done, pc={:08x}", sim_get_cpu_state()->pc);
 
   constexpr std::string_view gdb_socket = "127.0.0.1:1234";
   _logger->info("initializing gdbstub at {}", gdb_socket);
@@ -133,7 +156,7 @@ int gdb_mainloop() {
   spdlog::info("gdbstub initialized, waiting for gdb commands");
   res = gdbop_run();
   if (!res) {
-		_logger->error("gdbop_run failed");
+    _logger->error("gdbop_run failed");
     return 1;
   }
   gdbop_close();
