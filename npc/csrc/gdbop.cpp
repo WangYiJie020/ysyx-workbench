@@ -78,8 +78,9 @@ static int _op_read_mem(void *args, size_t addr, size_t len, void *val) {
 				return (int)std::errc::address_family_not_supported;
 			}
 			dest[i] = word;
-			_logger->trace("gdb read mem addr {:08x} word {:08x}", addr + i*4, word);
+			// _logger->trace("gdb read mem addr {:08x} word {:08x}", addr + i*4, word);
 		}
+		_logger->trace("gdb read mem addr {:08x} len {} words {}", addr, len, words);
 		return 0;
 	}
 
