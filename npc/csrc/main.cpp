@@ -25,6 +25,8 @@ int main(int argc, char **argv) {
 	}else{
 		sdb_mainloop();
 	}
+
+	spdlog::info("sim ended");
 	
 	get_dut()->final();
 	return 0;
