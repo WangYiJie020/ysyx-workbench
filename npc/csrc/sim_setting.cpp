@@ -20,10 +20,13 @@ static void _Get(std::string &field, const char *env_p) {
   do {                                                                         \
     const char *env_p = getenv(_STR(_CONCAT(VSIM_, v)));                       \
     _Get(setting.v, env_p);                                                    \
-    spdlog::info("sim_setting.{} = {}", #v, setting.v ? "true" : "false");     \
+    log_msg += (setting.v ? "[*] " : "[ ] ");                                  \
+    log_msg += #v;                                                             \
+    log_msg += "\n";                                                           \
   } while (0)
 
 void load_sim_setting_from_env(sim_setting &setting) {
+  std::string log_msg = "sim_setting: \n";
   GET(en_wave);
   GET(en_inst_trace);
   GET(showdisasm);
