@@ -21,7 +21,6 @@ SAN_FLAGS?=
 
 VERILATOR_FLAGS ?=
 ENABLE_VPI ?= 0
-ENABLE_NVBOARD ?= 0
 
 # ENABLE_WAVE ?= 0
 
@@ -103,13 +102,9 @@ NVB_AUTOBIND_SRC = $(abspath $(BUILD_DIR)/auto_bind.cpp)
 $(NVB_AUTOBIND_SRC): $(NXDC_FILES)
 	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
 
-ifeq ($(ENABLE_NVBOARD), 1)
-SIM_CSRCS += $(NVB_AUTOBIND_SRC)
-CXXFLAGS += -DENABLE_NVBOARD=1
-
 # rules for NVBoard
+SIM_CSRCS += $(NVB_AUTOBIND_SRC)
 include $(NVBOARD_HOME)/scripts/nvboard.mk
-endif
 
 # ysyxSoC
 SOC_PERIP_VSRCS = $(shell find $(abspath $(SOC_HOME)/perip) -name "*.v")

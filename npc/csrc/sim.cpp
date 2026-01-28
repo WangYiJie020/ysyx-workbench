@@ -18,9 +18,7 @@
 #include "spdlog/logger.h"
 #include "verilated_fst_c.h"
 
-#ifdef ENABLE_NVBOARD
 #include <nvboard.h>
-#endif
 
 #include <getopt.h>
 #include <unistd.h>
@@ -81,9 +79,9 @@ void sim_step_cycle() {
 
   cycle_count++;
 
-#ifdef ENABLE_NVBOARD
-  nvboard_update();
-#endif
+  if (sim_settings.nvboard) {
+    nvboard_update();
+  }
 
   if (sim_settings.trace_clock_cycle) {
     printf("[Clock Cycle End]\n");
@@ -485,8 +483,7 @@ static long load_img() {
 
 static void _init_flash() { memcpy(flash_data, img, img_size); }
 static void _fill_rams_uninit() {
-  spdlog::info("RAMs initialization: zero_uninit_ram = {}",
-							 sim_settings.zero_uninit_ram ? "true" : "false");
+	spdlog::info("RAMs initializing");
   if (sim_settings.zero_uninit_ram) {
     memset(psram_data, 0, sizeof(psram_data));
     memset(sdram_data, 0, sizeof(sdram_data));
@@ -495,8 +492,9 @@ static void _fill_rams_uninit() {
     spdlog::trace("psram_data filled with 0xcc");
     memset(sdram_data, 0xdd, sizeof(sdram_data));
     spdlog::trace("sdram_data filled with 0xdd");
-    spdlog::info("RAMs uninitialized area filled with non-zero patterns");
   }
+	spdlog::info("RAMs uninitialized area filled with {}", 
+		sim_settings.zero_uninit_ram ? "zeros" : "non-zero patterns");
 }
 
 // ARG
@@ -583,11 +581,11 @@ void _init_dpi_logger() {
 bool sim_init(int argc, char **argv, sim_setting setting) {
   Verilated::commandArgs(argc, argv);
   sim_settings = setting;
-#ifdef ENABLE_NVBOARD
-  spdlog::info("initializing nvboard");
-  nvboard_bind_all_pins(&dut);
-  nvboard_init();
-#endif
+  if (setting.nvboard) {
+    spdlog::info("initializing nvboard");
+    nvboard_bind_all_pins(&dut);
+    nvboard_init();
+  }
 
   parse_args(argc, argv);
 
