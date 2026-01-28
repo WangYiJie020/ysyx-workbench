@@ -63,7 +63,10 @@ static void _op_set_cpu(void *args, int cpuid) {}
 static int _op_get_cpu(void *args) { return 0; }
 
 static gdb_action_t _op_cont(void *args) { return ACT_RESUME; }
-static gdb_action_t _op_stepi(void *args) { return ACT_RESUME; }
+static gdb_action_t _op_stepi(void *args) {
+	sim_step_inst();
+	return ACT_RESUME;
+}
 
 static gdbstub_t gdbstub;
 
