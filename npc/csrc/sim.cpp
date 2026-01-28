@@ -110,6 +110,7 @@ void raise_ebreak(int a0) {
   is_running = false;
 
   // sbd_set_halt(a0);
+	assert(sim_cfg.raise_halt_cb);
   sim_cfg.raise_halt_cb(a0);
 
   constexpr std::string_view fg_red = "\33[1;31m", fg_green = "\33[1;32m",

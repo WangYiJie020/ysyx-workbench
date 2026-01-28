@@ -116,6 +116,9 @@ int sdb_mainloop() {
   spdlog::info("sim started in sdb debug mode");
 
   auto &cfg = *sim_get_config();
+	cfg.raise_halt_cb = sbd_set_halt;
+	spdlog::trace("setting raise_halt_cb to sbd_set_halt");
+
   sdb_init(cfg.init_pc, cfg.img_size, cfg.img_file_path, cfg.setting);
   spdlog::info("sdb entering {} mode",
                cfg.is_batch_mode() ? "batch" : "interactive");
