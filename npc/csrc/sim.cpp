@@ -186,7 +186,11 @@ struct mem_region {
   }
 	bool read_guest(uint32_t addr, uint32_t &data) const {
 		if (simple_map) {
-			assert(addr - base < arr.size);
+			// assert(addr - base < arr.size);
+			if(addr - base >= arr.size) {
+				spdlog::error("addr {:08x} at region {} is out of bound", addr, name);
+				return false;
+			}
 			uint32_t *ptr = (uint32_t *)((uint8_t *)arr.ptr + (addr - base));
 			data = *ptr;
 			return true;
