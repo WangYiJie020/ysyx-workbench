@@ -212,7 +212,7 @@ int gdb_mainloop() {
 	_logger->set_level(spdlog::level::info);
 	
 
-  constexpr std::string_view gdb_socket = "127.0.0.1:1234";
+  constexpr std::string_view gdb_socket = "127.0.0.1:1235";
   _logger->info("initializing gdbstub at {}", gdb_socket);
   _logger->info("this step will stuck until gdb connects");
   _logger->info("try use 'target remote {}' in gdb", gdb_socket);
