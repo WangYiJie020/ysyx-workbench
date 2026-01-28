@@ -8,6 +8,7 @@
 #include "sim.hpp"
 #include "dbg.hpp"
 
+int gdb_mainloop();
 
 int main(int argc, char **argv) {
   spdlog::set_level(spdlog::level::trace); // will modify all registered loggers
@@ -22,6 +23,7 @@ int main(int argc, char **argv) {
 	}
 
 	if(setting.gdb_mode){
+		gdb_mainloop();
 	}else{
 		sdb_mainloop();
 	}

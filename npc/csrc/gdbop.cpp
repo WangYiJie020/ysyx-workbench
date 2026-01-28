@@ -3,6 +3,8 @@ extern "C" {
 }
 #include <stdint.h>
 
+#include "common.hpp"
+
 static size_t _op_get_regbytes(int regno) { return 4; }
 
 static int _op_read_reg(void *args, int regno, void *value) {
@@ -60,3 +62,27 @@ bool gdbop_init(const char *socket) {
 }
 bool gdbop_run() { return gdbstub_run(&gdbstub, nullptr); }
 void gdbop_close() { gdbstub_close(&gdbstub); }
+
+
+int gdb_mainloop() {
+  spdlog::info("sim started in gdb debug mode");
+  constexpr std::string_view gdb_socket = "127.0.0.1:1234";
+  spdlog::info("initializing gdbstub at {}", gdb_socket);
+  spdlog::info("this step will stuck until gdb connects");
+  spdlog::info("try use 'target remote {}' in gdb", gdb_socket);
+
+  bool res = gdbop_init(gdb_socket.data());
+  if (!res) {
+    spdlog::error("gdbop_init failed");
+    return 1;
+  }
+  spdlog::info("gdbstub initialized, waiting for gdb commands");
+  res = gdbop_run();
+  if (!res) {
+    spdlog::error("gdbop_run failed");
+    return 1;
+  }
+  gdbop_close();
+  spdlog::info("gdb session ended");
+  return 0;
+}

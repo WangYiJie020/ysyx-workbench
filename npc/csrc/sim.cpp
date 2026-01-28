@@ -583,33 +583,6 @@ void _init_dpi_logger() {
   spdlog::register_logger(_dpi_logger);
 }
 
-bool gdbop_init(const char *socket);
-bool gdbop_run();
-void gdbop_close();
-
-int _dbg_by_gdb() {
-  spdlog::info("sim started in gdb debug mode");
-  constexpr std::string_view gdb_socket = "127.0.0.1:1234";
-  spdlog::info("initializing gdbstub at {}", gdb_socket);
-  spdlog::info("this step will stuck until gdb connects");
-  spdlog::info("try use 'target remote {}' in gdb", gdb_socket);
-
-  bool res = gdbop_init(gdb_socket.data());
-  if (!res) {
-    spdlog::error("gdbop_init failed");
-    return 1;
-  }
-  spdlog::info("gdbstub initialized, waiting for gdb commands");
-  res = gdbop_run();
-  if (!res) {
-    spdlog::error("gdbop_run failed");
-    return 1;
-  }
-  gdbop_close();
-  spdlog::info("gdb session ended");
-  return 0;
-}
-
 bool sim_init(int argc, char **argv, sim_setting setting) {
   Verilated::commandArgs(argc, argv);
   sim_settings = setting;
@@ -644,13 +617,4 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   spdlog::info("sim reset done ({} cycles)", reset_cycles);
 
 	return true;
-
-  // if (setting.gdb_mode) {
-  //   return _dbg_by_gdb();
-  // } else {
-  //   // return _dbg_by_sdb();
-  // }
 }
-
-// void sim_exec_sdbcmd(std::string_view cmd, bool &quit) { dbg_exec(cmd,
-// &quit); }
