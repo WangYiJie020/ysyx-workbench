@@ -506,7 +506,10 @@ bool sim_read_vmem(word_t addr, word_t *data) {
 			return r.read_guest(addr, *data);
 		}
 	}
-	spdlog::error("sim_read_vmem addr={:08x} no mapping region", addr);
+	if(SRAM_BASE <= addr && addr < SRAM_END){
+		// TODO: handle sram read
+	}
+	else spdlog::error("sim_read_vmem addr={:08x} no mapping region", addr);
 	return false;
 }
 bool sim_write_vmem(word_t addr, word_t data) {
