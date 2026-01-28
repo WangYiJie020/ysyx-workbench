@@ -91,6 +91,7 @@ sim_cpu_state* sim_get_cpu_state();
 
 uint8_t* sim_guest_to_host(uint32_t addr);
 bool sim_read_vmem(uint32_t addr, uint32_t *data);
+bool sim_write_vmem(uint32_t addr, uint32_t data);
 
 bool sim_halted();
 bool sim_hit_good_trap();
