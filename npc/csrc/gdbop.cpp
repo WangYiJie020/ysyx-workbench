@@ -12,11 +12,16 @@ extern "C" {
 static size_t _op_get_regbytes(int regno) { return 4; }
 
 static int _op_read_reg(void *args, int regno, void *value) {
-  return sim_get_cpu_state()->gpr[regno];
+  uint32_t r = sim_get_cpu_state()->gpr[regno];
+  spdlog::trace("gdb read reg {} value {:08x}", regno, r);
+  *(uint32_t *)value = r;
+  return 0;
 }
 
 static int _op_write_reg(void *args, int regno, void *value) {
   sim_get_cpu_state()->gpr[regno] = *(uint32_t *)value;
+	spdlog::trace("gdb write reg {} value {:08x}", regno,
+								sim_get_cpu_state()->gpr[regno]);
   return 0;
 }
 
@@ -36,16 +41,16 @@ static int _op_read_mem(void *args, size_t addr, size_t len, void *val) {
 }
 
 static int _op_write_mem(void *args, size_t addr, size_t len, void *val) {
-	size_t end = addr + len;
-	uint32_t *p = (uint32_t *)val;
-	for (size_t offset = 0; offset < len; offset += 4) {
-		bool ok = sim_write_vmem(addr + offset, *p);
-		if (!ok) {
-			return (int)std::errc::address_family_not_supported;
-		}
-		p++;
-	}
-	return 0;
+  size_t end = addr + len;
+  uint32_t *p = (uint32_t *)val;
+  for (size_t offset = 0; offset < len; offset += 4) {
+    bool ok = sim_write_vmem(addr + offset, *p);
+    if (!ok) {
+      return (int)std::errc::address_family_not_supported;
+    }
+    p++;
+  }
+  return 0;
 }
 
 static bool _op_set_bp(void *args, size_t addr, bp_type_t type) { return true; }
