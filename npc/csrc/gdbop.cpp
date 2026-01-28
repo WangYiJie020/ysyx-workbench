@@ -141,9 +141,15 @@ static bool _op_del_bp(void *args, size_t addr, bp_type_t type) {
 }
 
 static bool _request_interrupt = false;
+static volatile bool _request_int_ack = false;
 static void _op_on_interrupt(void *args) {
 	_request_interrupt = true;
+	_request_int_ack = false;
 	_logger->info("gdbstub on_interrupt called, interrupt requested");
+	while(!_request_int_ack){
+	}
+	_request_interrupt = false;
+	_logger->info("gdbstub on_interrupt acknowledged");
 	// _logger->warn("gdbstub on_interrupt called, but not implemented");
 }
 
@@ -156,7 +162,6 @@ static void _cb_on_halt(int a0) {
 
 static gdb_action_t _op_cont(void *args) {
   _logger->trace("cont called");
-	_request_interrupt = false;
   while (true) {
     uint32_t pc = sim_get_cpu_state()->pc;
     if (_breakpoints.count(pc)) {
@@ -171,6 +176,7 @@ static gdb_action_t _op_cont(void *args) {
     }
 		if(_request_interrupt){
 			_logger->info("interrupt requested, stopping execution at pc {:08x}", sim_get_cpu_state()->pc);
+			_request_int_ack = true;
 			break;
 		}
   }
