@@ -58,6 +58,18 @@ static int _op_read_mem(void *args, size_t addr, size_t len, void *val) {
 
 	_logger->trace("read mem addr {:08x} len {}", addr, len);
 
+	if(len==1){
+		uint32_t word;
+		if(!sim_read_vmem(addr & ~0x3, &word)){
+			*(uint8_t*)val = 0;
+			return (int)std::errc::address_family_not_supported;
+		}
+		*(uint8_t *)val = *((uint8_t *)(&word) + (addr & 0x3));
+		_logger->warn("use unverified impl read byte at addr {:08x}", addr);
+		_logger->trace("read mem addr {:08x} byte {:02x}", addr, *(uint8_t *)val);
+		return 0;
+	}
+
 	if((addr & 0x1)==0 && len == 2){
 		uint32_t word;
 		if(!sim_read_vmem(addr & ~0x3, &word)){
