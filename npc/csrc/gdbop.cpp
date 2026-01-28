@@ -203,11 +203,8 @@ int gdb_mainloop() {
   auto &cfg = *sim_get_config();
   cfg.raise_halt_cb = _cb_on_halt;
 
-  // for (int i = 0; i < 4; i++) {
-  //   _logger->trace("run preload step {}", i);
-  //   sim_step_inst();
-  // }
-  // _logger->info("preload steps done, pc={:08x}", sim_get_cpu_state()->pc);
+	_logger->set_level(spdlog::level::info);
+	
 
   constexpr std::string_view gdb_socket = "127.0.0.1:1234";
   _logger->info("initializing gdbstub at {}", gdb_socket);
