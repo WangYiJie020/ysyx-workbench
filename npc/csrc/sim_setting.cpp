@@ -51,4 +51,6 @@ void load_sim_setting_from_env(sim_setting &setting) {
   GET_DPI_FLAG(flash_read);
   GET_DPI_FLAG(psram_read);
   GET_DPI_FLAG(psram_write);
+
+	spdlog::info("{}", log_msg);
 }
