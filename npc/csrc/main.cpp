@@ -7,6 +7,8 @@
 
 #include "sprobe.hpp"
 
+#include <gdbstub.h>
+
 SProbe sprobe;
 void cyc_callback() {
   if (sim_halted())
