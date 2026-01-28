@@ -1,15 +1,14 @@
 #include "sim.hpp"
 #include "dbg.hpp"
 
+#include <spdlog/common.h>
+#include <spdlog/logger.h>
 #include <spdlog/mdc.h>
 #include <spdlog/pattern_formatter.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/dup_filter_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
-#include <spdlog/common.h>
-#include <spdlog/logger.h>
-
 
 #include <cassert>
 #include <chrono>
@@ -482,7 +481,10 @@ static long load_img() {
   return img_size;
 }
 
-static void _init_flash() { memcpy(flash_data, img, img_size); }
+static void _init_flash() {
+  spdlog::info("init flash with image data");
+  memcpy(flash_data, img, img_size);
+}
 static void _fill_rams_uninit() {
   if (sim_settings.zero_uninit_ram) {
     memset(psram_data, 0, sizeof(psram_data));
@@ -578,9 +580,45 @@ void _init_dpi_logger() {
   spdlog::register_logger(_dpi_logger);
 }
 
-bool gdbop_init(const char* socket);
+bool gdbop_init(const char *socket);
 bool gdbop_run();
 void gdbop_close();
+
+int _dbg_by_gdb() {
+  spdlog::info("sim started in gdb debug mode");
+  constexpr std::string_view gdb_socket = "127.0.0.1:1234";
+  spdlog::info("initializing gdbstub at {}", gdb_socket);
+  spdlog::info("this step will stuck until gdb connects");
+  spdlog::info("try use 'target remote {}' in gdb", gdb_socket);
+
+  bool res = gdbop_init(gdb_socket.data());
+  if (!res) {
+    spdlog::error("gdbop_init failed");
+    return 1;
+  }
+  spdlog::info("gdbstub initialized, waiting for gdb commands");
+  res = gdbop_run();
+  if (!res) {
+    spdlog::error("gdbop_run failed");
+    return 1;
+  }
+  gdbop_close();
+  spdlog::info("gdb session ended");
+  return 0;
+}
+int _dbg_by_sdb() {
+  spdlog::info("sim started in sdb debug mode");
+  dbg_init(INITIAL_PC, img_size, img_file, sim_settings);
+  spdlog::info("sim reset done, entering {} mode",
+               batch_mode ? "batch" : "interactive");
+
+  if (batch_mode && !sim_settings.no_batch) {
+    dbg_exec("c");
+    return dbg_is_hitbadtrap() ? 1 : 0;
+  }
+
+  return 0;
+}
 
 bool sim_init(int argc, char **argv, sim_setting setting) {
   Verilated::commandArgs(argc, argv);
@@ -600,30 +638,10 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 
   spdlog::set_level(spdlog::level::trace); // will modify all registered loggers
 
-	constexpr std::string_view gdb_socket = "127.0.0.1:1234";
-	spdlog::info("initializing gdbstub at {}", gdb_socket);
-	spdlog::info("this step will stuck until gdb connects");
-	spdlog::info("use 'target remote {}' in gdb to connect", gdb_socket);
-	bool res = gdbop_init(gdb_socket.data());
-	if(!res){
-		spdlog::error("gdbop_init failed");
-		return 1;
-	}
-	spdlog::info("gdbstub initialized, waiting for gdb commands");
-	res = gdbop_run();
-	if(!res){
-		spdlog::error("gdbop_run failed");
-		return 1;
-	}
-
-
   _init_flash();
   _fill_rams_uninit();
   _init_dpi_logger(); // should before dbg_init(which may preload data with func
                       // call dpis)
-
-  dbg_init(INITIAL_PC, img_size, img_file, setting);
-
   if (setting.en_wave) {
     Verilated::traceEverOn(true);
     tfp = std::shared_ptr<VerilatedFstC>(new VerilatedFstC,
@@ -633,19 +651,15 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
     spdlog::info("wave enabled, output file: {}", setting.wave_fst_file);
   }
 
-  reset(30);
+  constexpr int reset_cycles = 30;
+  reset(reset_cycles);
+  spdlog::info("sim reset done ({} cycles)", reset_cycles);
 
-  spdlog::info("sim reset done, entering {} mode",
-               batch_mode ? "batch" : "interactive");
-
-  if (batch_mode && !setting.no_batch) {
-    dbg_exec("c");
-    return dbg_is_hitbadtrap() ? 1 : 0;
+  if (setting.gdb_mode) {
+    return _dbg_by_gdb();
+  } else {
+    return _dbg_by_sdb();
   }
-
-  return 0;
 }
 
 void sim_exec_sdbcmd(std::string_view cmd, bool &quit) { dbg_exec(cmd, &quit); }
-
-

@@ -17,6 +17,8 @@ struct sim_setting {
 
 	bool no_batch = false;
 
+	bool gdb_mode = false;
+
   bool ftrace = false;
   bool iringbuf = true;
   bool etrace = true;

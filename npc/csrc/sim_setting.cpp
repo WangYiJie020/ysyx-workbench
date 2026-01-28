@@ -32,6 +32,7 @@ void load_sim_setting_from_env(sim_setting &setting) {
   GET(en_inst_trace);
   GET(showdisasm);
   GET(always_showdisasm);
+	GET(gdb_mode);
   GET(no_batch);
   GET(ftrace);
   GET(iringbuf);
