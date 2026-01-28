@@ -57,8 +57,12 @@ static int _op_read_mem(void *args, size_t addr, size_t len, void *val) {
     return 0;
 
 	_logger->trace("read mem addr {:08x} len {}", addr, len);
+	if(addr & 0x3){
+		_logger->error("read unaligned addr not supported addr {:08x}", addr);
+		return (int)std::errc::not_supported;
+	}
 
-	if((addr & 0x3) == 0 && len == 4){
+	if(len == 4){
 		uint32_t word;
 		if(!sim_read_vmem(addr, &word)){
 			*(uint32_t*)val = 0;
@@ -68,7 +72,7 @@ static int _op_read_mem(void *args, size_t addr, size_t len, void *val) {
 		_logger->trace("read mem addr {:08x} word {:08x}", addr, word);
 		return 0;
 	}
-	if((addr & 0x3) == 0 && (len & 0x3) == 0){
+	if((len & 0x3) == 0){
 		size_t words = len / 4;
 		uint32_t *dest = (uint32_t *)val;
 		for(size_t i=0;i<words;i++){
@@ -83,8 +87,22 @@ static int _op_read_mem(void *args, size_t addr, size_t len, void *val) {
 		_logger->trace("read mem addr {:08x} len {} words {}", addr, len, words);
 		return 0;
 	}
+	if(len==2){
+		uint32_t word;
+		if(!sim_read_vmem(addr & ~0x3, &word)){
+			*(uint16_t*)val = 0;
+			return (int)std::errc::address_family_not_supported;
+		}
+		uint16_t half;
 
-	_logger->error("read unaligned addr/len not supported addr {:08x} len {}", addr, len);
+		*(uint16_t *)val = *((uint16_t *)(&word));
+		_logger->warn("untested read half mem addr {:08x}", addr);
+		_logger->trace("read mem addr {:08x} half {:04x}", addr, half);
+		return 0;
+	}
+
+
+	_logger->error("read len not supported addr {:08x} len {}", addr, len);
 
   return (int)std::errc::not_supported;
 }
