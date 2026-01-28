@@ -67,7 +67,7 @@ static int _op_read_mem(void *args, size_t addr, size_t len, void *val) {
 		uint16_t half;
 
 		*(uint16_t *)val = *((uint16_t *)(&word) + ((addr & 0x2) >> 1));
-		_logger->warn("use untested func read half word at addr {:08x}", addr);
+		_logger->warn("use unverified impl read halfword at addr {:08x}", addr);
 		_logger->trace("read mem addr {:08x} half {:04x}", addr, half);
 		return 0;
 	}
