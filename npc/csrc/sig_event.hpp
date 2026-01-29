@@ -99,7 +99,7 @@ public:
   void checkAndCountAll();
 };
 
-struct InstTypeCounter {
+struct EXUPerfCounter {
   // in common_def.scala
   //   val imm, reg, store, upper, jump, branch = Value
   //   val branch, arithmetic, load, store, jalr, jal, lui, auipc, system =
@@ -128,20 +128,18 @@ struct InstTypeCounter {
   size_t tot_cycle_of_type[TYPE_NUM] = {0};
   size_t tot_cycle_of_fmt[FMT_NUM] = {0};
 
-  // init with invalid value
-  InstFmt lastInstFmt = FMT_NUM;
-  InstType lastInstType = TYPE_NUM;
-
-  uint64_t lastInstFetchCyc = 0;
+	bool lastCycOutValid = false;
+	sim_cycle_t instStartCycle = 0;
 
   SignalHandle hInstType;
   SignalHandle hInstFmt;
+	SignalHandle hOutValid;
+	SignalHandle hOutReady;
 
   std::shared_ptr<spdlog::logger> logger;
 
-  void init();
-
-  void newInstFetched(uint64_t cycle);
+  void bind(std::string path);
+	void update();
 
   size_t totalInstCountSumByFmt() {
     return std::accumulate(fmt_count, fmt_count + FMT_NUM, 0ull);

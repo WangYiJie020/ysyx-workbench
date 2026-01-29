@@ -35,7 +35,7 @@ sim_setting &sim_settings = sim_cfg.setting;
 sim_cpu_state cpu;
 
 HandShakeDetector handshake_detector;
-InstTypeCounter inst_type_counter;
+EXUPerfCounter exu_counter;
 AXI4PerfCounterManager axi4_perf_counters;
 IFUStateCounter ifu_state_counter;
 
@@ -116,6 +116,7 @@ void sim_step_cycle() {
     handshake_detector.checkAndCountAll();
     axi4_perf_counters.updateAll();
     ifu_state_counter.update();
+		exu_counter.update();
   }
 }
 static void reset(int n) {
@@ -723,13 +724,10 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   cpu.pc = sim_cfg.init_pc;
   spdlog::info("set initial pc to {:08x}", cpu.pc);
 
-  inst_type_counter.init();
-  auto notifyInstFetched = [&]() {
-    inst_type_counter.newInstFetched(cycle_count);
-  };
+
 
   handshake_detector.init();
-  handshake_detector.add("ifu.io_mem_r", "IFU fetch inst", notifyInstFetched);
+  handshake_detector.add("ifu.io_mem_r", "IFU fetch inst");
   handshake_detector.add("exu.io_mem_r", "EXU load data");
   handshake_detector.add("exu.alu.io_out_", "EXU calc");
   handshake_detector.add("idu.io_out_", "IDU decode inst");
@@ -739,6 +737,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 
   axi4_perf_counters.addRead("ifu.io_mem", "IFU fetch inst");
 
+	exu_counter.bind("idu");
   ifu_state_counter.bind("ifu");
 
   return true;
@@ -770,30 +769,30 @@ void sim_dump_statistics() {
   ifu_state_counter.dumpStatistics();
 
   spdlog::info(">instruction type counts:");
-  size_t totByType = inst_type_counter.totalInstCountSumByType();
+  size_t totByType = exu_counter.totalInstCountSumByType();
 	fmt::println("  by type: (total {})", totByType);
-  for (size_t i = 0; i < InstTypeCounter::TYPE_NUM; i++) {
+  for (size_t i = 0; i < EXUPerfCounter::TYPE_NUM; i++) {
     auto type_name =
-        InstTypeCounter::name_of_type((InstTypeCounter::InstType)i);
-    auto type_count = inst_type_counter.type_count[i];
+        EXUPerfCounter::name_of_type((EXUPerfCounter::InstType)i);
+    auto type_count = exu_counter.type_count[i];
     auto type_percentage =
         totByType == 0 ? NAN : ((double)type_count / (double)totByType) * 100.0;
 		fmt::println(
         "    {:<10} : {:>6} ({:>5.2f}%) cpi {:.2f}", type_name, type_count,
         type_percentage,
-        inst_type_counter.averageCPIOfType((InstTypeCounter::InstType)i));
+        exu_counter.averageCPIOfType((EXUPerfCounter::InstType)i));
   }
-  size_t totByFmt = inst_type_counter.totalInstCountSumByFmt();
+  size_t totByFmt = exu_counter.totalInstCountSumByFmt();
 	fmt::println("  by fmt: (total {})", totByFmt);
-  for (size_t i = 0; i < InstTypeCounter::FMT_NUM; i++) {
-    auto fmt_name = InstTypeCounter::name_of_fmt((InstTypeCounter::InstFmt)i);
-    auto fmt_count = inst_type_counter.fmt_count[i];
+  for (size_t i = 0; i < EXUPerfCounter::FMT_NUM; i++) {
+    auto fmt_name = EXUPerfCounter::name_of_fmt((EXUPerfCounter::InstFmt)i);
+    auto fmt_count = exu_counter.fmt_count[i];
     auto fmt_percentage =
         totByFmt == 0 ? NAN : ((double)fmt_count / (double)totByFmt) * 100.0;
 		fmt::println(
         "    {:<10} : {:>6} ({:>5.2f}%) cpi {:.2f}", fmt_name, fmt_count,
         fmt_percentage,
-        inst_type_counter.averageCPIOfFmt((InstTypeCounter::InstFmt)i));
+        exu_counter.averageCPIOfFmt((EXUPerfCounter::InstFmt)i));
   }
 
   axi4_perf_counters.dumpAllStatistics();
