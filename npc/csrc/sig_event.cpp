@@ -142,15 +142,19 @@ void IFUStateCounter::dumpStatistics() {
   spdlog::info("IFU State Counter Statistics:");
   fmt::println("  total instruction fetch count: {}", totalFetchCount);
   fmt::println("  state statistics:");
-  fmt::println("    {:10} : {:>10} {:>16}", "state", "count", "count_no_fetch");
+  fmt::println("    {:10} : {:>18} {:>18}", "state", "count", "count_no_fetch");
   auto totCycles = sim_get_cycle();
   for (size_t i = 0; i < STATE_NUM; i++) {
     double perc = totCycles == 0
                       ? NAN
                       : ((double)countOfState[i] / (double)totCycles) * 100.0;
+    double percNoFetch =
+        totCycles == 0
+            ? NAN
+            : ((double)countOfStateWhenNoFetch[i] / (double)totCycles) * 100.0;
 
-    fmt::println("    {:10} : {:>10} {:>16}({:.3f}%)",
-                 _name_of_ifu_state((State)i), countOfState[i],
-                 countOfStateWhenNoFetch[i], perc);
+    fmt::println("    {:10} : {:>8} ({:6.3f}%) {:>8} ({:6.3f}%)",
+                 _name_of_ifu_state((State)i), countOfState[i], perc,
+                 countOfStateWhenNoFetch[i], percNoFetch);
   }
 }
