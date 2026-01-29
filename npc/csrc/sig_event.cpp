@@ -35,3 +35,13 @@ void HandShakeDetector::add(std::string barePath, std::string description) {
   logger->info("added watch for channel {} ({})", _DebugPath(barePath), description);
   bus_list.emplace_back(hValid, hReady, description);
 }
+
+void HandShakeDetector::checkAndCountAll() {
+	for(auto &bus : bus_list){
+		if(bus.shakeHappened()){
+			bus.shake_count++;
+			logger->trace("Handshake happened on {} (total count {})",
+			              _DebugPath(bus.description), bus.shake_count);
+		}
+	}
+}

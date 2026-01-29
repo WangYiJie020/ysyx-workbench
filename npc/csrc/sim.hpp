@@ -89,6 +89,8 @@ void sim_step_inst();
 uint64_t sim_get_cycle_count();
 uint64_t sim_get_inst_count();
 
+void sim_dump_statistics();
+
 sim_config* sim_get_config();
 sim_cpu_state* sim_get_cpu_state();
 

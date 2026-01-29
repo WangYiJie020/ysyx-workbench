@@ -23,6 +23,8 @@ struct ValidReadyBus {
 
   std::string description;
 
+	size_t shake_count = 0;
+
   ValidReadyBus(vpiHandle hV, vpiHandle hR, std::string desc = "")
 			: hValid(hV), hReady(hR), description(desc) {}
 
@@ -46,4 +48,6 @@ public:
   HandShakeDetector();
 
   void add(std::string pathWithoutValidOrReady, std::string description = "");
+
+	void checkAndCountAll();
 };

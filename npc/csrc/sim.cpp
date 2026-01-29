@@ -103,12 +103,7 @@ void sim_step_cycle() {
     sim_settings.cycle_finish_cb();
   }
 
-	for(auto &bus : handshake_detector.bus_list){
-		if(bus.shakeHappened()){
-			spdlog::info("{} handshake happened at cycle {}",
-				bus.description,cycle_count);
-		}
-	}
+	handshake_detector.checkAndCountAll();
 }
 static void reset(int n) {
   dut.reset = 1;
@@ -721,4 +716,21 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 	handshake_detector.add("idu.io_out_", "IDU decode inst");
 
   return true;
+}
+
+void sim_dump_statistics() {
+	spdlog::info("simulation statistics:");
+	spdlog::info(">inst per cycle:");
+	spdlog::info("  total cycle count: {}", cycle_count);
+	spdlog::info("  total instruction count: {}", inst_count);
+	if (cycle_count > 0) {
+		double ipc = (double)inst_count / (double)cycle_count;
+		spdlog::info("  IPC: {:.4f}", ipc);
+	}
+
+	spdlog::info(">handshake counts:");
+	for(auto &e : handshake_detector.bus_list) {
+		spdlog::info("  {} happened {} times", e.description, e.shake_count);
+	}
+	
 }
