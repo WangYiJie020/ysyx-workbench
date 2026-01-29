@@ -20,12 +20,6 @@ inline const std::string &cpu_vpi_path_prefix() {
 struct ValidReadyBus {
   vpiHandle hValid;
   vpiHandle hReady;
-	~ValidReadyBus() {
-		if (hValid)
-			vpi_release_handle(hValid);
-		if (hReady)
-			vpi_release_handle(hReady);
-	}
 
   std::string description;
 
@@ -57,4 +51,16 @@ public:
   void add(std::string pathWithoutValidOrReady, std::string description = "");
 
 	void checkAndCountAll();
+};
+
+struct InstTypeCounter{
+	size_t r_type = 0;
+	size_t i_type = 0;
+	size_t s_type = 0;
+	size_t b_type = 0;
+	size_t u_type = 0;
+	size_t j_type = 0;
+
+	void count(uint32_t inst);
+
 };

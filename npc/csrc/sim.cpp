@@ -414,15 +414,6 @@ uint8_t *sim_guest_to_host(uint32_t addr) {
   spdlog::error("sim_guest_to_host addr={:08x} no mapping region", addr);
   return nullptr;
 }
-// word_t guest_to_host(word_t addr) {
-//   // printf("raw addr %08X\n",addr);
-//   assert(addr >= MADDR_BASE);
-//   word_t res = addr - MADDR_BASE;
-//   return res;
-// }
-
-// word_t gpr_snap[32];
-// word_t *sim_current_gpr() { return gpr_snap; }
 
 extern "C" void gpr_upd(int regno, int data) {
   if (regno == 0)
