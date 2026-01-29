@@ -32,7 +32,7 @@ object InstFmt  extends ChiselEnum {
   val imm, reg, store, upper, jump, branch = Value
 }
 object InstType extends ChiselEnum {
-  val none, arithmetic, load, store, jalr, jal, lui, auipc, system = Value
+  val branch, arithmetic, load, store, jalr, jal, lui, auipc, system = Value
 }
 
 class Inst extends Bundle {

@@ -244,7 +244,7 @@ class EXU extends Module {
 
   // for now, system inst, ecall and mret has rd == 0
   // TODO: handle rd != 0 case
-  io.out.bits.gpr.en := (dinst.info.rd =/= 0.U) && (dinst.info.typ =/= InstType.none) &&
+  io.out.bits.gpr.en := (dinst.info.rd =/= 0.U) && (dinst.info.typ =/= InstType.branch) &&
     (dinst.info.typ =/= InstType.store)
 
   io.out.bits.gpr.addr := dinst.info.rd
