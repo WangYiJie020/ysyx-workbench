@@ -136,6 +136,7 @@ int sdb_mainloop() {
 
   std::string top_vpi_name =
       std::string("TOP.") + std::string(_STR(TOP_NAME)).substr(1);
+	sprobe.add_watch("asic.cpu.cpu.io_master_araddr");
 
   std::string cmd;
   bool quit = false;
