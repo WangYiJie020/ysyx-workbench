@@ -90,6 +90,7 @@ void sim_step_cycle();
 void sim_step_inst();
 
 sim_time_t sim_get_time();
+sim_cycle_t sim_get_cycle();
 
 void sim_dump_statistics();
 

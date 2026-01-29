@@ -43,7 +43,8 @@ bool HandShakeDetector::ValidReadyBus::shakeHappened() {
   return hValid.getUint32Value() == 1 && hReady.getUint32Value() == 1;
 }
 void HandShakeDetector::ValidReadyBus::dumpStatus() {
-  fmt::println("  {:20} happened {} times", description, shake_count);
+  fmt::println("  {:20} happened {} times (freq {:.3f})", description,
+               shake_count, (double)shake_count / (double)sim_get_cycle());
 }
 
 void HandShakeDetector::checkAndCountAll() {
@@ -110,4 +111,3 @@ void InstTypeCounter::newInstFetched(uint64_t cyc) {
   lastInstFmt = (InstFmt)inst_fmt;
   lastInstFetchCyc = cyc;
 }
-

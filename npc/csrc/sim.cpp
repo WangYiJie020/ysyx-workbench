@@ -57,6 +57,7 @@ static uint64_t cycle_count = 0;
 static uint64_t inst_count = 0;
 
 sim_time_t sim_get_time() { return sim_time; }
+sim_cycle_t sim_get_cycle() { return cycle_count; }
 
 static std::shared_ptr<spdlog::logger> _dpi_logger;
 
