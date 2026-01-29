@@ -12,7 +12,7 @@ void HandShakeDetector::init() {
 }
 
 SignalHandle::SignalHandle(std::string barePath) {
-	spdlog::debug("resolving signal path: {}", _DebugPath(barePath));
+	// spdlog::debug("resolving signal path: {}", _DebugPath(barePath));
   handle = vpi_handle_by_name(
       const_cast<PLI_BYTE8 *>(_FullPath(barePath).c_str()), nullptr);
   if (!handle) {
@@ -134,7 +134,7 @@ static const char *_name_of_ifu_state(IFUStateCounter::State s) {
   const char *names[] = {
       "IDLE",
       "WAIT_INST",
-      "WAIT_DOWNSTREAM",
+      "WAIT_DOWN",
   };
   return names[(size_t)s];
 }
@@ -142,9 +142,10 @@ void IFUStateCounter::dumpStatistics() {
   spdlog::info("IFU State Counter Statistics:");
   fmt::println("  total instruction fetch count: {}", totalFetchCount);
   fmt::println("  state statistics:");
-  fmt::println("    {:10} : {:>10} {:>10}", "state", "count", "count_no_fetch");
+  fmt::println("    {:10} : {:>10} {:>10}", "state", "count", "count_no_fetch)");
   for (size_t i = 0; i < STATE_NUM; i++) {
-    fmt::println("    {:10} : {:>10} {:>10}", _name_of_ifu_state((State)i),
-                 countOfState[i], countOfStateWhenNoFetch[i]);
+		double perc = totalFetchCount == 0 ? NAN : countOfStateWhenNoFetch[i] * 100.0 / (double)totalFetchCount;
+    fmt::println("    {:10} : {:>10} {:>10} {:.3f}", _name_of_ifu_state((State)i),
+                 countOfState[i], countOfStateWhenNoFetch[i], perc);
   }
 }
