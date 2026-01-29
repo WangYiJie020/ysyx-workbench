@@ -55,6 +55,8 @@ static uint64_t sim_time = 0;
 static uint64_t cycle_count = 0;
 static uint64_t inst_count = 0;
 
+sim_time_t sim_get_time() { return sim_time; }
+
 static std::shared_ptr<spdlog::logger> _dpi_logger;
 
 sim_config *sim_get_config() { return &sim_cfg; }

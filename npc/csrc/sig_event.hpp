@@ -11,6 +11,8 @@
 
 #include "common.hpp"
 
+#include "sim.hpp"
+
 inline const std::string &cpu_vpi_path_prefix() {
   static std::string prefix;
   if (prefix.empty()) {
@@ -146,12 +148,17 @@ struct InstTypeCounter {
 
 
 struct AXI4CounterBase {
+	struct LatencyRecord {
+		sim_time_t startTime;
+		sim_time_t endTime;
+		size_t cycles;
+	};
 	size_t transaction_count = 0;
 
-	size_t current_latency_cycles = 0;
 	size_t total_latency_cycles = 0;
 
-	size_t max_latency_cycles = 0;
+	LatencyRecord currentRecord;
+	LatencyRecord maxRecord;
 
 	std::string name;
 

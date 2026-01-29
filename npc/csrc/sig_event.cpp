@@ -1,4 +1,5 @@
 #include "sig_event.hpp"
+#include "sim.hpp"
 #include "spdlog/fmt/bundled/base.h"
 #include <spdlog/sinks/stdout_color_sinks.h>
 
@@ -132,7 +133,8 @@ void AXI4CounterBase::dumpStatistics() {
                transaction_count == 0
                    ? NAN
                    : (double)total_latency_cycles / (double)transaction_count);
-  fmt::println("  max latency cycles: {}", max_latency_cycles);
+  fmt::print("  max latency cycles: {}", maxRecord.cycles);
+	fmt::println(" (at sim time {} to {})", maxRecord.startTime, maxRecord.endTime);
 }
 
 void AXI4ReadPerfCounter::bind(std::string channelPath) {
@@ -143,27 +145,30 @@ void AXI4ReadPerfCounter::bind(std::string channelPath) {
 }
 
 void AXI4ReadPerfCounter::update() {
+	auto sim_time = sim_get_time();
   switch (state) {
   case IDLE: {
     if (hARValid.getUint32Value() == 1) {
       state = WAIT_DATA;
       transaction_count++;
-      current_latency_cycles = 0;
+			currentRecord.startTime = sim_time;
+			currentRecord.cycles = 0;
       logger->trace("ARVALID high, starting transaction {}", transaction_count);
     }
     break;
   }
   case WAIT_DATA: {
-    current_latency_cycles++;
+		currentRecord.cycles++;
     if (hRValid.getUint32Value() == 1 && hRReady.getUint32Value() == 1) {
       // handshake happened
-      total_latency_cycles += current_latency_cycles;
-      if (current_latency_cycles > max_latency_cycles) {
-        max_latency_cycles = current_latency_cycles;
+			currentRecord.endTime = sim_time;
+      total_latency_cycles += currentRecord.cycles;
+      if (currentRecord.cycles > maxRecord.cycles) {
+				maxRecord = currentRecord;
       }
       logger->trace(
           "RVALID & RREADY handshake for transaction {} after {} cycles",
-          transaction_count, current_latency_cycles);
+          transaction_count, currentRecord.cycles);
       state = IDLE;
     }
     break;
