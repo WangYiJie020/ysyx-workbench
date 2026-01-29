@@ -10,7 +10,7 @@ inline const std::string &cpu_vpi_path_prefix() {
   static std::string prefix;
   if (prefix.empty()) {
     prefix = std::string("TOP.") + std::string(_STR(TOP_NAME)).substr(1);
-		prefix += ".cpu.cpu.";
+		prefix += ".asic.cpu.cpu.";
   }
   return prefix;
 }
