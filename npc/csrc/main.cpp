@@ -7,7 +7,9 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 #include "sim.hpp"
-#include "dbg.hpp"
+#include "sdbWrap.hpp"
+
+#include "PerfCounter.hpp"
 
 int gdb_mainloop();
 
@@ -32,8 +34,7 @@ int main(int argc, char **argv) {
 	}
 
 	spdlog::info("sim ended");
-
-	sim_dump_statistics();
+	dumpPerfCountersStatistics();
 	
 	get_dut()->final();
 	if(!setting.gdb_mode){

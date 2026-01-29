@@ -1,5 +1,4 @@
-#include "sig_event.hpp"
-#include "spdlog/fmt/bundled/base.h"
+#include "PerfCounter.hpp"
 using namespace _PerfCtrImp;
 
 void AXI4CounterBase::init_logger() {
