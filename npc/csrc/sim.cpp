@@ -102,6 +102,13 @@ void sim_step_cycle() {
   if (sim_settings.cycle_finish_cb) {
     sim_settings.cycle_finish_cb();
   }
+
+	for(auto &bus : handshake_detector.bus_list){
+		if(bus.shakeHappened()){
+			spdlog::info("{} handshake happened at cycle {}",
+				bus.description,cycle_count);
+		}
+	}
 }
 static void reset(int n) {
   dut.reset = 1;
@@ -709,6 +716,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   spdlog::info("set initial pc to {:08x}", cpu.pc);
 
 	handshake_detector.add("ifu.io_mem_r");
+	handshake_detector.bus_list.begin()->description = "IFU Mem Read";
 
   return true;
 }

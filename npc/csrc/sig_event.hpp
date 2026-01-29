@@ -19,6 +19,8 @@ struct ValidReadyBus {
   vpiHandle hValid;
   vpiHandle hReady;
 
+	std::string description;
+
   ValidReadyBus(vpiHandle hV, vpiHandle hR) : hValid(hV), hReady(hR) {}
 
   bool shakeHappened() {
