@@ -23,11 +23,14 @@
 #include <getopt.h>
 #include <unistd.h>
 
+#include "sig_event.hpp"
+
 TOP_NAME dut;
 sim_config sim_cfg;
 sim_setting &sim_settings = sim_cfg.setting;
 
 sim_cpu_state cpu;
+
 
 TOP_NAME *get_dut() { return &dut; }
 
@@ -665,6 +668,8 @@ void _init_dpi_logger() {
   _dpi_logger->set_formatter(std::move(formatter));
   spdlog::register_logger(_dpi_logger);
 }
+
+
 
 bool sim_init(int argc, char **argv, sim_setting setting) {
   Verilated::commandArgs(argc, argv);
