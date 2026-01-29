@@ -99,15 +99,21 @@ void IDUPerfCounter::update() {
 	}
 
 	auto cyc = sim_get_cycle();
+    auto cycles = cyc - lastInstFetchCyc;
 
   if (isValidType(lastInstType)) {
-    auto cycles = cyc - lastInstFetchCyc;
     tot_cycle_of_type[lastInstType] += cycles;
   }
   if (isValidFmt(lastInstFmt)) {
-    auto cycles = cyc - lastInstFetchCyc;
     tot_cycle_of_fmt[lastInstFmt] += cycles;
   }
+
+	if(cycles > 100){
+		logger->warn("large gap between instructions: {} cycles", cycles);
+		logger->info("  last inst type {} fmt {} at cycle {}",
+										 name_of_type(lastInstType), name_of_fmt(lastInstFmt),
+										 lastInstFetchCyc);
+	}
 
   uint32_t inst_type = hInstType.getUint32Value();
   uint32_t inst_fmt = hInstFmt.getUint32Value();
