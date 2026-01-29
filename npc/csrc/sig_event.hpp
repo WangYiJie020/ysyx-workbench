@@ -17,50 +17,69 @@ inline const std::string &cpu_vpi_path_prefix() {
   return prefix;
 }
 
+struct SignalHandle {
+  vpiHandle handle;
+  ~SignalHandle() {
+    if (handle) {
+      vpi_release_handle(handle);
+    }
+  }
+  SignalHandle() : handle(nullptr) {}
+  SignalHandle(vpiHandle h) : handle(h) {}
+
+  SignalHandle(const SignalHandle &) = delete;
+  SignalHandle &operator=(const SignalHandle &) = delete;
+  SignalHandle(SignalHandle &&other) : handle(other.handle) {
+    other.handle = nullptr;
+  }
+  SignalHandle &operator=(SignalHandle &&other) {
+    if (this != &other) {
+      if (handle) {
+        vpi_release_handle(handle);
+      }
+      handle = other.handle;
+      other.handle = nullptr;
+    }
+    return *this;
+  }
+
+  SignalHandle(std::string barePath);
+};
+
 struct ValidReadyBus {
-  vpiHandle hValid;
-  vpiHandle hReady;
+  SignalHandle hValid;
+	SignalHandle hReady;
 
   std::string description;
 
-	size_t shake_count = 0;
+  size_t shake_count = 0;
 
   ValidReadyBus(vpiHandle hV, vpiHandle hR, std::string desc = "")
-			: hValid(hV), hReady(hR), description(desc) {}
+      : hValid(hV), hReady(hR), description(desc) {}
 
-  bool shakeHappened() {
-    s_vpi_value valValid, valReady;
-    valValid.format = vpiIntVal;
-    valReady.format = vpiIntVal;
-
-    vpi_get_value(hValid, &valValid);
-    vpi_get_value(hReady, &valReady);
-
-    return (valValid.value.integer == 1) && (valReady.value.integer == 1);
-  }
+  bool shakeHappened();
 };
 
 class HandShakeDetector {
 public:
-	std::shared_ptr<spdlog::logger> logger;
+  std::shared_ptr<spdlog::logger> logger;
   std::vector<ValidReadyBus> bus_list;
 
   HandShakeDetector();
 
-	void init();
+  void init();
   void add(std::string pathWithoutValidOrReady, std::string description = "");
 
-	void checkAndCountAll();
+  void checkAndCountAll();
 };
 
-struct InstTypeCounter{
-	size_t r_type = 0;
-	size_t i_type = 0;
-	size_t s_type = 0;
-	size_t b_type = 0;
-	size_t u_type = 0;
-	size_t j_type = 0;
+struct InstTypeCounter {
+  size_t r_type = 0;
+  size_t i_type = 0;
+  size_t s_type = 0;
+  size_t b_type = 0;
+  size_t u_type = 0;
+  size_t j_type = 0;
 
-	void count(uint32_t inst);
-
+  void count(uint32_t inst);
 };

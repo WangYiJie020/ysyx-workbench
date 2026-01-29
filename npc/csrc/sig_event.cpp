@@ -20,6 +20,14 @@ auto _DebugPath(const std::string &pathWithoutValidOrReady,
   return "`cpu." + pathWithoutValidOrReady + suffix;
 }
 
+SignalHandle::SignalHandle(std::string barePath) {
+	handle = vpi_handle_by_name(
+			const_cast<PLI_BYTE8 *>(_FullPath(barePath).c_str()), nullptr);
+	if (!handle) {
+		spdlog::error("cannot find signal at path {}", _DebugPath(barePath));
+	}
+}
+
 void HandShakeDetector::add(std::string barePath, std::string description) {
   auto pathValid = _FullPath(barePath, "valid");
   auto pathReady = _FullPath(barePath, "ready");
@@ -40,6 +48,17 @@ void HandShakeDetector::add(std::string barePath, std::string description) {
   spdlog::info("added watch for channel {} ({})", _DebugPath(barePath), description);
   bus_list.emplace_back(hValid, hReady, description);
 }
+
+bool ValidReadyBus::shakeHappened() {
+    s_vpi_value valValid, valReady;
+    valValid.format = vpiIntVal;
+    valReady.format = vpiIntVal;
+
+    vpi_get_value(hValid.handle, &valValid);
+    vpi_get_value(hReady.handle, &valReady);
+
+    return (valValid.value.integer == 1) && (valReady.value.integer == 1);
+  }
 
 void HandShakeDetector::checkAndCountAll() {
 	for(auto &bus : bus_list){
