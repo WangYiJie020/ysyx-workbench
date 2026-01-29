@@ -1,15 +1,7 @@
 #include "sig_event.hpp"
 #include <spdlog/sinks/stdout_color_sinks.h>
 
-
-void set_logger_pattern_with_simtime(std::shared_ptr<spdlog::logger> logger);
-HandShakeDetector::HandShakeDetector() {
-  logger = spdlog::stdout_color_mt("HandShakeDetector");
-}
-void HandShakeDetector::init() {
-	set_logger_pattern_with_simtime(logger);
-	logger->set_level(spdlog::level::info);
-}
+using std::move;
 
 auto _FullPath(const std::string &pathWithoutValidOrReady,
                const std::string &suffix = "") {
@@ -18,6 +10,15 @@ auto _FullPath(const std::string &pathWithoutValidOrReady,
 auto _DebugPath(const std::string &pathWithoutValidOrReady,
                 const std::string &suffix = "") {
   return "`cpu." + pathWithoutValidOrReady + suffix;
+}
+
+void set_logger_pattern_with_simtime(std::shared_ptr<spdlog::logger> logger);
+HandShakeDetector::HandShakeDetector() {
+  logger = spdlog::stdout_color_mt("HandShakeDetector");
+}
+void HandShakeDetector::init() {
+	set_logger_pattern_with_simtime(logger);
+	logger->set_level(spdlog::level::info);
 }
 
 SignalHandle::SignalHandle(std::string barePath) {
@@ -32,21 +33,11 @@ void HandShakeDetector::add(std::string barePath, std::string description) {
   auto pathValid = _FullPath(barePath, "valid");
   auto pathReady = _FullPath(barePath, "ready");
   spdlog::debug("adding valid/ready pair: {}/{}", pathValid, pathReady);
-  vpiHandle hValid =
-      vpi_handle_by_name(const_cast<PLI_BYTE8 *>(pathValid.c_str()), nullptr);
-  if (!hValid) {
-    spdlog::error("cannot find valid signal at path {}",
-                  _DebugPath(barePath, "valid"));
-  }
-  vpiHandle hReady =
-      vpi_handle_by_name(const_cast<PLI_BYTE8 *>(pathReady.c_str()), nullptr);
-  if (!hReady) {
-    spdlog::error("cannot find ready signal at path {}",
-                  _DebugPath(barePath, "ready"));
-  }
+  auto hValid = SignalHandle(barePath + "valid");
+	auto hReady = SignalHandle(barePath + "ready");
 
   spdlog::info("added watch for channel {} ({})", _DebugPath(barePath), description);
-  bus_list.emplace_back(hValid, hReady, description);
+  bus_list.emplace_back(std::move(hValid), std::move(hReady), description);
 }
 
 bool ValidReadyBus::shakeHappened() {
@@ -68,4 +59,12 @@ void HandShakeDetector::checkAndCountAll() {
 			              _DebugPath(bus.description), bus.shake_count);
 		}
 	}
+}
+
+void InstTypeCounter::init(){
+	logger = spdlog::stdout_color_mt("InstTypeCounter");
+	set_logger_pattern_with_simtime(logger);
+	logger->set_level(spdlog::level::info);
+	hInstType = SignalHandle("idu.iinfo_dec.io_out_typ");
+	hInstFmt = SignalHandle("idu.iinfo_dec.io_out_fmt");
 }

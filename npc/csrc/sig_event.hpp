@@ -1,5 +1,6 @@
 #pragma once
 #include "vpi_user.h"
+#include <cstddef>
 #include <vector>
 #include <verilated.h>
 #include <verilated_vpi.h>
@@ -48,14 +49,14 @@ struct SignalHandle {
 
 struct ValidReadyBus {
   SignalHandle hValid;
-	SignalHandle hReady;
+  SignalHandle hReady;
 
   std::string description;
 
   size_t shake_count = 0;
 
-  ValidReadyBus(vpiHandle hV, vpiHandle hR, std::string desc = "")
-      : hValid(hV), hReady(hR), description(desc) {}
+  ValidReadyBus(SignalHandle&& hV, SignalHandle&& hR, std::string desc="")
+      : hValid(std::move(hV)), hReady(std::move(hR)), description(desc) {}
 
   bool shakeHappened();
 };
@@ -74,12 +75,34 @@ public:
 };
 
 struct InstTypeCounter {
-  size_t r_type = 0;
-  size_t i_type = 0;
-  size_t s_type = 0;
-  size_t b_type = 0;
-  size_t u_type = 0;
-  size_t j_type = 0;
+  // in common_def.scala
+  //   val imm, reg, store, upper, jump, branch = Value
+  //   val none, arithmetic, load, store, jalr, jal, lui, auipc, system =
+  enum InstFmt { I_TYPE, R_TYPE, S_TYPE, U_TYPE, J_TYPE, B_TYPE, FMT_COUNT };
+  enum InstType {
+    none,
+    arithmetic,
+    load,
+    store,
+    jalr,
+    jal,
+    lui,
+    auipc,
+    system,
+		TYPE_COUNT
+  };
+	size_t fmt_counts[FMT_COUNT] = {0};
+	size_t type_counts[TYPE_COUNT] = {0};
+
+	size_t tot_cycle_of_type[TYPE_COUNT] = {0};
+	size_t tot_cycle_of_fmt[FMT_COUNT] = {0};
+
+  SignalHandle hInstType;
+	SignalHandle hInstFmt;
+
+	std::shared_ptr<spdlog::logger> logger;
+
+  void init();
 
   void count(uint32_t inst);
 };
