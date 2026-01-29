@@ -64,8 +64,8 @@ void HandShakeDetector::checkAndCountAll() {
 
 const char *InstTypeCounter::name_of_type(InstType type) {
   static const char *type_names[] = {
-      "other", "alu",  "load",      "store",   "branch",
-      "jal",   "jalr", "lui_auipc", "syscall",
+      "none", "arithmetic", "load",  "store",  "jalr",
+      "jal",  "lui",        "auipc", "system",
   };
   if (type < sizeof(type_names) / sizeof(type_names[0])) {
     return type_names[type];
