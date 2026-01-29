@@ -97,7 +97,7 @@ string sdb::_impl::expand_tabs(std::string_view in, int tabsize) {
 
 string sdb::disasm_trace_handler::_dump_inst(disasm_trace_handler::_ctx_ref ctx, bool highlight_disasm) {
 	string res;
-	res+=format(ANSI_FG_GRAY "0x{:08X}: {}{:25} " ANSI_FG_GRAY "",
+	res+=format(ANSI_FG_GRAY "{:08X}: {}{:25} " ANSI_FG_GRAY "",
 			ctx.pc,
 			highlight_disasm?ANSI_FG_RED:ANSI_NONE,
 			_impl::expand_tabs(_disasm(ctx.pc,ctx.inst)));
@@ -106,7 +106,7 @@ string sdb::disasm_trace_handler::_dump_inst(disasm_trace_handler::_ctx_ref ctx,
 	//   res+=format("{:02X}",ctx.inst[j]);
 	// }
 	auto as_u32code=*(uint32_t*)ctx.inst.data();
-	res+=format("`0x{:08X}",as_u32code);
+	res+=format("`{:08X}",as_u32code);
 	res+="" ANSI_NONE ;
 	return res;
 }
