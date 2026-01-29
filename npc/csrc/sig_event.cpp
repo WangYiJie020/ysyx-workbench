@@ -2,8 +2,8 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 HandShakeDetector::HandShakeDetector() {
-	logger = spdlog::stdout_color_mt("HandShakeDetector");
-	logger->set_level(spdlog::level::debug);
+  logger = spdlog::stdout_color_mt("HandShakeDetector");
+  logger->set_level(spdlog::level::debug);
 }
 
 auto _FullPath(const std::string &pathWithoutValidOrReady,
@@ -18,8 +18,7 @@ auto _DebugPath(const std::string &pathWithoutValidOrReady,
 void HandShakeDetector::add(std::string barePath) {
   auto pathValid = _FullPath(barePath, "valid");
   auto pathReady = _FullPath(barePath, "ready");
-  logger->debug("adding valid/ready pair: {}/{}", pathValid,
-                pathReady);
+  logger->debug("adding valid/ready pair: {}/{}", pathValid, pathReady);
   vpiHandle hValid =
       vpi_handle_by_name(const_cast<PLI_BYTE8 *>(pathValid.c_str()), nullptr);
   if (!hValid) {
@@ -33,7 +32,6 @@ void HandShakeDetector::add(std::string barePath) {
                   _DebugPath(barePath, "ready"));
   }
 
-	logger->info("added valid/ready pair: {}/{}", pathValid,
-							 pathReady);
+  logger->info("add chanel: {}", _DebugPath(barePath, ""));
   bus_list.emplace_back(hValid, hReady);
 }
