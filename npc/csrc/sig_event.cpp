@@ -1,6 +1,5 @@
 #include "sig_event.hpp"
 #include "spdlog/fmt/bundled/base.h"
-#include "sig_event.hpp"
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 auto _FullPath(const std::string &pathWithoutValidOrReady,
@@ -53,7 +52,7 @@ bool HandShakeDetector::ValidReadyBus::shakeHappened() {
   return hValid.getUint32Value() == 1 && hReady.getUint32Value() == 1;
 }
 void HandShakeDetector::ValidReadyBus::dumpStatus() {
-	fmt::println("  {:20} happened {} times", description, shake_count);
+  fmt::println("  {:20} happened {} times", description, shake_count);
 }
 
 void HandShakeDetector::checkAndCountAll() {
@@ -119,4 +118,53 @@ void InstTypeCounter::newInstFetched(uint64_t cyc) {
   lastInstType = (InstType)inst_type;
   lastInstFmt = (InstFmt)inst_fmt;
   lastInstFetchCyc = cyc;
+}
+
+void AXI4CounterBase::init_logger() {
+  logger = spdlog::stdout_color_mt(name);
+  set_logger_pattern_with_simtime(logger);
+}
+void AXI4CounterBase::dumpStatistics() {
+  fmt::println("{} transactions: (total {})", name, transaction_count);
+  fmt::println("  average latency cycles: {:.2f}",
+               transaction_count == 0
+                   ? NAN
+                   : (double)total_latency_cycles / (double)transaction_count);
+  fmt::println("  max latency cycles: {}", max_latency_cycles);
+}
+
+void AXI4ReadPerfCounter::bind(std::string channelPath) {
+  hARValid = SignalHandle(channelPath + "_arvalid");
+  hARReady = SignalHandle(channelPath + "_arready");
+  hRValid = SignalHandle(channelPath + "_rvalid");
+  hRReady = SignalHandle(channelPath + "_rready");
+}
+
+void AXI4ReadPerfCounter::update() {
+  switch (state) {
+  case IDLE: {
+    if (hARValid.getUint32Value() == 1) {
+      state = WAIT_DATA;
+      transaction_count++;
+      current_latency_cycles = 0;
+      logger->trace("ARVALID high, starting transaction {}", transaction_count);
+    }
+    break;
+  }
+  case WAIT_DATA: {
+    current_latency_cycles++;
+    if (hRValid.getUint32Value() == 1 && hRReady.getUint32Value() == 1) {
+      // handshake happened
+      total_latency_cycles += current_latency_cycles;
+      if (current_latency_cycles > max_latency_cycles) {
+        max_latency_cycles = current_latency_cycles;
+      }
+      logger->trace(
+          "RVALID & RREADY handshake for transaction {} after {} cycles",
+          transaction_count, current_latency_cycles);
+      state = IDLE;
+    }
+    break;
+  }
+  }
 }

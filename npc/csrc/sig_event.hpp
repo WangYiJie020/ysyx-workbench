@@ -56,6 +56,7 @@ struct SignalHandle {
   }
 };
 
+
 class HandShakeDetector {
 public:
   using callback_t = std::function<void()>;
@@ -142,3 +143,39 @@ struct InstTypeCounter {
 		return (double)tot_cycle_of_fmt[fmt]/(double)fmt_count[fmt];
 	}
 };
+
+
+struct AXI4CounterBase {
+	size_t transaction_count = 0;
+
+	size_t current_latency_cycles = 0;
+	size_t total_latency_cycles = 0;
+
+	size_t max_latency_cycles = 0;
+
+	std::string name;
+
+	std::shared_ptr<spdlog::logger> logger;
+
+	void init_logger();
+
+	void dumpStatistics();
+};
+
+struct AXI4ReadPerfCounter : public AXI4CounterBase {
+	SignalHandle hARValid;
+	SignalHandle hARReady;
+	SignalHandle hRValid;
+	SignalHandle hRReady;
+
+	// count arvalid becoming high to rvalid & rready handshake
+
+	enum State {
+		IDLE,
+		WAIT_DATA,
+	} state = IDLE;
+
+	void bind(std::string path);
+	void update();
+};
+
