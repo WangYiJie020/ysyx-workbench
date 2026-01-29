@@ -45,11 +45,15 @@ std::shared_ptr<VerilatedFstC> tfp;
 
 static uint64_t sim_time = 0;
 static uint64_t cycle_count = 0;
+static uint64_t inst_count = 0;
 
 static std::shared_ptr<spdlog::logger> _dpi_logger;
 
 sim_config *sim_get_config() { return &sim_cfg; }
 sim_cpu_state *sim_get_cpu_state() { return &cpu; }
+
+uint64_t sim_get_cycle_count() { return cycle_count; }
+uint64_t sim_get_inst_count() { return inst_count; }
 
 class sim_time_formatter : public spdlog::custom_flag_formatter {
 public:
@@ -524,6 +528,7 @@ void sim_step_inst() {
     }
   }
   pc_changed = false;
+	inst_count++;
 }
 
 // IMG

@@ -32,6 +32,9 @@ int main(int argc, char **argv) {
 	}
 
 	spdlog::info("sim ended");
+	double ipc = (double)sim_get_inst_count() / sim_get_cycle_count();
+	spdlog::info("inst count = {}, cycle count = {}, ipc = {:.4f}",
+	           sim_get_inst_count(), sim_get_cycle_count(), ipc);
 	
 	get_dut()->final();
 	return 0;
