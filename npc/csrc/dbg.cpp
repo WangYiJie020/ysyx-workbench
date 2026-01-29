@@ -15,8 +15,8 @@ void cyc_callback() {
   if (sim_halted())
     return;
   sprobe.dump_watched();
-	if (_old_cycle_callback)
-		_old_cycle_callback();
+  if (_old_cycle_callback)
+    _old_cycle_callback();
 }
 
 std::shared_ptr<sdb::debuger> dbg;
@@ -92,15 +92,17 @@ void sdb_init(word_t init_pc, size_t img_size, const char *img_file,
     }
     if (setting.etrace)
       dbg->add_trace(sdb::make_etrace_handler());
-    if (setting.iringbuf)
-      dbg->add_trace(sdb::make_iringbuf_trace_handler());
+    if (setting.iringbuf > 0) {
+      dbg->add_trace(sdb::make_iringbuf_trace_handler(sdb::default_inst_disasm,
+                                                      setting.iringbuf));
+    }
 
     if (img_file && setting.ftrace) {
       auto elf_file = try_find_elf_file_of(img_file);
 
       if (!elf_file.empty()) {
         // printf("Found ELF file: %s\n", elf_file.c_str());
-				spdlog::info("Found ELF file {}", elf_file);
+        spdlog::info("Found ELF file {}", elf_file);
         dbg->add_trace(sdb::make_ftrace_handler(elf_file));
       }
     }
@@ -117,8 +119,8 @@ int sdb_mainloop() {
   spdlog::info("sim started in sdb debug mode");
 
   auto &cfg = *sim_get_config();
-	cfg.raise_halt_cb = sdb_set_halt;
-	spdlog::trace("setting raise_halt_cb to sdb_set_halt");
+  cfg.raise_halt_cb = sdb_set_halt;
+  spdlog::trace("setting raise_halt_cb to sdb_set_halt");
 
   sdb_init(cfg.init_pc, cfg.img_size, cfg.img_file_path, cfg.setting);
   spdlog::info("sdb entering {} mode",
@@ -129,8 +131,8 @@ int sdb_mainloop() {
     return sdb_is_hitbadtrap() ? 1 : 0;
   }
 
-	_old_cycle_callback = cfg.setting.cycle_finish_cb;
-	cfg.setting.cycle_finish_cb = cyc_callback;
+  _old_cycle_callback = cfg.setting.cycle_finish_cb;
+  cfg.setting.cycle_finish_cb = cyc_callback;
 
   std::string top_vpi_name =
       std::string("TOP.") + std::string(_STR(TOP_NAME)).substr(1);

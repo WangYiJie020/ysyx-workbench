@@ -10,6 +10,11 @@ static void _Get(bool &field, const char *env_p) {
     }
   }
 }
+static void _Get(int &field, const char *env_p) {
+	if (env_p != nullptr) {
+		field = atoi(env_p);
+	}
+}
 static void _Get(std::string &field, const char *env_p) {
   if (env_p != nullptr) {
     field = std::string(env_p);

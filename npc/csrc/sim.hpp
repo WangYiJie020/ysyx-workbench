@@ -21,7 +21,7 @@ struct sim_setting {
 	bool gdb_mode = false;
 
   bool ftrace = false;
-  bool iringbuf = true;
+	int iringbuf = 32;
   bool etrace = true;
   bool difftest = true;
 
