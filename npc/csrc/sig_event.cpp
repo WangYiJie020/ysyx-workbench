@@ -8,11 +8,14 @@ void HandShakeDetector::add(std::string pathWithoutValidOrReady) {
 								 pathValid, pathReady);
   vpiHandle hValid =
       vpi_handle_by_name(const_cast<PLI_BYTE8 *>(pathValid.c_str()), nullptr);
+	if(!hValid){
+		spdlog::error("HandShakeDetector: cannot find valid signal at path {}", pathValid);
+	}
   vpiHandle hReady =
       vpi_handle_by_name(const_cast<PLI_BYTE8 *>(pathReady.c_str()), nullptr);
-  if (hValid == nullptr || hReady == nullptr) {
-    spdlog::error("HandShakeDetector: cannot find valid/ready handles for {}",
-                  pathWithoutValidOrReady);
-  }
+	if(!hReady){
+		spdlog::error("HandShakeDetector: cannot find ready signal at path {}", pathReady);
+	}
+
   bus_list.emplace_back(hValid, hReady);
 }
