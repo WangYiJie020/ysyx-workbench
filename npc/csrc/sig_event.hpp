@@ -22,6 +22,19 @@ inline const std::string &cpu_vpi_path_prefix() {
   return prefix;
 }
 
+namespace _PerfCtrImp {
+
+inline auto _FullPath(const std::string &pathWithoutValidOrReady,
+               const std::string &suffix = "") {
+  return cpu_vpi_path_prefix() + pathWithoutValidOrReady + suffix;
+}
+inline auto _DebugPath(const std::string &pathWithoutValidOrReady,
+                const std::string &suffix = "") {
+  return "`cpu." + pathWithoutValidOrReady + suffix;
+}
+} // namespace _PerfCtrImp
+
+
 struct SignalHandle {
   vpiHandle handle;
   ~SignalHandle() {
@@ -58,7 +71,6 @@ struct SignalHandle {
   }
 };
 
-
 class HandShakeDetector {
 public:
   using callback_t = std::function<void()>;
@@ -72,7 +84,7 @@ public:
     callback_t onShakeCallback = nullptr;
 
     bool shakeHappened();
-		void dumpStatus();
+    void dumpStatus();
   };
   std::shared_ptr<spdlog::logger> logger;
   std::vector<ValidReadyBus> bus_list;
@@ -80,8 +92,9 @@ public:
   HandShakeDetector();
 
   void init();
-  ValidReadyBus& add(std::string pathWithoutValidOrReady, std::string description = "",
-           callback_t onShake = nullptr);
+  ValidReadyBus &add(std::string pathWithoutValidOrReady,
+                     std::string description = "",
+                     callback_t onShake = nullptr);
 
   void checkAndCountAll();
 };
@@ -136,53 +149,82 @@ struct InstTypeCounter {
   size_t totalInstCountSumByType() {
     return std::accumulate(type_count, type_count + TYPE_NUM, 0ull);
   }
-	double averageCPIOfType(InstType type){
-		if(type_count[type]==0) return NAN;
-		return (double)tot_cycle_of_type[type]/(double)type_count[type];
-	}
-	double averageCPIOfFmt(InstFmt fmt){
-		if(fmt_count[fmt]==0) return NAN;
-		return (double)tot_cycle_of_fmt[fmt]/(double)fmt_count[fmt];
-	}
+  double averageCPIOfType(InstType type) {
+    if (type_count[type] == 0)
+      return NAN;
+    return (double)tot_cycle_of_type[type] / (double)type_count[type];
+  }
+  double averageCPIOfFmt(InstFmt fmt) {
+    if (fmt_count[fmt] == 0)
+      return NAN;
+    return (double)tot_cycle_of_fmt[fmt] / (double)fmt_count[fmt];
+  }
 };
 
-
 struct AXI4CounterBase {
-	struct LatencyRecord {
-		sim_time_t startTime;
-		sim_time_t endTime;
-		size_t cycles;
-	};
-	size_t transaction_count = 0;
+  struct LatencyRecord {
+    sim_time_t startTime;
+    sim_time_t endTime;
+    size_t cycles;
+  };
+  size_t transaction_count = 0;
 
-	size_t total_latency_cycles = 0;
+  size_t total_latency_cycles = 0;
 
-	LatencyRecord currentRecord;
-	LatencyRecord maxRecord;
+  LatencyRecord currentRecord;
+  LatencyRecord maxRecord;
 
-	std::string name;
+  std::string name;
 
-	std::shared_ptr<spdlog::logger> logger;
+  std::shared_ptr<spdlog::logger> logger;
 
-	void init_logger();
-
-	void dumpStatistics();
+  void init_logger();
+	static void dumpStatisticsTitle();
+  void dumpStatistics();
 };
 
 struct AXI4ReadPerfCounter : public AXI4CounterBase {
-	SignalHandle hARValid;
-	SignalHandle hARReady;
-	SignalHandle hRValid;
-	SignalHandle hRReady;
+  SignalHandle hARValid;
+  SignalHandle hARReady;
+  SignalHandle hRValid;
+  SignalHandle hRReady;
 
-	// count arvalid becoming high to rvalid & rready handshake
+  // count arvalid becoming high to rvalid & rready handshake
 
-	enum State {
-		IDLE,
-		WAIT_DATA,
-	} state = IDLE;
+  enum State {
+    IDLE,
+    WAIT_DATA,
+  } state = IDLE;
 
-	void bind(std::string path);
-	void update();
+  void bind(std::string path);
+  void update();
+};
+struct AXI4WritePerfCounter : public AXI4CounterBase {
+  SignalHandle hAWValid;
+  SignalHandle hAWReady;
+  SignalHandle hWValid;
+  SignalHandle hWReady;
+  SignalHandle hBValid;
+  SignalHandle hBReady;
+
+  // count awvalid becoming high to bvalid & bready handshake
+
+  enum State {
+    IDLE,
+    WAIT_RESP,
+  } state = IDLE;
+
+  void bind(std::string path);
+  void update();
 };
 
+class AXI4PerfCounterManager {
+public:
+	std::vector<AXI4ReadPerfCounter> rdCounters;
+	std::vector<AXI4WritePerfCounter> wrCounters;
+	void updateAll();
+	void dumpAllStatistics();
+
+	void addRead(std::string channelPath, std::string name);
+	void addWrite(std::string channelPath, std::string name);
+};

@@ -17,6 +17,7 @@
 #include <cstdio>
 #include <string_view>
 
+#include "spdlog/fmt/bundled/base.h"
 #include "verilated_fst_c.h"
 
 #include <nvboard.h>
@@ -35,7 +36,7 @@ sim_cpu_state cpu;
 
 HandShakeDetector handshake_detector;
 InstTypeCounter inst_type_counter;
-std::vector<AXI4ReadPerfCounter> axi4_read_counters;
+AXI4PerfCounterManager axi4_perf_counters;
 
 TOP_NAME *get_dut() { return &dut; }
 
@@ -56,6 +57,7 @@ static uint64_t cycle_count = 0;
 static uint64_t inst_count = 0;
 
 sim_time_t sim_get_time() { return sim_time; }
+sim_cycle_t sim_get_cycle() { return cycle_count; }
 
 static std::shared_ptr<spdlog::logger> _dpi_logger;
 
@@ -110,9 +112,7 @@ void sim_step_cycle() {
   }
 
   handshake_detector.checkAndCountAll();
-	for (auto &ctr : axi4_read_counters) {
-		ctr.update();
-	}
+	axi4_perf_counters.updateAll();
 }
 static void reset(int n) {
   dut.reset = 1;
@@ -728,34 +728,30 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   handshake_detector.add("exu.alu.io_out_", "EXU calc");
   handshake_detector.add("idu.io_out_", "IDU decode inst");
 
-	axi4_read_counters.resize(2);
-	axi4_read_counters[0].name = "IFU Read Bus";
-	axi4_read_counters[0].init_logger();
-	axi4_read_counters[0].bind("ifu.io_mem");
+	axi4_perf_counters.addRead("exu.io_mem", "EXU load data");
+	axi4_perf_counters.addWrite("exu.io_mem", "EXU store data");
 
-	axi4_read_counters[1].name = "EXU Load Bus";
-	axi4_read_counters[1].init_logger();
-	axi4_read_counters[1].bind("exu.io_mem");
+	axi4_perf_counters.addRead("ifu.io_mem", "IFU fetch inst");
 
   return true;
 }
 
 void sim_dump_statistics() {
   spdlog::info("simulation statistics:");
-  spdlog::info(">cycle and instruction counts:");
-  spdlog::info("  total cycle count: {}", cycle_count);
-  spdlog::info("  total instruction count: {}", inst_count);
+	fmt::println(">cycle and instruction counts:");
+  fmt::println("  total cycle count: {}", cycle_count);
+  fmt::println("  total instruction count: {}", inst_count);
   if (cycle_count == 0) {
     spdlog::warn("cycle count is 0, cannot calc IPC");
   } else {
     double ipc = (double)inst_count / (double)cycle_count;
-    spdlog::info("  IPC: {:.4f}", ipc);
+		fmt::println("  IPC: {:.4f}", ipc);
   }
   if (inst_count == 0) {
     spdlog::warn("no instruction executed, cannot calc CPI");
   } else {
     double cpi = (double)cycle_count / (double)inst_count;
-    spdlog::info("  CPI: {:.4f}", cpi);
+		fmt::println("  CPI: {:.4f}", cpi);
   }
 
   spdlog::info(">handshake counts:");
@@ -790,8 +786,5 @@ void sim_dump_statistics() {
         inst_type_counter.averageCPIOfFmt((InstTypeCounter::InstFmt)i));
   }
 
-	spdlog::info(">AXI4 read performance counters:");
-	for (auto &ctr : axi4_read_counters) {
-		ctr.dumpStatistics();
-	}
+	axi4_perf_counters.dumpAllStatistics();
 }
