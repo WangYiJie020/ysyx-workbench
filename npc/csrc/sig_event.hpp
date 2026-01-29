@@ -1,6 +1,7 @@
 #pragma once
 #include "vpi_user.h"
 #include <cstddef>
+#include <numeric>
 #include <vector>
 #include <verilated.h>
 #include <verilated_vpi.h>
@@ -45,31 +46,36 @@ struct SignalHandle {
   }
 
   SignalHandle(std::string barePath);
-};
 
-struct ValidReadyBus {
-  SignalHandle hValid;
-  SignalHandle hReady;
-
-  std::string description;
-
-  size_t shake_count = 0;
-
-  ValidReadyBus(SignalHandle&& hV, SignalHandle&& hR, std::string desc="")
-      : hValid(std::move(hV)), hReady(std::move(hR)), description(desc) {}
-
-  bool shakeHappened();
+	uint32_t getUint32Value() {
+		s_vpi_value val;
+		val.format = vpiIntVal;
+		vpi_get_value(handle, &val);
+		return static_cast<uint32_t>(val.value.integer);
+	}
 };
 
 class HandShakeDetector {
 public:
+	using callback_t = std::function<void()>;
+  struct ValidReadyBus {
+    SignalHandle hValid;
+    SignalHandle hReady;
+
+    std::string description;
+
+    size_t shake_count = 0;
+		callback_t onShakeCallback = nullptr;
+
+    bool shakeHappened();
+  };
   std::shared_ptr<spdlog::logger> logger;
   std::vector<ValidReadyBus> bus_list;
 
   HandShakeDetector();
 
   void init();
-  void add(std::string pathWithoutValidOrReady, std::string description = "");
+  void add(std::string pathWithoutValidOrReady, std::string description = "", callback_t onShake = nullptr);
 
   void checkAndCountAll();
 };
@@ -78,7 +84,7 @@ struct InstTypeCounter {
   // in common_def.scala
   //   val imm, reg, store, upper, jump, branch = Value
   //   val none, arithmetic, load, store, jalr, jal, lui, auipc, system =
-  enum InstFmt { I_TYPE, R_TYPE, S_TYPE, U_TYPE, J_TYPE, B_TYPE, FMT_COUNT };
+  enum InstFmt { I_TYPE, R_TYPE, S_TYPE, U_TYPE, J_TYPE, B_TYPE, FMT_NUM };
   enum InstType {
     none,
     arithmetic,
@@ -89,20 +95,31 @@ struct InstTypeCounter {
     lui,
     auipc,
     system,
-		TYPE_COUNT
+    TYPE_NUM
   };
-	size_t fmt_counts[FMT_COUNT] = {0};
-	size_t type_counts[TYPE_COUNT] = {0};
 
-	size_t tot_cycle_of_type[TYPE_COUNT] = {0};
-	size_t tot_cycle_of_fmt[FMT_COUNT] = {0};
+	static const char* name_of_fmt(InstFmt fmt);
+	static const char* name_of_type(InstType type);
+
+  size_t fmt_count[FMT_NUM] = {0};
+  size_t type_count[TYPE_NUM] = {0};
+
+  size_t tot_cycle_of_type[TYPE_NUM] = {0};
+  size_t tot_cycle_of_fmt[FMT_NUM] = {0};
 
   SignalHandle hInstType;
-	SignalHandle hInstFmt;
+  SignalHandle hInstFmt;
 
-	std::shared_ptr<spdlog::logger> logger;
+  std::shared_ptr<spdlog::logger> logger;
 
   void init();
 
-  void count(uint32_t inst);
+  void newInstFetched(uint64_t sim_time);
+
+	size_t totalInstCountSumByFmt() {
+		return std::accumulate(fmt_count, fmt_count + FMT_NUM, 0ull);
+	}
+	size_t totalInstCountSumByType() {
+		return std::accumulate(type_count, type_count + TYPE_NUM, 0ull);
+	}
 };
