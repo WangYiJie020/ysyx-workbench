@@ -12,7 +12,7 @@ void HandShakeDetector::init() {
 }
 
 SignalHandle::SignalHandle(std::string barePath) {
-	// spdlog::debug("resolving signal path: {}", _DebugPath(barePath));
+  // spdlog::debug("resolving signal path: {}", _DebugPath(barePath));
   handle = vpi_handle_by_name(
       const_cast<PLI_BYTE8 *>(_FullPath(barePath).c_str()), nullptr);
   if (!handle) {
@@ -25,7 +25,7 @@ HandShakeDetector::add(std::string barePath, std::string description,
                        callback_t onShake) {
   auto pathValid = _FullPath(barePath, "valid");
   auto pathReady = _FullPath(barePath, "ready");
-  spdlog::debug("adding valid/ready pair: {}/{}", pathValid, pathReady);
+  spdlog::trace("adding valid/ready pair: {}/{}", pathValid, pathReady);
   auto hValid = SignalHandle(barePath + "valid");
   auto hReady = SignalHandle(barePath + "ready");
 
@@ -143,9 +143,14 @@ void IFUStateCounter::dumpStatistics() {
   fmt::println("  total instruction fetch count: {}", totalFetchCount);
   fmt::println("  state statistics:");
   fmt::println("    {:10} : {:>10} {:>16}", "state", "count", "count_no_fetch");
+  auto totCycles = sim_get_cycle();
   for (size_t i = 0; i < STATE_NUM; i++) {
-		double perc = totalFetchCount == 0 ? NAN : countOfStateWhenNoFetch[i] * 100.0 / (double)totalFetchCount;
-    fmt::println("    {:10} : {:>10} {:>16}({:.3f})", _name_of_ifu_state((State)i),
-                 countOfState[i], countOfStateWhenNoFetch[i], perc);
+    double perc = totCycles == 0
+                      ? NAN
+                      : ((double)countOfState[i] / (double)totCycles) * 100.0;
+
+    fmt::println("    {:10} : {:>10} {:>16}({:.3f}%)",
+                 _name_of_ifu_state((State)i), countOfState[i],
+                 countOfStateWhenNoFetch[i], perc);
   }
 }
