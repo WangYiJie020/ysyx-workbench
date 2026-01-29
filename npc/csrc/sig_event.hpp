@@ -23,7 +23,8 @@ struct ValidReadyBus {
 
   std::string description;
 
-  ValidReadyBus(vpiHandle hV, vpiHandle hR) : hValid(hV), hReady(hR) {}
+  ValidReadyBus(vpiHandle hV, vpiHandle hR, std::string desc = "")
+			: hValid(hV), hReady(hR), description(desc) {}
 
   bool shakeHappened() {
     s_vpi_value valValid, valReady;
@@ -44,5 +45,5 @@ public:
 
   HandShakeDetector();
 
-  void add(std::string pathWithoutValidOrReady);
+  void add(std::string pathWithoutValidOrReady, std::string description = "");
 };

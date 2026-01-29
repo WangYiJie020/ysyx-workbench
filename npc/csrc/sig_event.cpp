@@ -7,15 +7,15 @@ HandShakeDetector::HandShakeDetector() {
 }
 
 auto _FullPath(const std::string &pathWithoutValidOrReady,
-               const std::string &suffix) {
+               const std::string &suffix = "") {
   return cpu_vpi_path_prefix() + pathWithoutValidOrReady + suffix;
 }
 auto _DebugPath(const std::string &pathWithoutValidOrReady,
-                const std::string &suffix) {
+                const std::string &suffix = "") {
   return "`cpu." + pathWithoutValidOrReady + suffix;
 }
 
-void HandShakeDetector::add(std::string barePath) {
+void HandShakeDetector::add(std::string barePath, std::string description) {
   auto pathValid = _FullPath(barePath, "valid");
   auto pathReady = _FullPath(barePath, "ready");
   logger->debug("adding valid/ready pair: {}/{}", pathValid, pathReady);
@@ -32,6 +32,6 @@ void HandShakeDetector::add(std::string barePath) {
                   _DebugPath(barePath, "ready"));
   }
 
-  logger->info("add chanel: {}", _DebugPath(barePath, ""));
-  bus_list.emplace_back(hValid, hReady);
+  logger->info("added watch for channel {} ({})", barePath, description);
+  bus_list.emplace_back(hValid, hReady, description);
 }

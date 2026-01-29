@@ -715,8 +715,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   cpu.pc = sim_cfg.init_pc;
   spdlog::info("set initial pc to {:08x}", cpu.pc);
 
-	handshake_detector.add("ifu.io_mem_r");
-	handshake_detector.bus_list.begin()->description = "IFU Mem Read";
+	handshake_detector.add("ifu.io_mem_r", "IFU fetch inst");
 
   return true;
 }
