@@ -32,6 +32,6 @@ void HandShakeDetector::add(std::string barePath, std::string description) {
                   _DebugPath(barePath, "ready"));
   }
 
-  logger->info("added watch for channel {} ({})", barePath, description);
+  logger->info("added watch for channel {} ({})", _DebugPath(barePath), description);
   bus_list.emplace_back(hValid, hReady, description);
 }
