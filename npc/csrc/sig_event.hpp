@@ -20,6 +20,12 @@ inline const std::string &cpu_vpi_path_prefix() {
 struct ValidReadyBus {
   vpiHandle hValid;
   vpiHandle hReady;
+	~ValidReadyBus() {
+		if (hValid)
+			vpi_release_handle(hValid);
+		if (hReady)
+			vpi_release_handle(hReady);
+	}
 
   std::string description;
 
