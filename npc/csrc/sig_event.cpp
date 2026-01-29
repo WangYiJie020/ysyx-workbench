@@ -142,7 +142,7 @@ void IFUStateCounter::dumpStatistics() {
   spdlog::info("IFU State Counter Statistics:");
   fmt::println("  total instruction fetch count: {}", totalFetchCount);
   fmt::println("  state statistics:");
-  fmt::println("    {:10} : {:>18} {:>18}", "state", "count", "count_no_fetch");
+  fmt::println("    {:10} : {:<18} {:<18}", "state", "count", "count(exclu fetch)");
   auto totCycles = sim_get_cycle();
   for (size_t i = 0; i < STATE_NUM; i++) {
     double perc = totCycles == 0
