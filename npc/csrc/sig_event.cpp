@@ -111,3 +111,39 @@ void InstTypeCounter::newInstFetched(uint64_t cyc) {
   lastInstFmt = (InstFmt)inst_fmt;
   lastInstFetchCyc = cyc;
 }
+
+void IFUStateCounter::bind(std::string basePath) {
+  hRValid = SignalHandle(basePath + ".io_mem_rvalid");
+  hRReady = SignalHandle(basePath + ".io_mem_rready");
+
+  hState = SignalHandle(basePath + ".fsm.state");
+}
+void IFUStateCounter::update() {
+  bool fetchInstHappened =
+      (hRReady.getUint32Value() == 1 && hRValid.getUint32Value() == 1);
+  State s = (State)hState.getUint32Value();
+  countOfState[s]++;
+  if (fetchInstHappened) {
+    totalFetchCount++;
+  } else {
+    countOfStateWhenNoFetch[s]++;
+  }
+}
+static const char *_name_of_ifu_state(IFUStateCounter::State s) {
+  const char *names[] = {
+      "IDLE",
+      "WAIT_INST",
+      "WAIT_DOWNSTREAM",
+  };
+  return names[(size_t)s];
+}
+void IFUStateCounter::dumpStatistics() {
+  spdlog::info("IFU State Counter Statistics:");
+  fmt::println("  total instruction fetch count: {}", totalFetchCount);
+  fmt::println("  state statistics:");
+  fmt::println("    {:10} : {:>10} {:>10}", "state", "count", "count_no_fetch");
+  for (size_t i = 0; i < STATE_NUM; i++) {
+    fmt::println("    {:10} : {:>10} {:>10}", _name_of_ifu_state((State)i),
+                 countOfState[i], countOfStateWhenNoFetch[i]);
+  }
+}

@@ -37,6 +37,7 @@ sim_cpu_state cpu;
 HandShakeDetector handshake_detector;
 InstTypeCounter inst_type_counter;
 AXI4PerfCounterManager axi4_perf_counters;
+IFUStateCounter ifu_state_counter;
 
 TOP_NAME *get_dut() { return &dut; }
 
@@ -113,6 +114,7 @@ void sim_step_cycle() {
 
   handshake_detector.checkAndCountAll();
 	axi4_perf_counters.updateAll();
+	ifu_state_counter.update();
 }
 static void reset(int n) {
   dut.reset = 1;
@@ -758,6 +760,8 @@ void sim_dump_statistics() {
   for (auto &e : handshake_detector.bus_list) {
 		e.dumpStatus();
   }
+
+	ifu_state_counter.dumpStatistics();
 
   spdlog::info(">instruction type counts:");
   size_t totByType = inst_type_counter.totalInstCountSumByType();
