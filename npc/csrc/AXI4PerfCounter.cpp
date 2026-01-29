@@ -10,9 +10,8 @@ void AXI4CounterBase::init_logger() {
 }
 
 void AXI4CounterBase::dumpStatisticsTitle(){
-	fmt::println(
-			"  {:18} : {:>8} {:>8} {:>8} {:>8} max_lat sim time", "name", "txns",
-			"cycles", "avg_lat", "max_lat");
+	fmt::println("  {:18} : {:>8} {:>10} {:>8} {:>8} max_time",
+							 "name", "txns", "cycles", "avg_lat", "max_lat");
 }
 void AXI4CounterBase::dumpStatistics() {
   // name : total_txns total_cycles avg_latency max_latency max_time_beg
@@ -20,7 +19,7 @@ void AXI4CounterBase::dumpStatistics() {
   double avg_latency = transaction_count == 0 ? NAN
                                               : (double)total_latency_cycles /
                                                     (double)transaction_count;
-  fmt::println("  {:18} : {:>8} {:>8} {:.2f} {:>8} ({} - {})", name,
+  fmt::println("  {:18} : {:>8} {:>10} {:>8.2f} {:>8} ({} - {})", name,
                transaction_count, total_latency_cycles, avg_latency,
                maxRecord.cycles, maxRecord.startTime, maxRecord.endTime);
 }
