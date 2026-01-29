@@ -43,7 +43,7 @@ bool HandShakeDetector::ValidReadyBus::shakeHappened() {
   return hValid.getUint32Value() == 1 && hReady.getUint32Value() == 1;
 }
 void HandShakeDetector::ValidReadyBus::dumpStatus() {
-  fmt::println("  {:20} happened {} times (freq {:.3f})", description,
+  fmt::println("  {:18} happened {:>7} times (freq {:.4f})", description,
                shake_count, (double)shake_count / (double)sim_get_cycle());
 }
 
