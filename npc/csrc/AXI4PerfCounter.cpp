@@ -9,22 +9,19 @@ void AXI4CounterBase::init_logger() {
   logger->set_level(spdlog::level::info);
 }
 
+void AXI4CounterBase::dumpStatisticsTitle(){
+	fmt::println(
+			"  {:18} : {:>8} {:>8} {:>8} {:>8} max_lat sim time", "name", "txns",
+			"cycles", "avg_lat", "max_lat");
+}
 void AXI4CounterBase::dumpStatistics() {
-  // fmt::println("  {} transactions: (total {})", name, transaction_count);
-  // fmt::println("    average latency cycles: {:.2f}",
-  //              transaction_count == 0
-  //                  ? NAN
-  //                  : (double)total_latency_cycles /
-  //                  (double)transaction_count);
-  // fmt::println("    max latency cycles: {} (at sim time {} to {})",
-  //              maxRecord.cycles, maxRecord.startTime, maxRecord.endTime);
-
-  fmt::println("  {:18} : {:>7} transactions, avg latency {:>7.2f} cycles, max "
-               "latency {:>7} cycles (at sim time {} to {})",
-               name, transaction_count,
-               transaction_count == 0
-                   ? NAN
-                   : (double)total_latency_cycles / (double)transaction_count,
+  // name : total_txns total_cycles avg_latency max_latency max_time_beg
+  // max_time_end
+  double avg_latency = transaction_count == 0 ? NAN
+                                              : (double)total_latency_cycles /
+                                                    (double)transaction_count;
+  fmt::println("  {:18} : {:>8} {:>8} {:.2f} {:>8} ({} - {})", name,
+               transaction_count, total_latency_cycles, avg_latency,
                maxRecord.cycles, maxRecord.startTime, maxRecord.endTime);
 }
 
@@ -138,10 +135,12 @@ void AXI4PerfCounterManager::addWrite(std::string channelPath,
 void AXI4PerfCounterManager::dumpAllStatistics() {
   spdlog::info("AXI4 Performance Counters Statistics:");
   fmt::println(">AXI4 Read Counters:");
+	AXI4CounterBase::dumpStatisticsTitle();
   for (auto &ctr : rdCounters) {
     ctr.dumpStatistics();
   }
   fmt::println(">AXI4 Write Counters:");
+	AXI4CounterBase::dumpStatisticsTitle();
   for (auto &ctr : wrCounters) {
     ctr.dumpStatistics();
   }

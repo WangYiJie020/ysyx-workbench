@@ -179,7 +179,7 @@ struct AXI4CounterBase {
   std::shared_ptr<spdlog::logger> logger;
 
   void init_logger();
-
+	static void dumpStatisticsTitle();
   void dumpStatistics();
 };
 
