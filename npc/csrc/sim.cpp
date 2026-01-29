@@ -734,9 +734,17 @@ void sim_dump_statistics() {
 	spdlog::info(">inst per cycle:");
 	spdlog::info("  total cycle count: {}", cycle_count);
 	spdlog::info("  total instruction count: {}", inst_count);
-	if (cycle_count > 0) {
+	if (cycle_count == 0) {
+		spdlog::warn("cycle count is 0, cannot calc IPC");
+	} else {
 		double ipc = (double)inst_count / (double)cycle_count;
 		spdlog::info("  IPC: {:.4f}", ipc);
+	}
+	if(inst_count == 0) {
+		spdlog::warn("no instruction executed, cannot calc CPI");
+	} else {
+		double cpi = (double)cycle_count / (double)inst_count;
+		spdlog::info("  CPI: {:.4f}", cpi);
 	}
 
 	spdlog::info(">handshake counts:");
