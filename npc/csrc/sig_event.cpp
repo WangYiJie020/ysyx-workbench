@@ -2,8 +2,8 @@
 #include "common.hpp"
 
 void HandShakeDetector::add(std::string pathWithoutValidOrReady) {
-  auto pathValid = pathWithoutValidOrReady + "valid";
-  auto pathReady = pathWithoutValidOrReady + "ready";
+  auto pathValid = cpu_vpi_path_prefix() + pathWithoutValidOrReady + "valid";
+  auto pathReady = cpu_vpi_path_prefix() + pathWithoutValidOrReady + "ready";
 	spdlog::debug("HandShakeDetector: adding valid/ready pair: {}/{}",
 								 pathValid, pathReady);
   vpiHandle hValid =
