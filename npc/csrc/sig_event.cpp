@@ -1,5 +1,6 @@
 #include "sig_event.hpp"
 #include "sim.hpp"
+#include "spdlog/common.h"
 
 using namespace _PerfCtrImp;
 
@@ -85,7 +86,7 @@ const char *InstTypeCounter::name_of_fmt(InstFmt fmt) {
 void InstTypeCounter::init() {
   logger = spdlog::stdout_color_mt("InstTypeCounter");
   set_logger_pattern_with_simtime(logger);
-  // logger->set_level(spdlog::level::info);
+  logger->set_level(spdlog::level::trace);
   hInstType = SignalHandle("idu.iinfo_dec.io_out_typ");
   hInstFmt = SignalHandle("idu.iinfo_dec.io_out_fmt");
 }
