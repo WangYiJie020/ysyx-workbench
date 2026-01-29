@@ -1,6 +1,7 @@
 #pragma once
 #include "vpi_user.h"
 #include <cstddef>
+#include <cstdint>
 #include <numeric>
 #include <vector>
 #include <verilated.h>
@@ -47,17 +48,17 @@ struct SignalHandle {
 
   SignalHandle(std::string barePath);
 
-	uint32_t getUint32Value() {
-		s_vpi_value val;
-		val.format = vpiIntVal;
-		vpi_get_value(handle, &val);
-		return static_cast<uint32_t>(val.value.integer);
-	}
+  uint32_t getUint32Value() {
+    s_vpi_value val;
+    val.format = vpiIntVal;
+    vpi_get_value(handle, &val);
+    return static_cast<uint32_t>(val.value.integer);
+  }
 };
 
 class HandShakeDetector {
 public:
-	using callback_t = std::function<void()>;
+  using callback_t = std::function<void()>;
   struct ValidReadyBus {
     SignalHandle hValid;
     SignalHandle hReady;
@@ -65,7 +66,7 @@ public:
     std::string description;
 
     size_t shake_count = 0;
-		callback_t onShakeCallback = nullptr;
+    callback_t onShakeCallback = nullptr;
 
     bool shakeHappened();
   };
@@ -75,7 +76,8 @@ public:
   HandShakeDetector();
 
   void init();
-  void add(std::string pathWithoutValidOrReady, std::string description = "", callback_t onShake = nullptr);
+  void add(std::string pathWithoutValidOrReady, std::string description = "",
+           callback_t onShake = nullptr);
 
   void checkAndCountAll();
 };
@@ -97,15 +99,23 @@ struct InstTypeCounter {
     system,
     TYPE_NUM
   };
+  static inline bool isValidFmt(InstFmt fmt) { return fmt < FMT_NUM; }
+  static inline bool isValidType(InstType type) { return type < TYPE_NUM; }
 
-	static const char* name_of_fmt(InstFmt fmt);
-	static const char* name_of_type(InstType type);
+  static const char *name_of_fmt(InstFmt fmt);
+  static const char *name_of_type(InstType type);
 
   size_t fmt_count[FMT_NUM] = {0};
   size_t type_count[TYPE_NUM] = {0};
 
   size_t tot_cycle_of_type[TYPE_NUM] = {0};
   size_t tot_cycle_of_fmt[FMT_NUM] = {0};
+
+  // init with invalid value
+  InstFmt lastInstFmt = FMT_NUM;
+  InstType lastInstType = TYPE_NUM;
+
+  uint64_t lastInstFetchTime = 0;
 
   SignalHandle hInstType;
   SignalHandle hInstFmt;
@@ -116,10 +126,18 @@ struct InstTypeCounter {
 
   void newInstFetched(uint64_t sim_time);
 
-	size_t totalInstCountSumByFmt() {
-		return std::accumulate(fmt_count, fmt_count + FMT_NUM, 0ull);
+  size_t totalInstCountSumByFmt() {
+    return std::accumulate(fmt_count, fmt_count + FMT_NUM, 0ull);
+  }
+  size_t totalInstCountSumByType() {
+    return std::accumulate(type_count, type_count + TYPE_NUM, 0ull);
+  }
+	double averageCyclesPerInstOfType(InstType type){
+		if(type_count[type]==0) return NAN;
+		return (double)tot_cycle_of_type[type]/(double)type_count[type];
 	}
-	size_t totalInstCountSumByType() {
-		return std::accumulate(type_count, type_count + TYPE_NUM, 0ull);
+	double averageCyclesPerInstOfFmt(InstFmt fmt){
+		if(fmt_count[fmt]==0) return NAN;
+		return (double)tot_cycle_of_fmt[fmt]/(double)fmt_count[fmt];
 	}
 };
