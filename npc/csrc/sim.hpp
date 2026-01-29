@@ -86,8 +86,6 @@ bool sim_init(int argc, char **argv, sim_setting teg = sim_setting{});
 void sim_step_cycle();
 void sim_step_inst();
 
-uint64_t sim_get_cycle_count();
-uint64_t sim_get_inst_count();
 
 void sim_dump_statistics();
 

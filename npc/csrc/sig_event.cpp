@@ -1,9 +1,12 @@
 #include "sig_event.hpp"
 #include <spdlog/sinks/stdout_color_sinks.h>
 
+
+void set_logger_pattern_with_simtime(std::shared_ptr<spdlog::logger> logger);
 HandShakeDetector::HandShakeDetector() {
   logger = spdlog::stdout_color_mt("HandShakeDetector");
-  logger->set_level(spdlog::level::debug);
+	set_logger_pattern_with_simtime(logger);
+  logger->set_level(spdlog::level::info);
 }
 
 auto _FullPath(const std::string &pathWithoutValidOrReady,

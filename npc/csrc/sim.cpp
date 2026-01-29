@@ -618,11 +618,20 @@ const char *_get_env_or_default(const char *env_name,
   return env_value ? env_value : default_value;
 }
 
+static auto _gen_logger_formatter_with_simtime() {
+	auto formatter = std::make_unique<spdlog::pattern_formatter>();
+	formatter->add_flag<sim_time_formatter>('&');
+	// (sim_time) [logger_name] [log_level] log_msg
+	formatter->set_pattern("(%&) [%n] [%^%l%$] %v");
+	return formatter;
+}
+
+void set_logger_pattern_with_simtime(std::shared_ptr<spdlog::logger> logger){
+	auto formatter = _gen_logger_formatter_with_simtime();
+	logger->set_formatter(std::move(formatter));
+}
 void _init_dpi_logger() {
-  auto formatter = std::make_unique<spdlog::pattern_formatter>();
-  formatter->add_flag<sim_time_formatter>('&');
-  // (sim_time) [DPI] [log_level] log_msg
-  formatter->set_pattern("(%&) [%n] [%^%l%$] %v");
+	auto formatter = _gen_logger_formatter_with_simtime();
 
   auto out_file = "dpiout.log";
   auto con_lvl_str = _get_env_or_default("DPI_CONSOLE_LVL", "info");
