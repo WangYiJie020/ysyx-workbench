@@ -31,6 +31,7 @@ sim_setting &sim_settings = sim_cfg.setting;
 
 sim_cpu_state cpu;
 
+HandShakeDetector handshake_detector;
 
 TOP_NAME *get_dut() { return &dut; }
 
@@ -706,6 +707,8 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 
   cpu.pc = sim_cfg.init_pc;
   spdlog::info("set initial pc to {:08x}", cpu.pc);
+
+	handshake_detector.add("ifu.io_mem_r");
 
   return true;
 }
