@@ -12,6 +12,7 @@ void HandShakeDetector::init() {
 }
 
 SignalHandle::SignalHandle(std::string barePath) {
+	spdlog::debug("resolving signal path: {}", _DebugPath(barePath));
   handle = vpi_handle_by_name(
       const_cast<PLI_BYTE8 *>(_FullPath(barePath).c_str()), nullptr);
   if (!handle) {
