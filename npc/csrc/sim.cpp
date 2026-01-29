@@ -510,6 +510,7 @@ void sim_step_inst() {
     sim_step_cycle();
     if (sim_halted()) {
       cpu.pc += 4;
+			inst_count++;
       return;
     }
     cnt++;
