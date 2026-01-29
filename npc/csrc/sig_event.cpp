@@ -124,6 +124,7 @@ void AXI4CounterBase::init_logger() {
 	assert(!name.empty());
   logger = spdlog::stdout_color_mt(name);
   set_logger_pattern_with_simtime(logger);
+	logger->set_level(spdlog::level::info);
 }
 void AXI4CounterBase::dumpStatistics() {
   fmt::println("{} transactions: (total {})", name, transaction_count);
