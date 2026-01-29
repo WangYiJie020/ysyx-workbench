@@ -109,10 +109,10 @@ void IDUPerfCounter::update() {
   }
 
 	if(cycles < 100){
-		logger->warn("gap between instructions: {} cycles", cycles);
-		logger->info("  last inst type {} fmt {} at cycle {}",
-										 name_of_type(lastInstType), name_of_fmt(lastInstFmt),
-										 lastInstFetchCyc);
+		// logger->warn("gap between instructions: {} cycles", cycles);
+		// logger->info("  last inst type {} fmt {} at cycle {}",
+		// 								 name_of_type(lastInstType), name_of_fmt(lastInstFmt),
+		// 								 lastInstFetchCyc);
 	}
 
   uint32_t inst_type = hInstType.getUint32Value();
