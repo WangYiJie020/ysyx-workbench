@@ -756,18 +756,21 @@ void sim_dump_statistics() {
     auto type_count = inst_type_counter.type_count[i];
     auto type_percentage =
         totByType == 0 ? NAN : ((double)type_count / (double)totByType) * 100.0;
-    spdlog::info("    {:<10} : {:>6} ({:>5.2f}%) ", type_name, type_count,
-                 type_percentage);
+    spdlog::info(
+        "    {:<10} : {:>6} ({:>5.2f}%) cpi {:.2f}", type_name, type_count,
+        type_percentage,
+        inst_type_counter.averageCPIOfType((InstTypeCounter::InstType)i));
   }
-	size_t totByFmt = inst_type_counter.totalInstCountSumByFmt();
-	spdlog::info("  by fmt: (total {})", totByFmt);
-	for (size_t i = 0; i < InstTypeCounter::FMT_NUM; i++) {
-		auto fmt_name =
-				InstTypeCounter::name_of_fmt((InstTypeCounter::InstFmt)i);
-		auto fmt_count = inst_type_counter.fmt_count[i];
-		auto fmt_percentage =
-				totByFmt == 0 ? NAN : ((double)fmt_count / (double)totByFmt) * 100.0;
-		spdlog::info("    {:<10} : {:>6} ({:>5.2f}%)", fmt_name, fmt_count,
-								 fmt_percentage);
-	}
+  size_t totByFmt = inst_type_counter.totalInstCountSumByFmt();
+  spdlog::info("  by fmt: (total {})", totByFmt);
+  for (size_t i = 0; i < InstTypeCounter::FMT_NUM; i++) {
+    auto fmt_name = InstTypeCounter::name_of_fmt((InstTypeCounter::InstFmt)i);
+    auto fmt_count = inst_type_counter.fmt_count[i];
+    auto fmt_percentage =
+        totByFmt == 0 ? NAN : ((double)fmt_count / (double)totByFmt) * 100.0;
+    spdlog::info(
+        "    {:<10} : {:>6} ({:>5.2f}%) cpi {:.2f}", fmt_name, fmt_count,
+        fmt_percentage,
+        inst_type_counter.averageCPIOfFmt((InstTypeCounter::InstFmt)i));
+  }
 }

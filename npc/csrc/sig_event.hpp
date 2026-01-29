@@ -132,11 +132,11 @@ struct InstTypeCounter {
   size_t totalInstCountSumByType() {
     return std::accumulate(type_count, type_count + TYPE_NUM, 0ull);
   }
-	double averageCyclesPerInstOfType(InstType type){
+	double averageCPIOfType(InstType type){
 		if(type_count[type]==0) return NAN;
 		return (double)tot_cycle_of_type[type]/(double)type_count[type];
 	}
-	double averageCyclesPerInstOfFmt(InstFmt fmt){
+	double averageCPIOfFmt(InstFmt fmt){
 		if(fmt_count[fmt]==0) return NAN;
 		return (double)tot_cycle_of_fmt[fmt]/(double)fmt_count[fmt];
 	}
