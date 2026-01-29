@@ -727,6 +727,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   handshake_detector.add("idu.io_out_", "IDU decode inst");
 
 	axi4_read_counters.resize(1);
+	axi4_read_counters[0].name = "IFU Read Bus";
 	axi4_read_counters[0].init_logger();
 	axi4_read_counters[0].bind("ifu.io_mem");
 
