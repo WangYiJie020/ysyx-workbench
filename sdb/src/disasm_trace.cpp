@@ -99,9 +99,10 @@ string sdb::_impl::expand_tabs(std::string_view in, int tabsize) {
 
 string sdb::disasm_trace_handler::_dump_inst(disasm_trace_handler::_ctx_ref ctx,
                                              bool highlight_disasm) {
+#define ANSI_FG_LIGHTGRAY "\e[38;2;149;164;192m"
   string res;
   auto as_u32code = *(uint32_t *)ctx.inst.data();
-  res += format(ANSI_FG_GRAY "{:08x}: {:08x} {}{:25}", ctx.pc,
+  res += format(ANSI_FG_LIGHTGRAY"{:08x}" ANSI_FG_GRAY ": {:08x} {}{:25}", ctx.pc,
                 as_u32code, highlight_disasm ? ANSI_FG_RED : ANSI_NONE,
                 _impl::expand_tabs(_disasm(ctx.pc, ctx.inst)));
   // for(size_t j=0;j<ctx.inst.size();j++){
