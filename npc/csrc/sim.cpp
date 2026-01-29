@@ -744,7 +744,7 @@ void sim_dump_statistics() {
 
   spdlog::info(">handshake counts:");
   for (auto &e : handshake_detector.bus_list) {
-    spdlog::info("  {:20} happened {} times", e.description, e.shake_count);
+		e.dumpStatus();
   }
 
   spdlog::info(">instruction type counts:");

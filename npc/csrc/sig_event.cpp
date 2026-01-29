@@ -1,4 +1,6 @@
 #include "sig_event.hpp"
+#include "spdlog/fmt/bundled/base.h"
+#include "sig_event.hpp"
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 auto _FullPath(const std::string &pathWithoutValidOrReady,
@@ -27,8 +29,9 @@ SignalHandle::SignalHandle(std::string barePath) {
   }
 }
 
-void HandShakeDetector::add(std::string barePath, std::string description,
-                            callback_t onShake) {
+HandShakeDetector::ValidReadyBus &
+HandShakeDetector::add(std::string barePath, std::string description,
+                       callback_t onShake) {
   auto pathValid = _FullPath(barePath, "valid");
   auto pathReady = _FullPath(barePath, "ready");
   spdlog::debug("adding valid/ready pair: {}/{}", pathValid, pathReady);
@@ -43,10 +46,14 @@ void HandShakeDetector::add(std::string barePath, std::string description,
       .description = description,
       .onShakeCallback = onShake,
   });
+  return bus_list.back();
 }
 
 bool HandShakeDetector::ValidReadyBus::shakeHappened() {
   return hValid.getUint32Value() == 1 && hReady.getUint32Value() == 1;
+}
+void HandShakeDetector::ValidReadyBus::dumpStatus() {
+	fmt::println("  {:20} happened {} times", description, shake_count);
 }
 
 void HandShakeDetector::checkAndCountAll() {
@@ -92,14 +99,14 @@ void InstTypeCounter::init() {
 }
 void InstTypeCounter::newInstFetched(uint64_t cyc) {
 
-	if(isValidType(lastInstType)){
-		auto cycles = cyc - lastInstFetchCyc;
-		tot_cycle_of_type[lastInstType] += cycles;
-	}
-	if(isValidFmt(lastInstFmt)){
-		auto cycles = cyc - lastInstFetchCyc;
-		tot_cycle_of_fmt[lastInstFmt] += cycles;
-	}
+  if (isValidType(lastInstType)) {
+    auto cycles = cyc - lastInstFetchCyc;
+    tot_cycle_of_type[lastInstType] += cycles;
+  }
+  if (isValidFmt(lastInstFmt)) {
+    auto cycles = cyc - lastInstFetchCyc;
+    tot_cycle_of_fmt[lastInstFmt] += cycles;
+  }
 
   uint32_t inst_type = hInstType.getUint32Value();
   uint32_t inst_fmt = hInstFmt.getUint32Value();
@@ -109,7 +116,7 @@ void InstTypeCounter::newInstFetched(uint64_t cyc) {
 
   logger->trace("new inst fetched: type {} fmt {}", inst_type, inst_fmt);
 
-	lastInstType = (InstType)inst_type;
-	lastInstFmt = (InstFmt)inst_fmt;
-	lastInstFetchCyc = cyc;
+  lastInstType = (InstType)inst_type;
+  lastInstFmt = (InstFmt)inst_fmt;
+  lastInstFetchCyc = cyc;
 }

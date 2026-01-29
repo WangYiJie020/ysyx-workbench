@@ -69,6 +69,7 @@ public:
     callback_t onShakeCallback = nullptr;
 
     bool shakeHappened();
+		void dumpStatus();
   };
   std::shared_ptr<spdlog::logger> logger;
   std::vector<ValidReadyBus> bus_list;
@@ -76,7 +77,7 @@ public:
   HandShakeDetector();
 
   void init();
-  void add(std::string pathWithoutValidOrReady, std::string description = "",
+  ValidReadyBus& add(std::string pathWithoutValidOrReady, std::string description = "",
            callback_t onShake = nullptr);
 
   void checkAndCountAll();
