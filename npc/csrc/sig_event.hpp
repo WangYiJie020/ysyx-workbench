@@ -115,7 +115,7 @@ struct InstTypeCounter {
   InstFmt lastInstFmt = FMT_NUM;
   InstType lastInstType = TYPE_NUM;
 
-  uint64_t lastInstFetchTime = 0;
+  uint64_t lastInstFetchCyc = 0;
 
   SignalHandle hInstType;
   SignalHandle hInstFmt;
@@ -124,7 +124,7 @@ struct InstTypeCounter {
 
   void init();
 
-  void newInstFetched(uint64_t sim_time);
+  void newInstFetched(uint64_t cycle);
 
   size_t totalInstCountSumByFmt() {
     return std::accumulate(fmt_count, fmt_count + FMT_NUM, 0ull);

@@ -713,7 +713,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   spdlog::info("set initial pc to {:08x}", cpu.pc);
 
   inst_type_counter.init();
-  auto count_inst_type = [&]() { inst_type_counter.newInstFetched(sim_time); };
+  auto count_inst_type = [&]() { inst_type_counter.newInstFetched(cycle_count); };
 
   handshake_detector.init();
   handshake_detector.add("ifu.io_mem_r", "IFU fetch inst", count_inst_type);

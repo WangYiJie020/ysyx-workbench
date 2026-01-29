@@ -90,14 +90,14 @@ void InstTypeCounter::init() {
   hInstType = SignalHandle("idu.iinfo_dec.io_out_typ");
   hInstFmt = SignalHandle("idu.iinfo_dec.io_out_fmt");
 }
-void InstTypeCounter::newInstFetched(uint64_t sim_time) {
+void InstTypeCounter::newInstFetched(uint64_t cyc) {
 
 	if(isValidType(lastInstType)){
-		auto cycles = sim_time - lastInstFetchTime;
+		auto cycles = cyc - lastInstFetchCyc;
 		tot_cycle_of_type[lastInstType] += cycles;
 	}
 	if(isValidFmt(lastInstFmt)){
-		auto cycles = sim_time - lastInstFetchTime;
+		auto cycles = cyc - lastInstFetchCyc;
 		tot_cycle_of_fmt[lastInstFmt] += cycles;
 	}
 
@@ -111,5 +111,5 @@ void InstTypeCounter::newInstFetched(uint64_t sim_time) {
 
 	lastInstType = (InstType)inst_type;
 	lastInstFmt = (InstFmt)inst_fmt;
-	lastInstFetchTime = sim_time;
+	lastInstFetchCyc = cyc;
 }
