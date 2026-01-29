@@ -47,6 +47,7 @@ public:
 
   HandShakeDetector();
 
+	void init();
   void add(std::string pathWithoutValidOrReady, std::string description = "");
 
 	void checkAndCountAll();

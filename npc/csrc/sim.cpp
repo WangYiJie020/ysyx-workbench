@@ -720,6 +720,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   cpu.pc = sim_cfg.init_pc;
   spdlog::info("set initial pc to {:08x}", cpu.pc);
 
+	handshake_detector.init();
 	handshake_detector.add("ifu.io_mem_r", "IFU fetch inst");
 	handshake_detector.add("exu.io_mem_r", "EXU load data");
 	handshake_detector.add("exu.alu.io_out_", "EXU calc");

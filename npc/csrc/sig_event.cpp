@@ -5,8 +5,10 @@
 void set_logger_pattern_with_simtime(std::shared_ptr<spdlog::logger> logger);
 HandShakeDetector::HandShakeDetector() {
   logger = spdlog::stdout_color_mt("HandShakeDetector");
+}
+void HandShakeDetector::init() {
 	set_logger_pattern_with_simtime(logger);
-  logger->set_level(spdlog::level::info);
+	logger->set_level(spdlog::level::info);
 }
 
 auto _FullPath(const std::string &pathWithoutValidOrReady,
