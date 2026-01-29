@@ -86,7 +86,7 @@ const char *IDUPerfCounter::name_of_fmt(InstFmt fmt) {
 void IDUPerfCounter::bind(std::string path) {
   logger = spdlog::stdout_color_mt("InstTypeCounter");
   set_logger_pattern_with_simtime(logger);
-  logger->set_level(spdlog::level::trace);
+  logger->set_level(spdlog::level::info);
   hInstType = SignalHandle(path + ".io_out_bits_info_typ");
   hInstFmt = SignalHandle(path + ".io_out_bits_info_fmt");
 	hOutValid = SignalHandle(path + ".io_out_valid");
