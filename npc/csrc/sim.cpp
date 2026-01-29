@@ -735,6 +735,8 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 
 	axi4_perf_counters.addRead("ifu.io_mem", "IFU fetch inst");
 
+	ifu_state_counter.bind("ifu");
+
   return true;
 }
 
