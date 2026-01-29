@@ -62,7 +62,7 @@ void HandShakeDetector::checkAndCountAll() {
   }
 }
 
-const char *IDUPerfCounter::name_of_type(InstType type) {
+const char *EXUPerfCounter::name_of_type(InstType type) {
   static const char *type_names[] = {
       "branch", "arithmetic", "load",  "store",  "jalr",
       "jal",    "lui",        "auipc", "system",
@@ -73,7 +73,7 @@ const char *IDUPerfCounter::name_of_type(InstType type) {
     return "unknown";
   }
 }
-const char *IDUPerfCounter::name_of_fmt(InstFmt fmt) {
+const char *EXUPerfCounter::name_of_fmt(InstFmt fmt) {
   static const char *fmt_names[] = {
       "I_TYPE", "R_TYPE", "S_TYPE", "U_TYPE", "J_TYPE", "B_TYPE",
   };
@@ -83,49 +83,52 @@ const char *IDUPerfCounter::name_of_fmt(InstFmt fmt) {
     return "unknown";
   }
 }
-void IDUPerfCounter::bind(std::string path) {
+void EXUPerfCounter::bind(std::string path) {
   logger = spdlog::stdout_color_mt("InstTypeCounter");
   set_logger_pattern_with_simtime(logger);
   logger->set_level(spdlog::level::info);
   hInstType = SignalHandle(path + ".io_out_bits_info_typ");
   hInstFmt = SignalHandle(path + ".io_out_bits_info_fmt");
-	hOutValid = SignalHandle(path + ".io_out_valid");
-	hOutReady = SignalHandle(path + ".io_out_ready");
+  hOutValid = SignalHandle(path + ".io_out_valid");
+  hOutReady = SignalHandle(path + ".io_out_ready");
 }
-void IDUPerfCounter::update() {
-	if(!(hOutValid.getUint32Value() == 1 && hOutReady.getUint32Value() == 1)){
-		// no new instruction output
-		return;
+void EXUPerfCounter::update() {
+
+	bool isOutValidRasingEdge =
+			(!lastCycOutValid && hOutValid.getUint32Value() == 1);
+	lastCycOutValid = (hOutValid.getUint32Value() == 1);
+
+  //
+  // For history reason the timing is wired
+  //
+  // a inst start execution approximately when out_valid rises
+  // (TODO: figure out the exact timing)
+  // and ends when out_ready highs
+  //
+
+	if (isOutValidRasingEdge) {
+		instStartCycle = sim_get_cycle();
 	}
 
-	auto cyc = sim_get_cycle();
-    auto cycles = cyc - lastInstFetchCyc;
+	if (hOutReady.getUint32Value() == 1 && hOutValid.getUint32Value() == 1) {
+		// instruction finished execution
+		InstType type = (InstType)hInstType.getUint32Value();
+		InstFmt fmt = (InstFmt)hInstFmt.getUint32Value();
 
-  if (isValidType(lastInstType)) {
-    tot_cycle_of_type[lastInstType] += cycles;
-  }
-  if (isValidFmt(lastInstFmt)) {
-    tot_cycle_of_fmt[lastInstFmt] += cycles;
-  }
+		assert(isValidType(type));
+		assert(isValidFmt(fmt));
 
-	if(cycles < 100){
-		// logger->warn("gap between instructions: {} cycles", cycles);
-		// logger->info("  last inst type {} fmt {} at cycle {}",
-		// 								 name_of_type(lastInstType), name_of_fmt(lastInstFmt),
-		// 								 lastInstFetchCyc);
+		type_count[type]++;
+		fmt_count[fmt]++;
+
+		auto instEndCycle = sim_get_cycle();
+		auto instCycles = instEndCycle - instStartCycle;
+		tot_cycle_of_type[type] += instCycles;
+		tot_cycle_of_fmt[fmt] += instCycles;
+
+		logger->trace("inst executed: type {} fmt {} cycles {}", name_of_type(type),
+									name_of_fmt(fmt), instCycles);
 	}
-
-  uint32_t inst_type = hInstType.getUint32Value();
-  uint32_t inst_fmt = hInstFmt.getUint32Value();
-
-  type_count[inst_type]++;
-  fmt_count[inst_fmt]++;
-
-  logger->trace("new inst fetched: type {} fmt {}", inst_type, inst_fmt);
-
-  lastInstType = (InstType)inst_type;
-  lastInstFmt = (InstFmt)inst_fmt;
-  lastInstFetchCyc = cyc;
 }
 
 void IFUStateCounter::bind(std::string basePath) {
@@ -157,7 +160,8 @@ void IFUStateCounter::dumpStatistics() {
   spdlog::info("IFU State Counter Statistics:");
   fmt::println("  total instruction fetch count: {}", totalFetchCount);
   fmt::println("  state statistics:");
-  fmt::println("    {:10} : {:<18} {:<18}", "state", "count", "count[exclu fetch]");
+  fmt::println("    {:10} : {:<18} {:<18}", "state", "count",
+               "count[exclu fetch]");
   auto totCycles = sim_get_cycle();
   for (size_t i = 0; i < STATE_NUM; i++) {
     double perc = totCycles == 0
