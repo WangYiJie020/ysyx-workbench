@@ -756,7 +756,7 @@ void sim_dump_statistics() {
     auto type_count = inst_type_counter.type_count[i];
     auto type_percentage =
         totByType == 0 ? NAN : ((double)type_count / (double)totByType) * 100.0;
-    spdlog::info("    {:<10} : {:>10} ({:.2f}%)", type_name, type_count,
+    spdlog::info("    {:<10} : {:>6} ({:.2f}%)", type_name, type_count,
                  type_percentage);
   }
 	size_t totByFmt = inst_type_counter.totalInstCountSumByFmt();
@@ -767,7 +767,7 @@ void sim_dump_statistics() {
 		auto fmt_count = inst_type_counter.fmt_count[i];
 		auto fmt_percentage =
 				totByFmt == 0 ? NAN : ((double)fmt_count / (double)totByFmt) * 100.0;
-		spdlog::info("    {:<10} : {:>10} ({:.2f}%)", fmt_name, fmt_count,
+		spdlog::info("    {:<10} : {:>6} ({:.2f}%)", fmt_name, fmt_count,
 								 fmt_percentage);
 	}
 }
