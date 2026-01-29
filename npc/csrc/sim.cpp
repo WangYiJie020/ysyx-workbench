@@ -731,7 +731,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 
 void sim_dump_statistics() {
 	spdlog::info("simulation statistics:");
-	spdlog::info(">inst per cycle:");
+	spdlog::info(">cycle and instruction counts:");
 	spdlog::info("  total cycle count: {}", cycle_count);
 	spdlog::info("  total instruction count: {}", inst_count);
 	if (cycle_count == 0) {
