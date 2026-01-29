@@ -62,7 +62,7 @@ void HandShakeDetector::checkAndCountAll() {
   }
 }
 
-const char *InstTypeCounter::name_of_type(InstType type) {
+const char *IDUPerfCounter::name_of_type(InstType type) {
   static const char *type_names[] = {
       "branch", "arithmetic", "load",  "store",  "jalr",
       "jal",    "lui",        "auipc", "system",
@@ -73,7 +73,7 @@ const char *InstTypeCounter::name_of_type(InstType type) {
     return "unknown";
   }
 }
-const char *InstTypeCounter::name_of_fmt(InstFmt fmt) {
+const char *IDUPerfCounter::name_of_fmt(InstFmt fmt) {
   static const char *fmt_names[] = {
       "I_TYPE", "R_TYPE", "S_TYPE", "U_TYPE", "J_TYPE", "B_TYPE",
   };
@@ -83,14 +83,22 @@ const char *InstTypeCounter::name_of_fmt(InstFmt fmt) {
     return "unknown";
   }
 }
-void InstTypeCounter::init() {
+void IDUPerfCounter::bind(std::string path) {
   logger = spdlog::stdout_color_mt("InstTypeCounter");
   set_logger_pattern_with_simtime(logger);
   logger->set_level(spdlog::level::trace);
-  hInstType = SignalHandle("idu.iinfo_dec.io_out_typ");
-  hInstFmt = SignalHandle("idu.iinfo_dec.io_out_fmt");
+  hInstType = SignalHandle(path + ".io_out_bits_info_typ");
+  hInstFmt = SignalHandle(path + ".io_out_bits_info_fmt");
+	hOutValid = SignalHandle(path + ".io_out_valid");
+	hOutReady = SignalHandle(path + ".io_out_ready");
 }
-void InstTypeCounter::newInstFetched(uint64_t cyc) {
+void IDUPerfCounter::update() {
+	if(!(hOutValid.getUint32Value() == 1 && hOutReady.getUint32Value() == 1)){
+		// no new instruction output
+		return;
+	}
+
+	auto cyc = sim_get_cycle();
 
   if (isValidType(lastInstType)) {
     auto cycles = cyc - lastInstFetchCyc;

@@ -99,7 +99,7 @@ public:
   void checkAndCountAll();
 };
 
-struct InstTypeCounter {
+struct IDUPerfCounter {
   // in common_def.scala
   //   val imm, reg, store, upper, jump, branch = Value
   //   val branch, arithmetic, load, store, jalr, jal, lui, auipc, system =
@@ -136,12 +136,13 @@ struct InstTypeCounter {
 
   SignalHandle hInstType;
   SignalHandle hInstFmt;
+	SignalHandle hOutValid;
+	SignalHandle hOutReady;
 
   std::shared_ptr<spdlog::logger> logger;
 
-  void init();
-
-  void newInstFetched(uint64_t cycle);
+  void bind(std::string path);
+	void update();
 
   size_t totalInstCountSumByFmt() {
     return std::accumulate(fmt_count, fmt_count + FMT_NUM, 0ull);
