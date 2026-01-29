@@ -17,6 +17,7 @@
 #include <cstdio>
 #include <string_view>
 
+#include "spdlog/fmt/bundled/base.h"
 #include "verilated_fst_c.h"
 
 #include <nvboard.h>
@@ -736,20 +737,20 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 
 void sim_dump_statistics() {
   spdlog::info("simulation statistics:");
-  spdlog::info(">cycle and instruction counts:");
-  spdlog::info("  total cycle count: {}", cycle_count);
-  spdlog::info("  total instruction count: {}", inst_count);
+	fmt::println(">cycle and instruction counts:");
+  fmt::println("  total cycle count: {}", cycle_count);
+  fmt::println("  total instruction count: {}", inst_count);
   if (cycle_count == 0) {
     spdlog::warn("cycle count is 0, cannot calc IPC");
   } else {
     double ipc = (double)inst_count / (double)cycle_count;
-    spdlog::info("  IPC: {:.4f}", ipc);
+		fmt::println("  IPC: {:.4f}", ipc);
   }
   if (inst_count == 0) {
     spdlog::warn("no instruction executed, cannot calc CPI");
   } else {
     double cpi = (double)cycle_count / (double)inst_count;
-    spdlog::info("  CPI: {:.4f}", cpi);
+		fmt::println("  CPI: {:.4f}", cpi);
   }
 
   spdlog::info(">handshake counts:");
