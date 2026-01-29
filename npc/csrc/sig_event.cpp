@@ -134,7 +134,7 @@ static const char *_name_of_ifu_state(IFUStateCounter::State s) {
   const char *names[] = {
       "IDLE",
       "WAIT_INST",
-      "WAIT_DOWN",
+      "WAIT_LATER",
   };
   return names[(size_t)s];
 }
