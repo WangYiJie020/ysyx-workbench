@@ -23,21 +23,21 @@ auto _DebugPath(const std::string &pathWithoutValidOrReady,
 void HandShakeDetector::add(std::string barePath, std::string description) {
   auto pathValid = _FullPath(barePath, "valid");
   auto pathReady = _FullPath(barePath, "ready");
-  logger->debug("adding valid/ready pair: {}/{}", pathValid, pathReady);
+  spdlog::debug("adding valid/ready pair: {}/{}", pathValid, pathReady);
   vpiHandle hValid =
       vpi_handle_by_name(const_cast<PLI_BYTE8 *>(pathValid.c_str()), nullptr);
   if (!hValid) {
-    logger->error("cannot find valid signal at path {}",
+    spdlog::error("cannot find valid signal at path {}",
                   _DebugPath(barePath, "valid"));
   }
   vpiHandle hReady =
       vpi_handle_by_name(const_cast<PLI_BYTE8 *>(pathReady.c_str()), nullptr);
   if (!hReady) {
-    logger->error("cannot find ready signal at path {}",
+    spdlog::error("cannot find ready signal at path {}",
                   _DebugPath(barePath, "ready"));
   }
 
-  logger->info("added watch for channel {} ({})", _DebugPath(barePath), description);
+  spdlog::info("added watch for channel {} ({})", _DebugPath(barePath), description);
   bus_list.emplace_back(hValid, hReady, description);
 }
 
