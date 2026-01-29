@@ -35,7 +35,7 @@ sim_cpu_state cpu;
 
 HandShakeDetector handshake_detector;
 InstTypeCounter inst_type_counter;
-std::vector<AXI4ReadPerfCounter> axi4_read_counters;
+AXI4PerfCounterManager axi4_perf_counters;
 
 TOP_NAME *get_dut() { return &dut; }
 
@@ -110,9 +110,7 @@ void sim_step_cycle() {
   }
 
   handshake_detector.checkAndCountAll();
-	for (auto &ctr : axi4_read_counters) {
-		ctr.update();
-	}
+	axi4_perf_counters.updateAll();
 }
 static void reset(int n) {
   dut.reset = 1;
@@ -728,14 +726,10 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   handshake_detector.add("exu.alu.io_out_", "EXU calc");
   handshake_detector.add("idu.io_out_", "IDU decode inst");
 
-	axi4_read_counters.resize(2);
-	axi4_read_counters[0].name = "IFU Read Bus";
-	axi4_read_counters[0].init_logger();
-	axi4_read_counters[0].bind("ifu.io_mem");
+	axi4_perf_counters.addRead("exu.io_mem", "EXU load data");
+	axi4_perf_counters.addWrite("exu.io_mem", "EXU store data");
 
-	axi4_read_counters[1].name = "EXU Load Bus";
-	axi4_read_counters[1].init_logger();
-	axi4_read_counters[1].bind("exu.io_mem");
+	axi4_perf_counters.addRead("ifu.io_mem", "IFU fetch inst");
 
   return true;
 }
@@ -790,8 +784,5 @@ void sim_dump_statistics() {
         inst_type_counter.averageCPIOfFmt((InstTypeCounter::InstFmt)i));
   }
 
-	spdlog::info(">AXI4 read performance counters:");
-	for (auto &ctr : axi4_read_counters) {
-		ctr.dumpStatistics();
-	}
+	axi4_perf_counters.dumpAllStatistics();
 }

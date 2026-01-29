@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <string_view>
 
+#include <spdlog/spdlog.h>
 TOP_NAME *get_dut();
 
 typedef void (*cycle_end_callback_t)();
@@ -102,4 +103,5 @@ bool sim_write_vmem(uint32_t addr, uint32_t data);
 bool sim_halted();
 bool sim_hit_good_trap();
 
+void set_logger_pattern_with_simtime(std::shared_ptr<spdlog::logger> logger);
 // void sim_exec_sdbcmd(std::string_view cmd, bool &quit);
