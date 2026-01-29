@@ -83,10 +83,10 @@ public:
 struct InstTypeCounter {
   // in common_def.scala
   //   val imm, reg, store, upper, jump, branch = Value
-  //   val none, arithmetic, load, store, jalr, jal, lui, auipc, system =
+  //   val branch, arithmetic, load, store, jalr, jal, lui, auipc, system =
   enum InstFmt { I_TYPE, R_TYPE, S_TYPE, U_TYPE, J_TYPE, B_TYPE, FMT_NUM };
   enum InstType {
-    none,
+    branch,
     arithmetic,
     load,
     store,
