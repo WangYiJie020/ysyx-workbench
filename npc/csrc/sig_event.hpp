@@ -6,11 +6,13 @@
 
 #include "vsrc.hpp"
 
+#include "common.hpp"
+
 inline const std::string &cpu_vpi_path_prefix() {
   static std::string prefix;
   if (prefix.empty()) {
     prefix = std::string("TOP.") + std::string(_STR(TOP_NAME)).substr(1);
-		prefix += ".asic.cpu.cpu.";
+    prefix += ".asic.cpu.cpu.";
   }
   return prefix;
 }
@@ -19,7 +21,7 @@ struct ValidReadyBus {
   vpiHandle hValid;
   vpiHandle hReady;
 
-	std::string description;
+  std::string description;
 
   ValidReadyBus(vpiHandle hV, vpiHandle hR) : hValid(hV), hReady(hR) {}
 
@@ -35,7 +37,12 @@ struct ValidReadyBus {
   }
 };
 
-struct HandShakeDetector {
+class HandShakeDetector {
+public:
+	std::shared_ptr<spdlog::logger> logger;
   std::vector<ValidReadyBus> bus_list;
+
+  HandShakeDetector();
+
   void add(std::string pathWithoutValidOrReady);
 };
