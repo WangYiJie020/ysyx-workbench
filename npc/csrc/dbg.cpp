@@ -126,6 +126,10 @@ int sdb_mainloop() {
   spdlog::info("sdb entering {} mode",
                cfg.is_batch_mode() ? "batch" : "interactive");
 
+  std::string top_vpi_name =
+      std::string("TOP.") + std::string(_STR(TOP_NAME)).substr(1);
+	sprobe.add_watch(top_vpi_name + ".asic.cpu.cpu.io_master_araddr");
+
   if (cfg.is_batch_mode()) {
     sdb_exec("c", nullptr);
     return sdb_is_hitbadtrap() ? 1 : 0;
@@ -134,9 +138,6 @@ int sdb_mainloop() {
   _old_cycle_callback = cfg.setting.cycle_finish_cb;
   cfg.setting.cycle_finish_cb = cyc_callback;
 
-  std::string top_vpi_name =
-      std::string("TOP.") + std::string(_STR(TOP_NAME)).substr(1);
-	sprobe.add_watch(top_vpi_name + ".asic.cpu.cpu.io_master_araddr");
 
   std::string cmd;
   bool quit = false;
