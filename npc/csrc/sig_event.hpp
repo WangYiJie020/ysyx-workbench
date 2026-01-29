@@ -228,3 +228,27 @@ public:
 	void addRead(std::string channelPath, std::string name);
 	void addWrite(std::string channelPath, std::string name);
 };
+
+struct IFUStateCounter {
+	// check fetch handshake happened
+	SignalHandle hRValid;
+	SignalHandle hRReady;
+	// ifu fsm state
+	SignalHandle hState;
+
+	enum State {
+		IDLE,
+		WAIT_INST,
+		WAIT_DOWNSTREAM,
+
+		STATE_NUM
+	};
+
+	size_t countOfState[STATE_NUM] = {0};
+	size_t countOfStateWhenNoFetch[STATE_NUM] = {0};
+	size_t totalFetchCount = 0;
+
+	void bind(std::string ifupath);
+	void update();
+	void dumpStatistics();
+};

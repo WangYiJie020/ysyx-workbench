@@ -37,6 +37,7 @@ sim_cpu_state cpu;
 HandShakeDetector handshake_detector;
 InstTypeCounter inst_type_counter;
 AXI4PerfCounterManager axi4_perf_counters;
+IFUStateCounter ifu_state_counter;
 
 TOP_NAME *get_dut() { return &dut; }
 
@@ -111,8 +112,11 @@ void sim_step_cycle() {
     sim_settings.cycle_finish_cb();
   }
 
-  handshake_detector.checkAndCountAll();
-	axi4_perf_counters.updateAll();
+  if (dut.reset == 0) {
+    handshake_detector.checkAndCountAll();
+    axi4_perf_counters.updateAll();
+    ifu_state_counter.update();
+  }
 }
 static void reset(int n) {
   dut.reset = 1;
@@ -720,7 +724,9 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   spdlog::info("set initial pc to {:08x}", cpu.pc);
 
   inst_type_counter.init();
-  auto notifyInstFetched = [&]() { inst_type_counter.newInstFetched(cycle_count); };
+  auto notifyInstFetched = [&]() {
+    inst_type_counter.newInstFetched(cycle_count);
+  };
 
   handshake_detector.init();
   handshake_detector.add("ifu.io_mem_r", "IFU fetch inst", notifyInstFetched);
@@ -728,63 +734,67 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   handshake_detector.add("exu.alu.io_out_", "EXU calc");
   handshake_detector.add("idu.io_out_", "IDU decode inst");
 
-	axi4_perf_counters.addRead("exu.io_mem", "EXU load data");
-	axi4_perf_counters.addWrite("exu.io_mem", "EXU store data");
+  axi4_perf_counters.addRead("exu.io_mem", "EXU load data");
+  axi4_perf_counters.addWrite("exu.io_mem", "EXU store data");
 
-	axi4_perf_counters.addRead("ifu.io_mem", "IFU fetch inst");
+  axi4_perf_counters.addRead("ifu.io_mem", "IFU fetch inst");
+
+  ifu_state_counter.bind("ifu");
 
   return true;
 }
 
 void sim_dump_statistics() {
   spdlog::info("simulation statistics:");
-	fmt::println(">cycle and instruction counts:");
+  fmt::println(">cycle and instruction counts:");
   fmt::println("  total cycle count: {}", cycle_count);
   fmt::println("  total instruction count: {}", inst_count);
   if (cycle_count == 0) {
     spdlog::warn("cycle count is 0, cannot calc IPC");
   } else {
     double ipc = (double)inst_count / (double)cycle_count;
-		fmt::println("  IPC: {:.4f}", ipc);
+    fmt::println("  IPC: {:.4f}", ipc);
   }
   if (inst_count == 0) {
     spdlog::warn("no instruction executed, cannot calc CPI");
   } else {
     double cpi = (double)cycle_count / (double)inst_count;
-		fmt::println("  CPI: {:.4f}", cpi);
+    fmt::println("  CPI: {:.4f}", cpi);
   }
 
   spdlog::info(">handshake counts:");
   for (auto &e : handshake_detector.bus_list) {
-		e.dumpStatus();
+    e.dumpStatus();
   }
+
+  ifu_state_counter.dumpStatistics();
 
   spdlog::info(">instruction type counts:");
   size_t totByType = inst_type_counter.totalInstCountSumByType();
-  spdlog::info("  by type: (total {})", totByType);
+	fmt::println("  by type: (total {})", totByType);
   for (size_t i = 0; i < InstTypeCounter::TYPE_NUM; i++) {
     auto type_name =
         InstTypeCounter::name_of_type((InstTypeCounter::InstType)i);
     auto type_count = inst_type_counter.type_count[i];
     auto type_percentage =
         totByType == 0 ? NAN : ((double)type_count / (double)totByType) * 100.0;
-    spdlog::info(
+		fmt::println(
         "    {:<10} : {:>6} ({:>5.2f}%) cpi {:.2f}", type_name, type_count,
         type_percentage,
         inst_type_counter.averageCPIOfType((InstTypeCounter::InstType)i));
   }
   size_t totByFmt = inst_type_counter.totalInstCountSumByFmt();
-  spdlog::info("  by fmt: (total {})", totByFmt);
+	fmt::println("  by fmt: (total {})", totByFmt);
   for (size_t i = 0; i < InstTypeCounter::FMT_NUM; i++) {
     auto fmt_name = InstTypeCounter::name_of_fmt((InstTypeCounter::InstFmt)i);
     auto fmt_count = inst_type_counter.fmt_count[i];
     auto fmt_percentage =
         totByFmt == 0 ? NAN : ((double)fmt_count / (double)totByFmt) * 100.0;
-    spdlog::info(
+		fmt::println(
         "    {:<10} : {:>6} ({:>5.2f}%) cpi {:.2f}", fmt_name, fmt_count,
         fmt_percentage,
         inst_type_counter.averageCPIOfFmt((InstTypeCounter::InstFmt)i));
   }
 
-	axi4_perf_counters.dumpAllStatistics();
+  axi4_perf_counters.dumpAllStatistics();
 }

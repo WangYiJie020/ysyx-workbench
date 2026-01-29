@@ -12,6 +12,7 @@ void HandShakeDetector::init() {
 }
 
 SignalHandle::SignalHandle(std::string barePath) {
+  // spdlog::debug("resolving signal path: {}", _DebugPath(barePath));
   handle = vpi_handle_by_name(
       const_cast<PLI_BYTE8 *>(_FullPath(barePath).c_str()), nullptr);
   if (!handle) {
@@ -24,7 +25,7 @@ HandShakeDetector::add(std::string barePath, std::string description,
                        callback_t onShake) {
   auto pathValid = _FullPath(barePath, "valid");
   auto pathReady = _FullPath(barePath, "ready");
-  spdlog::debug("adding valid/ready pair: {}/{}", pathValid, pathReady);
+  spdlog::trace("adding valid/ready pair: {}/{}", pathValid, pathReady);
   auto hValid = SignalHandle(barePath + "valid");
   auto hReady = SignalHandle(barePath + "ready");
 
@@ -110,4 +111,50 @@ void InstTypeCounter::newInstFetched(uint64_t cyc) {
   lastInstType = (InstType)inst_type;
   lastInstFmt = (InstFmt)inst_fmt;
   lastInstFetchCyc = cyc;
+}
+
+void IFUStateCounter::bind(std::string basePath) {
+  hRValid = SignalHandle(basePath + ".io_mem_rvalid");
+  hRReady = SignalHandle(basePath + ".io_mem_rready");
+
+  hState = SignalHandle(basePath + ".fsm.state");
+}
+void IFUStateCounter::update() {
+  bool fetchInstHappened =
+      (hRReady.getUint32Value() == 1 && hRValid.getUint32Value() == 1);
+  State s = (State)hState.getUint32Value();
+  countOfState[s]++;
+  if (fetchInstHappened) {
+    totalFetchCount++;
+  } else {
+    countOfStateWhenNoFetch[s]++;
+  }
+}
+static const char *_name_of_ifu_state(IFUStateCounter::State s) {
+  const char *names[] = {
+      "IDLE",
+      "WAIT_INST",
+      "WAIT_LATER",
+  };
+  return names[(size_t)s];
+}
+void IFUStateCounter::dumpStatistics() {
+  spdlog::info("IFU State Counter Statistics:");
+  fmt::println("  total instruction fetch count: {}", totalFetchCount);
+  fmt::println("  state statistics:");
+  fmt::println("    {:10} : {:<18} {:<18}", "state", "count", "count[exclu fetch]");
+  auto totCycles = sim_get_cycle();
+  for (size_t i = 0; i < STATE_NUM; i++) {
+    double perc = totCycles == 0
+                      ? NAN
+                      : ((double)countOfState[i] / (double)totCycles) * 100.0;
+    double percNoFetch =
+        totCycles == 0
+            ? NAN
+            : ((double)countOfStateWhenNoFetch[i] / (double)totCycles) * 100.0;
+
+    fmt::println("    {:10} : {:>8} ({:6.3f}%) {:>8} ({:6.3f}%)",
+                 _name_of_ifu_state((State)i), countOfState[i], perc,
+                 countOfStateWhenNoFetch[i], percNoFetch);
+  }
 }
