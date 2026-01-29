@@ -12,7 +12,7 @@ auto _FullPath(const std::string &pathWithoutValidOrReady,
 }
 auto _DebugPath(const std::string &pathWithoutValidOrReady,
                 const std::string &suffix) {
-  return "(.cpu.)" + pathWithoutValidOrReady + suffix;
+  return "`cpu." + pathWithoutValidOrReady + suffix;
 }
 
 void HandShakeDetector::add(std::string barePath) {
