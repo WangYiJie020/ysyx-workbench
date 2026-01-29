@@ -8,13 +8,23 @@ void AXI4CounterBase::init_logger() {
   set_logger_pattern_with_simtime(logger);
   logger->set_level(spdlog::level::info);
 }
+
 void AXI4CounterBase::dumpStatistics() {
-  fmt::println("  {} transactions: (total {})", name, transaction_count);
-  fmt::println("    average latency cycles: {:.2f}",
+  // fmt::println("  {} transactions: (total {})", name, transaction_count);
+  // fmt::println("    average latency cycles: {:.2f}",
+  //              transaction_count == 0
+  //                  ? NAN
+  //                  : (double)total_latency_cycles /
+  //                  (double)transaction_count);
+  // fmt::println("    max latency cycles: {} (at sim time {} to {})",
+  //              maxRecord.cycles, maxRecord.startTime, maxRecord.endTime);
+
+  fmt::println("  {:18} : {:>7} transactions, avg latency {:>7.2f} cycles, max "
+               "latency {:>7} cycles (at sim time {} to {})",
+               name, transaction_count,
                transaction_count == 0
                    ? NAN
-                   : (double)total_latency_cycles / (double)transaction_count);
-  fmt::println("    max latency cycles: {} (at sim time {} to {})",
+                   : (double)total_latency_cycles / (double)transaction_count,
                maxRecord.cycles, maxRecord.startTime, maxRecord.endTime);
 }
 
