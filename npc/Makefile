@@ -20,9 +20,9 @@ SAN_FLAGS?=
 # SAN_FLAGS?= -fsanitize=address
 
 VERILATOR_FLAGS ?=
-ENABLE_VPI ?= 0
 
-# ENABLE_WAVE ?= 0
+# Performance counter need VPI to fetch handshake signals
+ENABLE_VPI ?= 1
 
 # spdlog
 SPDLOG_PATH ?= /home/wuser/gitclones/spdlog
@@ -31,9 +31,13 @@ INC_PATH += $(abspath $(SPDLOG_PATH)/include)
 LDFLAGS += -L$(abspath $(SPDLOG_LIBPATH)) -lspdlog
 CXXFLAGS += -DSPDLOG_COMPILED_LIB
 
-# ifeq ($(ENABLE_WAVE), 1)
+# gdbstub
+GDBSTUB_PATH ?= /home/wuser/gitclones/mini-gdbstub
+GDBSTUB_LIBPATH ?= $(GDBSTUB_PATH)/build
+INC_PATH += $(abspath $(GDBSTUB_PATH)/include)
+LDFLAGS += -L$(abspath $(GDBSTUB_LIBPATH)) -lgdbstub
+
 VERILATOR_FLAGS += --trace-fst --trace-structs
-# endif
 
 ifeq ($(ENABLE_VPI), 1)
 VERILATOR_FLAGS += --vpi

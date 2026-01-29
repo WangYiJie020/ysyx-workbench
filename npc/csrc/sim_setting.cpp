@@ -10,6 +10,11 @@ static void _Get(bool &field, const char *env_p) {
     }
   }
 }
+static void _Get(int &field, const char *env_p) {
+	if (env_p != nullptr) {
+		field = atoi(env_p);
+	}
+}
 static void _Get(std::string &field, const char *env_p) {
   if (env_p != nullptr) {
     field = std::string(env_p);
@@ -28,10 +33,14 @@ static void _Get(std::string &field, const char *env_p) {
 void load_sim_setting_from_env(sim_setting &setting) {
   std::string log_msg = "sim_setting: \n";
   bool msg_line_first = true;
+
+	spdlog::info("loading sim_setting from env");
+
   GET(en_wave);
   GET(en_inst_trace);
   GET(showdisasm);
   GET(always_showdisasm);
+	GET(gdb_mode);
   GET(no_batch);
   GET(ftrace);
   GET(iringbuf);
@@ -53,5 +62,5 @@ void load_sim_setting_from_env(sim_setting &setting) {
   GET_DPI_FLAG(psram_read);
   GET_DPI_FLAG(psram_write);
 
-  spdlog::info("{}", log_msg);
+  spdlog::debug("{}", log_msg);
 }

@@ -1,6 +1,8 @@
 #include "sim.hpp"
 #include "dbg.hpp"
 
+#include <spdlog/common.h>
+#include <spdlog/logger.h>
 #include <spdlog/mdc.h>
 #include <spdlog/pattern_formatter.h>
 #include <spdlog/sinks/basic_file_sink.h>
@@ -14,8 +16,6 @@
 #include <cstdio>
 #include <string_view>
 
-#include "spdlog/common.h"
-#include "spdlog/logger.h"
 #include "verilated_fst_c.h"
 
 #include <nvboard.h>
@@ -23,8 +23,15 @@
 #include <getopt.h>
 #include <unistd.h>
 
+#include "sig_event.hpp"
+
 TOP_NAME dut;
-sim_setting sim_settings;
+sim_config sim_cfg;
+sim_setting &sim_settings = sim_cfg.setting;
+
+sim_cpu_state cpu;
+
+HandShakeDetector handshake_detector;
 
 TOP_NAME *get_dut() { return &dut; }
 
@@ -34,7 +41,6 @@ typedef uint32_t word_t;
 typedef uint32_t addr_t;
 
 #define MADDR_BASE 0x20000000u
-#define INITIAL_PC 0x30000000u
 
 // #define TRACE_PMEM_CALL
 // #define TRACE_SHOW_ALL_INST
@@ -43,8 +49,15 @@ std::shared_ptr<VerilatedFstC> tfp;
 
 static uint64_t sim_time = 0;
 static uint64_t cycle_count = 0;
+static uint64_t inst_count = 0;
 
 static std::shared_ptr<spdlog::logger> _dpi_logger;
+
+sim_config *sim_get_config() { return &sim_cfg; }
+sim_cpu_state *sim_get_cpu_state() { return &cpu; }
+
+uint64_t sim_get_cycle_count() { return cycle_count; }
+uint64_t sim_get_inst_count() { return inst_count; }
 
 class sim_time_formatter : public spdlog::custom_flag_formatter {
 public:
@@ -89,6 +102,8 @@ void sim_step_cycle() {
   if (sim_settings.cycle_finish_cb) {
     sim_settings.cycle_finish_cb();
   }
+
+	handshake_detector.checkAndCountAll();
 }
 static void reset(int n) {
   dut.reset = 1;
@@ -101,13 +116,12 @@ static void reset(int n) {
 static bool is_running = true;
 static bool is_good_trap = false;
 
-word_t current_pc = INITIAL_PC;
-word_t sim_current_pc() { return current_pc; }
-
 void raise_ebreak(int a0) {
   is_running = false;
 
-  dbg_set_halt(a0);
+  // sbd_set_halt(a0);
+  assert(sim_cfg.raise_halt_cb);
+  sim_cfg.raise_halt_cb(a0);
 
   constexpr std::string_view fg_red = "\33[1;31m", fg_green = "\33[1;32m",
                              fg_yellow = "\33[1;33m", ansi_none = "\33[0m";
@@ -116,7 +130,7 @@ void raise_ebreak(int a0) {
 
   spdlog::info("{}HIT {} TRAP{} a0 = {} @pc = 0x{:08x} cyc {}",
                is_good_trap ? fg_green : fg_red, is_good_trap ? "GOOD" : "BAD",
-               ansi_none, a0, current_pc, cycle_count);
+               ansi_none, a0, cpu.pc, cycle_count);
 }
 bool sim_halted() { return !is_running; }
 bool sim_hit_good_trap() { return is_good_trap; }
@@ -138,9 +152,92 @@ word_t img[60 * 1024 * 1024 / 4] = {
       _loger->trace(fmt, ##__VA_ARGS__);                                       \
   } while (0)
 
+typedef bool (*mem_region_addr_mapper_tohost_t)(uint32_t addr,
+                                                uint8_t *mapped_addr);
+typedef bool (*mem_region_addr_mapper_toguest_t)(uint8_t *host_ptr,
+                                                 uint32_t &addr);
+
+typedef bool (*mem_region_read_guest_t)(uint32_t addr, uint32_t *data);
+typedef bool (*mem_region_write_guest_t)(uint32_t addr, uint32_t data);
+
+struct mem_region {
+  uint32_t base;
+  uint32_t end;
+
+  const char *name;
+
+  union {
+    struct {
+      mem_region_addr_mapper_tohost_t tohost;
+      mem_region_read_guest_t read_guest;
+      mem_region_write_guest_t write_guest;
+      // mem_region_addr_mapper_toguest_t toguest;
+    } mapper;
+    struct {
+      void *ptr;
+      size_t size;
+    } arr;
+  };
+  bool simple_map; // true: mapped_addr = addr - base + base_at_host
+  bool enwrite;
+
+  bool contains(uint32_t addr) const { return addr >= base && addr < end; }
+  uint8_t *at_host(uint32_t addr) const {
+    if (simple_map) {
+      assert(addr - base < arr.size);
+      return (uint8_t *)arr.ptr + (addr - base);
+    } else {
+      assert(mapper.tohost);
+      uint8_t *mapped_addr = nullptr;
+      bool ok = mapper.tohost(addr, mapped_addr);
+      assert(ok);
+      return mapped_addr;
+    }
+  }
+  bool read_guest(uint32_t addr, uint32_t &data) const {
+    if (simple_map) {
+      // assert(addr - base < arr.size);
+      if (addr - base >= arr.size) {
+        spdlog::error("addr {:08x} at region {} is out of bound", addr, name);
+        return false;
+      }
+      uint32_t *ptr = (uint32_t *)((uint8_t *)arr.ptr + (addr - base));
+      data = *ptr;
+      return true;
+    } else {
+      assert(mapper.read_guest);
+      return mapper.read_guest(addr, &data);
+    }
+  }
+  bool write_guest(uint32_t addr, uint32_t data) const {
+    if (!enwrite) {
+      spdlog::error("addr {:08x} at region {} is not writable", addr, name);
+      return false;
+    }
+    if (simple_map) {
+      assert(addr - base < arr.size);
+      uint32_t *ptr = (uint32_t *)((uint8_t *)arr.ptr + (addr - base));
+      *ptr = data;
+      return true;
+    } else {
+      assert(mapper.write_guest);
+      return mapper.write_guest(addr, data);
+    }
+  }
+};
+
 constexpr uint32_t MROM_BASE = 0x20000000u;
 constexpr uint32_t MROM_END = 0x20010000u;
 word_t mrom_data[(MROM_END - MROM_BASE) / 4];
+
+constexpr uint32_t FLASH_BASE = 0x30000000u;
+constexpr uint32_t FLASH_END = 0x40000000u;
+uint32_t flash_data[sizeof(img) / 4];
+
+constexpr uint32_t PSRAM_BASE = 0x80000000u;
+constexpr uint32_t PSRAM_END = 0xA0000000u;
+uint32_t psram_data[8 * 1024 * 1024 / 4];
+
 extern "C" void mrom_read(int32_t addr, int32_t *data) {
   spdlog::mdc::put("testkey", "testvalue");
   if (addr < MROM_BASE) {
@@ -154,14 +251,8 @@ extern "C" void mrom_read(int32_t addr, int32_t *data) {
   *data = *(int32_t *)ptr;
 
   DPI_TRACE("R addr={:08x} data={:08x}", addr + MROM_BASE, *data);
-
-  // _dpi_logger->trace("mrom_read addr={:08x} data={:08x}", addr + MROM_BASE,
-  // *data);
 }
 
-constexpr uint32_t FLASH_BASE = 0x30000000u;
-constexpr uint32_t FLASH_END = 0x40000000u;
-uint32_t flash_data[sizeof(img) / 4];
 static void _init_flash();
 extern "C" void flash_read(int32_t addr, int32_t *data) {
   // in spi
@@ -174,13 +265,8 @@ extern "C" void flash_read(int32_t addr, int32_t *data) {
   uintptr_t ptr = (uintptr_t)flash_data + addr;
   *data = *(int32_t *)ptr;
   DPI_TRACE("R addr={:08x} data={:08x}", addr + FLASH_BASE, *data);
-  // _dpi_logger->trace("flash_read addr={:08x} data={:08x}", addr + FLASH_BASE,
-  // (uint32_t)*data);
 }
 
-constexpr uint32_t PSRAM_BASE = 0x80000000u;
-constexpr uint32_t PSRAM_END = 0xA0000000u;
-uint32_t psram_data[8 * 1024 * 1024 / 4];
 extern "C" void psram_read(int32_t addr, int32_t *data) {
   // in psram high 8bit addr are 0
   // no need to minus PSRAM_BASE
@@ -189,7 +275,6 @@ extern "C" void psram_read(int32_t addr, int32_t *data) {
   uintptr_t ptr = (uintptr_t)psram_data + addr;
   *data = *(int32_t *)ptr;
   DPI_TRACE("R addr={:08x} data={:08x}", addr + PSRAM_BASE, *data);
-  // printf("[DPI] psram_read addr=%08x data=%08x\n", addr + PSRAM_BASE, *data);
 }
 extern "C" void psram_write(int32_t addr, char strb8, int32_t data, int32_t *) {
   assert(addr < sizeof(psram_data));
@@ -214,8 +299,6 @@ extern "C" void psram_write(int32_t addr, char strb8, int32_t data, int32_t *) {
 
   DPI_TRACE("W addr={:08x} data={:08x} (strb {:02x}) newdata={:08x}",
             addr + PSRAM_BASE, data, (uint32_t)strb8, *ptr);
-  // printf("[DPI] psram_write addr=%08x data=%08x (strb %X)\n", addr +
-  // PSRAM_BASE, data, (uint32_t)strb8);
 }
 
 constexpr uint32_t SDRAM_BASE = 0xa0000000u;
@@ -228,7 +311,7 @@ extern "C" void sdram_read(char block, char bank, short row, short col,
   assert(bank >= 0 && bank < 4);
   assert(row >= 0 && row < 8192);
   assert(col >= 0 && col < 512);
-  // assert(block == 0 || block == 1);
+  assert(block >= 0 && block < 4);
   *data = sdram_data[bank][row][col][block];
   DPI_TRACE("R bank={:02x} row={:04x} col={:04x} block={} data={:04x}", bank,
             row, col, (uint32_t)block, (uint16_t)*data);
@@ -266,152 +349,158 @@ extern "C" void sdram_write(char block, char bank, short row, short col,
             human_friendly_mask, sdram_data[bank][row][col][block]);
 }
 
+struct sdram_u32_data_ptr {
+  uint16_t *lowpart;
+  uint16_t *highpart;
+};
+sdram_u32_data_ptr get_sdram_data_at(word_t addr) {
+  word_t in_sdram_addr = addr - SDRAM_BASE;
+  char raw_bank = (in_sdram_addr >> 10) & 0x7;
+  uint16_t row = (in_sdram_addr >> 13) & 0x1fff;
+  uint16_t col = (in_sdram_addr >> 1) & 0x1ff;
+  uint8_t bank = raw_bank % 4;
+  uint8_t block = (raw_bank & 0x4) ? 2 : 0;
+  assert(bank < 4);
+  assert(row < 8192);
+  assert(col < 512);
+  assert(block < 4);
+  return {.lowpart = &sdram_data[bank][row][col][block],
+          .highpart = &sdram_data[bank][row][col][block + 1]};
+}
+
+bool read_sdram(word_t addr, word_t *data) {
+  sdram_u32_data_ptr ptrs = get_sdram_data_at(addr);
+  *data = ((word_t)(*ptrs.highpart) << 16) | (word_t)(*ptrs.lowpart);
+  return true;
+}
+bool write_sdram(word_t addr, word_t data) {
+  sdram_u32_data_ptr ptrs = get_sdram_data_at(addr);
+  *ptrs.lowpart = (uint16_t)(data & 0xffff);
+  *ptrs.highpart = (uint16_t)((data >> 16) & 0xffff);
+  return true;
+}
 constexpr uint32_t SRAM_BASE = 0x0f000000u;
 constexpr uint32_t SRAM_END = 0x10000000u;
 
-uint8_t *sim_guest_to_host(uint32_t addr) {
-  uint32_t *ptr = nullptr;
-  if (addr >= MROM_BASE && addr < MROM_END) {
-    ptr = img + (addr - MROM_BASE);
-  } else if (addr >= FLASH_BASE && addr < FLASH_END) {
-    ptr = flash_data + (addr - FLASH_BASE);
-  } else {
-    printf("[W] mem_atguest don't support addr=%08x\n", addr);
-    assert(0);
+#define SIMPLE_REGION(name, base, end, array, enwrite)                         \
+  {                                                                            \
+    base, end, #name, {.arr = {.ptr = (void *)array, .size = sizeof(array)}},  \
+        true, enwrite                                                          \
   }
-  // printf("[DPI] mem_atguest addr=%08x get %08x\n",addr,*ptr);
-  return (uint8_t *)ptr;
-}
-word_t guest_to_host(word_t addr) {
-  // printf("raw addr %08X\n",addr);
-  assert(addr >= MADDR_BASE);
-  word_t res = addr - MADDR_BASE;
-  return res;
-}
 
-word_t gpr_snap[32];
-word_t *sim_current_gpr() { return gpr_snap; }
+mem_region mem_regions[] = {
+    SIMPLE_REGION(mrom, MROM_BASE, MROM_END, mrom_data, false),
+    SIMPLE_REGION(flash, FLASH_BASE, FLASH_END, flash_data, false),
+    SIMPLE_REGION(psram, PSRAM_BASE, PSRAM_END, psram_data, true),
+    {SDRAM_BASE,
+     SDRAM_END,
+     "sdram",
+     {.mapper =
+          {
+              .tohost = nullptr,
+              .read_guest = read_sdram,
+              .write_guest = write_sdram,
+          }},
+     false,
+     true},
+};
 
-void gpr_upd(int regno, int data) {
+uint8_t *sim_guest_to_host(uint32_t addr) {
+  for (auto &r : mem_regions) {
+    if (r.contains(addr)) {
+      return r.at_host(addr);
+    }
+  }
+  spdlog::error("sim_guest_to_host addr={:08x} no mapping region", addr);
+  return nullptr;
+}
+// word_t guest_to_host(word_t addr) {
+//   // printf("raw addr %08X\n",addr);
+//   assert(addr >= MADDR_BASE);
+//   word_t res = addr - MADDR_BASE;
+//   return res;
+// }
+
+// word_t gpr_snap[32];
+// word_t *sim_current_gpr() { return gpr_snap; }
+
+extern "C" void gpr_upd(int regno, int data) {
   if (regno == 0)
     return;
-  gpr_snap[regno] = data;
+  cpu.gpr[regno] = data;
 }
 
 bool pc_changed = false;
-void pc_upd(int pc, int npc) {
-  //	printf("pc upd pc=%08x npc=%08x\n",pc,npc);
+extern "C" void pc_upd(int pc, int npc) {
   pc_changed = true;
-  current_pc = npc;
+  cpu.pc = npc;
 }
 
-void skip_difftest_ref() {
+extern "C" void skip_difftest_ref() {
   if (sim_settings.trace_difftest_skip) {
     printf("[DPI] skip_difftest_ref called\n");
   }
-  dbg_skip_difftest_ref();
-}
-
-#define MMIO_SERIAL_PORT 0x10000000u
-#define MMIO_RTC_ADDR 0x10000048u
-
-void pmem_read(int addr, int *out_data) {
-  if (!is_running) {
-    printf("warn: pmem_read when not running\n");
-    *out_data = 0;
-    return;
-  }
-
-  if (addr == MMIO_RTC_ADDR || addr == MMIO_RTC_ADDR + 4) {
-    skip_difftest_ref();
-    static uint64_t time_in_us;
-    if (addr == MMIO_RTC_ADDR) {
-      struct timespec ts;
-      clock_gettime(CLOCK_MONOTONIC_COARSE, &ts);
-      time_in_us = ts.tv_sec * 1000000 + ts.tv_nsec / 1000;
-      *out_data = (uint32_t)(time_in_us & 0xffffffffu);
-    } else {
-      *out_data = time_in_us >> 32;
-    }
-    return;
-  }
-
-  if (sim_settings.trace_pmem_readcall) {
-    printf("[DPI] pmem_read addr=%08x get ", addr);
-  }
-
-  uint32_t host_aligned = guest_to_host(addr) & (~0x3);
-  *out_data = img[host_aligned / 4];
-
-  if (sim_settings.trace_pmem_readcall) {
-    printf("%08x\n", *out_data);
-  }
-}
-void pmem_write(int addr, int data, int mask) {
-  if (addr == MMIO_SERIAL_PORT) {
-    if (sim_settings.trace_mmio_write) {
-      printf("[DPI] MMIO write to serial port: %c\n", data & 0xff);
-    }
-    skip_difftest_ref();
-    putchar(data & 0xff);
-    fflush(stdout);
-    return;
-  }
-
-  if (sim_settings.trace_pmem_writecall) {
-    printf("[DPI] pmem write addr=%08x data=%08x mask=%02x\n", addr, data,
-           mask);
-  }
-
-  uint32_t host_aligned = guest_to_host(addr) & (~0x3);
-
-  uint8_t *p = (uint8_t *)(&img[host_aligned >> 2]);
-  uint32_t umask = mask, udata = data;
-
-  while (umask) {
-    if (umask & 1) {
-      *p = udata & 0xff;
-    }
-    p++;
-    umask >>= 1;
-    udata >>= 8;
-  }
+  sdb_skip_difftest_ref();
 }
 
 bool sim_read_vmem(word_t addr, word_t *data) {
-  if (addr >= MROM_BASE && addr < MROM_END) {
-    mrom_read(addr, (int *)data);
-  } else if (addr >= FLASH_BASE && addr < FLASH_END) {
-    flash_read(addr - FLASH_BASE, (int *)data);
-  } else if (addr >= SRAM_BASE && addr < SRAM_END) {
-    // TODO: shouldn't read directly
-    // should gen warn and return nothing
-    // for debug
-    *data = img[(addr - SRAM_BASE) / 4];
-  } else if (addr >= PSRAM_BASE && addr < PSRAM_END) {
-    psram_read(addr - PSRAM_BASE, (int *)data);
-  } else if (addr >= SDRAM_BASE && addr < SDRAM_END) {
-    word_t in_sdram_addr = addr - SDRAM_BASE;
-    char raw_bank = (in_sdram_addr >> 10) & 0x7;
-    short row = (in_sdram_addr >> 13) & 0x1fff;
-    short col = (in_sdram_addr >> 1) & 0x1ff;
-    uint16_t half1, half2;
-    char bank = raw_bank % 4;
-    char block_offset = (raw_bank & 0x4) ? 2 : 0;
-    half1 = sdram_data[bank][row][col][block_offset];
-    half2 = sdram_data[bank][row][col][block_offset + 1];
-    *data = ((word_t)half2 << 16) | (word_t)half1;
-    // spdlog::trace("sim_read_vmem addr={:08x} -> "
-    //               "sdram[{:02x}][{:04x}][{:04x},{:04x}] = {:08x} "
-    //               "(pc={:08x})", addr, bank, row, col, col + 1, *data,
-    //               current_pc);
-  } else {
-    // TODO: gen error
-    _dpi_logger->error("sim_read_vmem addr={:08x} INVALID", addr);
-    return false;
+  for (auto &r : mem_regions) {
+    if (r.contains(addr)) {
+      return r.read_guest(addr, *data);
+    }
   }
-  return true;
+  if (SRAM_BASE <= addr && addr < SRAM_END) {
+		// spdlog::warn("sim_read_vmem addr={:08x} in SRAM region, direct read not allowed", addr);
+    // TODO: handle sram read
+		*data = 0;
+  } else
+    spdlog::warn("sim_read_vmem addr={:08x} no mapping region", addr);
+  return false;
 }
+bool sim_write_vmem(word_t addr, word_t data) {
+  for (auto &r : mem_regions) {
+    if (r.contains(addr)) {
+      return r.write_guest(addr, data);
+    }
+  }
+  spdlog::warn("sim_write_vmem addr={:08x} no mapping region", addr);
+  return false;
+}
+
+// bool sim_read_vmem(word_t addr, word_t *data) {
+//   if (addr >= MROM_BASE && addr < MROM_END) {
+//     mrom_read(addr, (int *)data);
+//   } else if (addr >= FLASH_BASE && addr < FLASH_END) {
+//     flash_read(addr - FLASH_BASE, (int *)data);
+//   } else if (addr >= SRAM_BASE && addr < SRAM_END) {
+//     // TODO: shouldn't read directly
+//     // should gen warn and return nothing
+//     // for debug
+//     *data = img[(addr - SRAM_BASE) / 4];
+//   } else if (addr >= PSRAM_BASE && addr < PSRAM_END) {
+//     psram_read(addr - PSRAM_BASE, (int *)data);
+//   } else if (addr >= SDRAM_BASE && addr < SDRAM_END) {
+//     word_t in_sdram_addr = addr - SDRAM_BASE;
+//     char raw_bank = (in_sdram_addr >> 10) & 0x7;
+//     short row = (in_sdram_addr >> 13) & 0x1fff;
+//     short col = (in_sdram_addr >> 1) & 0x1ff;
+//     uint16_t half1, half2;
+//     char bank = raw_bank % 4;
+//     char block_offset = (raw_bank & 0x4) ? 2 : 0;
+//     half1 = sdram_data[bank][row][col][block_offset];
+//     half2 = sdram_data[bank][row][col][block_offset + 1];
+//     *data = ((word_t)half2 << 16) | (word_t)half1;
+//     // spdlog::trace("sim_read_vmem addr={:08x} -> "
+//     //               "sdram[{:02x}][{:04x}][{:04x},{:04x}] = {:08x} "
+//     //               "(pc={:08x})", addr, bank, row, col, col + 1, *data,
+//     //               current_pc);
+//   } else {
+//     // TODO: gen error
+//     _dpi_logger->error("sim_read_vmem addr={:08x} INVALID", addr);
+//     return false;
+//   }
+//   return true;
+// }
 
 void sim_step_inst() {
   size_t cnt = 0;
@@ -420,12 +509,15 @@ void sim_step_inst() {
   while (!pc_changed) {
     sim_step_cycle();
     if (sim_halted()) {
-      current_pc += 4;
+      cpu.pc += 4;
+			inst_count++;
       return;
     }
     cnt++;
     if (cnt >= MAYBE_DEADLOOP_THRESHOLD) {
-      dbg_dump_recent_info();
+      if (!sim_settings.gdb_mode) {
+        sdb_dump_recent_info();
+      }
       spdlog::warn("simulation has stepped {} cycles without pc change, maybe "
                    "lock happened",
                    cnt);
@@ -443,15 +535,16 @@ void sim_step_inst() {
     }
   }
   pc_changed = false;
+	inst_count++;
 }
 
 // IMG
 
-static const char *img_file;
-static size_t img_size;
-static bool batch_mode = false;
+// static const char *img_file;
+// static size_t img_size;
+// static bool batch_mode = false;
 
-static long load_img() {
+static void load_img() {
 #define Assert(expr, ...)                                                      \
   do {                                                                         \
     if (!(expr)) {                                                             \
@@ -459,41 +552,44 @@ static long load_img() {
     }                                                                          \
   } while (0)
 
-  if (img_file == NULL) {
+  if (sim_cfg.img_file_path == NULL) {
     spdlog::warn("No image is given. Use the default build-in image.");
-    return img_size = 4096; // built-in image size
+    sim_cfg.img_size = 24;
+    return;
   }
 
-  FILE *fp = fopen(img_file, "rb");
-  Assert(fp, "Can not open '%s'", img_file);
+  FILE *fp = fopen(sim_cfg.img_file_path, "rb");
+  Assert(fp, "Can not open '%s'", sim_cfg.img_file_path);
 
   fseek(fp, 0, SEEK_END);
-  img_size = ftell(fp);
+  sim_cfg.img_size = ftell(fp);
 
-  spdlog::info("load image {}, size = {}", img_file, img_size);
+  spdlog::info("load image {}, size = {}", sim_cfg.img_file_path,
+               sim_cfg.img_size);
 
   fseek(fp, 0, SEEK_SET);
-  int ret = fread(img, img_size, 1, fp);
+  int ret = fread(img, sim_cfg.img_size, 1, fp);
   assert(ret == 1);
 
   fclose(fp);
-
-  return img_size;
 }
 
-static void _init_flash() { memcpy(flash_data, img, img_size); }
+static void _init_flash() {
+  spdlog::info("init flash with image data");
+  memcpy(flash_data, img, sim_cfg.img_size);
+}
 static void _fill_rams_uninit() {
   if (sim_settings.zero_uninit_ram) {
     memset(psram_data, 0, sizeof(psram_data));
     memset(sdram_data, 0, sizeof(sdram_data));
   } else {
     memset(psram_data, 0xcc, sizeof(psram_data));
-    spdlog::trace("psram_data filled with 0xcc");
+    spdlog::debug("psram_data filled with 0xcc");
     memset(sdram_data, 0xdd, sizeof(sdram_data));
-    spdlog::trace("sdram_data filled with 0xdd");
+    spdlog::debug("sdram_data filled with 0xdd");
   }
-	spdlog::info("RAMs uninitialized area filled with {}", 
-		sim_settings.zero_uninit_ram ? "zeros" : "non-zero patterns");
+  spdlog::info("RAMs uninitialized area filled with {}",
+               sim_settings.zero_uninit_ram ? "zeros" : "non-zero patterns");
 }
 
 // ARG
@@ -505,10 +601,10 @@ static void parse_args(int argc, char **argv) {
   while ((o = getopt_long(argc, argv, "-b", table, NULL)) != -1) {
     switch (o) {
     case 'b':
-      batch_mode = true;
+      sim_cfg.hope_batch_mode = true;
       break;
     case 1:
-      img_file = optarg;
+      sim_cfg.img_file_path = optarg;
       break;
     default:
       printf("Bad option %c\n", o);
@@ -523,11 +619,20 @@ const char *_get_env_or_default(const char *env_name,
   return env_value ? env_value : default_value;
 }
 
+static auto _gen_logger_formatter_with_simtime() {
+	auto formatter = std::make_unique<spdlog::pattern_formatter>();
+	formatter->add_flag<sim_time_formatter>('&');
+	// (sim_time) [logger_name] [log_level] log_msg
+	formatter->set_pattern("(%&) [%n] [%^%l%$] %v");
+	return formatter;
+}
+
+void set_logger_pattern_with_simtime(std::shared_ptr<spdlog::logger> logger){
+	auto formatter = _gen_logger_formatter_with_simtime();
+	logger->set_formatter(std::move(formatter));
+}
 void _init_dpi_logger() {
-  auto formatter = std::make_unique<spdlog::pattern_formatter>();
-  formatter->add_flag<sim_time_formatter>('&');
-  // (sim_time) [DPI] [log_level] log_msg
-  formatter->set_pattern("(%&) [%n] [%^%l%$] %v");
+	auto formatter = _gen_logger_formatter_with_simtime();
 
   auto out_file = "dpiout.log";
   auto con_lvl_str = _get_env_or_default("DPI_CONSOLE_LVL", "info");
@@ -557,7 +662,7 @@ void _init_dpi_logger() {
     auto func_logger = std::make_shared<spdlog::logger>(#func, dpi_sink_list); \
     auto lvl = sim_settings.TRACE_DPI_FLAG(func) ? spdlog::level::trace        \
                                                  : spdlog::level::info;        \
-    spdlog::info("DPI func '{}' logger lvl {}", #func,                         \
+    spdlog::debug("DPI func '{}' logger lvl {}", #func,                         \
                  spdlog::level::to_string_view(lvl));                          \
     func_logger->set_level(lvl);                                               \
     func_logger->set_formatter(formatter->clone());                            \
@@ -577,6 +682,8 @@ void _init_dpi_logger() {
   spdlog::register_logger(_dpi_logger);
 }
 
+
+
 bool sim_init(int argc, char **argv, sim_setting setting) {
   Verilated::commandArgs(argc, argv);
   sim_settings = setting;
@@ -593,15 +700,10 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 
   load_img();
 
-  spdlog::set_level(spdlog::level::trace); // will modify all registered loggers
-
   _init_flash();
   _fill_rams_uninit();
   _init_dpi_logger(); // should before dbg_init(which may preload data with func
                       // call dpis)
-
-  dbg_init(INITIAL_PC, img_size, img_file, setting);
-
   if (setting.en_wave) {
     Verilated::traceEverOn(true);
     tfp = std::shared_ptr<VerilatedFstC>(new VerilatedFstC,
@@ -611,17 +713,35 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
     spdlog::info("wave enabled, output file: {}", setting.wave_fst_file);
   }
 
-  reset(30);
+  constexpr int reset_cycles = 30;
+  reset(reset_cycles);
+  spdlog::info("sim reset done ({} cycles)", reset_cycles);
 
-  spdlog::info("sim reset done, entering {} mode",
-               batch_mode ? "batch" : "interactive");
+  cpu.pc = sim_cfg.init_pc;
+  spdlog::info("set initial pc to {:08x}", cpu.pc);
 
-  if (batch_mode && !setting.no_batch) {
-    dbg_exec("c");
-    return dbg_is_hitbadtrap() ? 1 : 0;
-  }
+	handshake_detector.init();
+	handshake_detector.add("ifu.io_mem_r", "IFU fetch inst");
+	handshake_detector.add("exu.io_mem_r", "EXU load data");
+	handshake_detector.add("exu.alu.io_out_", "EXU calc");
+	handshake_detector.add("idu.io_out_", "IDU decode inst");
 
-  return 0;
+  return true;
 }
 
-void sim_exec_sdbcmd(std::string_view cmd, bool &quit) { dbg_exec(cmd, &quit); }
+void sim_dump_statistics() {
+	spdlog::info("simulation statistics:");
+	spdlog::info(">inst per cycle:");
+	spdlog::info("  total cycle count: {}", cycle_count);
+	spdlog::info("  total instruction count: {}", inst_count);
+	if (cycle_count > 0) {
+		double ipc = (double)inst_count / (double)cycle_count;
+		spdlog::info("  IPC: {:.4f}", ipc);
+	}
+
+	spdlog::info(">handshake counts:");
+	for(auto &e : handshake_detector.bus_list) {
+		spdlog::info("  {} happened {} times", e.description, e.shake_count);
+	}
+	
+}

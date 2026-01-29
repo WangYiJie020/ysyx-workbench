@@ -9,6 +9,7 @@ TOP_NAME *get_dut();
 
 typedef void (*cycle_end_callback_t)();
 
+
 struct sim_setting {
   bool en_inst_trace = true;
 
@@ -17,8 +18,10 @@ struct sim_setting {
 
 	bool no_batch = false;
 
+	bool gdb_mode = false;
+
   bool ftrace = false;
-  bool iringbuf = true;
+	int iringbuf = 32;
   bool etrace = true;
   bool difftest = true;
 
@@ -53,6 +56,28 @@ struct sim_setting {
   std::string wave_fst_file = "build/wave.fst";
 };
 
+typedef void(*raise_halt_cb_t)(int a0);
+
+struct sim_config {
+	uint32_t init_pc = 0x30000000;
+	size_t img_size;
+	const char* img_file_path;
+
+	bool hope_batch_mode;
+
+	sim_setting setting;
+	raise_halt_cb_t raise_halt_cb;
+
+	inline bool is_batch_mode() const {
+		return hope_batch_mode && !setting.no_batch;
+	}
+};
+
+struct sim_cpu_state {
+	uint32_t pc;
+	uint32_t gpr[32];
+};
+
 // unchange item if not set in env
 void load_sim_setting_from_env(sim_setting &setting);
 
@@ -61,13 +86,17 @@ bool sim_init(int argc, char **argv, sim_setting teg = sim_setting{});
 void sim_step_cycle();
 void sim_step_inst();
 
-uint32_t sim_current_pc();
-uint32_t* sim_current_gpr();
+
+void sim_dump_statistics();
+
+sim_config* sim_get_config();
+sim_cpu_state* sim_get_cpu_state();
 
 uint8_t* sim_guest_to_host(uint32_t addr);
 bool sim_read_vmem(uint32_t addr, uint32_t *data);
+bool sim_write_vmem(uint32_t addr, uint32_t data);
 
 bool sim_halted();
 bool sim_hit_good_trap();
 
-void sim_exec_sdbcmd(std::string_view cmd, bool &quit);
+// void sim_exec_sdbcmd(std::string_view cmd, bool &quit);
