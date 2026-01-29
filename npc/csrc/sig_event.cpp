@@ -108,8 +108,8 @@ void IDUPerfCounter::update() {
     tot_cycle_of_fmt[lastInstFmt] += cycles;
   }
 
-	if(cycles > 100){
-		logger->warn("large gap between instructions: {} cycles", cycles);
+	if(cycles < 100){
+		logger->warn("gap between instructions: {} cycles", cycles);
 		logger->info("  last inst type {} fmt {} at cycle {}",
 										 name_of_type(lastInstType), name_of_fmt(lastInstFmt),
 										 lastInstFetchCyc);
