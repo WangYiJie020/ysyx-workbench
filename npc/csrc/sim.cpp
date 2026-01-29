@@ -718,7 +718,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 	handshake_detector.add("ifu.io_mem_r", "IFU fetch inst");
 	handshake_detector.add("exu.io_mem_r", "EXU load data");
 	handshake_detector.add("exu.alu.io_out_", "EXU calc");
-	handshake_detector.add("idu._out_", "IDU decode inst");
+	handshake_detector.add("idu.io_out_", "IDU decode inst");
 
   return true;
 }
