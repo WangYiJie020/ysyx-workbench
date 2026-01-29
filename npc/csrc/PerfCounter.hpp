@@ -119,14 +119,14 @@ struct EXUPerfCounter {
   static inline bool isValidFmt(InstFmt fmt) { return fmt < FMT_NUM; }
   static inline bool isValidType(InstType type) { return type < TYPE_NUM; }
 
-  static const char *name_of_fmt(InstFmt fmt);
-  static const char *name_of_type(InstType type);
+  static const char *nameOfFmt(InstFmt fmt);
+  static const char *nameOfTyp(InstType type);
 
-  size_t fmt_count[FMT_NUM] = {0};
-  size_t type_count[TYPE_NUM] = {0};
+  size_t instCountOfFmt[FMT_NUM] = {0};
+  size_t instCountOfTyp[TYPE_NUM] = {0};
 
-  size_t tot_cycle_of_type[TYPE_NUM] = {0};
-  size_t tot_cycle_of_fmt[FMT_NUM] = {0};
+  size_t totalCycleOfTyp[TYPE_NUM] = {0};
+  size_t totalCycleOfFmt[FMT_NUM] = {0};
 
 	bool lastCycOutValid = false;
 	sim_cycle_t instStartCycle = 0;
@@ -142,20 +142,20 @@ struct EXUPerfCounter {
 	void update();
 
   size_t totalInstCountSumByFmt() {
-    return std::accumulate(fmt_count, fmt_count + FMT_NUM, 0ull);
+    return std::accumulate(instCountOfFmt, instCountOfFmt + FMT_NUM, 0ull);
   }
-  size_t totalInstCountSumByType() {
-    return std::accumulate(type_count, type_count + TYPE_NUM, 0ull);
+  size_t totalInstCountSumByTyp() {
+    return std::accumulate(instCountOfTyp, instCountOfTyp + TYPE_NUM, 0ull);
   }
-  double averageCPIOfType(InstType type) {
-    if (type_count[type] == 0)
+  double averageCPIOfTyp(InstType type) {
+    if (instCountOfTyp[type] == 0)
       return NAN;
-    return (double)tot_cycle_of_type[type] / (double)type_count[type];
+    return (double)totalCycleOfTyp[type] / (double)instCountOfTyp[type];
   }
   double averageCPIOfFmt(InstFmt fmt) {
-    if (fmt_count[fmt] == 0)
+    if (instCountOfFmt[fmt] == 0)
       return NAN;
-    return (double)tot_cycle_of_fmt[fmt] / (double)fmt_count[fmt];
+    return (double)totalCycleOfFmt[fmt] / (double)instCountOfFmt[fmt];
   }
 };
 
@@ -250,3 +250,7 @@ struct IFUStateCounter {
 	void update();
 	void dumpStatistics();
 };
+
+void initPerfCounters();
+void dumpPerfCountersStatistics();
+void updatePerfCounters();

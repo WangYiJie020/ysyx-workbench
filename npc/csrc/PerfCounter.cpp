@@ -1,6 +1,5 @@
-#include "sig_event.hpp"
+#include "PerfCounter.hpp"
 #include "sim.hpp"
-#include "spdlog/common.h"
 
 using namespace _PerfCtrImp;
 
@@ -62,7 +61,7 @@ void HandShakeDetector::checkAndCountAll() {
   }
 }
 
-const char *EXUPerfCounter::name_of_type(InstType type) {
+const char *EXUPerfCounter::nameOfTyp(InstType type) {
   static const char *type_names[] = {
       "branch", "arithmetic", "load",  "store",  "jalr",
       "jal",    "lui",        "auipc", "system",
@@ -73,7 +72,7 @@ const char *EXUPerfCounter::name_of_type(InstType type) {
     return "unknown";
   }
 }
-const char *EXUPerfCounter::name_of_fmt(InstFmt fmt) {
+const char *EXUPerfCounter::nameOfFmt(InstFmt fmt) {
   static const char *fmt_names[] = {
       "I_TYPE", "R_TYPE", "S_TYPE", "U_TYPE", "J_TYPE", "B_TYPE",
   };
@@ -94,9 +93,9 @@ void EXUPerfCounter::bind(std::string path) {
 }
 void EXUPerfCounter::update() {
 
-	bool isOutValidRasingEdge =
-			(!lastCycOutValid && hOutValid.getUint32Value() == 1);
-	lastCycOutValid = (hOutValid.getUint32Value() == 1);
+  bool isOutValidRasingEdge =
+      (!lastCycOutValid && hOutValid.getUint32Value() == 1);
+  lastCycOutValid = (hOutValid.getUint32Value() == 1);
 
   //
   // For history reason the timing is wired
@@ -106,29 +105,29 @@ void EXUPerfCounter::update() {
   // and ends when out_ready highs
   //
 
-	if (isOutValidRasingEdge) {
-		instStartCycle = sim_get_cycle();
-	}
+  if (isOutValidRasingEdge) {
+    instStartCycle = sim_get_cycle();
+  }
 
-	if (hOutReady.getUint32Value() == 1 && hOutValid.getUint32Value() == 1) {
-		// instruction finished execution
-		InstType type = (InstType)hInstType.getUint32Value();
-		InstFmt fmt = (InstFmt)hInstFmt.getUint32Value();
+  if (hOutReady.getUint32Value() == 1 && hOutValid.getUint32Value() == 1) {
+    // instruction finished execution
+    InstType type = (InstType)hInstType.getUint32Value();
+    InstFmt fmt = (InstFmt)hInstFmt.getUint32Value();
 
-		assert(isValidType(type));
-		assert(isValidFmt(fmt));
+    assert(isValidType(type));
+    assert(isValidFmt(fmt));
 
-		type_count[type]++;
-		fmt_count[fmt]++;
+    instCountOfTyp[type]++;
+    instCountOfFmt[fmt]++;
 
-		auto instEndCycle = sim_get_cycle();
-		auto instCycles = instEndCycle - instStartCycle;
-		tot_cycle_of_type[type] += instCycles;
-		tot_cycle_of_fmt[fmt] += instCycles;
+    auto instEndCycle = sim_get_cycle();
+    auto instCycles = instEndCycle - instStartCycle;
+    totalCycleOfTyp[type] += instCycles;
+    totalCycleOfFmt[fmt] += instCycles;
 
-		logger->trace("inst executed: type {} fmt {} cycles {}", name_of_type(type),
-									name_of_fmt(fmt), instCycles);
-	}
+    logger->trace("inst executed: type {} fmt {} cycles {}", nameOfTyp(type),
+                  nameOfFmt(fmt), instCycles);
+  }
 }
 
 void IFUStateCounter::bind(std::string basePath) {
@@ -176,4 +175,86 @@ void IFUStateCounter::dumpStatistics() {
                  _name_of_ifu_state((State)i), countOfState[i], perc,
                  countOfStateWhenNoFetch[i], percNoFetch);
   }
+}
+
+HandShakeDetector handshake_detector;
+EXUPerfCounter exu_counter;
+AXI4PerfCounterManager axi4_perf_counters;
+IFUStateCounter ifu_state_counter;
+
+void initPerfCounters() {
+
+  handshake_detector.init();
+  handshake_detector.add("ifu.io_mem_r", "IFU fetch inst");
+  handshake_detector.add("exu.io_mem_r", "EXU load data");
+  handshake_detector.add("exu.alu.io_out_", "EXU calc");
+  handshake_detector.add("idu.io_out_", "IDU decode inst");
+
+  axi4_perf_counters.addRead("exu.io_mem", "EXU load data");
+  axi4_perf_counters.addWrite("exu.io_mem", "EXU store data");
+
+  axi4_perf_counters.addRead("ifu.io_mem", "IFU fetch inst");
+
+  exu_counter.bind("idu");
+  ifu_state_counter.bind("ifu");
+}
+
+void updatePerfCounters() {
+	handshake_detector.checkAndCountAll();
+	exu_counter.update();
+	axi4_perf_counters.updateAll();
+	ifu_state_counter.update();
+}
+void dumpPerfCountersStatistics() {
+  auto cycle_count = sim_get_cycle();
+  auto inst_count = sim_get_inst_count();
+  spdlog::info("simulation statistics:");
+  fmt::println(">cycle and instruction counts:");
+  fmt::println("  total cycle count: {}", cycle_count);
+  fmt::println("  total instruction count: {}", inst_count);
+  if (cycle_count == 0) {
+    spdlog::warn("cycle count is 0, cannot calc IPC");
+  } else {
+    double ipc = (double)inst_count / (double)cycle_count;
+    fmt::println("  IPC: {:.4f}", ipc);
+  }
+  if (inst_count == 0) {
+    spdlog::warn("no instruction executed, cannot calc CPI");
+  } else {
+    double cpi = (double)cycle_count / (double)inst_count;
+    fmt::println("  CPI: {:.4f}", cpi);
+  }
+
+  spdlog::info(">handshake counts:");
+  for (auto &e : handshake_detector.bus_list) {
+    e.dumpStatus();
+  }
+
+  ifu_state_counter.dumpStatistics();
+
+  spdlog::info(">instruction type counts:");
+  size_t totByType = exu_counter.totalInstCountSumByTyp();
+  fmt::println("  by type: (total {})", totByType);
+  for (size_t i = 0; i < EXUPerfCounter::TYPE_NUM; i++) {
+    auto type_name = EXUPerfCounter::nameOfTyp((EXUPerfCounter::InstType)i);
+    auto type_count = exu_counter.instCountOfTyp[i];
+    auto type_percentage =
+        totByType == 0 ? NAN : ((double)type_count / (double)totByType) * 100.0;
+    fmt::println("    {:<10} : {:>6} ({:>5.2f}%) cpi {:.2f}", type_name,
+                 type_count, type_percentage,
+                 exu_counter.averageCPIOfTyp((EXUPerfCounter::InstType)i));
+  }
+  size_t totByFmt = exu_counter.totalInstCountSumByFmt();
+  fmt::println("  by fmt: (total {})", totByFmt);
+  for (size_t i = 0; i < EXUPerfCounter::FMT_NUM; i++) {
+    auto fmt_name = EXUPerfCounter::nameOfFmt((EXUPerfCounter::InstFmt)i);
+    auto fmt_count = exu_counter.instCountOfFmt[i];
+    auto fmt_percentage =
+        totByFmt == 0 ? NAN : ((double)fmt_count / (double)totByFmt) * 100.0;
+    fmt::println("    {:<10} : {:>6} ({:>5.2f}%) cpi {:.2f}", fmt_name,
+                 fmt_count, fmt_percentage,
+                 exu_counter.averageCPIOfFmt((EXUPerfCounter::InstFmt)i));
+  }
+
+  axi4_perf_counters.dumpAllStatistics();
 }

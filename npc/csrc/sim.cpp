@@ -1,5 +1,5 @@
 #include "sim.hpp"
-#include "dbg.hpp"
+#include "sdbWrap.hpp"
 
 #include <cmath>
 #include <spdlog/common.h>
@@ -26,7 +26,7 @@
 #include <unistd.h>
 #include <vector>
 
-#include "sig_event.hpp"
+#include "PerfCounter.hpp"
 
 TOP_NAME dut;
 sim_config sim_cfg;
@@ -34,10 +34,6 @@ sim_setting &sim_settings = sim_cfg.setting;
 
 sim_cpu_state cpu;
 
-HandShakeDetector handshake_detector;
-EXUPerfCounter exu_counter;
-AXI4PerfCounterManager axi4_perf_counters;
-IFUStateCounter ifu_state_counter;
 
 TOP_NAME *get_dut() { return &dut; }
 
@@ -113,10 +109,7 @@ void sim_step_cycle() {
   }
 
   if (dut.reset == 0) {
-    handshake_detector.checkAndCountAll();
-    axi4_perf_counters.updateAll();
-    ifu_state_counter.update();
-		exu_counter.update();
+		updatePerfCounters();
   }
 }
 static void reset(int n) {
@@ -473,41 +466,6 @@ bool sim_write_vmem(word_t addr, word_t data) {
   return false;
 }
 
-// bool sim_read_vmem(word_t addr, word_t *data) {
-//   if (addr >= MROM_BASE && addr < MROM_END) {
-//     mrom_read(addr, (int *)data);
-//   } else if (addr >= FLASH_BASE && addr < FLASH_END) {
-//     flash_read(addr - FLASH_BASE, (int *)data);
-//   } else if (addr >= SRAM_BASE && addr < SRAM_END) {
-//     // TODO: shouldn't read directly
-//     // should gen warn and return nothing
-//     // for debug
-//     *data = img[(addr - SRAM_BASE) / 4];
-//   } else if (addr >= PSRAM_BASE && addr < PSRAM_END) {
-//     psram_read(addr - PSRAM_BASE, (int *)data);
-//   } else if (addr >= SDRAM_BASE && addr < SDRAM_END) {
-//     word_t in_sdram_addr = addr - SDRAM_BASE;
-//     char raw_bank = (in_sdram_addr >> 10) & 0x7;
-//     short row = (in_sdram_addr >> 13) & 0x1fff;
-//     short col = (in_sdram_addr >> 1) & 0x1ff;
-//     uint16_t half1, half2;
-//     char bank = raw_bank % 4;
-//     char block_offset = (raw_bank & 0x4) ? 2 : 0;
-//     half1 = sdram_data[bank][row][col][block_offset];
-//     half2 = sdram_data[bank][row][col][block_offset + 1];
-//     *data = ((word_t)half2 << 16) | (word_t)half1;
-//     // spdlog::trace("sim_read_vmem addr={:08x} -> "
-//     //               "sdram[{:02x}][{:04x}][{:04x},{:04x}] = {:08x} "
-//     //               "(pc={:08x})", addr, bank, row, col, col + 1, *data,
-//     //               current_pc);
-//   } else {
-//     // TODO: gen error
-//     _dpi_logger->error("sim_read_vmem addr={:08x} INVALID", addr);
-//     return false;
-//   }
-//   return true;
-// }
-
 void sim_step_inst() {
   size_t cnt = 0;
   // SPI flash may need many cycles to respond
@@ -545,10 +503,6 @@ void sim_step_inst() {
 }
 
 // IMG
-
-// static const char *img_file;
-// static size_t img_size;
-// static bool batch_mode = false;
 
 static void load_img() {
 #define Assert(expr, ...)                                                      \
@@ -724,76 +678,9 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   cpu.pc = sim_cfg.init_pc;
   spdlog::info("set initial pc to {:08x}", cpu.pc);
 
-
-
-  handshake_detector.init();
-  handshake_detector.add("ifu.io_mem_r", "IFU fetch inst");
-  handshake_detector.add("exu.io_mem_r", "EXU load data");
-  handshake_detector.add("exu.alu.io_out_", "EXU calc");
-  handshake_detector.add("idu.io_out_", "IDU decode inst");
-
-  axi4_perf_counters.addRead("exu.io_mem", "EXU load data");
-  axi4_perf_counters.addWrite("exu.io_mem", "EXU store data");
-
-  axi4_perf_counters.addRead("ifu.io_mem", "IFU fetch inst");
-
-	exu_counter.bind("idu");
-  ifu_state_counter.bind("ifu");
+	initPerfCounters();
+	spdlog::info("perf counters initialized");
 
   return true;
 }
 
-void sim_dump_statistics() {
-  spdlog::info("simulation statistics:");
-  fmt::println(">cycle and instruction counts:");
-  fmt::println("  total cycle count: {}", cycle_count);
-  fmt::println("  total instruction count: {}", inst_count);
-  if (cycle_count == 0) {
-    spdlog::warn("cycle count is 0, cannot calc IPC");
-  } else {
-    double ipc = (double)inst_count / (double)cycle_count;
-    fmt::println("  IPC: {:.4f}", ipc);
-  }
-  if (inst_count == 0) {
-    spdlog::warn("no instruction executed, cannot calc CPI");
-  } else {
-    double cpi = (double)cycle_count / (double)inst_count;
-    fmt::println("  CPI: {:.4f}", cpi);
-  }
-
-  spdlog::info(">handshake counts:");
-  for (auto &e : handshake_detector.bus_list) {
-    e.dumpStatus();
-  }
-
-  ifu_state_counter.dumpStatistics();
-
-  spdlog::info(">instruction type counts:");
-  size_t totByType = exu_counter.totalInstCountSumByType();
-	fmt::println("  by type: (total {})", totByType);
-  for (size_t i = 0; i < EXUPerfCounter::TYPE_NUM; i++) {
-    auto type_name =
-        EXUPerfCounter::name_of_type((EXUPerfCounter::InstType)i);
-    auto type_count = exu_counter.type_count[i];
-    auto type_percentage =
-        totByType == 0 ? NAN : ((double)type_count / (double)totByType) * 100.0;
-		fmt::println(
-        "    {:<10} : {:>6} ({:>5.2f}%) cpi {:.2f}", type_name, type_count,
-        type_percentage,
-        exu_counter.averageCPIOfType((EXUPerfCounter::InstType)i));
-  }
-  size_t totByFmt = exu_counter.totalInstCountSumByFmt();
-	fmt::println("  by fmt: (total {})", totByFmt);
-  for (size_t i = 0; i < EXUPerfCounter::FMT_NUM; i++) {
-    auto fmt_name = EXUPerfCounter::name_of_fmt((EXUPerfCounter::InstFmt)i);
-    auto fmt_count = exu_counter.fmt_count[i];
-    auto fmt_percentage =
-        totByFmt == 0 ? NAN : ((double)fmt_count / (double)totByFmt) * 100.0;
-		fmt::println(
-        "    {:<10} : {:>6} ({:>5.2f}%) cpi {:.2f}", fmt_name, fmt_count,
-        fmt_percentage,
-        exu_counter.averageCPIOfFmt((EXUPerfCounter::InstFmt)i));
-  }
-
-  axi4_perf_counters.dumpAllStatistics();
-}

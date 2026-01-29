@@ -91,6 +91,7 @@ void sim_step_inst();
 
 sim_time_t sim_get_time();
 sim_cycle_t sim_get_cycle();
+uint64_t sim_get_inst_count();
 
 void sim_dump_statistics();
 
