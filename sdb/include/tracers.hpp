@@ -26,7 +26,7 @@ namespace sdb {
 			disasm_trace_handler(inst_disasmsembler d=default_inst_disasm,size_t th=16)
 				:_threshold(th),_disasm(d){}
 			virtual void handle(_ctx_ref ctx)override{
-				_log("{}",_dump_inst(ctx));
+				_log("{}\n",_dump_inst(ctx));
 			}
 			virtual bool no_call_when_batch(size_t n)override{
 				return n>_threshold;
