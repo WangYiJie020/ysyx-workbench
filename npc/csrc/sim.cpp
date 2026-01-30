@@ -1,4 +1,5 @@
 #include "sim.hpp"
+#include "Vysyx_25100261__Dpi.h"
 #include "sdbWrap.hpp"
 
 #include <cmath>
@@ -286,6 +287,10 @@ extern "C" void psram_read(int32_t addr, int32_t *data) {
   *data = *(int32_t *)ptr;
   DPI_TRACE("R addr={:08x} data={:08x}", addr + PSRAM_BASE, *data);
 }
+// compatible interface for npc core
+extern "C" void pmem_read(int addr, int *data) {
+	return psram_read(addr, data);
+}
 extern "C" void psram_write(int32_t addr, char strb8, int32_t data, int32_t *) {
   assert(addr < sizeof(psram_data));
   uint8_t shift = (addr & 0x3) * 8;
@@ -309,6 +314,10 @@ extern "C" void psram_write(int32_t addr, char strb8, int32_t data, int32_t *) {
 
   DPI_TRACE("W addr={:08x} data={:08x} (strb {:02x}) newdata={:08x}",
             addr + PSRAM_BASE, data, (uint32_t)strb8, *ptr);
+}
+// compatible interface for npc core
+extern "C" void pmem_write(int addr, int strb, int data) {
+	return psram_write(addr, strb, data, nullptr);
 }
 
 constexpr uint32_t SDRAM_BASE = 0xa0000000u;
