@@ -229,6 +229,7 @@ void dumpPerfCounterAsCSV(std::ostream &os) {
   for (auto &ctr : perf_counters) {
     std::visit(
         [&](auto &c) {
+          c.fillFields();
           for (auto &f : c.fields) {
             if (!title_row.empty()) {
               title_row += ",";
@@ -240,6 +241,6 @@ void dumpPerfCounterAsCSV(std::ostream &os) {
         },
         ctr);
   }
-	os << title_row << "\n";
-	os << value_row << "\n";
+  os << title_row << "\n";
+  os << value_row << "\n";
 }
