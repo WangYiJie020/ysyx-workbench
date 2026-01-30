@@ -141,7 +141,9 @@ VERILATOR_CONTROL_FILE = verilator.vlt
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME=V$(TOP_NAME) -DENABLE_VPI=$(ENABLE_VPI)# -DENABLE_WAVE=$(ENABLE_WAVE)
 CXXFLAGS += $(SAN_FLAGS) -std=c++20 -g # -fno-inline
-CXXFLAGS += -fno-omit-frame-pointer
+
+# when use perf tool, frame pointer is needed
+# CXXFLAGS += -fno-omit-frame-pointer
 
 # make link faster
 LDFLAGS += -fuse-ld=mold
