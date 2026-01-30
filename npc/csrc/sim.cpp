@@ -34,7 +34,6 @@ sim_setting &sim_settings = sim_cfg.setting;
 
 sim_cpu_state cpu;
 
-
 TOP_NAME *get_dut() { return &dut; }
 
 void nvboard_bind_all_pins(TOP_NAME *top);
@@ -109,7 +108,7 @@ void sim_step_cycle() {
   }
 
   if (dut.reset == 0) {
-		updatePerfCounters();
+    updatePerfCounters();
   }
 }
 static void reset(int n) {
@@ -260,7 +259,7 @@ extern "C" void mrom_read(int32_t addr, int32_t *data) {
   DPI_TRACE("R addr={:08x} data={:08x}", addr + MROM_BASE, *data);
 }
 
-static void _init_flash();
+static void _copy_img();
 extern "C" void flash_read(int32_t addr, int32_t *data) {
   // in spi
   //   .addr({8'b0, in_paddr[23:2], 2'b0}),
@@ -534,17 +533,26 @@ static void load_img() {
   fclose(fp);
 }
 
-static void _init_flash() {
-  spdlog::info("init flash with image data");
-  memcpy(flash_data, img, sim_cfg.img_size);
+static void _copy_img() {
+  if (is_soc()) {
+    spdlog::info("copy img to flash for soc sim");
+    memcpy(flash_data, img, sim_cfg.img_size);
+  } else {
+    spdlog::info("copy img to psram for cpu core sim");
+    memcpy(psram_data, img, sim_cfg.img_size);
+  }
 }
 static void _fill_rams_uninit() {
   if (sim_settings.zero_uninit_ram) {
-    memset(psram_data, 0, sizeof(psram_data));
+    if (is_soc()) {
+      memset(psram_data, 0, sizeof(psram_data));
+    }
     memset(sdram_data, 0, sizeof(sdram_data));
   } else {
-    memset(psram_data, 0xcc, sizeof(psram_data));
-    spdlog::debug("psram_data filled with 0xcc");
+    if (is_soc()) {
+      memset(psram_data, 0xcc, sizeof(psram_data));
+      spdlog::debug("psram_data filled with 0xcc");
+    }
     memset(sdram_data, 0xdd, sizeof(sdram_data));
     spdlog::debug("sdram_data filled with 0xdd");
   }
@@ -658,7 +666,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 
   load_img();
 
-  _init_flash();
+  _copy_img();
   _fill_rams_uninit();
   _init_dpi_logger(); // should before dbg_init(which may preload data with func
                       // call dpis)
@@ -678,9 +686,8 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   cpu.pc = sim_cfg.init_pc;
   spdlog::info("set initial pc to {:08x}", cpu.pc);
 
-	initPerfCounters();
-	spdlog::info("perf counters initialized");
+  initPerfCounters();
+  spdlog::info("perf counters initialized");
 
   return true;
 }
-

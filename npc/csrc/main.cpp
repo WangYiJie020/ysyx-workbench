@@ -14,6 +14,19 @@
 
 int gdb_mainloop();
 
+bool is_soc(){
+	static bool isSoC = false;
+	static bool inited = false;
+	if(!inited){
+		auto arch = getenv("ARCH");
+		if(arch && std::string(arch).find("soc") != std::string::npos){
+			isSoC = true;
+		}
+		inited = true;
+	}
+	return isSoC;
+}
+
 void test_table(){
 	EXUPerfCounter exu_counter;
 	for(int i=0;i<1000;i++){
@@ -30,6 +43,15 @@ int main(int argc, char **argv) {
 	spdlog::set_default_logger(spdlog::stdout_color_mt("sim"));
   spdlog::set_level(spdlog::level::info); // will modify all registered loggers
 	spdlog::set_pattern("[%H:%M:%S.%e][%^%-5l%$][%n] %v");
+	
+	if(is_soc()){
+		spdlog::info("Simulating SoC design");
+		sim_get_config()->init_pc = 0x30000000;
+	}else{
+		spdlog::info("Simulating CPU core design");
+		sim_get_config()->init_pc = 0x80000000;
+	}
+	spdlog::info("Sim init pc set to 0x{:08x}", sim_get_config()->init_pc);
 
 	auto& setting = sim_get_config()->setting;
 	load_sim_setting_from_env(setting);
