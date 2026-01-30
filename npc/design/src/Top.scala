@@ -174,6 +174,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     val uart = Module(new UARTUnit)
     val mem  = Module(new AXI4MemUnit)
 
+    otherReqSlave := DontCare
     Module(new AXI4LiteXBar(
       Seq(
         ("h02000000".U(32.W), "h0200ffff".U(32.W)) -> clint.io,
@@ -181,7 +182,6 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
         (SERIAL_BASE, SERIAL_END)                  -> uart.io
       )
     ))
-    otherReqSlave := DontCare
   }
 
   when(io.master.bvalid && io.master.bresp === AXI4IO.BResp.DECERR) {
