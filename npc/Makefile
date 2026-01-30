@@ -30,8 +30,8 @@ SIM_IMG ?=
 
 SOC_HOME ?= ../ysyxSoC
 
-# SAN_FLAGS?=
-SAN_FLAGS?= -fsanitize=address
+SAN_FLAGS?=
+# SAN_FLAGS?= -fsanitize=address
 
 VERILATOR_FLAGS ?=
 
@@ -130,8 +130,6 @@ VERILATOR_FLAGS += -MMD -cc \
 VERILATOR_FLAGS += --hierarchical
 										# --output-split 20000 
 
-# VERILATOR_FLAGS += --threads 2
-
 VERILATOR_CONTROL_FILE = verilator.vlt
 
 # --noassert -O3
@@ -213,6 +211,6 @@ sta: $(SIM_VSRCS)
 		RTL_FILES="$(STA_VSRCS)" 
 
 perf: $(SIM_BIN)
-	make -C ../am-kernels/benchmarks/microbench ARCH=riscv32e-ysyxsoc run VSIM_difftest=0 mainargs=train
+	make -C ../am-kernels/benchmarks/microbench ARCH=riscv32e-ysyxsoc run VSIM_difftest=0 mainargs=train SAN_FLAGS=
 
 -include ../Makefile
