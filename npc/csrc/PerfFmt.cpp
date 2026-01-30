@@ -50,36 +50,18 @@ void EXUPerfCounter::_dump(size_t *instCnts, size_t *cycCnts, size_t num,
 	_PrintTable(t);
 }
 
-static const char *_name_of_ifu_state(IFUStateCounter::State s) {
+const char *IFUStateCounter::nameOfState(int s) {
   const char *names[] = {
       "IDLE",
       "WAIT_INST",
       "WAIT_LATER",
   };
-  return names[(size_t)s];
+  return names[s];
 }
 void IFUStateCounter::dumpStatistics() {
   spdlog::info("IFU State Counter Statistics:");
   fmt::println("total instruction fetch count: {}", totalFetchCount);
   fmt::println("state statistics:");
-  // fmt::println("    {:10} : {:<18} {:<18}", "state", "count",
-  //              "count[exclu fetch]");
-  // auto totCycles = sim_get_cycle();
-  // for (size_t i = 0; i < STATE_NUM; i++) {
-  //   double perc = totCycles == 0
-  //                     ? NAN
-  //                     : ((double)countOfState[i] / (double)totCycles) *
-  //                     100.0;
-  //   double percNoFetch =
-  //       totCycles == 0
-  //           ? NAN
-  //           : ((double)countOfStateWhenNoFetch[i] / (double)totCycles) *
-  //           100.0;
-  //
-  //   fmt::println("    {:10} : {:>8} ({:6.3f}%) {:>8} ({:6.3f}%)",
-  //                _name_of_ifu_state((State)i), countOfState[i], perc,
-  //                countOfStateWhenNoFetch[i], percNoFetch);
-  // }
   Table t;
   t.add_row({"State", "Count", "Percent", "Count\n[exclu fetch]",
              "Percent\n[exclu fetch]"});
@@ -94,7 +76,7 @@ void IFUStateCounter::dumpStatistics() {
             ? NAN
             : ((double)countOfStateWhenNoFetch[i] / (double)totCycles) * 100.0;
 
-    t.add_row(RowStream{} << _name_of_ifu_state((State)i) << countOfState[i]
+    t.add_row(RowStream{} << nameOfState(i) << countOfState[i]
                           << perc << countOfStateWhenNoFetch[i] << percNoFetch);
   }
   _PrintTable(t);

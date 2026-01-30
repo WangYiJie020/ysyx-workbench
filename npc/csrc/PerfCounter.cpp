@@ -1,12 +1,11 @@
 #include "PerfCounter.hpp"
 #include "sim.hpp"
+#include <vector>
 
 using namespace _PerfCtrImp;
 
-HandShakeDetector::HandShakeDetector() {
+void HandShakeCounterManager::init() {
   logger = spdlog::stdout_color_mt("HandShakeDetector");
-}
-void HandShakeDetector::init() {
   set_logger_pattern_with_simtime(logger);
   logger->set_level(spdlog::level::info);
 }
@@ -20,9 +19,9 @@ SignalHandle::SignalHandle(std::string barePath) {
   }
 }
 
-HandShakeDetector::ValidReadyBus &
-HandShakeDetector::add(std::string barePath, std::string description,
-                       callback_t onShake) {
+HandShakeCounterManager::ValidReadyBus &
+HandShakeCounterManager::add(std::string barePath, std::string description,
+                             callback_t onShake) {
   auto pathValid = _FullPath(barePath, "valid");
   auto pathReady = _FullPath(barePath, "ready");
   spdlog::trace("adding valid/ready pair: {}/{}", pathValid, pathReady);
@@ -34,21 +33,29 @@ HandShakeDetector::add(std::string barePath, std::string description,
   bus_list.emplace_back(ValidReadyBus{
       .hValid = std::move(hValid),
       .hReady = std::move(hReady),
+      .pathWithoutValidOrReady = barePath,
       .description = description,
       .onShakeCallback = onShake,
   });
   return bus_list.back();
 }
 
-bool HandShakeDetector::ValidReadyBus::shakeHappened() {
+void HandShakeCounterManager::dumpStatistics() {
+  spdlog::info(">handshake counts:");
+  for (auto &bus : bus_list) {
+    bus.dumpStatus();
+  }
+}
+
+bool HandShakeCounterManager::ValidReadyBus::shakeHappened() {
   return hValid.getUint32Value() == 1 && hReady.getUint32Value() == 1;
 }
-void HandShakeDetector::ValidReadyBus::dumpStatus() {
+void HandShakeCounterManager::ValidReadyBus::dumpStatus() {
   fmt::println("  {:18} happened {:>7} times (freq {:.4f})", description,
                shake_count, (double)shake_count / (double)sim_get_cycle());
 }
 
-void HandShakeDetector::checkAndCountAll() {
+void HandShakeCounterManager::update() {
   for (auto &bus : bus_list) {
     if (bus.shakeHappened()) {
       bus.shake_count++;
@@ -157,33 +164,39 @@ void EXUPerfCounter::dumpStatistics() {
   _dump(instCountOfFmt, totalCycleOfFmt, FMT_NUM, nameOfFmt);
 }
 
-HandShakeDetector handshake_detector;
-EXUPerfCounter exu_counter;
-AXI4PerfCounterManager axi4_perf_counters;
-IFUStateCounter ifu_state_counter;
+std::vector<PerfCounterVariant> perf_counters;
 
 void initPerfCounters() {
 
-  handshake_detector.init();
-  handshake_detector.add("ifu.io_mem_r", "IFU fetch inst");
-  handshake_detector.add("exu.io_mem_r", "EXU load data");
-  handshake_detector.add("exu.alu.io_out_", "EXU calc");
-  handshake_detector.add("idu.io_out_", "IDU decode inst");
+  HandShakeCounterManager handshakeCtr;
+  EXUPerfCounter exuCtr;
+  AXI4PerfCounterManager axi4Ctr;
+  IFUStateCounter ifuStateCtr;
 
-  axi4_perf_counters.addRead("exu.io_mem", "EXU load data");
-  axi4_perf_counters.addWrite("exu.io_mem", "EXU store data");
+  handshakeCtr.init();
+  handshakeCtr.add("ifu.io_mem_r", "IFU fetch inst");
+  handshakeCtr.add("exu.io_mem_r", "EXU load data");
+  handshakeCtr.add("exu.alu.io_out_", "EXU calc");
+  handshakeCtr.add("idu.io_out_", "IDU decode inst");
 
-  axi4_perf_counters.addRead("ifu.io_mem", "IFU fetch inst");
+  axi4Ctr.addRead("exu.io_mem", "EXU load data");
+  axi4Ctr.addWrite("exu.io_mem", "EXU store data");
 
-  exu_counter.bind("idu");
-  ifu_state_counter.bind("ifu");
+  axi4Ctr.addRead("ifu.io_mem", "IFU fetch inst");
+
+  exuCtr.bind("idu");
+  ifuStateCtr.bind("ifu");
+
+  perf_counters.push_back(std::move(handshakeCtr));
+  perf_counters.push_back(std::move(exuCtr));
+  perf_counters.push_back(std::move(axi4Ctr));
+  perf_counters.push_back(std::move(ifuStateCtr));
 }
 
 void updatePerfCounters() {
-  handshake_detector.checkAndCountAll();
-  exu_counter.update();
-  axi4_perf_counters.updateAll();
-  ifu_state_counter.update();
+  for (auto &ctr : perf_counters) {
+    std::visit([&](auto &c) { c.update(); }, ctr);
+  }
 }
 void dumpPerfCountersStatistics() {
   auto cycle_count = sim_get_cycle();
@@ -205,12 +218,28 @@ void dumpPerfCountersStatistics() {
     fmt::println("  CPI: {:.4f}", cpi);
   }
 
-  spdlog::info(">handshake counts:");
-  for (auto &e : handshake_detector.bus_list) {
-    e.dumpStatus();
+  for (auto &ctr : perf_counters) {
+    std::visit([&](auto &c) { c.dumpStatistics(); }, ctr);
   }
+}
 
-	exu_counter.dumpStatistics();
-  ifu_state_counter.dumpStatistics();
-  axi4_perf_counters.dumpAllStatistics();
+void dumpPerfCounterAsCSV(std::ostream &os) {
+  std::string title_row;
+  std::string value_row;
+  for (auto &ctr : perf_counters) {
+    std::visit(
+        [&](auto &c) {
+          for (auto &f : c.fields) {
+            if (!title_row.empty()) {
+              title_row += ",";
+              value_row += ",";
+            }
+            title_row += f.label;
+            value_row += std::to_string(f.value);
+          }
+        },
+        ctr);
+  }
+	os << title_row << "\n";
+	os << value_row << "\n";
 }

@@ -47,6 +47,7 @@ int main(int argc, char **argv) {
 
 	spdlog::info("sim ended");
 	dumpPerfCountersStatistics();
+	dumpPerfCounterAsCSV(std::cout);
 	
 	get_dut()->final();
 	if(!setting.gdb_mode){
