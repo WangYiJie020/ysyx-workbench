@@ -1,6 +1,8 @@
 #include "PerfCounter.hpp"
 #include "sim.hpp"
 
+#include <tabulate/table.hpp>
+
 using namespace _PerfCtrImp;
 
 HandShakeDetector::HandShakeDetector() {
@@ -61,7 +63,7 @@ void HandShakeDetector::checkAndCountAll() {
   }
 }
 
-const char *EXUPerfCounter::nameOfTyp(InstType type) {
+const char *EXUPerfCounter::nameOfTyp(int type) {
   static const char *type_names[] = {
       "branch", "arithmetic", "load",  "store",  "jalr",
       "jal",    "lui",        "auipc", "system",
@@ -72,7 +74,7 @@ const char *EXUPerfCounter::nameOfTyp(InstType type) {
     return "unknown";
   }
 }
-const char *EXUPerfCounter::nameOfFmt(InstFmt fmt) {
+const char *EXUPerfCounter::nameOfFmt(int fmt) {
   static const char *fmt_names[] = {
       "I_TYPE", "R_TYPE", "S_TYPE", "U_TYPE", "J_TYPE", "B_TYPE",
   };
@@ -178,43 +180,41 @@ void IFUStateCounter::dumpStatistics() {
 }
 
 void EXUPerfCounter::_dump(size_t *instCnts, size_t *cycCnts, size_t num,
-													const char *(*nameFunc)(int)) {
-	// output:
-	// total instructions: xxx, total cycles: xxx
-	//
-	size_t totalInsts = std::accumulate(instCnts, instCnts + num, 0ull);
-	size_t totalCyc = std::accumulate(cycCnts, cycCnts + num, 0ull);
-	fmt::println("  total instructions: {}, total cycles: {}", totalInsts, totalCyc);
-	for (size_t i = 0; i < num; i++) {
-		auto name = nameFunc(i);
-	}
+                           const char *(*nameFunc)(int)) {
+  using namespace tabulate;
+  Table table;
+  table.add_row({"Category", "Inst Count", "Inst %", "Cycle Count", "Cycle %",
+                 "Avg CPI"});
+
+  size_t totalInsts = std::accumulate(instCnts, instCnts + num, 0ull);
+  size_t totalCyc = std::accumulate(cycCnts, cycCnts + num, 0ull);
+
+  for (size_t i = 0; i < num; i++) {
+    auto name = nameFunc((int)i);
+    auto instCount = instCnts[i];
+    auto cycleCount = cycCnts[i];
+
+    double instPerc = totalInsts == 0
+                          ? NAN
+                          : ((double)instCount / (double)totalInsts) * 100.0;
+    double cyclePerc =
+        totalCyc == 0 ? NAN : ((double)cycleCount / (double)totalCyc) * 100.0;
+
+    double avgCPI =
+        instCount == 0 ? NAN : (double)cycleCount / (double)instCount;
+
+    table.add_row(RowStream{} << name << instCount << instPerc << cycleCount
+                              << cyclePerc << avgCPI);
+  }
 }
 
 void EXUPerfCounter::dumpStatistics() {
-
   spdlog::info(">instruction type counts:");
-  size_t totByType = totalInstCountSumByTyp();
-  fmt::println("  by type: (total {})", totByType);
-  for (size_t i = 0; i < EXUPerfCounter::TYPE_NUM; i++) {
-    auto type_name = EXUPerfCounter::nameOfTyp((EXUPerfCounter::InstType)i);
-    auto type_count = instCountOfTyp[i];
-    auto type_percentage =
-        totByType == 0 ? NAN : ((double)type_count / (double)totByType) * 100.0;
-    fmt::println("    {:<10} : {:>6} ({:>5.2f}%) cpi {:.2f}", type_name,
-                 type_count, type_percentage,
-                 averageCPIOfTyp((EXUPerfCounter::InstType)i));
-  }
-  size_t totByFmt = totalInstCountSumByFmt();
-  fmt::println("  by fmt: (total {})", totByFmt);
-  for (size_t i = 0; i < EXUPerfCounter::FMT_NUM; i++) {
-    auto fmt_name = EXUPerfCounter::nameOfFmt((EXUPerfCounter::InstFmt)i);
-    auto fmt_count = instCountOfFmt[i];
-    auto fmt_percentage =
-        totByFmt == 0 ? NAN : ((double)fmt_count / (double)totByFmt) * 100.0;
-    fmt::println("    {:<10} : {:>6} ({:>5.2f}%) cpi {:.2f}", fmt_name,
-                 fmt_count, fmt_percentage,
-                 averageCPIOfFmt((EXUPerfCounter::InstFmt)i));
-  }
+
+  spdlog::info("  by type:");
+  _dump(instCountOfTyp, totalCycleOfTyp, TYPE_NUM, nameOfTyp);
+  spdlog::info("  by format:");
+  _dump(instCountOfFmt, totalCycleOfFmt, FMT_NUM, nameOfFmt);
 }
 
 HandShakeDetector handshake_detector;

@@ -119,8 +119,8 @@ struct EXUPerfCounter {
   static inline bool isValidFmt(InstFmt fmt) { return fmt < FMT_NUM; }
   static inline bool isValidType(InstType type) { return type < TYPE_NUM; }
 
-  static const char *nameOfFmt(InstFmt fmt);
-  static const char *nameOfTyp(InstType type);
+  static const char *nameOfFmt(int fmt);
+  static const char *nameOfTyp(int type);
 
   size_t instCountOfFmt[FMT_NUM] = {0};
   size_t instCountOfTyp[TYPE_NUM] = {0};
@@ -141,22 +141,6 @@ struct EXUPerfCounter {
   void bind(std::string path);
   void update();
 
-  size_t totalInstCountSumByFmt() {
-    return std::accumulate(instCountOfFmt, instCountOfFmt + FMT_NUM, 0ull);
-  }
-  size_t totalInstCountSumByTyp() {
-    return std::accumulate(instCountOfTyp, instCountOfTyp + TYPE_NUM, 0ull);
-  }
-  double averageCPIOfTyp(InstType type) {
-    if (instCountOfTyp[type] == 0)
-      return NAN;
-    return (double)totalCycleOfTyp[type] / (double)instCountOfTyp[type];
-  }
-  double averageCPIOfFmt(InstFmt fmt) {
-    if (instCountOfFmt[fmt] == 0)
-      return NAN;
-    return (double)totalCycleOfFmt[fmt] / (double)instCountOfFmt[fmt];
-  }
   void _dump(size_t *instCnts, size_t *cycCnts, size_t num,
              const char *(*nameFunc)(int));
   void dumpStatistics();
