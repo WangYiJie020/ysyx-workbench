@@ -9,9 +9,6 @@ SIM_BIN_DIR = $(BUILD_DIR)/bin
 ifeq ($(ARCH), riscv32e-ysyxsoc)
 TOP_NAME = ysyxSoCFull
 SIM_ARCH_SUFFIX = _soc
-
-include ./soc.mk
-
 else
 TOP_NAME = $(CPU_DESIGN_NAME)
 SIM_ARCH_SUFFIX = _npc
@@ -23,6 +20,11 @@ SIM_BIN = $(SIM_BIN_DIR)/$(TOP_NAME)$(SIM_ARCH_SUFFIX)$(VSIM_OPT)
 VERILATOR = verilator
 
 default: $(SIM_BIN)
+
+ifeq ($(ARCH), riscv32e-ysyxsoc)
+include ./soc.mk
+endif
+
 
 SIM_IMG ?=
 
