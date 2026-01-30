@@ -706,8 +706,5 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   cpu.pc = sim_cfg.init_pc;
   spdlog::info("set initial pc to {:08x}", cpu.pc);
 
-  initPerfCounters();
-  spdlog::info("perf counters initialized");
-
   return true;
 }

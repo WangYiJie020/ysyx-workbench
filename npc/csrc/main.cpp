@@ -64,6 +64,11 @@ int main(int argc, char **argv) {
     return 1;
   }
 
+  if (is_soc()) {
+    initPerfCounters();
+    spdlog::info("perf counters initialized");
+  }
+
   if (setting.gdb_mode) {
     gdb_mainloop();
   } else {
