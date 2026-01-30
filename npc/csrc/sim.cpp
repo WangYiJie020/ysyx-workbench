@@ -289,7 +289,7 @@ extern "C" void psram_read(int32_t addr, int32_t *data) {
 }
 // compatible interface for npc core
 extern "C" void pmem_read(int addr, int *data) {
-	return psram_read(addr, data);
+	return psram_read(addr-PSRAM_BASE, data);
 }
 extern "C" void psram_write(int32_t addr, char strb8, int32_t data, int32_t *) {
   assert(addr < sizeof(psram_data));
@@ -317,7 +317,7 @@ extern "C" void psram_write(int32_t addr, char strb8, int32_t data, int32_t *) {
 }
 // compatible interface for npc core
 extern "C" void pmem_write(int addr, int strb, int data) {
-	return psram_write(addr, strb, data, nullptr);
+	return psram_write(addr-PSRAM_BASE, strb, data, nullptr);
 }
 
 constexpr uint32_t SDRAM_BASE = 0xa0000000u;
