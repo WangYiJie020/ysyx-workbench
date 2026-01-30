@@ -223,7 +223,7 @@ void dumpPerfCountersStatistics() {
   }
 }
 
-void dumpPerfCounterAsCSV(std::ostream &os) {
+std::string dumpPerfCounterAsCSV(){
   std::string title_row;
   std::string value_row;
   for (auto &ctr : perf_counters) {
@@ -235,12 +235,12 @@ void dumpPerfCounterAsCSV(std::ostream &os) {
               title_row += ",";
               value_row += ",";
             }
-            title_row += f.label;
+            title_row += c.ctrName + "_" + f.label;
             value_row += std::to_string(f.value);
           }
+					c.clearFields();
         },
         ctr);
   }
-  os << title_row << "\n";
-  os << value_row << "\n";
+	return title_row + "\n" + value_row;
 }

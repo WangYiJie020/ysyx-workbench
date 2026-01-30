@@ -83,6 +83,9 @@ public:
   std::vector<Field> fields;
   virtual void fillFields() = 0;
 	virtual void dumpStatistics() = 0;
+	void clearFields() {
+		fields.clear();
+	}
 };
 
 class HandShakeCounterManager : public PerfCounterBase {
@@ -310,4 +313,4 @@ void initPerfCounters();
 void dumpPerfCountersStatistics();
 void updatePerfCounters();
 
-void dumpPerfCounterAsCSV(std::ostream &os);
+std::string dumpPerfCounterAsCSV();

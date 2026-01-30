@@ -1,3 +1,4 @@
+#include <fstream>
 #include <iostream>
 #include <string_view>
 #include <verilated.h>
@@ -47,7 +48,19 @@ int main(int argc, char **argv) {
 
 	spdlog::info("sim ended");
 	dumpPerfCountersStatistics();
-	dumpPerfCounterAsCSV(std::cout);
+	std::string perfCtrCSV = dumpPerfCounterAsCSV();
+	std::cout << "PerfCounter CSV Data:\n";
+	std::cout << perfCtrCSV << std::endl;
+
+	std::fstream csvFile;
+	csvFile.open("perf_counters.csv", std::ios::out);
+	if(csvFile.is_open()){
+		csvFile << perfCtrCSV;
+		csvFile.close();
+		spdlog::info("Perf counters CSV data written to 'perf_counters.csv'");
+	}else{
+		spdlog::error("Failed to write perf counters CSV data to file");
+	}
 	
 	get_dut()->final();
 	if(!setting.gdb_mode){
