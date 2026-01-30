@@ -3,7 +3,7 @@ using namespace _PerfCtrImp;
 
 void AXI4CounterBase::init_logger() {
   // assert(!name.empty());
-  // logger = spdlog::stdout_color_mt(name);
+  logger = spdlog::stdout_color_mt(ctrName);
   set_logger_pattern_with_simtime(logger);
   logger->set_level(spdlog::level::info);
 }
