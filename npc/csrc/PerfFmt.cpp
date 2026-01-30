@@ -7,7 +7,7 @@ using namespace tabulate;
 static void _SetTableFmt(Table &t) {
   assert(t.size() >= 2);
   t.format().font_align(FontAlign::right);
-  t.column(0).format().font_align(FontAlign::center);
+  // t.column(0).format().font_align(FontAlign::center);
   t.row(0).format().font_align(FontAlign::center);
 
   for (auto &row : t) {
