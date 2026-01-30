@@ -59,8 +59,8 @@ void HandShakeCounterManager::update() {
   for (auto &bus : bus_list) {
     if (bus.shakeHappened()) {
       bus.shake_count++;
-      logger->trace("Handshake happened on {} (total count {})",
-                    _DebugPath(bus.description), bus.shake_count);
+      // logger->trace("Handshake happened on {} (total count {})",
+      //               _DebugPath(bus.description), bus.shake_count);
       if (bus.onShakeCallback) {
         bus.onShakeCallback();
       }
@@ -132,8 +132,8 @@ void EXUPerfCounter::update() {
     totalCycleOfTyp[type] += instCycles;
     totalCycleOfFmt[fmt] += instCycles;
 
-    logger->trace("inst executed: type {} fmt {} cycles {}", nameOfTyp(type),
-                  nameOfFmt(fmt), instCycles);
+    // logger->trace("inst executed: type {} fmt {} cycles {}", nameOfTyp(type),
+    //               nameOfFmt(fmt), instCycles);
   }
 }
 

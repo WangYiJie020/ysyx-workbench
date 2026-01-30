@@ -39,7 +39,7 @@ void AXI4ReadPerfCounter::update() {
       transaction_count++;
       currentRecord.startTime = sim_time;
       currentRecord.cycles = 0;
-      logger->trace("ARVALID high, starting transaction {}", transaction_count);
+      // logger->trace("ARVALID high, starting transaction {}", transaction_count);
     }
     break;
   }
@@ -52,9 +52,9 @@ void AXI4ReadPerfCounter::update() {
       if (currentRecord.cycles > maxRecord.cycles) {
         maxRecord = currentRecord;
       }
-      logger->trace(
-          "RVALID & RREADY handshake for transaction {} after {} cycles",
-          transaction_count, currentRecord.cycles);
+      // logger->trace(
+      //     "RVALID & RREADY handshake for transaction {} after {} cycles",
+      //     transaction_count, currentRecord.cycles);
       state = IDLE;
     }
     break;
@@ -78,7 +78,7 @@ void AXI4WritePerfCounter::update() {
       transaction_count++;
       currentRecord.startTime = sim_time;
       currentRecord.cycles = 0;
-      logger->trace("AWVALID high, starting transaction {}", transaction_count);
+      // logger->trace("AWVALID high, starting transaction {}", transaction_count);
     }
     break;
   }
@@ -91,9 +91,9 @@ void AXI4WritePerfCounter::update() {
       if (currentRecord.cycles > maxRecord.cycles) {
         maxRecord = currentRecord;
       }
-      logger->trace(
-          "BVALID & BREADY handshake for transaction {} after {} cycles",
-          transaction_count, currentRecord.cycles);
+      // logger->trace(
+      //     "BVALID & BREADY handshake for transaction {} after {} cycles",
+      //     transaction_count, currentRecord.cycles);
       state = IDLE;
     }
     break;
