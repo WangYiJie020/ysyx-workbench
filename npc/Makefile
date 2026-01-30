@@ -10,7 +10,6 @@ SIM_BIN_DIR = $(BUILD_DIR)/bin
 ifeq ($(ARCH), riscv32e-ysyxsoc)
 SIM_ARCH_SUFFIX = _soc
 else
-TOP_NAME = $(CPU_DESIGN_NAME)
 SIM_ARCH_SUFFIX = _npc
 endif
 
