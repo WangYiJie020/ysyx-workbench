@@ -72,7 +72,7 @@ V2CXX_EMIT_DIR = $(BUILD_DIR)/gened/cxx
 
 MY_VSRCS = $(shell find $(abspath $(CHISEL2V_EMIT_DIR)) -maxdepth 1 -name "*.v" -or -name "*.sv")
 SIM_VSRCS += $(MY_VSRCS)
-SIM_CSRCS = $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
+SIM_CSRCS += $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 
 SIM_HEADERS = $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.h" -or -name "*.hpp")
 
