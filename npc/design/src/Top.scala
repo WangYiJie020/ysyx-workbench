@@ -119,11 +119,11 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val INIT_PC = if (isSoC) "h30000000".U(32.W) else "h80000000".U(32.W)
 
   // "h30000000".U(32.W)
-  // val MEM_BASE = "h80000000".U(32.W)
-  // val MEM_END  = "h8FFFFFFF".U(32.W)
-  //
-  // val SERIAL_BASE = "h10000000".U(32.W)
-  // val SERIAL_END  = "h10000001".U(32.W)
+  val MEM_BASE = "h80000000".U(32.W)
+  val MEM_END  = "h8FFFFFFF".U(32.W)
+
+  val SERIAL_BASE = "h10000000".U(32.W)
+  val SERIAL_END  = "h10000001".U(32.W)
 
   val pc = RegInit(INIT_PC)
 
@@ -157,25 +157,29 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   AXI4IO.connectMasterSlave(exu.io.mem, memArbiter.io.exu)
   AXI4IO.connectMasterSlave(ifu.io.mem, memArbiter.io.ifu)
 
-  // val uart = Module(new UARTUnit)
+  val uart = Module(new UARTUnit)
+  val mem  = Module(new AXI4MemUnit)
+
   val clint = Module(new CLINTUnit)
 
   val otherReqSlave = Wire(AXI4IO.Slave)
   if (isSoC) {
     AXI4IO.transformSlaveToMasterValidIf(!reset.asBool)(io.master, otherReqSlave)
-  } else {
-    val mem = Module(new AXI4MemUnit)
-    mem.io <> otherReqSlave
-  }
+  } else {}
 
   val memXBar = Module(
     new AXI4LiteXBar(
       Seq(
-        // (MEM_BASE,MEM_END) -> mem.io,
-        // (SERIAL_BASE,SERIAL_END) -> uart.io,
         ("h02000000".U(32.W), "h0200ffff".U(32.W)) -> clint.io,
         ("h0f000000".U(32.W), "hffffffff".U(32.W)) -> otherReqSlave
-      )
+      ) ++ (if (isSoC) {
+              Seq(
+                (MEM_BASE, MEM_END)       -> mem.io,
+                (SERIAL_BASE, SERIAL_END) -> uart.io
+              )
+            } else {
+              Seq()
+            })
     )
   )
 
