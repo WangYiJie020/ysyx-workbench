@@ -2,10 +2,13 @@
 #include "vpi_user.h"
 #include <cstddef>
 #include <cstdint>
+#include <iterator>
 #include <numeric>
 #include <vector>
 #include <verilated.h>
 #include <verilated_vpi.h>
+
+#include <variant>
 
 #include "vsrc.hpp"
 
@@ -25,15 +28,14 @@ inline const std::string &cpu_vpi_path_prefix() {
 namespace _PerfCtrImp {
 
 inline auto _FullPath(const std::string &pathWithoutValidOrReady,
-               const std::string &suffix = "") {
+                      const std::string &suffix = "") {
   return cpu_vpi_path_prefix() + pathWithoutValidOrReady + suffix;
 }
 inline auto _DebugPath(const std::string &pathWithoutValidOrReady,
-                const std::string &suffix = "") {
+                       const std::string &suffix = "") {
   return "`cpu." + pathWithoutValidOrReady + suffix;
 }
 } // namespace _PerfCtrImp
-
 
 struct SignalHandle {
   vpiHandle handle;
@@ -71,13 +73,29 @@ struct SignalHandle {
   }
 };
 
-class HandShakeDetector {
+class PerfCounterBase {
+public:
+  std::string ctrName;
+  struct Field {
+    std::string label;
+    size_t value;
+  };
+  std::vector<Field> fields;
+  virtual void fillFields() = 0;
+	virtual void dumpStatistics() = 0;
+	void clearFields() {
+		fields.clear();
+	}
+};
+
+class HandShakeCounterManager : public PerfCounterBase {
 public:
   using callback_t = std::function<void()>;
   struct ValidReadyBus {
     SignalHandle hValid;
     SignalHandle hReady;
 
+    std::string pathWithoutValidOrReady;
     std::string description;
 
     size_t shake_count = 0;
@@ -89,17 +107,22 @@ public:
   std::shared_ptr<spdlog::logger> logger;
   std::vector<ValidReadyBus> bus_list;
 
-  HandShakeDetector();
-
   void init();
   ValidReadyBus &add(std::string pathWithoutValidOrReady,
                      std::string description = "",
                      callback_t onShake = nullptr);
 
-  void checkAndCountAll();
+  void update();
+  void fillFields() override {
+		ctrName = "HandShakeCounter";
+    for (auto &bus : bus_list) {
+      fields.push_back(Field{bus.pathWithoutValidOrReady, bus.shake_count});
+    }
+  }
+	void dumpStatistics() override;
 };
 
-struct EXUPerfCounter {
+struct EXUPerfCounter : public PerfCounterBase {
   // in common_def.scala
   //   val imm, reg, store, upper, jump, branch = Value
   //   val branch, arithmetic, load, store, jalr, jal, lui, auipc, system =
@@ -119,8 +142,8 @@ struct EXUPerfCounter {
   static inline bool isValidFmt(InstFmt fmt) { return fmt < FMT_NUM; }
   static inline bool isValidType(InstType type) { return type < TYPE_NUM; }
 
-  static const char *nameOfFmt(InstFmt fmt);
-  static const char *nameOfTyp(InstType type);
+  static const char *nameOfFmt(int fmt);
+  static const char *nameOfTyp(int type);
 
   size_t instCountOfFmt[FMT_NUM] = {0};
   size_t instCountOfTyp[TYPE_NUM] = {0};
@@ -128,38 +151,37 @@ struct EXUPerfCounter {
   size_t totalCycleOfTyp[TYPE_NUM] = {0};
   size_t totalCycleOfFmt[FMT_NUM] = {0};
 
-	bool lastCycOutValid = false;
-	sim_cycle_t instStartCycle = 0;
+  bool lastCycOutValid = false;
+  sim_cycle_t instStartCycle = 0;
 
   SignalHandle hInstType;
   SignalHandle hInstFmt;
-	SignalHandle hOutValid;
-	SignalHandle hOutReady;
+  SignalHandle hOutValid;
+  SignalHandle hOutReady;
 
   std::shared_ptr<spdlog::logger> logger;
 
   void bind(std::string path);
-	void update();
+  void update();
 
-  size_t totalInstCountSumByFmt() {
-    return std::accumulate(instCountOfFmt, instCountOfFmt + FMT_NUM, 0ull);
-  }
-  size_t totalInstCountSumByTyp() {
-    return std::accumulate(instCountOfTyp, instCountOfTyp + TYPE_NUM, 0ull);
-  }
-  double averageCPIOfTyp(InstType type) {
-    if (instCountOfTyp[type] == 0)
-      return NAN;
-    return (double)totalCycleOfTyp[type] / (double)instCountOfTyp[type];
-  }
-  double averageCPIOfFmt(InstFmt fmt) {
-    if (instCountOfFmt[fmt] == 0)
-      return NAN;
-    return (double)totalCycleOfFmt[fmt] / (double)instCountOfFmt[fmt];
-  }
+  void _dump(size_t *instCnts, size_t *cycCnts, size_t num,
+             const char *(*nameFunc)(int));
+  void dumpStatistics() override;
+
+	void fillFields() override {
+		ctrName = "EXUInstTypeFmtCounter";
+		for (size_t i = 0; i < TYPE_NUM; i++) {
+			fields.push_back(Field{std::string("typ_") + nameOfTyp((int)i),
+														 instCountOfTyp[i]});
+		}
+		for (size_t i = 0; i < FMT_NUM; i++) {
+			fields.push_back(Field{std::string("fmt_") + nameOfFmt((int)i),
+														 instCountOfFmt[i]});
+		}
+	}
 };
 
-struct AXI4CounterBase {
+struct AXI4CounterBase : public PerfCounterBase {
   struct LatencyRecord {
     sim_time_t startTime;
     sim_time_t endTime;
@@ -177,8 +199,14 @@ struct AXI4CounterBase {
   std::shared_ptr<spdlog::logger> logger;
 
   void init_logger();
-	static void dumpStatisticsTitle();
+  static void dumpStatisticsTitle();
   void dumpStatistics();
+	void fillFields() {
+		ctrName = name;
+		fields.push_back(Field{"txn", transaction_count});
+		fields.push_back(Field{"lat_cyc", total_latency_cycles});
+		fields.push_back(Field{"lat_max", maxRecord.cycles});
+	}
 };
 
 struct AXI4ReadPerfCounter : public AXI4CounterBase {
@@ -216,41 +244,73 @@ struct AXI4WritePerfCounter : public AXI4CounterBase {
   void update();
 };
 
-class AXI4PerfCounterManager {
+class AXI4PerfCounterManager : public PerfCounterBase {
 public:
-	std::vector<AXI4ReadPerfCounter> rdCounters;
-	std::vector<AXI4WritePerfCounter> wrCounters;
-	void updateAll();
-	void dumpAllStatistics();
+  std::vector<AXI4ReadPerfCounter> rdCounters;
+  std::vector<AXI4WritePerfCounter> wrCounters;
+  void update();
+  void dumpStatistics() override;
 
-	void addRead(std::string channelPath, std::string name);
-	void addWrite(std::string channelPath, std::string name);
+  void addRead(std::string channelPath, std::string name);
+  void addWrite(std::string channelPath, std::string name);
+
+	void fillFields() override {
+		ctrName = "AXI4PerfCounters";
+		for (auto &ctr : rdCounters) {
+			for (auto &f : ctr.fields) {
+				fields.push_back(Field{"rd_" + ctr.ctrName + "_" + f.label, f.value});
+			}
+		}
+		for (auto &ctr : wrCounters) {
+			for (auto &f : ctr.fields) {
+				fields.push_back(Field{"wr_" + ctr.ctrName + "_" + f.label, f.value});
+			}
+		}
+	}
 };
 
-struct IFUStateCounter {
-	// check fetch handshake happened
-	SignalHandle hRValid;
-	SignalHandle hRReady;
-	// ifu fsm state
-	SignalHandle hState;
+struct IFUStateCounter : public PerfCounterBase {
+  // check fetch handshake happened
+  SignalHandle hRValid;
+  SignalHandle hRReady;
+  // ifu fsm state
+  SignalHandle hState;
 
-	enum State {
-		IDLE,
-		WAIT_INST,
-		WAIT_DOWNSTREAM,
+  enum State {
+    IDLE,
+    WAIT_INST,
+    WAIT_DOWNSTREAM,
 
-		STATE_NUM
-	};
+    STATE_NUM
+  };
 
-	size_t countOfState[STATE_NUM] = {0};
-	size_t countOfStateWhenNoFetch[STATE_NUM] = {0};
-	size_t totalFetchCount = 0;
+  size_t countOfState[STATE_NUM] = {0};
+  size_t countOfStateWhenNoFetch[STATE_NUM] = {0};
+  size_t totalFetchCount = 0;
 
-	void bind(std::string ifupath);
-	void update();
-	void dumpStatistics();
+	const char *nameOfState(int state);
+
+  void bind(std::string ifupath);
+  void update();
+  void dumpStatistics() override;
+
+	void fillFields() override {
+		ctrName = "IFUStateCounter";
+		for (size_t i = 0; i < STATE_NUM; i++) {
+			fields.push_back(Field{std::string("state_") + nameOfState((int)i),
+														 countOfState[i]});
+		}
+	}
 };
+
+using PerfCounterVariant = std::variant<
+		HandShakeCounterManager,
+		EXUPerfCounter,
+		AXI4PerfCounterManager,
+		IFUStateCounter>;
 
 void initPerfCounters();
 void dumpPerfCountersStatistics();
 void updatePerfCounters();
+
+std::string dumpPerfCounterAsCSV();

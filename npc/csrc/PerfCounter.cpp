@@ -1,12 +1,11 @@
 #include "PerfCounter.hpp"
 #include "sim.hpp"
+#include <vector>
 
 using namespace _PerfCtrImp;
 
-HandShakeDetector::HandShakeDetector() {
+void HandShakeCounterManager::init() {
   logger = spdlog::stdout_color_mt("HandShakeDetector");
-}
-void HandShakeDetector::init() {
   set_logger_pattern_with_simtime(logger);
   logger->set_level(spdlog::level::info);
 }
@@ -20,9 +19,9 @@ SignalHandle::SignalHandle(std::string barePath) {
   }
 }
 
-HandShakeDetector::ValidReadyBus &
-HandShakeDetector::add(std::string barePath, std::string description,
-                       callback_t onShake) {
+HandShakeCounterManager::ValidReadyBus &
+HandShakeCounterManager::add(std::string barePath, std::string description,
+                             callback_t onShake) {
   auto pathValid = _FullPath(barePath, "valid");
   auto pathReady = _FullPath(barePath, "ready");
   spdlog::trace("adding valid/ready pair: {}/{}", pathValid, pathReady);
@@ -34,21 +33,29 @@ HandShakeDetector::add(std::string barePath, std::string description,
   bus_list.emplace_back(ValidReadyBus{
       .hValid = std::move(hValid),
       .hReady = std::move(hReady),
+      .pathWithoutValidOrReady = barePath,
       .description = description,
       .onShakeCallback = onShake,
   });
   return bus_list.back();
 }
 
-bool HandShakeDetector::ValidReadyBus::shakeHappened() {
+void HandShakeCounterManager::dumpStatistics() {
+  spdlog::info(">handshake counts:");
+  for (auto &bus : bus_list) {
+    bus.dumpStatus();
+  }
+}
+
+bool HandShakeCounterManager::ValidReadyBus::shakeHappened() {
   return hValid.getUint32Value() == 1 && hReady.getUint32Value() == 1;
 }
-void HandShakeDetector::ValidReadyBus::dumpStatus() {
+void HandShakeCounterManager::ValidReadyBus::dumpStatus() {
   fmt::println("  {:18} happened {:>7} times (freq {:.4f})", description,
                shake_count, (double)shake_count / (double)sim_get_cycle());
 }
 
-void HandShakeDetector::checkAndCountAll() {
+void HandShakeCounterManager::update() {
   for (auto &bus : bus_list) {
     if (bus.shakeHappened()) {
       bus.shake_count++;
@@ -61,7 +68,7 @@ void HandShakeDetector::checkAndCountAll() {
   }
 }
 
-const char *EXUPerfCounter::nameOfTyp(InstType type) {
+const char *EXUPerfCounter::nameOfTyp(int type) {
   static const char *type_names[] = {
       "branch", "arithmetic", "load",  "store",  "jalr",
       "jal",    "lui",        "auipc", "system",
@@ -72,7 +79,7 @@ const char *EXUPerfCounter::nameOfTyp(InstType type) {
     return "unknown";
   }
 }
-const char *EXUPerfCounter::nameOfFmt(InstFmt fmt) {
+const char *EXUPerfCounter::nameOfFmt(int fmt) {
   static const char *fmt_names[] = {
       "I_TYPE", "R_TYPE", "S_TYPE", "U_TYPE", "J_TYPE", "B_TYPE",
   };
@@ -147,63 +154,49 @@ void IFUStateCounter::update() {
     countOfStateWhenNoFetch[s]++;
   }
 }
-static const char *_name_of_ifu_state(IFUStateCounter::State s) {
-  const char *names[] = {
-      "IDLE",
-      "WAIT_INST",
-      "WAIT_LATER",
-  };
-  return names[(size_t)s];
-}
-void IFUStateCounter::dumpStatistics() {
-  spdlog::info("IFU State Counter Statistics:");
-  fmt::println("  total instruction fetch count: {}", totalFetchCount);
-  fmt::println("  state statistics:");
-  fmt::println("    {:10} : {:<18} {:<18}", "state", "count",
-               "count[exclu fetch]");
-  auto totCycles = sim_get_cycle();
-  for (size_t i = 0; i < STATE_NUM; i++) {
-    double perc = totCycles == 0
-                      ? NAN
-                      : ((double)countOfState[i] / (double)totCycles) * 100.0;
-    double percNoFetch =
-        totCycles == 0
-            ? NAN
-            : ((double)countOfStateWhenNoFetch[i] / (double)totCycles) * 100.0;
 
-    fmt::println("    {:10} : {:>8} ({:6.3f}%) {:>8} ({:6.3f}%)",
-                 _name_of_ifu_state((State)i), countOfState[i], perc,
-                 countOfStateWhenNoFetch[i], percNoFetch);
-  }
+void EXUPerfCounter::dumpStatistics() {
+  spdlog::info(">instruction type counts:");
+
+  spdlog::info("  by type:");
+  _dump(instCountOfTyp, totalCycleOfTyp, TYPE_NUM, nameOfTyp);
+  spdlog::info("  by format:");
+  _dump(instCountOfFmt, totalCycleOfFmt, FMT_NUM, nameOfFmt);
 }
 
-HandShakeDetector handshake_detector;
-EXUPerfCounter exu_counter;
-AXI4PerfCounterManager axi4_perf_counters;
-IFUStateCounter ifu_state_counter;
+std::vector<PerfCounterVariant> perf_counters;
 
 void initPerfCounters() {
 
-  handshake_detector.init();
-  handshake_detector.add("ifu.io_mem_r", "IFU fetch inst");
-  handshake_detector.add("exu.io_mem_r", "EXU load data");
-  handshake_detector.add("exu.alu.io_out_", "EXU calc");
-  handshake_detector.add("idu.io_out_", "IDU decode inst");
+  HandShakeCounterManager handshakeCtr;
+  EXUPerfCounter exuCtr;
+  AXI4PerfCounterManager axi4Ctr;
+  IFUStateCounter ifuStateCtr;
 
-  axi4_perf_counters.addRead("exu.io_mem", "EXU load data");
-  axi4_perf_counters.addWrite("exu.io_mem", "EXU store data");
+  handshakeCtr.init();
+  handshakeCtr.add("ifu.io_mem_r", "IFU fetch inst");
+  handshakeCtr.add("exu.io_mem_r", "EXU load data");
+  handshakeCtr.add("exu.alu.io_out_", "EXU calc");
+  handshakeCtr.add("idu.io_out_", "IDU decode inst");
 
-  axi4_perf_counters.addRead("ifu.io_mem", "IFU fetch inst");
+  axi4Ctr.addRead("exu.io_mem", "EXU load data");
+  axi4Ctr.addWrite("exu.io_mem", "EXU store data");
 
-  exu_counter.bind("idu");
-  ifu_state_counter.bind("ifu");
+  axi4Ctr.addRead("ifu.io_mem", "IFU fetch inst");
+
+  exuCtr.bind("idu");
+  ifuStateCtr.bind("ifu");
+
+  perf_counters.push_back(std::move(handshakeCtr));
+  perf_counters.push_back(std::move(exuCtr));
+  perf_counters.push_back(std::move(axi4Ctr));
+  perf_counters.push_back(std::move(ifuStateCtr));
 }
 
 void updatePerfCounters() {
-	handshake_detector.checkAndCountAll();
-	exu_counter.update();
-	axi4_perf_counters.updateAll();
-	ifu_state_counter.update();
+  for (auto &ctr : perf_counters) {
+    std::visit([&](auto &c) { c.update(); }, ctr);
+  }
 }
 void dumpPerfCountersStatistics() {
   auto cycle_count = sim_get_cycle();
@@ -225,36 +218,29 @@ void dumpPerfCountersStatistics() {
     fmt::println("  CPI: {:.4f}", cpi);
   }
 
-  spdlog::info(">handshake counts:");
-  for (auto &e : handshake_detector.bus_list) {
-    e.dumpStatus();
+  for (auto &ctr : perf_counters) {
+    std::visit([&](auto &c) { c.dumpStatistics(); }, ctr);
   }
+}
 
-  ifu_state_counter.dumpStatistics();
-
-  spdlog::info(">instruction type counts:");
-  size_t totByType = exu_counter.totalInstCountSumByTyp();
-  fmt::println("  by type: (total {})", totByType);
-  for (size_t i = 0; i < EXUPerfCounter::TYPE_NUM; i++) {
-    auto type_name = EXUPerfCounter::nameOfTyp((EXUPerfCounter::InstType)i);
-    auto type_count = exu_counter.instCountOfTyp[i];
-    auto type_percentage =
-        totByType == 0 ? NAN : ((double)type_count / (double)totByType) * 100.0;
-    fmt::println("    {:<10} : {:>6} ({:>5.2f}%) cpi {:.2f}", type_name,
-                 type_count, type_percentage,
-                 exu_counter.averageCPIOfTyp((EXUPerfCounter::InstType)i));
+std::string dumpPerfCounterAsCSV(){
+  std::string title_row;
+  std::string value_row;
+  for (auto &ctr : perf_counters) {
+    std::visit(
+        [&](auto &c) {
+          c.fillFields();
+          for (auto &f : c.fields) {
+            if (!title_row.empty()) {
+              title_row += ",";
+              value_row += ",";
+            }
+            title_row += c.ctrName + "_" + f.label;
+            value_row += std::to_string(f.value);
+          }
+					c.clearFields();
+        },
+        ctr);
   }
-  size_t totByFmt = exu_counter.totalInstCountSumByFmt();
-  fmt::println("  by fmt: (total {})", totByFmt);
-  for (size_t i = 0; i < EXUPerfCounter::FMT_NUM; i++) {
-    auto fmt_name = EXUPerfCounter::nameOfFmt((EXUPerfCounter::InstFmt)i);
-    auto fmt_count = exu_counter.instCountOfFmt[i];
-    auto fmt_percentage =
-        totByFmt == 0 ? NAN : ((double)fmt_count / (double)totByFmt) * 100.0;
-    fmt::println("    {:<10} : {:>6} ({:>5.2f}%) cpi {:.2f}", fmt_name,
-                 fmt_count, fmt_percentage,
-                 exu_counter.averageCPIOfFmt((EXUPerfCounter::InstFmt)i));
-  }
-
-  axi4_perf_counters.dumpAllStatistics();
+	return title_row + "\n" + value_row;
 }

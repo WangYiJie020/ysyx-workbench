@@ -37,6 +37,10 @@ GDBSTUB_LIBPATH ?= $(GDBSTUB_PATH)/build
 INC_PATH += $(abspath $(GDBSTUB_PATH)/include)
 LDFLAGS += -L$(abspath $(GDBSTUB_LIBPATH)) -lgdbstub
 
+# tabulate
+TABULATE_PATH ?= /home/wuser/gitclones/tabulate
+INC_PATH += $(abspath $(TABULATE_PATH)/include)
+
 VERILATOR_FLAGS += --trace-fst --trace-structs
 
 ifeq ($(ENABLE_VPI), 1)

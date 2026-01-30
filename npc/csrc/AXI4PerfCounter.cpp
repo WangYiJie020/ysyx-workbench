@@ -101,7 +101,7 @@ void AXI4WritePerfCounter::update() {
   }
 }
 
-void AXI4PerfCounterManager::updateAll() {
+void AXI4PerfCounterManager::update() {
   for (auto &ctr : rdCounters) {
     ctr.update();
   }
@@ -130,7 +130,7 @@ void AXI4PerfCounterManager::addWrite(std::string channelPath,
   wrCounters.push_back(std::move(ctr));
 }
 
-void AXI4PerfCounterManager::dumpAllStatistics() {
+void AXI4PerfCounterManager::dumpStatistics() {
   spdlog::info("AXI4 Performance Counters Statistics:");
   fmt::println(">AXI4 Read Counters:");
 	AXI4CounterBase::dumpStatisticsTitle();
