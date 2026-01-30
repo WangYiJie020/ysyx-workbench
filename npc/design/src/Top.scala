@@ -160,27 +160,30 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val clint = Module(new CLINTUnit)
 
   val otherReqSlave = Wire(AXI4IO.Slave)
-  if (isSoC) {
+  val memXBar       = if (isSoC) {
     AXI4IO.transformSlaveToMasterValidIf(!reset.asBool)(io.master, otherReqSlave)
-  } else {}
 
-  val memXBar = Module(
+    Module(
+      new AXI4LiteXBar(
+        Seq(
+          ("h02000000".U(32.W), "h0200ffff".U(32.W)) -> clint.io,
+          ("h0f000000".U(32.W), "hffffffff".U(32.W)) -> otherReqSlave
+        )
+      )
+    )
+  } else {
+    val uart = Module(new UARTUnit)
+    val mem  = Module(new AXI4MemUnit)
+
     new AXI4LiteXBar(
       Seq(
         ("h02000000".U(32.W), "h0200ffff".U(32.W)) -> clint.io,
-        ("h0f000000".U(32.W), "hffffffff".U(32.W)) -> otherReqSlave
-      ) ++ (if (isSoC) {
-              Seq()
-            } else {
-              val uart = Module(new UARTUnit)
-              val mem  = Module(new AXI4MemUnit)
-              Seq(
-                (MEM_BASE, MEM_END)       -> mem.io,
-                (SERIAL_BASE, SERIAL_END) -> uart.io
-              )
-            })
+        ("h0f000000".U(32.W), "hffffffff".U(32.W)) -> otherReqSlave,
+        (MEM_BASE, MEM_END)                        -> mem.io,
+        (SERIAL_BASE, SERIAL_END)                  -> uart.io
+      )
     )
-  )
+  }
 
   when(io.master.bvalid && io.master.bresp === AXI4IO.BResp.DECERR) {
     printf("AXI4 DECERR on write address 0x%x\n", io.master.awaddr)
