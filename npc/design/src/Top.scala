@@ -14,32 +14,7 @@ import uart._
 import clint._
 import xbar._
 
-class NVBoardIO extends Bundle {
-  val btn      = Input(UInt(5.W))
-  val sw       = Input(UInt(16.W))
-  val ps2_clk  = Input(Bool())
-  val ps2_data = Input(Bool())
-  val uart_rx  = Input(Bool())
-  val uart_tx  = Output(Bool())
-  val ledr     = Output(UInt(16.W))
-
-  val VGA_CLK     = Output(Bool())
-  val VGA_HSYNC   = Output(Bool())
-  val VGA_VSYNC   = Output(Bool())
-  val VGA_BLANK_N = Output(Bool())
-  val VGA_R       = Output(UInt(8.W))
-  val VGA_G       = Output(UInt(8.W))
-  val VGA_B       = Output(UInt(8.W))
-
-  val seg0 = Output(UInt(8.W))
-  val seg1 = Output(UInt(8.W))
-  val seg2 = Output(UInt(8.W))
-  val seg3 = Output(UInt(8.W))
-  val seg4 = Output(UInt(8.W))
-  val seg5 = Output(UInt(8.W))
-  val seg6 = Output(UInt(8.W))
-  val seg7 = Output(UInt(8.W))
-}
+import npcMem._
 
 class TopIO extends Bundle {
   val interrupt = Input(Bool())
@@ -186,7 +161,12 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val clint = Module(new CLINTUnit)
 
   val otherReqSlave = Wire(AXI4IO.Slave)
-  AXI4IO.transformSlaveToMasterValidIf(!reset.asBool)(io.master, otherReqSlave)
+  if (isSoC) {
+    AXI4IO.transformSlaveToMasterValidIf(!reset.asBool)(io.master, otherReqSlave)
+  } else {
+    val mem = Module(new AXI4MemUnit)
+    mem.io <> otherReqSlave
+  }
 
   val memXBar = Module(
     new AXI4LiteXBar(

@@ -20,7 +20,9 @@
 #include "spdlog/fmt/bundled/base.h"
 #include "verilated_fst_c.h"
 
+#if ENABLE_NVBOARD
 #include <nvboard.h>
+#endif
 
 #include <getopt.h>
 #include <unistd.h>
@@ -96,9 +98,11 @@ void sim_step_cycle() {
 
   cycle_count++;
 
+#if ENABLE_NVBOARD
   if (sim_settings.nvboard) {
     nvboard_update();
   }
+#endif
 
   if (sim_settings.trace_clock_cycle) {
     printf("[Clock Cycle End]\n");
@@ -653,11 +657,13 @@ void _init_dpi_logger() {
 bool sim_init(int argc, char **argv, sim_setting setting) {
   Verilated::commandArgs(argc, argv);
   sim_settings = setting;
+#if ENABLE_NVBOARD
   if (setting.nvboard) {
     spdlog::info("initializing nvboard");
     nvboard_bind_all_pins(&dut);
     nvboard_init();
   }
+#endif
 
   parse_args(argc, argv);
 
