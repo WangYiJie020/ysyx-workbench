@@ -157,9 +157,6 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   AXI4IO.connectMasterSlave(exu.io.mem, memArbiter.io.exu)
   AXI4IO.connectMasterSlave(ifu.io.mem, memArbiter.io.ifu)
 
-  val uart = Module(new UARTUnit)
-  val mem  = Module(new AXI4MemUnit)
-
   val clint = Module(new CLINTUnit)
 
   val otherReqSlave = Wire(AXI4IO.Slave)
@@ -173,12 +170,14 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
         ("h02000000".U(32.W), "h0200ffff".U(32.W)) -> clint.io,
         ("h0f000000".U(32.W), "hffffffff".U(32.W)) -> otherReqSlave
       ) ++ (if (isSoC) {
+              Seq()
+            } else {
+              val uart = Module(new UARTUnit)
+              val mem  = Module(new AXI4MemUnit)
               Seq(
                 (MEM_BASE, MEM_END)       -> mem.io,
                 (SERIAL_BASE, SERIAL_END) -> uart.io
               )
-            } else {
-              Seq()
             })
     )
   )
