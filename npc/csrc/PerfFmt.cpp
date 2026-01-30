@@ -41,7 +41,7 @@ void EXUPerfCounter::_dump(size_t *instCnts, size_t *cycCnts, size_t num,
 	t.row(0).format().font_align(FontAlign::center);
 
 	t.column(0).format().hide_border_left();
-	t.column(t.shape().second-1).format().hide_border_right();
+	t.column(t[0].size()-1).format().hide_border_right();
 
 	std::cout << t << std::endl;
 }
