@@ -30,10 +30,6 @@ int main(int argc, char **argv) {
   spdlog::set_level(spdlog::level::info); // will modify all registered loggers
 	spdlog::set_pattern("[%H:%M:%S.%e][%^%-5l%$][%n] %v");
 
-	test_table();
-
-	return 0;
-
 	auto& setting = sim_get_config()->setting;
 	load_sim_setting_from_env(setting);
 
