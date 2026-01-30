@@ -26,7 +26,7 @@ class AXI4MemUnit extends Module {
 
   val sARIdle :: sARWait :: Nil = Enum(2)
   val arState                   = RegInit(sARIdle)
-  sio.arready := (arState === sARIdle)
+  sio.arready := (arState === sARIdle) && (!reset.asBool)
 
   arState := MuxLookup(arState, sARIdle)(
     Seq(
