@@ -239,7 +239,7 @@ void dumpPerfCountersStatistics() {
     e.dumpStatus();
   }
 
+	exu_counter.dumpStatistics();
   ifu_state_counter.dumpStatistics();
-
   axi4_perf_counters.dumpAllStatistics();
 }
