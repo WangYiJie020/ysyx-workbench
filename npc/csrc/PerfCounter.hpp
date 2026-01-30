@@ -40,19 +40,18 @@ inline auto _DebugPath(const std::string &pathWithoutValidOrReady,
 } // namespace _PerfCtrImp
 
 struct SignalHandle {
-	using vDataPtr = std::variant<CData*,SData*,IData*,QData*>;
-	vDataPtr ptr;
-	uint64_t get(){
-		return std::visit([](auto&& arg) { return static_cast<uint64_t>(*arg); }, ptr);
-	}
-	SignalHandle() = default;
-	SignalHandle(auto* newPtr){
-		ptr = newPtr;
-	}
-	SignalHandle operator=(auto* newPtr){
-		ptr = newPtr;
-		return *this;
-	}
+  using vDataPtr = std::variant<CData *, SData *, IData *, QData *>;
+  vDataPtr ptr;
+  uint64_t get() {
+    return std::visit([](auto &&arg) { return static_cast<uint64_t>(*arg); },
+                      ptr);
+  }
+  SignalHandle() = default;
+  SignalHandle(auto *newPtr) { ptr = newPtr; }
+  SignalHandle operator=(auto *newPtr) {
+    ptr = newPtr;
+    return *this;
+  }
 };
 
 class PerfCounterBase {
@@ -88,10 +87,8 @@ public:
   std::vector<ValidReadyBus> bus_list;
 
   void init();
-  ValidReadyBus &add(SignalHandle hValid,
-										 SignalHandle hReady,
-										 std::string barePath,
-                     std::string description = "",
+  ValidReadyBus &add(SignalHandle hValid, SignalHandle hReady,
+                     std::string barePath, std::string description = "",
                      callback_t onShake = nullptr);
 
   void update();
@@ -176,15 +173,12 @@ struct AXI4CounterBase : public PerfCounterBase {
   LatencyRecord currentRecord;
   LatencyRecord maxRecord;
 
-  std::string name;
-
   std::shared_ptr<spdlog::logger> logger;
 
   void init_logger();
   static void dumpStatisticsTitle();
   void dumpStatistics();
   void fillFields() {
-    ctrName = name;
     fields.push_back(Field{"txn", transaction_count});
     fields.push_back(Field{"lat_cyc", total_latency_cycles});
     fields.push_back(Field{"lat_max", maxRecord.cycles});
@@ -204,7 +198,16 @@ struct AXI4ReadPerfCounter : public AXI4CounterBase {
     WAIT_DATA,
   } state = IDLE;
 
-  void bind(std::string path);
+  AXI4ReadPerfCounter &bind(SignalHandle arv, SignalHandle arr, SignalHandle rv,
+                            SignalHandle rr) {
+    hARValid = arv;
+    hARReady = arr;
+    hRValid = rv;
+    hRReady = rr;
+    return *this;
+  }
+#define BIND_AXI4_R_BASE(base)                                                 \
+  bind(&base##_arvalid, &base##_arready, &base##_rvalid, &base##_rready)
   void update();
 };
 struct AXI4WritePerfCounter : public AXI4CounterBase {
@@ -222,7 +225,20 @@ struct AXI4WritePerfCounter : public AXI4CounterBase {
     WAIT_RESP,
   } state = IDLE;
 
-  void bind(std::string path);
+  AXI4WritePerfCounter &bind(SignalHandle awv, SignalHandle awr,
+                             SignalHandle wv, SignalHandle wr, SignalHandle bv,
+                             SignalHandle br) {
+    hAWValid = awv;
+    hAWReady = awr;
+    hWValid = wv;
+    hWReady = wr;
+    hBValid = bv;
+    hBReady = br;
+    return *this;
+  }
+#define BIND_AXI4_W_BASE(base)                                                 \
+  bind(&base##_awvalid, &base##_awready, &base##_wvalid, &base##_wready,       \
+       &base##_bvalid, &base##_bready)
   void update();
 };
 
@@ -233,8 +249,18 @@ public:
   void update();
   void dumpStatistics() override;
 
-  void addRead(std::string channelPath, std::string name);
-  void addWrite(std::string channelPath, std::string name);
+  void add(AXI4ReadPerfCounter ctr, std::string path) {
+    ctr.ctrName = path;
+    ctr.init_logger();
+    spdlog::debug("added AXI4 read perf counter '{}'", ctr.ctrName);
+    rdCounters.push_back(std::move(ctr));
+  }
+  void add(AXI4WritePerfCounter ctr, std::string path) {
+    ctr.ctrName = path;
+    ctr.init_logger();
+    spdlog::debug("added AXI4 write perf counter '{}'", ctr.ctrName);
+    wrCounters.push_back(std::move(ctr));
+  }
 
   void fillFields() override {
     ctrName = "AXI4PerfCounters";

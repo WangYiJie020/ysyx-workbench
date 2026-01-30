@@ -175,10 +175,17 @@ void initPerfCounters() {
   handshakeCtr.add(&_GetIDU()->io_out_valid, &_GetIDU()->io_out_ready,
                    "idu.io_out", "IDU decode inst");
 
-  axi4Ctr.addRead("exu.io_mem", "EXU load data");
-  axi4Ctr.addWrite("exu.io_mem", "EXU store data");
+  axi4Ctr.add(AXI4WritePerfCounter().BIND_AXI4_W_BASE(_GetEXU()->io_mem),
+              "exu_mem_write");
+  axi4Ctr.add(AXI4ReadPerfCounter().BIND_AXI4_R_BASE(_GetEXU()->io_mem),
+              "exu_mem_read");
+  axi4Ctr.add(AXI4ReadPerfCounter().BIND_AXI4_R_BASE(_GetIFU()->io_mem),
+              "ifu_mem_read");
 
-  axi4Ctr.addRead("ifu.io_mem", "IFU fetch inst");
+  // axi4Ctr.addRead("exu.io_mem", "EXU load data");
+  // axi4Ctr.addWrite("exu.io_mem", "EXU store data");
+  //
+  // axi4Ctr.addRead("ifu.io_mem", "IFU fetch inst");
 
   exuCtr.bind();
   ifuStateCtr.bind();
