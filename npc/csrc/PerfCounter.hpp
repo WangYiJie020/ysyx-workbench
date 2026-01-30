@@ -2,6 +2,7 @@
 #include "vpi_user.h"
 #include <cstddef>
 #include <cstdint>
+#include <iterator>
 #include <numeric>
 #include <vector>
 #include <verilated.h>
@@ -25,15 +26,14 @@ inline const std::string &cpu_vpi_path_prefix() {
 namespace _PerfCtrImp {
 
 inline auto _FullPath(const std::string &pathWithoutValidOrReady,
-               const std::string &suffix = "") {
+                      const std::string &suffix = "") {
   return cpu_vpi_path_prefix() + pathWithoutValidOrReady + suffix;
 }
 inline auto _DebugPath(const std::string &pathWithoutValidOrReady,
-                const std::string &suffix = "") {
+                       const std::string &suffix = "") {
   return "`cpu." + pathWithoutValidOrReady + suffix;
 }
 } // namespace _PerfCtrImp
-
 
 struct SignalHandle {
   vpiHandle handle;
@@ -128,18 +128,18 @@ struct EXUPerfCounter {
   size_t totalCycleOfTyp[TYPE_NUM] = {0};
   size_t totalCycleOfFmt[FMT_NUM] = {0};
 
-	bool lastCycOutValid = false;
-	sim_cycle_t instStartCycle = 0;
+  bool lastCycOutValid = false;
+  sim_cycle_t instStartCycle = 0;
 
   SignalHandle hInstType;
   SignalHandle hInstFmt;
-	SignalHandle hOutValid;
-	SignalHandle hOutReady;
+  SignalHandle hOutValid;
+  SignalHandle hOutReady;
 
   std::shared_ptr<spdlog::logger> logger;
 
   void bind(std::string path);
-	void update();
+  void update();
 
   size_t totalInstCountSumByFmt() {
     return std::accumulate(instCountOfFmt, instCountOfFmt + FMT_NUM, 0ull);
@@ -157,6 +157,9 @@ struct EXUPerfCounter {
       return NAN;
     return (double)totalCycleOfFmt[fmt] / (double)instCountOfFmt[fmt];
   }
+  void _dump(size_t *instCnts, size_t *cycCnts, size_t num,
+             const char *(*nameFunc)(int));
+  void dumpStatistics();
 };
 
 struct AXI4CounterBase {
@@ -177,7 +180,7 @@ struct AXI4CounterBase {
   std::shared_ptr<spdlog::logger> logger;
 
   void init_logger();
-	static void dumpStatisticsTitle();
+  static void dumpStatisticsTitle();
   void dumpStatistics();
 };
 
@@ -218,37 +221,37 @@ struct AXI4WritePerfCounter : public AXI4CounterBase {
 
 class AXI4PerfCounterManager {
 public:
-	std::vector<AXI4ReadPerfCounter> rdCounters;
-	std::vector<AXI4WritePerfCounter> wrCounters;
-	void updateAll();
-	void dumpAllStatistics();
+  std::vector<AXI4ReadPerfCounter> rdCounters;
+  std::vector<AXI4WritePerfCounter> wrCounters;
+  void updateAll();
+  void dumpAllStatistics();
 
-	void addRead(std::string channelPath, std::string name);
-	void addWrite(std::string channelPath, std::string name);
+  void addRead(std::string channelPath, std::string name);
+  void addWrite(std::string channelPath, std::string name);
 };
 
 struct IFUStateCounter {
-	// check fetch handshake happened
-	SignalHandle hRValid;
-	SignalHandle hRReady;
-	// ifu fsm state
-	SignalHandle hState;
+  // check fetch handshake happened
+  SignalHandle hRValid;
+  SignalHandle hRReady;
+  // ifu fsm state
+  SignalHandle hState;
 
-	enum State {
-		IDLE,
-		WAIT_INST,
-		WAIT_DOWNSTREAM,
+  enum State {
+    IDLE,
+    WAIT_INST,
+    WAIT_DOWNSTREAM,
 
-		STATE_NUM
-	};
+    STATE_NUM
+  };
 
-	size_t countOfState[STATE_NUM] = {0};
-	size_t countOfStateWhenNoFetch[STATE_NUM] = {0};
-	size_t totalFetchCount = 0;
+  size_t countOfState[STATE_NUM] = {0};
+  size_t countOfStateWhenNoFetch[STATE_NUM] = {0};
+  size_t totalFetchCount = 0;
 
-	void bind(std::string ifupath);
-	void update();
-	void dumpStatistics();
+  void bind(std::string ifupath);
+  void update();
+  void dumpStatistics();
 };
 
 void initPerfCounters();

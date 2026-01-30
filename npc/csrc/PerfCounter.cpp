@@ -177,6 +177,46 @@ void IFUStateCounter::dumpStatistics() {
   }
 }
 
+void EXUPerfCounter::_dump(size_t *instCnts, size_t *cycCnts, size_t num,
+													const char *(*nameFunc)(int)) {
+	// output:
+	// total instructions: xxx, total cycles: xxx
+	//
+	size_t totalInsts = std::accumulate(instCnts, instCnts + num, 0ull);
+	size_t totalCyc = std::accumulate(cycCnts, cycCnts + num, 0ull);
+	fmt::println("  total instructions: {}, total cycles: {}", totalInsts, totalCyc);
+	for (size_t i = 0; i < num; i++) {
+		auto name = nameFunc(i);
+	}
+}
+
+void EXUPerfCounter::dumpStatistics() {
+
+  spdlog::info(">instruction type counts:");
+  size_t totByType = totalInstCountSumByTyp();
+  fmt::println("  by type: (total {})", totByType);
+  for (size_t i = 0; i < EXUPerfCounter::TYPE_NUM; i++) {
+    auto type_name = EXUPerfCounter::nameOfTyp((EXUPerfCounter::InstType)i);
+    auto type_count = instCountOfTyp[i];
+    auto type_percentage =
+        totByType == 0 ? NAN : ((double)type_count / (double)totByType) * 100.0;
+    fmt::println("    {:<10} : {:>6} ({:>5.2f}%) cpi {:.2f}", type_name,
+                 type_count, type_percentage,
+                 averageCPIOfTyp((EXUPerfCounter::InstType)i));
+  }
+  size_t totByFmt = totalInstCountSumByFmt();
+  fmt::println("  by fmt: (total {})", totByFmt);
+  for (size_t i = 0; i < EXUPerfCounter::FMT_NUM; i++) {
+    auto fmt_name = EXUPerfCounter::nameOfFmt((EXUPerfCounter::InstFmt)i);
+    auto fmt_count = instCountOfFmt[i];
+    auto fmt_percentage =
+        totByFmt == 0 ? NAN : ((double)fmt_count / (double)totByFmt) * 100.0;
+    fmt::println("    {:<10} : {:>6} ({:>5.2f}%) cpi {:.2f}", fmt_name,
+                 fmt_count, fmt_percentage,
+                 averageCPIOfFmt((EXUPerfCounter::InstFmt)i));
+  }
+}
+
 HandShakeDetector handshake_detector;
 EXUPerfCounter exu_counter;
 AXI4PerfCounterManager axi4_perf_counters;
@@ -200,10 +240,10 @@ void initPerfCounters() {
 }
 
 void updatePerfCounters() {
-	handshake_detector.checkAndCountAll();
-	exu_counter.update();
-	axi4_perf_counters.updateAll();
-	ifu_state_counter.update();
+  handshake_detector.checkAndCountAll();
+  exu_counter.update();
+  axi4_perf_counters.updateAll();
+  ifu_state_counter.update();
 }
 void dumpPerfCountersStatistics() {
   auto cycle_count = sim_get_cycle();
@@ -231,30 +271,6 @@ void dumpPerfCountersStatistics() {
   }
 
   ifu_state_counter.dumpStatistics();
-
-  spdlog::info(">instruction type counts:");
-  size_t totByType = exu_counter.totalInstCountSumByTyp();
-  fmt::println("  by type: (total {})", totByType);
-  for (size_t i = 0; i < EXUPerfCounter::TYPE_NUM; i++) {
-    auto type_name = EXUPerfCounter::nameOfTyp((EXUPerfCounter::InstType)i);
-    auto type_count = exu_counter.instCountOfTyp[i];
-    auto type_percentage =
-        totByType == 0 ? NAN : ((double)type_count / (double)totByType) * 100.0;
-    fmt::println("    {:<10} : {:>6} ({:>5.2f}%) cpi {:.2f}", type_name,
-                 type_count, type_percentage,
-                 exu_counter.averageCPIOfTyp((EXUPerfCounter::InstType)i));
-  }
-  size_t totByFmt = exu_counter.totalInstCountSumByFmt();
-  fmt::println("  by fmt: (total {})", totByFmt);
-  for (size_t i = 0; i < EXUPerfCounter::FMT_NUM; i++) {
-    auto fmt_name = EXUPerfCounter::nameOfFmt((EXUPerfCounter::InstFmt)i);
-    auto fmt_count = exu_counter.instCountOfFmt[i];
-    auto fmt_percentage =
-        totByFmt == 0 ? NAN : ((double)fmt_count / (double)totByFmt) * 100.0;
-    fmt::println("    {:<10} : {:>6} ({:>5.2f}%) cpi {:.2f}", fmt_name,
-                 fmt_count, fmt_percentage,
-                 exu_counter.averageCPIOfFmt((EXUPerfCounter::InstFmt)i));
-  }
 
   axi4_perf_counters.dumpAllStatistics();
 }
