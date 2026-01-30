@@ -40,39 +40,19 @@ inline auto _DebugPath(const std::string &pathWithoutValidOrReady,
 } // namespace _PerfCtrImp
 
 struct SignalHandle {
-  vpiHandle handle;
-  ~SignalHandle() {
-    if (handle) {
-      vpi_release_handle(handle);
-    }
-  }
-  SignalHandle() : handle(nullptr) {}
-  SignalHandle(vpiHandle h) : handle(h) {}
-
-  SignalHandle(const SignalHandle &) = delete;
-  SignalHandle &operator=(const SignalHandle &) = delete;
-  SignalHandle(SignalHandle &&other) : handle(other.handle) {
-    other.handle = nullptr;
-  }
-  SignalHandle &operator=(SignalHandle &&other) {
-    if (this != &other) {
-      if (handle) {
-        vpi_release_handle(handle);
-      }
-      handle = other.handle;
-      other.handle = nullptr;
-    }
-    return *this;
-  }
-
-  SignalHandle(std::string barePath);
-
-  uint32_t getUint32Value() {
-    s_vpi_value val;
-    val.format = vpiIntVal;
-    vpi_get_value(handle, &val);
-    return static_cast<uint32_t>(val.value.integer);
-  }
+	using vDataPtr = std::variant<CData*,SData*,IData*,QData*>;
+	vDataPtr ptr;
+	uint64_t get(){
+		return std::visit([](auto&& arg) { return static_cast<uint64_t>(*arg); }, ptr);
+	}
+	SignalHandle() = default;
+	SignalHandle(auto* newPtr){
+		ptr = newPtr;
+	}
+	SignalHandle operator=(auto* newPtr){
+		ptr = newPtr;
+		return *this;
+	}
 };
 
 class PerfCounterBase {
@@ -108,7 +88,9 @@ public:
   std::vector<ValidReadyBus> bus_list;
 
   void init();
-  ValidReadyBus &add(std::string pathWithoutValidOrReady,
+  ValidReadyBus &add(SignalHandle hValid,
+										 SignalHandle hReady,
+										 std::string barePath,
                      std::string description = "",
                      callback_t onShake = nullptr);
 
@@ -161,7 +143,7 @@ struct EXUPerfCounter : public PerfCounterBase {
 
   std::shared_ptr<spdlog::logger> logger;
 
-  void bind(std::string path);
+  void bind();
   void update();
 
   void _dump(size_t *instCnts, size_t *cycCnts, size_t num,
@@ -290,7 +272,7 @@ struct IFUStateCounter : public PerfCounterBase {
 
   const char *nameOfState(int state);
 
-  void bind(std::string ifupath);
+  void bind();
   void update();
   void dumpStatistics() override;
 
