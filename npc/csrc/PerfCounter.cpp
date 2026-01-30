@@ -206,6 +206,13 @@ void EXUPerfCounter::_dump(size_t *instCnts, size_t *cycCnts, size_t num,
     table.add_row(RowStream{} << name << instCount << instPerc << cycleCount
                               << cyclePerc << avgCPI);
   }
+
+	table.format()
+			.font_align(FontAlign::center)
+			.font_style({FontStyle::underline})
+			.column_separator("|");
+
+	std::cout << table << std::endl;
 }
 
 void EXUPerfCounter::dumpStatistics() {
