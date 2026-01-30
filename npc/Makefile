@@ -1,6 +1,5 @@
 BUILD_DIR = ./build
 # case sensitive
-TOP_NAME = ysyxSoCFull
 CPU_DESIGN_NAME = ysyx_25100261
 
 SIM_CSRC_DIR = ./csrc
@@ -8,9 +7,29 @@ VSIM_OPT?= -O3
 SIM_BIN_DIR = $(BUILD_DIR)/bin
 
 ifeq ($(ARCH), riscv32e-ysyxsoc)
+TOP_NAME = ysyxSoCFull
 SIM_ARCH_SUFFIX = _soc
+
+# ysyxSoC
+SOC_PERIP_VSRCS = $(shell find $(abspath $(SOC_HOME)/perip) -name "*.v")
+SOC_GENED_FILE = $(abspath $(SOC_HOME)/build/ysyxSoCFull.v)
+
+SIM_VSRCS = $(SOC_GENED_FILE)
+SIM_VSRCS += $(SOC_PERIP_VSRCS)
+
+VERILATOR_INCDIRS += $(abspath $(SOC_HOME)/perip/uart16550/rtl)
+VERILATOR_INCDIRS += $(abspath $(SOC_HOME)/perip/spi/rtl)
+
+VERILATOR_FLAGS += --timescale "1ns/1ns" --no-timing 
+VERILATOR_FLAGS += -Wno-SYMRSVDWORD # make uart verilog happy
+
+VERILATOR_FLAGS += -Wno-WIDTHEXPAND # make chiplink happy
+# VERILATOR_FLAGS += -Wno-UNOPTFLAT
+
 else
+TOP_NAME = $(CPU_DESIGN_NAME)
 SIM_ARCH_SUFFIX = _npc
+SIM_VSRCS =
 endif
 
 SIM_BIN = $(SIM_BIN_DIR)/$(TOP_NAME)$(SIM_ARCH_SUFFIX)$(VSIM_OPT)
@@ -64,7 +83,7 @@ CHISEL2V_DONE = $(BUILD_DIR)/verilog.done
 V2CXX_EMIT_DIR = $(BUILD_DIR)/gened/cxx
 
 MY_VSRCS = $(shell find $(abspath $(CHISEL2V_EMIT_DIR)) -maxdepth 1 -name "*.v" -or -name "*.sv")
-SIM_VSRCS = $(MY_VSRCS)
+SIM_VSRCS += $(MY_VSRCS)
 SIM_CSRCS = $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 
 SIM_HEADERS = $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.h" -or -name "*.hpp")
@@ -123,21 +142,6 @@ $(NVB_AUTOBIND_SRC): $(NXDC_FILES)
 SIM_CSRCS += $(NVB_AUTOBIND_SRC)
 include $(NVBOARD_HOME)/scripts/nvboard.mk
 
-# ysyxSoC
-SOC_PERIP_VSRCS = $(shell find $(abspath $(SOC_HOME)/perip) -name "*.v")
-SOC_GENED_FILE = $(abspath $(SOC_HOME)/build/ysyxSoCFull.v)
-
-SIM_VSRCS += $(SOC_GENED_FILE)
-SIM_VSRCS += $(SOC_PERIP_VSRCS)
-
-VERILATOR_INCDIRS += $(abspath $(SOC_HOME)/perip/uart16550/rtl)
-VERILATOR_INCDIRS += $(abspath $(SOC_HOME)/perip/spi/rtl)
-
-VERILATOR_FLAGS += --timescale "1ns/1ns" --no-timing 
-VERILATOR_FLAGS += -Wno-SYMRSVDWORD # make uart verilog happy
-
-VERILATOR_FLAGS += -Wno-WIDTHEXPAND # make chiplink happy
-# VERILATOR_FLAGS += -Wno-UNOPTFLAT
 # rules for verilator
 
 VERILATOR_FLAGS += -MMD -cc \
