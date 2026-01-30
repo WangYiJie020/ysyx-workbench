@@ -130,7 +130,7 @@ VERILATOR_FLAGS += -MMD -cc \
 VERILATOR_FLAGS += --hierarchical
 										# --output-split 20000 
 
-VERILATOR_FLAGS += --threads 4
+VERILATOR_FLAGS += --threads 2
 
 VERILATOR_CONTROL_FILE = verilator.vlt
 
