@@ -97,6 +97,7 @@ void sim_step_cycle() {
   _sim_eval();
 
   cycle_count++;
+	fmt::println("cycle {}", cycle_count);
 
 #if ENABLE_NVBOARD
   if (sim_settings.nvboard) {
