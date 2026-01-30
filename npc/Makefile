@@ -9,6 +9,7 @@ SIM_BIN_DIR = $(BUILD_DIR)/bin
 ifeq ($(ARCH), riscv32e-ysyxsoc)
 TOP_NAME = ysyxSoCFull
 SIM_ARCH_SUFFIX = _soc
+CXXFLAGS += -DSIM_SOC
 else
 TOP_NAME = $(CPU_DESIGN_NAME)
 SIM_ARCH_SUFFIX = _npc
@@ -129,6 +130,8 @@ VERILATOR_FLAGS += -MMD -cc \
 
 VERILATOR_FLAGS += --hierarchical
 										# --output-split 20000 
+
+VERILATOR_FLAGS += -threads 4
 
 VERILATOR_CONTROL_FILE = verilator.vlt
 

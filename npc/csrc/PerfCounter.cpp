@@ -2,10 +2,14 @@
 #include "sim.hpp"
 #include <vector>
 
-#include "VysyxSoCFull__Syms.h"
 
 auto _GetCPU() {
+	// use vlSymsp to get inner module/signal
+#ifdef SIM_SOC
   return &get_dut()->ysyxSoCFull->vlSymsp->TOP__ysyxSoCFull__asic__cpu__cpu;
+#else
+	return &get_dut()->ysyx_25100261->vlSymsp->TOP__ysyx_25100261;
+#endif
 }
 
 auto _GetIFU() { return _GetCPU()->ifu; }

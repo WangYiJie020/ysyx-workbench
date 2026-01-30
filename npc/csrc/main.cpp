@@ -14,19 +14,6 @@
 
 int gdb_mainloop();
 
-bool is_soc() {
-  static bool isSoC = false;
-  static bool inited = false;
-  if (!inited) {
-    auto arch = getenv("ARCH");
-    if (arch && std::string(arch).find("soc") != std::string::npos) {
-      isSoC = true;
-    }
-    inited = true;
-  }
-  return isSoC;
-}
-
 void test_table() {
   EXUPerfCounter exu_counter;
   for (int i = 0; i < 1000; i++) {

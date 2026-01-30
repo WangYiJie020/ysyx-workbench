@@ -84,8 +84,6 @@ struct sim_cpu_state {
 // unchange item if not set in env
 void load_sim_setting_from_env(sim_setting &setting);
 
-bool is_soc();
-
 bool sim_init(int argc, char **argv, sim_setting teg = sim_setting{});
 
 void sim_step_cycle();
