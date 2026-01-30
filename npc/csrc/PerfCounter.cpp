@@ -210,14 +210,11 @@ void EXUPerfCounter::_dump(size_t *instCnts, size_t *cycCnts, size_t num,
 
 	t.format().font_align(FontAlign::right);
 
-	t.column(0).format().font_align(FontAlign::left);
+	t.column(0).format().font_align(FontAlign::center);
 
-	t.row(0).format()
-			.font_align(FontAlign::center)
-			.font_style({FontStyle::bold});
+	t.row(0).format().font_align(FontAlign::center);
 
-	// table.format()
-	// 		.column_separator("|");
+	t.format().hide_border();
 
 	std::cout << t << std::endl;
 }
