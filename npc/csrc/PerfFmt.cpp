@@ -17,11 +17,14 @@ static void _SetTableFmt(Table &t) {
   t[1].format().show_border_top();
   t[t.size() - 1].format().show_border_bottom();
 }
+void _PrintTable(Table &t){
+	_SetTableFmt(t);
+	std::cout <<std::setprecision(3)<< t << std::endl;
+}
 
 void EXUPerfCounter::_dump(size_t *instCnts, size_t *cycCnts, size_t num,
                            const char *(*nameFunc)(int)) {
   Table t;
-  _SetTableFmt(t);
   t.add_row({"Category", "Inst Count", "Inst %", "Cycle Count", "Cycle %",
              "Avg CPI"});
 
@@ -45,7 +48,7 @@ void EXUPerfCounter::_dump(size_t *instCnts, size_t *cycCnts, size_t num,
     t.add_row(RowStream{} << name << instCount << instPerc << cycleCount
                           << cyclePerc << avgCPI);
   }
-  std::cout << t << std::endl;
+	_PrintTable(t);
 }
 
 static const char *_name_of_ifu_state(IFUStateCounter::State s) {
@@ -79,7 +82,6 @@ void IFUStateCounter::dumpStatistics() {
   //                countOfStateWhenNoFetch[i], percNoFetch);
   // }
   Table t;
-  _SetTableFmt(t);
   t.add_row({"State", "Count", "Percent", "Count\n[exclu fetch]",
              "Percent\n[exclu fetch]"});
 
@@ -96,4 +98,5 @@ void IFUStateCounter::dumpStatistics() {
     t.add_row(RowStream{} << _name_of_ifu_state((State)i) << countOfState[i]
                           << perc << countOfStateWhenNoFetch[i] << percNoFetch);
   }
+  _PrintTable(t);
 }
