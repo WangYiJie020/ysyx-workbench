@@ -12,11 +12,12 @@ static void _SetTableFmt(Table &t) {
 
   for (auto &row : t) {
     row.format().hide_border_top();
-    row.format().hide_border_bottom();
+    // row.format().hide_border_bottom();
   }
+
   t[0].format().show_border_top().show_border_bottom();
 	t[1].format().show_border_top();
-  t[t.size() - 1].format().show_border_bottom();
+  // t[t.size() - 1].format().show_border_bottom();
 }
 void _PrintTable(Table &t){
 	_SetTableFmt(t);
