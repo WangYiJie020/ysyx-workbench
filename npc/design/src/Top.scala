@@ -111,9 +111,9 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val isSoC = sys.env.getOrElse("ARCH", "") == "riscv32e-ysyxsoc"
 
   if (isSoC) {
-    printf("ARCH is SoC npc : INIT_PC = 0x30000000\n")
+    println("ARCH is SoC npc : INIT_PC = 0x30000000\n")
   } else {
-    printf("ARCH is normal npc : INIT_PC = 0x80000000\n")
+    println("ARCH is normal npc : INIT_PC = 0x80000000\n")
   }
 
   val INIT_PC = if (isSoC) "h30000000".U(32.W) else "h80000000".U(32.W)
