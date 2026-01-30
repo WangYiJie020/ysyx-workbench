@@ -182,8 +182,8 @@ void IFUStateCounter::dumpStatistics() {
 void EXUPerfCounter::_dump(size_t *instCnts, size_t *cycCnts, size_t num,
                            const char *(*nameFunc)(int)) {
   using namespace tabulate;
-  Table table;
-  table.add_row({"Category", "Inst Count", "Inst %", "Cycle Count", "Cycle %",
+  Table t;
+  t.add_row({"Category", "Inst Count", "Inst %", "Cycle Count", "Cycle %",
                  "Avg CPI"});
 
   size_t totalInsts = std::accumulate(instCnts, instCnts + num, 0ull);
@@ -203,18 +203,23 @@ void EXUPerfCounter::_dump(size_t *instCnts, size_t *cycCnts, size_t num,
     double avgCPI =
         instCount == 0 ? NAN : (double)cycleCount / (double)instCount;
 
-    table.add_row(RowStream{} << name << instCount << instPerc << cycleCount
+    t.add_row(RowStream{} << name << instCount << instPerc << cycleCount
                               << cyclePerc << avgCPI);
   }
 
-	table.row(0).format()
+
+	t.format().font_align(FontAlign::right);
+
+	t.column(0).format().font_align(FontAlign::left);
+
+	t.row(0).format()
 			.font_align(FontAlign::center)
-			.font_style({FontStyle::underline});
+			.font_style({FontStyle::bold});
 
 	// table.format()
 	// 		.column_separator("|");
 
-	std::cout << table << std::endl;
+	std::cout << t << std::endl;
 }
 
 void EXUPerfCounter::dumpStatistics() {
