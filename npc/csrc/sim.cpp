@@ -1,5 +1,4 @@
 #include "sim.hpp"
-#include "Vysyx_25100261__Dpi.h"
 #include "sdbWrap.hpp"
 
 #include <cmath>
