@@ -90,8 +90,8 @@ void EXUPerfCounter::bind() {
   logger->set_level(spdlog::level::info);
   hInstType = &_GetIDU()->io_out_bits_info_typ;
   hInstFmt = &_GetIDU()->io_out_bits_info_fmt;
-  hOutValid = &_GetEXU()->io_out_valid;
-  hOutReady = &_GetEXU()->io_out_ready;
+  hOutValid = &_GetIDU()->io_out_valid;
+  hOutReady = &_GetIDU()->io_out_ready;
 }
 void EXUPerfCounter::update() {
 
@@ -100,6 +100,8 @@ void EXUPerfCounter::update() {
 
   //
   // For history reason the timing is wired
+	//
+	// the exu cost time is calculated from idu
   //
   // a inst start execution approximately when out_valid rises
   // (TODO: figure out the exact timing)
@@ -122,9 +124,9 @@ void EXUPerfCounter::update() {
     instCountOfFmt[fmt]++;
 
     auto instEndCycle = sim_get_cycle();
-		fmt::println("Instruction executed: type {} fmt {} cycles {}",
-								 nameOfTyp(type), nameOfFmt(fmt),
-								 instEndCycle - instStartCycle);
+		// fmt::println("Instruction executed: type {} fmt {} cycles {}",
+		// 						 nameOfTyp(type), nameOfFmt(fmt),
+		// 						 instEndCycle - instStartCycle);
     auto instCycles = instEndCycle - instStartCycle;
     totalCycleOfTyp[type] += instCycles;
     totalCycleOfFmt[fmt] += instCycles;
