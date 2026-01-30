@@ -316,11 +316,14 @@ extern "C" void psram_write(int32_t addr, char strb8, int32_t data, int32_t *) {
   *ptr |= (shData & shMask);
 
   DPI_TRACE("W addr={:08x} data={:08x} (strb {:02x}) newdata={:08x}",
-            addr + PSRAM_BASE, data, (uint32_t)strb8, *ptr);
+            addr + PSRAM_BASE, (uint32_t)data, (uint32_t)strb8, *ptr);
 }
 // compatible interface for npc core
 extern "C" void pmem_write(int addr, int data, int mask) {
-	return psram_write(addr-PSRAM_BASE, mask, data, nullptr);
+	uint8_t unaligned_part = addr & 0x3;
+	uint32_t udata = ((uint32_t)data) >> (unaligned_part * 8);
+	uint8_t umask = (mask >> unaligned_part) & 0xf;
+	return psram_write(addr-PSRAM_BASE, umask, udata, nullptr);
 }
 
 constexpr uint32_t SDRAM_BASE = 0xa0000000u;
