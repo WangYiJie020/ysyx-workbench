@@ -162,7 +162,6 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val otherReqSlave = Wire(AXI4IO.Slave)
   val memXBar       = if (isSoC) {
     AXI4IO.transformSlaveToMasterValidIf(!reset.asBool)(io.master, otherReqSlave)
-
     Module(
       new AXI4LiteXBar(
         Seq(
@@ -178,11 +177,11 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     Module(new AXI4LiteXBar(
       Seq(
         ("h02000000".U(32.W), "h0200ffff".U(32.W)) -> clint.io,
-        ("h0f000000".U(32.W), "hffffffff".U(32.W)) -> otherReqSlave,
         (MEM_BASE, MEM_END)                        -> mem.io,
         (SERIAL_BASE, SERIAL_END)                  -> uart.io
       )
     ))
+    otherReqSlave := DontCare
   }
 
   when(io.master.bvalid && io.master.bresp === AXI4IO.BResp.DECERR) {
