@@ -122,6 +122,9 @@ void EXUPerfCounter::update() {
     instCountOfFmt[fmt]++;
 
     auto instEndCycle = sim_get_cycle();
+		fmt::println("Instruction executed: type {} fmt {} cycles {}",
+								 nameOfTyp(type), nameOfFmt(fmt),
+								 instEndCycle - instStartCycle);
     auto instCycles = instEndCycle - instStartCycle;
     totalCycleOfTyp[type] += instCycles;
     totalCycleOfFmt[fmt] += instCycles;
