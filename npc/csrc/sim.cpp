@@ -316,8 +316,8 @@ extern "C" void psram_write(int32_t addr, char strb8, int32_t data, int32_t *) {
             addr + PSRAM_BASE, data, (uint32_t)strb8, *ptr);
 }
 // compatible interface for npc core
-extern "C" void pmem_write(int addr, int strb, int data) {
-	return psram_write(addr-PSRAM_BASE, strb, data, nullptr);
+extern "C" void pmem_write(int addr, int data, int mask) {
+	return psram_write(addr-PSRAM_BASE, mask, data, nullptr);
 }
 
 constexpr uint32_t SDRAM_BASE = 0xa0000000u;
