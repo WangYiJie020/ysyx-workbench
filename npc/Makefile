@@ -6,7 +6,15 @@ CPU_DESIGN_NAME = ysyx_25100261
 SIM_CSRC_DIR = ./csrc
 VSIM_OPT?= -O3
 SIM_BIN_DIR = $(BUILD_DIR)/bin
-SIM_BIN = $(SIM_BIN_DIR)/$(TOP_NAME)$(VSIM_OPT)
+
+ifeq ($(ARCH), riscv32e-ysyxsoc)
+SIM_ARCH_SUFFIX = _soc
+else
+TOP_NAME = $(CPU_DESIGN_NAME)
+SIM_ARCH_SUFFIX = _npc
+endif
+
+SIM_BIN = $(SIM_BIN_DIR)/$(TOP_NAME)$(SIM_ARCH_SUFFIX)$(VSIM_OPT)
 
 VERILATOR = verilator
 
