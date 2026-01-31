@@ -215,7 +215,11 @@ void dumpPerfCountersStatistics(std::ostream &os) {
   // fmt::println(">cycle and instruction counts:");
   // fmt::println("  total cycle count: {}", cycle_count);
   // fmt::println("  total instruction count: {}", inst_count);
-  os << "simulation statistics:\n";
+	
+	os << "Perf Counters Report\n";
+	os << "Git commit: " << _STR(GIT_COMMIT_HASH) << "\n\n";
+
+  os << "Statistics:\n";
   os << "cycle and instruction counts:\n";
   os << "  total cycle count: " << cycle_count << "\n";
   os << "  total instruction count: " << inst_count << "\n";
