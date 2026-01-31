@@ -74,7 +74,7 @@ class ICache extends Module {
   val rdCacheBlock = blocks(rdIdx)
   val cacheHit     = rdCacheBlock.matchAddr(rdAddr)
 
-  io.cpu.arready := (state === State.idle)
+  io.cpu.arready := (state === State.idle) && (!reset.asBool)
   io.mem.arvalid := (state === State.sendFetch)
   AXI4IO.noShakeConnectAR(io.cpu, io.mem)
 
