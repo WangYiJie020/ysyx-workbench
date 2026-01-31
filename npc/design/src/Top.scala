@@ -159,10 +159,10 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   AXI4IO.connectMasterSlave(exu.io.mem, memArbiter.io.exu)
 
   val ifu_icache = Module(new ICache)
-  AXI4IO.connectMasterSlave(ifu.io.mem, ifu_icache.io.cpu)
-  AXI4IO.connectMasterSlave(ifu_icache.io.mem, memArbiter.io.ifu)
+  // AXI4IO.connectMasterSlave(ifu.io.mem, ifu_icache.io.cpu)
+  // AXI4IO.connectMasterSlave(ifu_icache.io.mem, memArbiter.io.ifu)
 
-  // AXI4IO.connectMasterSlave(ifu.io.mem, memArbiter.io.ifu)
+  AXI4IO.connectMasterSlave(ifu.io.mem, memArbiter.io.ifu)
 
   val clint = Module(new CLINTUnit)
 
