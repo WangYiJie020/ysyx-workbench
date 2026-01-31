@@ -205,6 +205,8 @@ void initPerfCounters() {
   AXI4PerfCounterManager axi4Ctr;
   IFUStateCounter ifuStateCtr;
 
+	CachePerfCounter cacheCtr;
+
   handshakeCtr.init();
   handshakeCtr.add(&_GetIFU()->io_mem_rvalid, &_GetIFU()->io_mem_rready,
                    "ifu.io_mem_r", "IFU fetch inst");
@@ -234,6 +236,7 @@ void initPerfCounters() {
   perf_counters.push_back(std::move(exuCtr));
   perf_counters.push_back(std::move(axi4Ctr));
   perf_counters.push_back(std::move(ifuStateCtr));
+	perf_counters.push_back(std::move(cacheCtr));
 }
 
 void updatePerfCounters() {
