@@ -145,6 +145,7 @@ void AXI4PerfCounterManager::dumpStatistics(std::ostream &os) {
 	}
 	_SetTableFmt(t);
 	t.row(wrTitleRowIdx).format().show_border_top().hide_border_left().hide_border_right();
+	t.column(0).format().show_border_left();
 	os << t << std::endl;
 
   // os << "AXI4 Write Counters:\n";
