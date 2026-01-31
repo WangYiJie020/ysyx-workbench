@@ -207,11 +207,11 @@ bool gdbop_init(const char *socket) {
   };
 
 #define TARGET_RV32E \
-    "<target version=\"1.0\"><architecture>riscv:rv32e</architecture></target>"
+    "<target version=\"1.0\"><architecture>riscv:rv32</architecture></target>"
   static arch_info_t arch = {
       .target_desc = (char *)TARGET_RV32E,
       .smp = 1,
-      .reg_num = 32,
+      .reg_num = 16,
   };
 
   return gdbstub_init(&gdbstub, &ops, arch, (char *)socket);
