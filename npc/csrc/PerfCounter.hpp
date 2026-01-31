@@ -263,11 +263,13 @@ public:
   void fillFields() override {
     ctrName = "AXI4PerfCounters";
     for (auto &ctr : rdCounters) {
+			ctr.fillFields();
       for (auto &f : ctr.fields) {
         fields.push_back(Field{"rd_" + ctr.ctrName + "_" + f.label, f.value});
       }
     }
     for (auto &ctr : wrCounters) {
+			ctr.fillFields();
       for (auto &f : ctr.fields) {
         fields.push_back(Field{"wr_" + ctr.ctrName + "_" + f.label, f.value});
       }
