@@ -30,6 +30,9 @@ static uint8_t *pmem = NULL;
 static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 #endif
 
+#define SOC_SERIAL_BASE 0x10000000u
+#define SOC_SERIAL_END 0x10001000u
+
 #define SRAM_BASE 0x0f000000u
 #define MROM_BASE 0x20000000u
 #define FLASH_BASE 0x30000000u
@@ -53,11 +56,11 @@ static uint8_t sdram[0x800000] PG_ALIGN; // 8MB
 
 static bool in_mrom(paddr_t addr) { return addr - MROM_BASE < sizeof(mrom); }
 static bool in_sram(paddr_t addr) { return addr - SRAM_BASE < sizeof(sram); }
-static bool in_flash(paddr_t addr) { 
-	return FLASH_BASE <= addr && addr < FLASH_END;
+static bool in_flash(paddr_t addr) {
+  return FLASH_BASE <= addr && addr < FLASH_END;
 }
-static bool in_sdram(paddr_t addr) { 
-	return SDRAM_BASE <= addr && addr < SDRAM_END;
+static bool in_sdram(paddr_t addr) {
+  return SDRAM_BASE <= addr && addr < SDRAM_END;
 }
 
 uint8_t *guest_to_host(paddr_t paddr) {
@@ -68,37 +71,39 @@ uint8_t *guest_to_host(paddr_t paddr) {
   } else if (in_sram(paddr)) {
     return sram + paddr - SRAM_BASE;
   } else if (in_flash(paddr)) {
-		if(paddr - FLASH_BASE >= sizeof(flash)) {
-			printf("Flash address out of range: " FMT_PADDR, paddr);
-			return NULL;
-		}
-	  return flash + paddr - FLASH_BASE;
-	} else if (in_sdram(paddr)) {
-		if(paddr - SDRAM_BASE >= sizeof(sdram)) {
-			printf("SDRAM address out of range: " FMT_PADDR, paddr);
-			return NULL;
-		}
-	  return sdram + paddr - SDRAM_BASE;
-	} else if (NEMU_DEVICE_BASE <= paddr && paddr < NEMU_DEVICE_END) {
-		return NULL;
-	}
-	printf("Failed to translate guest to host address: " FMT_PADDR, paddr);
+    if (paddr - FLASH_BASE >= sizeof(flash)) {
+      printf("Flash address out of range: " FMT_PADDR, paddr);
+      return NULL;
+    }
+    return flash + paddr - FLASH_BASE;
+  } else if (in_sdram(paddr)) {
+    if (paddr - SDRAM_BASE >= sizeof(sdram)) {
+      printf("SDRAM address out of range: " FMT_PADDR, paddr);
+      return NULL;
+    }
+    return sdram + paddr - SDRAM_BASE;
+  } else if (SOC_SERIAL_BASE <= paddr && paddr < SOC_SERIAL_END) {
+    return NULL;
+  } else if (NEMU_DEVICE_BASE <= paddr && paddr < NEMU_DEVICE_END) {
+    return NULL;
+  }
+  printf("Failed to translate guest to host address: " FMT_PADDR, paddr);
   return NULL;
 }
 paddr_t host_to_guest(uint8_t *haddr) {
   if (likely(haddr >= pmem && haddr < pmem + CONFIG_MSIZE)) {
     return haddr - pmem + CONFIG_MBASE;
   } else if (haddr >= mrom && haddr < mrom + sizeof(mrom)) {
-		return haddr - mrom + MROM_BASE;
-	} else if (haddr >= sram && haddr < sram + sizeof(sram)) {
-		return haddr - sram + SRAM_BASE;
-	} else if (haddr >= flash && haddr < flash + sizeof(flash)) {
-		return haddr - flash + FLASH_BASE;
-	} else if (haddr >= sdram && haddr < sdram + sizeof(sdram)) {
-		return haddr - sdram + SDRAM_BASE;
-	}
-	printf("Failed to translate host to guest address: %p", haddr);
-	return 0;
+    return haddr - mrom + MROM_BASE;
+  } else if (haddr >= sram && haddr < sram + sizeof(sram)) {
+    return haddr - sram + SRAM_BASE;
+  } else if (haddr >= flash && haddr < flash + sizeof(flash)) {
+    return haddr - flash + FLASH_BASE;
+  } else if (haddr >= sdram && haddr < sdram + sizeof(sdram)) {
+    return haddr - sdram + SDRAM_BASE;
+  }
+  printf("Failed to translate host to guest address: %p", haddr);
+  return 0;
 }
 
 static bool builtin_read(paddr_t addr, int len, word_t *data) {
@@ -111,16 +116,17 @@ static bool builtin_read(paddr_t addr, int len, word_t *data) {
 }
 
 static bool builtin_write(paddr_t addr, int len, word_t data) {
-	if(in_mrom(addr)) {
-		panic("can not write ROM address = " FMT_PADDR " at pc = " FMT_WORD, addr, cpu.pc);
-		return false;
-	}
-	uint8_t *haddr = guest_to_host(addr);
-	if (haddr == NULL) {
-		return false;
-	}
-	host_write(haddr, len, data);
-	return true;
+  if (in_mrom(addr)) {
+    panic("can not write ROM address = " FMT_PADDR " at pc = " FMT_WORD, addr,
+          cpu.pc);
+    return false;
+  }
+  uint8_t *haddr = guest_to_host(addr);
+  if (haddr == NULL) {
+    return false;
+  }
+  host_write(haddr, len, data);
+  return true;
 }
 
 static void out_of_bound(paddr_t addr) {
@@ -147,7 +153,7 @@ void init_mem() {
 extern uint64_t g_nr_guest_inst;
 
 word_t paddr_read(paddr_t addr, int len) {
-  mtrace(addr, printf("%ld mem r %08X %db\n",g_nr_guest_inst, addr, len));
+  mtrace(addr, printf("%ld mem r %08X %db\n", g_nr_guest_inst, addr, len));
   word_t data;
   if (builtin_read(addr, len, &data)) {
     return data;
@@ -159,10 +165,11 @@ word_t paddr_read(paddr_t addr, int len) {
 }
 
 void paddr_write(paddr_t addr, int len, word_t data) {
-  mtrace(addr, printf("%ld mem w %08X %db %08X\n",g_nr_guest_inst, addr, len, data));
-	if (builtin_write(addr, len, data)) {
-		return;
-	}
+  mtrace(addr,
+         printf("%ld mem w %08X %db %08X\n", g_nr_guest_inst, addr, len, data));
+  if (builtin_write(addr, len, data)) {
+    return;
+  }
   IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
   out_of_bound(addr);
 }
