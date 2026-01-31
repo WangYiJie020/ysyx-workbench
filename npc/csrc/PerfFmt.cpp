@@ -1,4 +1,5 @@
 #include "PerfCounter.hpp"
+#include "spdlog/spdlog.h"
 #include <tabulate/table.hpp>
 
 using namespace _PerfCtrImp;
@@ -14,15 +15,29 @@ static void _SetTableFmt(Table &t) {
   }
 
   t[0].format().show_border_top();
-	t[1].format().show_border_top();
+  t[1].format().show_border_top();
 }
-void _PrintTable(Table &t){
-	_SetTableFmt(t);
-	std::cout <<std::setprecision(3)<< t << std::endl;
+void _PrintTable(Table &t, std::ostream &os) {
+  _SetTableFmt(t);
+  os << t << std::endl;
+}
+
+void HandShakeCounterManager::dumpStatistics(std::ostream &os) {
+  // spdlog::info(">handshake counts:");
+  os << "handshake counts:\n";
+  Table t;
+  t.add_row({"Description", "Handshake Count", "Frequency"});
+  for (auto &bus : bus_list) {
+    double freq = sim_get_cycle() == 0
+                      ? NAN
+                      : ((double)bus.shake_count / (double)sim_get_cycle());
+    t.add_row(RowStream{} << bus.description << bus.shake_count << freq);
+  }
+	_PrintTable(t, os);
 }
 
 void EXUPerfCounter::_dump(size_t *instCnts, size_t *cycCnts, size_t num,
-                           const char *(*nameFunc)(int)) {
+                           const char *(*nameFunc)(int), std::ostream &os) {
   Table t;
   t.add_row({"Category", "Inst Count", "Inst %", "Cycle Count", "Cycle %",
              "Avg CPI"});
@@ -47,7 +62,7 @@ void EXUPerfCounter::_dump(size_t *instCnts, size_t *cycCnts, size_t num,
     t.add_row(RowStream{} << name << instCount << instPerc << cycleCount
                           << cyclePerc << avgCPI);
   }
-	_PrintTable(t);
+  _PrintTable(t, os);
 }
 
 const char *IFUStateCounter::nameOfState(int s) {
@@ -58,10 +73,13 @@ const char *IFUStateCounter::nameOfState(int s) {
   };
   return names[s];
 }
-void IFUStateCounter::dumpStatistics() {
-  spdlog::info("IFU State Counter Statistics:");
-  fmt::println("total instruction fetch count: {}", totalFetchCount);
-  fmt::println("state statistics:");
+void IFUStateCounter::dumpStatistics(std::ostream &os) {
+  os << "IFU State Counter Statistics:\n";
+  os << "total instruction fetch count: " << totalFetchCount << "\n";
+  os << "state statistics:\n";
+  // spdlog::info("IFU State Counter Statistics:");
+  // fmt::println("total instruction fetch count: {}", totalFetchCount);
+  // fmt::println("state statistics:");
   Table t;
   t.add_row({"State", "Count", "Percent", "Count\n[exclu fetch]",
              "Percent\n[exclu fetch]"});
@@ -76,8 +94,54 @@ void IFUStateCounter::dumpStatistics() {
             ? NAN
             : ((double)countOfStateWhenNoFetch[i] / (double)totCycles) * 100.0;
 
-    t.add_row(RowStream{} << nameOfState(i) << countOfState[i]
-                          << perc << countOfStateWhenNoFetch[i] << percNoFetch);
+    t.add_row(RowStream{} << nameOfState(i) << countOfState[i] << perc
+                          << countOfStateWhenNoFetch[i] << percNoFetch);
   }
-  _PrintTable(t);
+  _PrintTable(t, os);
+}
+
+// void AXI4CounterBase::dumpStatisticsTitle(){
+// 	fmt::println("  {:18} : {:>8} {:>10} {:>8} {:>8}",
+// 							 "name", "txns",
+// "cycles", "avg_lat", "max_lat");
+// }
+void AXI4CounterBase::dumpStatistics(std::ostream &os) {
+  spdlog::error("AXI4CounterBase::dumpStatistics unimpled!!!");
+  // // name : total_txns total_cycles avg_latency max_latency max_time_beg
+  // // max_time_end
+  // double avg_latency = transaction_count == 0 ? NAN
+  //                                             : (double)total_latency_cycles
+  //                                             /
+  //                                                   (double)transaction_count;
+  // fmt::println("  {:18} : {:>8} {:>10} {:>8.2f} {:>8} (at sim time {} to
+  // {})", ctrName,
+  //              transaction_count, total_latency_cycles, avg_latency,
+  //              maxRecord.cycles, maxRecord.startTime, maxRecord.endTime);
+}
+
+static void _AddTableRowForAXI4Counter(Table &t, AXI4CounterBase &ctr){
+    double avg_latency =
+        ctr.transaction_count == 0
+            ? NAN
+            : (double)ctr.total_latency_cycles / (double)ctr.transaction_count;
+    t.add_row(RowStream{} << ctr.ctrName << ctr.transaction_count
+                          << ctr.total_latency_cycles << avg_latency
+                          << ctr.maxRecord.cycles << ctr.maxRecord.startTime);
+}
+void AXI4PerfCounterManager::dumpStatistics(std::ostream &os) {
+  os << "AXI4 Performance Counters Statistics:\n";
+  // os << "AXI4 Read Counters:\n";
+
+  Table t;
+  t.add_row({"Name", "Transactions", "Total\nCycles", "Avg\nLatency",
+             "Max\nLatency", "Max Start\n(sim time)"});
+  for (AXI4CounterBase &ctr : rdCounters) {
+		_AddTableRowForAXI4Counter(t, ctr);
+  }
+	for (AXI4CounterBase &ctr : wrCounters) {
+		_AddTableRowForAXI4Counter(t, ctr);
+	}
+	_PrintTable(t, os);
+
+  // os << "AXI4 Write Counters:\n";
 }
