@@ -1,5 +1,6 @@
 #include <am.h>
-#define RTC_ADDR 0x10000048
+// #define RTC_ADDR 0x10000048
+#define RTC_ADDR 0x02000048
 
 static uint64_t _am_start_time;
 static uint64_t get_us_time() {
@@ -12,7 +13,8 @@ static uint64_t get_us_time() {
 void __am_timer_init() { _am_start_time = get_us_time(); }
 
 void __am_timer_uptime(AM_TIMER_UPTIME_T *uptime) {
-  uptime->us = (get_us_time() - _am_start_time)/2; // adjust to make npc timer closer to real time
+  uptime->us = (get_us_time() - _am_start_time)*4;
+	// adjust to make npc timer closer to real time
 }
 
 void __am_timer_rtc(AM_TIMER_RTC_T *rtc) {
