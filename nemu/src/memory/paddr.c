@@ -45,8 +45,8 @@ static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 #define NEMU_DEVICE_END 0xb0000000u
 
 // dummy SDRAM region
-#define SDRAM_BASE 0xc0000000u
-#define SDRAM_END 0xd0000000u
+#define SDRAM_BASE (isSoC ? 0xffffffffu : 0xa0000000u)
+#define SDRAM_END (isSoC ? 0xffffffffu : 0xb0000000u)
 
 static uint8_t mrom[0x1000] PG_ALIGN; // 4KB
 static uint8_t sram[0x2000] PG_ALIGN; // 8KB
