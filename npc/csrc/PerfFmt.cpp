@@ -119,14 +119,7 @@ void AXI4CounterBase::dumpStatistics(std::ostream &os) {
   //              maxRecord.cycles, maxRecord.startTime, maxRecord.endTime);
 }
 
-void AXI4PerfCounterManager::dumpStatistics(std::ostream &os) {
-  os << "AXI4 Performance Counters Statistics:\n";
-  // os << "AXI4 Read Counters:\n";
-
-  Table t;
-  t.add_row({"Name", "Transactions", "Total\nCycles", "Avg\nLatency",
-             "Max\nLatency", "Max Start\n(sim time)"});
-  for (auto &ctr : rdCounters) {
+static void _AddTableRowForAXI4Counter(Table &t, AXI4CounterBase &ctr){
     double avg_latency =
         ctr.transaction_count == 0
             ? NAN
@@ -134,7 +127,21 @@ void AXI4PerfCounterManager::dumpStatistics(std::ostream &os) {
     t.add_row(RowStream{} << ctr.ctrName << ctr.transaction_count
                           << ctr.total_latency_cycles << avg_latency
                           << ctr.maxRecord.cycles << ctr.maxRecord.startTime);
+}
+void AXI4PerfCounterManager::dumpStatistics(std::ostream &os) {
+  os << "AXI4 Performance Counters Statistics:\n";
+  // os << "AXI4 Read Counters:\n";
+
+  Table t;
+  t.add_row({"Name", "Transactions", "Total\nCycles", "Avg\nLatency",
+             "Max\nLatency", "Max Start\n(sim time)"});
+  for (AXI4CounterBase &ctr : rdCounters) {
+		_AddTableRowForAXI4Counter(t, ctr);
   }
+	t.add_row({"Write Counters"});
+	for (AXI4CounterBase &ctr : wrCounters) {
+		_AddTableRowForAXI4Counter(t, ctr);
+	}
   _PrintTable(t, os);
 
   // os << "AXI4 Write Counters:\n";
