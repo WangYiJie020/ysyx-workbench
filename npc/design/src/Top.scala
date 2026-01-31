@@ -16,6 +16,8 @@ import xbar._
 
 import npcMem._
 
+import icache._
+
 class TopIO extends Bundle {
   val interrupt = Input(Bool())
   val master    = AXI4IO.Master
@@ -155,7 +157,12 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
   val memArbiter = Module(new EXUIFU_MemVisitArbiter)
   AXI4IO.connectMasterSlave(exu.io.mem, memArbiter.io.exu)
-  AXI4IO.connectMasterSlave(ifu.io.mem, memArbiter.io.ifu)
+
+  val ifu_icache = Module(new ICache)
+  AXI4IO.connectMasterSlave(ifu.io.mem, ifu_icache.io.cpu)
+  AXI4IO.connectMasterSlave(ifu_icache.io.mem, memArbiter.io.ifu)
+
+  // AXI4IO.connectMasterSlave(ifu.io.mem, memArbiter.io.ifu)
 
   val clint = Module(new CLINTUnit)
 
