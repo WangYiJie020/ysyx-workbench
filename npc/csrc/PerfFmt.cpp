@@ -110,9 +110,9 @@ void AXI4PerfCounterManager::dumpStatistics(std::ostream &os) {
   // os << "AXI4 Read Counters:\n";
 
   Table t;
-  t.add_row({"Name", "Transactions", "Total Cycles", "Avg Latency",
-             "Max Latency", "Max Latency Start\n(sim time)",
-             "Max Latency End\n(sim time)"});
+  t.add_row({"Name", "Transactions", "Total\nCycles", "Avg\nLatency",
+             "Max\nLatency", "Max Start\n(sim time)",
+             "Max End\n(sim time)"});
   for (auto &ctr : rdCounters) {
     double avg_latency =
         ctr.transaction_count == 0
