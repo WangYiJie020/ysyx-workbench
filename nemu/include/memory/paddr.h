@@ -23,7 +23,7 @@
 
 extern bool isSoC;
 static inline paddr_t reset_vector() {
-	return isSoC ? PMEM_LEFT + CONFIG_PC_RESET_OFFSET : 0x30000000;
+	return isSoC ? 0x30000000 : PMEM_LEFT + CONFIG_PC_RESET_OFFSET;
 }
 
 // #define RESET_VECTOR (PMEM_LEFT + CONFIG_PC_RESET_OFFSET)
