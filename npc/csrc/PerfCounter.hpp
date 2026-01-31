@@ -63,8 +63,8 @@ public:
   };
   std::vector<Field> fields;
   virtual void fillFields() = 0;
+  virtual void dumpStatistics() = 0;
   void clearFields() { fields.clear(); }
-  virtual void dumpStatistics(std::ostream&) = 0;
 };
 
 class HandShakeCounterManager : public PerfCounterBase {
@@ -81,6 +81,7 @@ public:
     callback_t onShakeCallback = nullptr;
 
     bool shakeHappened();
+    void dumpStatus();
   };
   std::shared_ptr<spdlog::logger> logger;
   std::vector<ValidReadyBus> bus_list;
@@ -97,7 +98,7 @@ public:
       fields.push_back(Field{bus.pathWithoutValidOrReady, bus.shake_count});
     }
   }
-  void dumpStatistics(std::ostream& os) override;
+  void dumpStatistics() override;
 };
 
 struct EXUPerfCounter : public PerfCounterBase {
@@ -143,8 +144,8 @@ struct EXUPerfCounter : public PerfCounterBase {
   void update();
 
   void _dump(size_t *instCnts, size_t *cycCnts, size_t num,
-             const char *(*nameFunc)(int), std::ostream& os);
-  void dumpStatistics(std::ostream&) override;
+             const char *(*nameFunc)(int));
+  void dumpStatistics() override;
 
   void fillFields() override {
     ctrName = "EXUInstTypeFmtCounter";
@@ -175,8 +176,9 @@ struct AXI4CounterBase : public PerfCounterBase {
   std::shared_ptr<spdlog::logger> logger;
 
   void init_logger();
-  void dumpStatistics(std::ostream&) override;
-  void fillFields() override {
+  static void dumpStatisticsTitle();
+  void dumpStatistics();
+  void fillFields() {
     fields.push_back(Field{"txn", transaction_count});
     fields.push_back(Field{"lat_cyc", total_latency_cycles});
     fields.push_back(Field{"lat_max", maxRecord.cycles});
@@ -245,7 +247,7 @@ public:
   std::vector<AXI4ReadPerfCounter> rdCounters;
   std::vector<AXI4WritePerfCounter> wrCounters;
   void update();
-  void dumpStatistics(std::ostream&) override;
+  void dumpStatistics() override;
 
   void add(AXI4ReadPerfCounter ctr, std::string path) {
     ctr.ctrName = path;
@@ -298,7 +300,7 @@ struct IFUStateCounter : public PerfCounterBase {
 
   void bind();
   void update();
-  void dumpStatistics(std::ostream&) override;
+  void dumpStatistics() override;
 
   void fillFields() override {
     ctrName = "IFUStateCounter";
@@ -314,9 +316,7 @@ using PerfCounterVariant =
                  AXI4PerfCounterManager, IFUStateCounter>;
 
 void initPerfCounters();
-void dumpPerfCountersStatistics(std::ostream& os);
+void dumpPerfCountersStatistics();
 void updatePerfCounters();
 
-void dumpPerfCounterAsCSV(std::ostream& os);
-
-void dumpPerfReportOnDir(const std::string &dir);
+std::string dumpPerfCounterAsCSV();

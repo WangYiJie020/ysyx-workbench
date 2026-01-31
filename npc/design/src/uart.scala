@@ -7,7 +7,7 @@ import axi4._
 
 import chisel3.util.circt.dpi._
 
-class UARTUnit extends Module {
+class UARTUnit extends Module{
   val io = IO(AXI4IO.Slave)
 
   io.dontCareAR()
@@ -23,12 +23,8 @@ class UARTUnit extends Module {
   sio.bvalid := true.B
   sio.bresp  := AXI4IO.BResp.OKAY
 
-  when(sio.wvalid) {
-    RawClockedVoidFunctionCall("uart_send")(
-      clock,
-      sio.wvalid,
-      sio.wdata(7, 0)
-    )
+  when(sio.wvalid){
+    printf("%c", sio.wdata(7,0))
     RawClockedVoidFunctionCall("skip_difftest_ref")(
       clock,
       sio.wvalid

@@ -1,7 +1,0 @@
-rtconfig.h
-files.mk
-compile_commands.json
-.cache
-*.swp
-!*.ld
-!Makefile

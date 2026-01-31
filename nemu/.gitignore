@@ -10,8 +10,5 @@
 !README.md
 !Kconfig
 !asan_suppress.txt
-
-!*.sh
-!*.py
 include/config
 include/generated

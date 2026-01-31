@@ -10,18 +10,16 @@ extern "C" {
 
 #include "sim.hpp"
 
-#define N_GPR 16
-
 static std::shared_ptr<spdlog::logger> _logger =
     spdlog::stdout_color_mt("gdbstub");
 
 static size_t _op_get_regbytes(int regno) { return 4; }
 
 static int _op_read_reg(void *args, int regno, void *value) {
-  if (regno < 0 || regno > N_GPR) {
+  if (regno < 0 || regno > 32) {
     _logger->error("read reg invalid regno {}", regno);
     return (int)std::errc::invalid_argument;
-  } else if (regno == N_GPR) {
+  } else if (regno == 32) {
     // pc
     uint32_t pc = sim_get_cpu_state()->pc;
     _logger->trace("read reg pc value {:08x}", pc);
@@ -36,10 +34,10 @@ static int _op_read_reg(void *args, int regno, void *value) {
 }
 
 static int _op_write_reg(void *args, int regno, void *value) {
-  if (regno < 0 || regno > N_GPR) {
+  if (regno < 0 || regno > 32) {
     _logger->error("write reg invalid regno {}", regno);
     return (int)std::errc::invalid_argument;
-  } else if (regno == N_GPR) {
+  } else if (regno == 32) {
     // pc
     uint32_t pc = *(uint32_t *)value;
     _logger->trace("write reg pc value {:08x}", pc);
@@ -211,7 +209,7 @@ bool gdbop_init(const char *socket) {
   static arch_info_t arch = {
       .target_desc = (char *)TARGET_RV32,
       .smp = 1,
-      .reg_num = N_GPR,
+      .reg_num = 32,
   };
 
   return gdbstub_init(&gdbstub, &ops, arch, (char *)socket);

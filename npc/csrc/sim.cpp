@@ -248,11 +248,6 @@ constexpr uint32_t PSRAM_BASE = 0x80000000u;
 constexpr uint32_t PSRAM_END = 0xA0000000u;
 uint32_t psram_data[8 * 1024 * 1024 / 4];
 
-extern "C" void uart_send(char ch) {
-	putchar(ch);
-	// fflush(stdout);
-}
-
 extern "C" void mrom_read(int32_t addr, int32_t *data) {
   spdlog::mdc::put("testkey", "testvalue");
   if (addr < MROM_BASE) {
