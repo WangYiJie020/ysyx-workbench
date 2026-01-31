@@ -70,9 +70,14 @@ run: export LSAN_OPTIONS=suppressions=asan_suppress.txt
 # 	@echo $(shell find -L $(DIRS-y) -name "*.c" -or -name "*.cpp")
 # 	@echo $(SRCS-y)
 
+# sdb
 INC_PATH += $(abspath ../sdb/include)
 LDFLAGS += -L$(abspath ../sdb/build) -lsdb
 ARCHIVES += $(abspath ../sdb/build/libsdb.a)
+
+# itrace_pack
+INC_PATH += $(abspath ../cachesim/public/include)
+CXXSRC += $(shell find ../cachesim/public/src -name "*.cpp" -or -name "*.cc")
 
 ifdef CONFIG_TARGET_AM
 include $(AM_HOME)/Makefile
