@@ -40,7 +40,8 @@ static void serial_io_handler(uint32_t offset, int len, bool is_write) {
     break;
   default: {
     if (isSoC) {
-      printf("serial io do not support offset = %d\n", offset);
+			// 5 : Line Status Register (LSR)
+			if(offset != 5) printf("serial io do not support offset = %d\n", offset);
     } else {
       panic("do not support offset = %d", offset);
     }
