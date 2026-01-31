@@ -6,6 +6,9 @@ SIM_CSRC_DIR = ./csrc
 VSIM_OPT?= -O3
 SIM_BIN_DIR = $(BUILD_DIR)/bin
 
+COMMIT_HASH = $(shell git rev-parse HEAD)
+CXXFLAGS += -DGIT_COMMIT_HASH=\"$(COMMIT_HASH)\"
+
 ifeq ($(ARCH), riscv32e-ysyxsoc)
 TOP_NAME = ysyxSoCFull
 SIM_ARCH_SUFFIX = _soc
