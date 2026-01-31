@@ -164,6 +164,38 @@ void EXUPerfCounter::dumpStatistics(std::ostream &os) {
   _dump(instCountOfFmt, totalCycleOfFmt, FMT_NUM, nameOfFmt, os);
 }
 
+void CachePerfCounter::bind() {
+  hARValid = &_GetICache()->io_cpu_arvalid;
+  hARReady = &_GetICache()->io_cpu_arready;
+  hCacheHit = &_GetICache()->cacheHit;
+  hState = &_GetICache()->state;
+
+  rdMemCtr.BIND_AXI4_R_BASE(_GetICache()->io_mem);
+}
+
+void CachePerfCounter::update() {
+  if (hARValid.get() && hARReady.get()) {
+    totalVisitCount++;
+    currentHitAccessStartCycle = sim_get_cycle();
+  }
+  auto s = (State)hState.get();
+  if (s == checkCache && hCacheHit.get()) {
+    hitCount++;
+    totalHitAccessCycles += sim_get_cycle() - currentHitAccessStartCycle;
+  }
+}
+
+void CachePerfCounter::dumpStatistics(std::ostream &os) {
+  os << "Cache Performance Counter Statistics:\n";
+  os << "hit rate: " << hitCount << " / " << totalVisitCount << " = "
+     << hitRate() * 100.0 << " %\n";
+	os << "average hit access cycles: " << avgHitAccessCycles() << "\n";
+	os << "average miss access cycles: " << avgMissPenaltyCycles() << "\n";
+	os << "AMAT : " << AMAT() << "\n";
+	os << "detailed read memory performance:\n";
+	rdMemCtr.dumpStatistics(os);
+}
+
 std::vector<PerfCounterVariant> perf_counters;
 
 void initPerfCounters() {
