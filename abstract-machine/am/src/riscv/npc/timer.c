@@ -1,5 +1,6 @@
 #include <am.h>
-#define RTC_ADDR 0x10000048
+// #define RTC_ADDR 0x10000048
+#define RTC_ADDR 0x02000000
 
 static uint64_t _am_start_time;
 static uint64_t get_us_time() {
