@@ -206,8 +206,10 @@ bool gdbop_init(const char *socket) {
       .get_cpu = _op_get_cpu,
   };
 
+#define TARGET_RV32E \
+    "<target version=\"1.0\"><architecture>riscv:rv32e</architecture></target>"
   static arch_info_t arch = {
-      .target_desc = (char *)TARGET_RV32,
+      .target_desc = (char *)TARGET_RV32E,
       .smp = 1,
       .reg_num = 32,
   };
