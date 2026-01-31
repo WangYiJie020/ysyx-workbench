@@ -144,15 +144,15 @@ void init_mem() {
 #define mtrace(p, expr)                                                        \
   IFDEF(CONFIG_MTRACE, if (is_addr_inmtrace(addr)) { expr; });
 
-static uint64_t get_time_us(){
+static uint64_t get_time_ns(){
   struct timespec now;
   clock_gettime(CLOCK_MONOTONIC_COARSE, &now);
-  uint64_t us = now.tv_sec * 1000000 + now.tv_nsec / 1000;
+  uint64_t us = now.tv_sec * 1000000*1000 + now.tv_nsec;
 	return us;
 }
 
 word_t paddr_read(paddr_t addr, int len) {
-  mtrace(addr, printf("%ld mem r %08X %db\n",get_time_us(), addr, len));
+  mtrace(addr, printf("%ld mem r %08X %db\n",get_time_ns(), addr, len));
   word_t data;
   if (builtin_read(addr, len, &data)) {
     return data;
@@ -164,7 +164,7 @@ word_t paddr_read(paddr_t addr, int len) {
 }
 
 void paddr_write(paddr_t addr, int len, word_t data) {
-  mtrace(addr, printf("%ld mem w %08X %db %08X\n",get_time_us(), addr, len, data));
+  mtrace(addr, printf("%ld mem w %08X %db %08X\n",get_time_ns(), addr, len, data));
 	if (builtin_write(addr, len, data)) {
 		return;
 	}
