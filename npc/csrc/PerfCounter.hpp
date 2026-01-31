@@ -81,7 +81,6 @@ public:
     callback_t onShakeCallback = nullptr;
 
     bool shakeHappened();
-    void dumpStatus();
   };
   std::shared_ptr<spdlog::logger> logger;
   std::vector<ValidReadyBus> bus_list;

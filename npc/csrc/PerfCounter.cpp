@@ -39,21 +39,14 @@ HandShakeCounterManager::add(SignalHandle hValid, SignalHandle hReady,
   return bus_list.back();
 }
 
-void HandShakeCounterManager::dumpStatistics(std::ostream &os) {
-  // spdlog::info(">handshake counts:");
-  os << ">handshake counts:\n";
-  for (auto &bus : bus_list) {
-    bus.dumpStatus();
-  }
-}
 
 bool HandShakeCounterManager::ValidReadyBus::shakeHappened() {
   return hValid.get() && hReady.get();
 }
-void HandShakeCounterManager::ValidReadyBus::dumpStatus() {
-  fmt::println("  {:18} happened {:>7} times (freq {:.4f})", description,
-               shake_count, (double)shake_count / (double)sim_get_cycle());
-}
+// void HandShakeCounterManager::ValidReadyBus::dumpStatus() {
+//   fmt::println("  {:18} happened {:>7} times (freq {:.4f})", description,
+//                shake_count, (double)shake_count / (double)sim_get_cycle());
+// }
 
 void HandShakeCounterManager::update() {
   for (auto &bus : bus_list) {

@@ -22,6 +22,20 @@ void _PrintTable(Table &t, std::ostream &os) {
   os << t << std::endl;
 }
 
+void HandShakeCounterManager::dumpStatistics(std::ostream &os) {
+  // spdlog::info(">handshake counts:");
+  os << "handshake counts:\n";
+  Table t;
+  t.add_row({"Description", "Handshake Count", "Frequency"});
+  for (auto &bus : bus_list) {
+    double freq = sim_get_cycle() == 0
+                      ? NAN
+                      : ((double)bus.shake_count / (double)sim_get_cycle());
+    t.add_row(RowStream{} << bus.description << bus.shake_count << freq);
+  }
+	_PrintTable(t, os);
+}
+
 void EXUPerfCounter::_dump(size_t *instCnts, size_t *cycCnts, size_t num,
                            const char *(*nameFunc)(int), std::ostream &os) {
   Table t;
@@ -111,7 +125,7 @@ void AXI4PerfCounterManager::dumpStatistics(std::ostream &os) {
 
   Table t;
   t.add_row({"Name", "Transactions", "Total\nCycles", "Avg\nLatency",
-             "Max\nLatency", "Max Start\n(sim time)" });
+             "Max\nLatency", "Max Start\n(sim time)"});
   for (auto &ctr : rdCounters) {
     double avg_latency =
         ctr.transaction_count == 0
