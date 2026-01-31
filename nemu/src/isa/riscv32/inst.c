@@ -42,6 +42,8 @@ static void _csr_write(word_t csr, word_t src1) {
   _handle_csr_rw(csr, src1, 1);
 }
 
+itrace_pack_t g_itrace_pack;
+
 // generate in out.cc
 int execute_instruction(word_t instruction, word_t* pc, word_t* regs);
 
@@ -78,6 +80,7 @@ static int decode_exec(Decode *s) {
   }
 
   if (IS_INST(EBREAK)) {
+		itrace_pack_close(g_itrace_pack);
     NEMUTRAP(s->pc, R(10)); // R(10) is $a0
 		matched = true;
   }
@@ -134,5 +137,6 @@ word_t _handle_csr_rw(word_t csr, word_t src1, bool is_write) {
 
 int isa_exec_once(Decode *s) {
   s->isa.inst = inst_fetch(&s->snpc, 4);
+	itrace_pack_add(g_itrace_pack, s->pc);
   return decode_exec(s);
 }
