@@ -89,6 +89,9 @@ class ICache extends Module {
 
   io.cpu.rvalid  := (state === State.respCPU)
   io.cpu.rresp   := AXI4IO.RResp.OKAY
+  // TODO: support burst read
+  io.cpu.rid     := 0.U
+  io.cpu.rlast   := true.B
 
   // TODO: impl offset
   // for now assume aligned access
