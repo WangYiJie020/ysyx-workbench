@@ -2,4 +2,4 @@
 !*.c
 !*.h
 
-./compile_commands.json
+compile_commands.json
