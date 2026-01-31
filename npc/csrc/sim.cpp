@@ -246,7 +246,13 @@ uint32_t flash_data[sizeof(img) / 4];
 
 constexpr uint32_t PSRAM_BASE = 0x80000000u;
 constexpr uint32_t PSRAM_END = 0xA0000000u;
+#if IS_SOC
 uint32_t psram_data[8 * 1024 * 1024 / 4];
+#else
+// for npc
+// psram act as pmem is 128MB
+uint32_t psram_data[128 * 1024 * 1024 / 4];
+#endif
 
 extern "C" void uart_send(char ch) {
 	putchar(ch);
