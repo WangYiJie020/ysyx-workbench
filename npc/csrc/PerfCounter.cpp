@@ -174,6 +174,7 @@ void CachePerfCounter::bind() {
 }
 
 void CachePerfCounter::update() {
+	rdMemCtr.update();
   if (hARValid.get() && hARReady.get()) {
     totalVisitCount++;
     currentHitAccessStartCycle = sim_get_cycle();
@@ -192,8 +193,6 @@ void CachePerfCounter::dumpStatistics(std::ostream &os) {
 	os << "average hit access cycles: " << avgHitAccessCycles() << "\n";
 	os << "average miss access cycles: " << avgMissPenaltyCycles() << "\n";
 	os << "AMAT : " << AMAT() << "\n";
-	os << "detailed read memory performance:\n";
-	rdMemCtr.dumpStatistics(os);
 }
 
 std::vector<PerfCounterVariant> perf_counters;
