@@ -22,6 +22,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include <time.h>
+
 #if defined(CONFIG_PMEM_MALLOC)
 static uint8_t *pmem = NULL;
 #else // CONFIG_PMEM_GARRAY
@@ -142,8 +144,15 @@ void init_mem() {
 #define mtrace(p, expr)                                                        \
   IFDEF(CONFIG_MTRACE, if (is_addr_inmtrace(addr)) { expr; });
 
+static uint64_t get_time_us(){
+  struct timespec now;
+  clock_gettime(CLOCK_MONOTONIC_COARSE, &now);
+  uint64_t us = now.tv_sec * 1000000 + now.tv_nsec / 1000;
+	return us;
+}
+
 word_t paddr_read(paddr_t addr, int len) {
-  mtrace(addr, printf("%ld mem r %08X %db\n",get_time(), addr, len));
+  mtrace(addr, printf("%ld mem r %08X %db\n",get_time_us(), addr, len));
   word_t data;
   if (builtin_read(addr, len, &data)) {
     return data;
@@ -155,7 +164,7 @@ word_t paddr_read(paddr_t addr, int len) {
 }
 
 void paddr_write(paddr_t addr, int len, word_t data) {
-  mtrace(addr, printf("%ld mem w %08X %db %08X\n",get_time(), addr, len, data));
+  mtrace(addr, printf("%ld mem w %08X %db %08X\n",get_time_us(), addr, len, data));
 	if (builtin_write(addr, len, data)) {
 		return;
 	}
