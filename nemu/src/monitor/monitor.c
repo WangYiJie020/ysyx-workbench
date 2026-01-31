@@ -177,6 +177,9 @@ void init_monitor(int argc, char *argv[]) {
 
   /* Display welcome message. */
   welcome();
+
+	printf("NEMU is running on %s\n", isSoC ? "SoC mode" : "CPU mode");
+	printf("RESET_VECTOR = " FMT_WORD "\n", RESET_VECTOR);
 }
 
 void destroy_monitor() {
