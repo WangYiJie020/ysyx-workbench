@@ -13,7 +13,7 @@ static uint64_t get_us_time() {
 void __am_timer_init() { _am_start_time = get_us_time(); }
 
 void __am_timer_uptime(AM_TIMER_UPTIME_T *uptime) {
-  uptime->us = (get_us_time() - _am_start_time)*3;
+  uptime->us = (get_us_time() - _am_start_time)*4;
 	// adjust to make npc timer closer to real time
 }
 
