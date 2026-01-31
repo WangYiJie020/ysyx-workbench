@@ -256,7 +256,7 @@ uint32_t psram_data[128 * 1024 * 1024 / 4];
 
 extern "C" void uart_send(char ch) {
 	putchar(ch);
-	// fflush(stdout);
+	fflush(stdout);
 }
 
 extern "C" void mrom_read(int32_t addr, int32_t *data) {
