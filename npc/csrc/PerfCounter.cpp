@@ -231,6 +231,7 @@ void initPerfCounters() {
 
   exuCtr.bind();
   ifuStateCtr.bind();
+	cacheCtr.bind();
 
   perf_counters.push_back(std::move(handshakeCtr));
   perf_counters.push_back(std::move(exuCtr));
