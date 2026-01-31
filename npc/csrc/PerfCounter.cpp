@@ -1,14 +1,14 @@
 #include "PerfCounter.hpp"
 #include "sim.hpp"
 #include <vector>
-
+#include <fstream>
 
 auto _GetCPU() {
-	// use vlSymsp to get inner module/signal
+  // use vlSymsp to get inner module/signal
 #ifdef SIM_SOC
   return &get_dut()->ysyxSoCFull->vlSymsp->TOP__ysyxSoCFull__asic__cpu__cpu;
 #else
-	return &get_dut()->ysyx_25100261->vlSymsp->TOP__ysyx_25100261;
+  return &get_dut()->ysyx_25100261->vlSymsp->TOP__ysyx_25100261;
 #endif
 }
 
@@ -39,8 +39,9 @@ HandShakeCounterManager::add(SignalHandle hValid, SignalHandle hReady,
   return bus_list.back();
 }
 
-void HandShakeCounterManager::dumpStatistics() {
-  spdlog::info(">handshake counts:");
+void HandShakeCounterManager::dumpStatistics(std::ostream &os) {
+  // spdlog::info(">handshake counts:");
+  os << ">handshake counts:\n";
   for (auto &bus : bus_list) {
     bus.dumpStatus();
   }
@@ -104,8 +105,8 @@ void EXUPerfCounter::update() {
 
   //
   // For history reason the timing is wired
-	//
-	// the exu cost time is calculated from idu
+  //
+  // the exu cost time is calculated from idu
   //
   // a inst start execution approximately when out_valid rises
   // (TODO: figure out the exact timing)
@@ -128,9 +129,10 @@ void EXUPerfCounter::update() {
     instCountOfFmt[fmt]++;
 
     auto instEndCycle = sim_get_cycle();
-		// fmt::println("Instruction executed: type {} fmt {} cycles {}",
-		// 						 nameOfTyp(type), nameOfFmt(fmt),
-		// 						 instEndCycle - instStartCycle);
+    // fmt::println("Instruction executed: type {} fmt {} cycles {}",
+    // 						 nameOfTyp(type),
+    // nameOfFmt(fmt), 						 instEndCycle -
+    // instStartCycle);
     auto instCycles = instEndCycle - instStartCycle;
     totalCycleOfTyp[type] += instCycles;
     totalCycleOfFmt[fmt] += instCycles;
@@ -156,13 +158,16 @@ void IFUStateCounter::update() {
   }
 }
 
-void EXUPerfCounter::dumpStatistics() {
-  spdlog::info(">instruction type counts:");
+void EXUPerfCounter::dumpStatistics(std::ostream &os) {
+  // spdlog::info(">instruction type counts:");
+  os << "instruction type counts:\n";
 
-  spdlog::info("  by type:");
-  _dump(instCountOfTyp, totalCycleOfTyp, TYPE_NUM, nameOfTyp);
-  spdlog::info("  by format:");
-  _dump(instCountOfFmt, totalCycleOfFmt, FMT_NUM, nameOfFmt);
+  // spdlog::info("  by type:");
+  os << "By type:\n";
+  _dump(instCountOfTyp, totalCycleOfTyp, TYPE_NUM, nameOfTyp, os);
+  // spdlog::info("  by format:");
+  os << "By format:\n";
+  _dump(instCountOfFmt, totalCycleOfFmt, FMT_NUM, nameOfFmt, os);
 }
 
 std::vector<PerfCounterVariant> perf_counters;
@@ -210,49 +215,82 @@ void updatePerfCounters() {
     std::visit([&](auto &c) { c.update(); }, ctr);
   }
 }
-void dumpPerfCountersStatistics() {
+void dumpPerfCountersStatistics(std::ostream &os) {
   auto cycle_count = sim_get_cycle();
   auto inst_count = sim_get_inst_count();
-  spdlog::info("simulation statistics:");
-  fmt::println(">cycle and instruction counts:");
-  fmt::println("  total cycle count: {}", cycle_count);
-  fmt::println("  total instruction count: {}", inst_count);
+  // spdlog::info("simulation statistics:");
+  // fmt::println(">cycle and instruction counts:");
+  // fmt::println("  total cycle count: {}", cycle_count);
+  // fmt::println("  total instruction count: {}", inst_count);
+  os << "simulation statistics:\n";
+  os << "cycle and instruction counts:\n";
+  os << "  total cycle count: " << cycle_count << "\n";
+  os << "  total instruction count: " << inst_count << "\n";
   if (cycle_count == 0) {
     spdlog::warn("cycle count is 0, cannot calc IPC");
   } else {
     double ipc = (double)inst_count / (double)cycle_count;
-    fmt::println("  IPC: {:.4f}", ipc);
+    os << fmt::format("  IPC: {:.4f}\n", ipc);
+    // fmt::println("  IPC: {:.4f}", ipc);
   }
   if (inst_count == 0) {
     spdlog::warn("no instruction executed, cannot calc CPI");
   } else {
     double cpi = (double)cycle_count / (double)inst_count;
-    fmt::println("  CPI: {:.4f}", cpi);
+    // fmt::println("  CPI: {:.4f}", cpi);
+    os << fmt::format("  CPI: {:.4f}\n", cpi);
   }
 
   for (auto &ctr : perf_counters) {
-    std::visit([&](auto &c) { c.dumpStatistics(); }, ctr);
+    std::visit([&](auto &c) { c.dumpStatistics(os); }, ctr);
   }
 }
 
-std::string dumpPerfCounterAsCSV() {
-  std::string title_row;
+void dumpPerfCounterAsCSV(std::ostream &os) {
+  // std::string title_row;
   std::string value_row;
+
+  bool first = true;
   for (auto &ctr : perf_counters) {
     std::visit(
         [&](auto &c) {
           c.fillFields();
           for (auto &f : c.fields) {
-            if (!title_row.empty()) {
-              title_row += ",";
+            if (!first) {
+              os << ",";
               value_row += ",";
+            } else {
+              first = false;
             }
-            title_row += c.ctrName + "_" + f.label;
+            // title_row += c.ctrName + "_" + f.label;
+            os << c.ctrName + "_" + f.label;
             value_row += std::to_string(f.value);
           }
           c.clearFields();
         },
         ctr);
   }
-  return title_row + "\n" + value_row;
+  os << "\n" << value_row;
 }
+void dumpPerfReportOnDir(const std::string &dir){
+	std::string reportPath = dir + "/perf_counter.rpt";
+	std::ofstream reportFile(reportPath);
+	if (!reportFile.is_open()) {
+		spdlog::error("cannot open perf counter report file {}", reportPath);
+		return;
+	}
+	dumpPerfCountersStatistics(reportFile);
+	reportFile.close();
+	spdlog::info("perf counter report dumped to {}", reportPath);
+	std::string csvPath = dir + "/perf_rawdata.csv";
+	std::ofstream csvFile(csvPath);
+	if (!csvFile.is_open()) {
+		spdlog::error("cannot open perf counter csv file {}", csvPath);
+		return;
+	}
+	dumpPerfCounterAsCSV(csvFile);
+	csvFile.close();
+	spdlog::info("perf counter csv dumped to {}", csvPath);
+}
+
+

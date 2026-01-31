@@ -25,7 +25,7 @@ void test_table() {
     exu_counter.totalCycleOfFmt[random() % EXUPerfCounter::FMT_NUM] +=
         random() % 5 + 1;
   }
-  exu_counter.dumpStatistics();
+  exu_counter.dumpStatistics(std::cout);
 }
 
 int main(int argc, char **argv) {
@@ -65,20 +65,8 @@ int main(int argc, char **argv) {
   spdlog::info("sim ended");
 
   if (is_soc()) {
-    dumpPerfCountersStatistics();
-    std::string perfCtrCSV = dumpPerfCounterAsCSV();
-    std::cout << "PerfCounter CSV Data:\n";
-    std::cout << perfCtrCSV << std::endl;
-
-    std::fstream csvFile;
-    csvFile.open("perf_counters.csv", std::ios::out);
-    if (csvFile.is_open()) {
-      csvFile << perfCtrCSV;
-      csvFile.close();
-      spdlog::info("Perf counters CSV data written to 'perf_counters.csv'");
-    } else {
-      spdlog::error("Failed to write perf counters CSV data to file");
-    }
+    dumpPerfCountersStatistics(std::cout);
+		dumpPerfReportOnDir(".");
   }
 
   get_dut()->final();

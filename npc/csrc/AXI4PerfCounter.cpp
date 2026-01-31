@@ -8,20 +8,6 @@ void AXI4CounterBase::init_logger() {
   logger->set_level(spdlog::level::info);
 }
 
-void AXI4CounterBase::dumpStatisticsTitle(){
-	fmt::println("  {:18} : {:>8} {:>10} {:>8} {:>8}",
-							 "name", "txns", "cycles", "avg_lat", "max_lat");
-}
-void AXI4CounterBase::dumpStatistics() {
-  // name : total_txns total_cycles avg_latency max_latency max_time_beg
-  // max_time_end
-  double avg_latency = transaction_count == 0 ? NAN
-                                              : (double)total_latency_cycles /
-                                                    (double)transaction_count;
-  fmt::println("  {:18} : {:>8} {:>10} {:>8.2f} {:>8} (at sim time {} to {})", ctrName,
-               transaction_count, total_latency_cycles, avg_latency,
-               maxRecord.cycles, maxRecord.startTime, maxRecord.endTime);
-}
 
 
 void AXI4ReadPerfCounter::update() {
@@ -96,17 +82,3 @@ void AXI4PerfCounterManager::update() {
   }
 }
 
-
-void AXI4PerfCounterManager::dumpStatistics() {
-  spdlog::info("AXI4 Performance Counters Statistics:");
-  fmt::println(">AXI4 Read Counters:");
-	AXI4CounterBase::dumpStatisticsTitle();
-  for (auto &ctr : rdCounters) {
-    ctr.dumpStatistics();
-  }
-  fmt::println(">AXI4 Write Counters:");
-	AXI4CounterBase::dumpStatisticsTitle();
-  for (auto &ctr : wrCounters) {
-    ctr.dumpStatistics();
-  }
-}
