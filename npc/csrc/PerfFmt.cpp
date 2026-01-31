@@ -111,8 +111,7 @@ void AXI4PerfCounterManager::dumpStatistics(std::ostream &os) {
 
   Table t;
   t.add_row({"Name", "Transactions", "Total\nCycles", "Avg\nLatency",
-             "Max\nLatency", "Max Start\n(sim time)",
-             "Max End\n(sim time)"});
+             "Max\nLatency", "Max Start\n(sim time)" });
   for (auto &ctr : rdCounters) {
     double avg_latency =
         ctr.transaction_count == 0
@@ -120,8 +119,7 @@ void AXI4PerfCounterManager::dumpStatistics(std::ostream &os) {
             : (double)ctr.total_latency_cycles / (double)ctr.transaction_count;
     t.add_row(RowStream{} << ctr.ctrName << ctr.transaction_count
                           << ctr.total_latency_cycles << avg_latency
-                          << ctr.maxRecord.cycles << ctr.maxRecord.startTime
-                          << ctr.maxRecord.endTime);
+                          << ctr.maxRecord.cycles << ctr.maxRecord.startTime);
   }
   _PrintTable(t, os);
 
