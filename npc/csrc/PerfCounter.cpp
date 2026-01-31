@@ -1,7 +1,7 @@
 #include "PerfCounter.hpp"
 #include "sim.hpp"
-#include <vector>
 #include <fstream>
+#include <vector>
 
 auto _GetCPU() {
   // use vlSymsp to get inner module/signal
@@ -16,6 +16,8 @@ auto _GetIFU() { return _GetCPU()->ifu; }
 auto _GetEXU() { return _GetCPU()->exu; }
 auto _GetALU() { return _GetEXU()->alu; }
 auto _GetIDU() { return _GetCPU()->idu; }
+
+auto _GetICache() { return _GetCPU()->icache; }
 
 using namespace _PerfCtrImp;
 
@@ -38,7 +40,6 @@ HandShakeCounterManager::add(SignalHandle hValid, SignalHandle hReady,
   });
   return bus_list.back();
 }
-
 
 bool HandShakeCounterManager::ValidReadyBus::shakeHappened() {
   return hValid.get() && hReady.get();
@@ -215,9 +216,9 @@ void dumpPerfCountersStatistics(std::ostream &os) {
   // fmt::println(">cycle and instruction counts:");
   // fmt::println("  total cycle count: {}", cycle_count);
   // fmt::println("  total instruction count: {}", inst_count);
-	
-	os << "Perf Counters Report\n";
-	os << "Git commit: " << _STR(GIT_COMMIT_HASH) << "\n\n";
+
+  os << "Perf Counters Report\n";
+  os << "Git commit: " << _STR(GIT_COMMIT_HASH) << "\n\n";
 
   os << "Statistics:\n";
   os << "cycle and instruction counts:\n";
@@ -269,25 +270,23 @@ void dumpPerfCounterAsCSV(std::ostream &os) {
   }
   os << "\n" << value_row;
 }
-void dumpPerfReportOnDir(const std::string &dir){
-	std::string reportPath = dir + "/perf_counter.rpt";
-	std::ofstream reportFile(reportPath);
-	if (!reportFile.is_open()) {
-		spdlog::error("cannot open perf counter report file {}", reportPath);
-		return;
-	}
-	dumpPerfCountersStatistics(reportFile);
-	reportFile.close();
-	spdlog::info("perf counter report dumped to {}", reportPath);
-	std::string csvPath = dir + "/perf_rawdata.csv";
-	std::ofstream csvFile(csvPath);
-	if (!csvFile.is_open()) {
-		spdlog::error("cannot open perf counter csv file {}", csvPath);
-		return;
-	}
-	dumpPerfCounterAsCSV(csvFile);
-	csvFile.close();
-	spdlog::info("perf counter csv dumped to {}", csvPath);
+void dumpPerfReportOnDir(const std::string &dir) {
+  std::string reportPath = dir + "/perf_counter.rpt";
+  std::ofstream reportFile(reportPath);
+  if (!reportFile.is_open()) {
+    spdlog::error("cannot open perf counter report file {}", reportPath);
+    return;
+  }
+  dumpPerfCountersStatistics(reportFile);
+  reportFile.close();
+  spdlog::info("perf counter report dumped to {}", reportPath);
+  std::string csvPath = dir + "/perf_rawdata.csv";
+  std::ofstream csvFile(csvPath);
+  if (!csvFile.is_open()) {
+    spdlog::error("cannot open perf counter csv file {}", csvPath);
+    return;
+  }
+  dumpPerfCounterAsCSV(csvFile);
+  csvFile.close();
+  spdlog::info("perf counter csv dumped to {}", csvPath);
 }
-
-
