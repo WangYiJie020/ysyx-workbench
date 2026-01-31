@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
   init_monitor(argc, argv);
 #endif
 
-	g_itrace_pack = itrace_pack_open("itrace_pack.bin");
+	g_itrace_pack = itrace_pack_create("itrace_pack.bin");
 
 
   /* Start engine. */
