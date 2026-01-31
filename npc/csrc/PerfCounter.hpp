@@ -64,7 +64,7 @@ public:
   std::vector<Field> fields;
   virtual void fillFields() = 0;
   void clearFields() { fields.clear(); }
-  virtual void dumpStatistics(std::ostream&) = 0;
+  virtual void dumpStatistics(std::ostream &) = 0;
 };
 
 class HandShakeCounterManager : public PerfCounterBase {
@@ -97,7 +97,7 @@ public:
       fields.push_back(Field{bus.pathWithoutValidOrReady, bus.shake_count});
     }
   }
-  void dumpStatistics(std::ostream& os) override;
+  void dumpStatistics(std::ostream &os) override;
 };
 
 struct EXUPerfCounter : public PerfCounterBase {
@@ -143,8 +143,8 @@ struct EXUPerfCounter : public PerfCounterBase {
   void update();
 
   void _dump(size_t *instCnts, size_t *cycCnts, size_t num,
-             const char *(*nameFunc)(int), std::ostream& os);
-  void dumpStatistics(std::ostream&) override;
+             const char *(*nameFunc)(int), std::ostream &os);
+  void dumpStatistics(std::ostream &) override;
 
   void fillFields() override {
     ctrName = "EXUInstTypeFmtCounter";
@@ -174,8 +174,14 @@ struct AXI4CounterBase : public PerfCounterBase {
 
   std::shared_ptr<spdlog::logger> logger;
 
+  double avgLatency() const {
+    return transaction_count == 0
+               ? NAN
+               : (double)total_latency_cycles / (double)transaction_count;
+  }
+
   void init_logger();
-  void dumpStatistics(std::ostream&) override;
+  void dumpStatistics(std::ostream &) override;
   void fillFields() override {
     fields.push_back(Field{"txn", transaction_count});
     fields.push_back(Field{"lat_cyc", total_latency_cycles});
@@ -245,7 +251,7 @@ public:
   std::vector<AXI4ReadPerfCounter> rdCounters;
   std::vector<AXI4WritePerfCounter> wrCounters;
   void update();
-  void dumpStatistics(std::ostream&) override;
+  void dumpStatistics(std::ostream &) override;
 
   void add(AXI4ReadPerfCounter ctr, std::string path) {
     ctr.ctrName = path;
@@ -263,13 +269,13 @@ public:
   void fillFields() override {
     ctrName = "AXI4PerfCounters";
     for (auto &ctr : rdCounters) {
-			ctr.fillFields();
+      ctr.fillFields();
       for (auto &f : ctr.fields) {
         fields.push_back(Field{"rd_" + ctr.ctrName + "_" + f.label, f.value});
       }
     }
     for (auto &ctr : wrCounters) {
-			ctr.fillFields();
+      ctr.fillFields();
       for (auto &f : ctr.fields) {
         fields.push_back(Field{"wr_" + ctr.ctrName + "_" + f.label, f.value});
       }
@@ -300,7 +306,7 @@ struct IFUStateCounter : public PerfCounterBase {
 
   void bind();
   void update();
-  void dumpStatistics(std::ostream&) override;
+  void dumpStatistics(std::ostream &) override;
 
   void fillFields() override {
     ctrName = "IFUStateCounter";
@@ -311,14 +317,63 @@ struct IFUStateCounter : public PerfCounterBase {
   }
 };
 
+class CachePerfCounter : public PerfCounterBase {
+public:
+  enum State { idle, checkCache, sendFetch, waitMem, respCPU };
+
+  SignalHandle hCacheHit;
+  SignalHandle hState;
+
+  SignalHandle hARValid, hARReady;
+
+  // cache miss penalty counter
+  AXI4ReadPerfCounter rdMemCtr;
+
+  size_t totalVisitCount = 0;
+  size_t hitCount = 0;
+
+  sim_cycle_t currentHitAccessStartCycle = 0;
+  size_t totalHitAccessCycles = 0;
+
+  void bind();
+  void update();
+  void dumpStatistics(std::ostream &) override;
+	void fillFields() override {
+		ctrName = "CachePerfCounter";
+		fields.push_back(Field{"total_visits", totalVisitCount});
+		fields.push_back(Field{"hit_count", hitCount});
+		fields.push_back(Field{"total_hit_cycles", totalHitAccessCycles});
+		rdMemCtr.fillFields();
+		for (auto &f : rdMemCtr.fields) {
+			fields.push_back(Field{"mem_rd_" + f.label, f.value});
+		}
+	}
+
+  double hitRate() const {
+    return totalVisitCount == 0 ? NAN
+                                : (double)hitCount / (double)totalVisitCount;
+  }
+  double avgHitAccessCycles() const {
+    return hitCount == 0
+               ? NAN
+               : (double)totalHitAccessCycles / (double)hitCount;
+  }
+  double avgMissPenaltyCycles() const { return rdMemCtr.avgLatency(); }
+
+  // avg memory access time in cycles
+  double AMAT() const {
+    return avgHitAccessCycles() + (1.0 - hitRate()) * avgMissPenaltyCycles();
+  }
+};
+
 using PerfCounterVariant =
     std::variant<HandShakeCounterManager, EXUPerfCounter,
-                 AXI4PerfCounterManager, IFUStateCounter>;
+                 AXI4PerfCounterManager, IFUStateCounter, CachePerfCounter>;
 
 void initPerfCounters();
-void dumpPerfCountersStatistics(std::ostream& os);
+void dumpPerfCountersStatistics(std::ostream &os);
 void updatePerfCounters();
 
-void dumpPerfCounterAsCSV(std::ostream& os);
+void dumpPerfCounterAsCSV(std::ostream &os);
 
 void dumpPerfReportOnDir(const std::string &dir);

@@ -1,7 +1,7 @@
 #include "PerfCounter.hpp"
 #include "sim.hpp"
-#include <vector>
 #include <fstream>
+#include <vector>
 
 auto _GetCPU() {
   // use vlSymsp to get inner module/signal
@@ -16,6 +16,8 @@ auto _GetIFU() { return _GetCPU()->ifu; }
 auto _GetEXU() { return _GetCPU()->exu; }
 auto _GetALU() { return _GetEXU()->alu; }
 auto _GetIDU() { return _GetCPU()->idu; }
+
+auto _GetICache() { return _GetCPU()->icache; }
 
 using namespace _PerfCtrImp;
 
@@ -38,7 +40,6 @@ HandShakeCounterManager::add(SignalHandle hValid, SignalHandle hReady,
   });
   return bus_list.back();
 }
-
 
 bool HandShakeCounterManager::ValidReadyBus::shakeHappened() {
   return hValid.get() && hReady.get();
@@ -163,6 +164,37 @@ void EXUPerfCounter::dumpStatistics(std::ostream &os) {
   _dump(instCountOfFmt, totalCycleOfFmt, FMT_NUM, nameOfFmt, os);
 }
 
+void CachePerfCounter::bind() {
+  hARValid = &_GetICache()->io_cpu_arvalid;
+  hARReady = &_GetICache()->io_cpu_arready;
+  hCacheHit = &_GetICache()->cacheHit;
+  hState = &_GetICache()->state;
+
+  rdMemCtr.BIND_AXI4_R_BASE(_GetICache()->io_mem);
+}
+
+void CachePerfCounter::update() {
+	rdMemCtr.update();
+  if (hARValid.get() && hARReady.get()) {
+    totalVisitCount++;
+    currentHitAccessStartCycle = sim_get_cycle();
+  }
+  auto s = (State)hState.get();
+  if (s == checkCache && hCacheHit.get()) {
+    hitCount++;
+    totalHitAccessCycles += sim_get_cycle() - currentHitAccessStartCycle;
+  }
+}
+
+void CachePerfCounter::dumpStatistics(std::ostream &os) {
+  os << "Cache Performance Counter Statistics:\n";
+  os << "hit rate: " << hitCount << " / " << totalVisitCount << " = "
+     << hitRate() * 100.0 << " %\n";
+	os << "average hit access cycles: " << avgHitAccessCycles() << "\n";
+	os << "average miss access cycles: " << avgMissPenaltyCycles() << "\n";
+	os << "AMAT : " << AMAT() << "\n";
+}
+
 std::vector<PerfCounterVariant> perf_counters;
 
 void initPerfCounters() {
@@ -171,6 +203,8 @@ void initPerfCounters() {
   EXUPerfCounter exuCtr;
   AXI4PerfCounterManager axi4Ctr;
   IFUStateCounter ifuStateCtr;
+
+	CachePerfCounter cacheCtr;
 
   handshakeCtr.init();
   handshakeCtr.add(&_GetIFU()->io_mem_rvalid, &_GetIFU()->io_mem_rready,
@@ -196,11 +230,13 @@ void initPerfCounters() {
 
   exuCtr.bind();
   ifuStateCtr.bind();
+	cacheCtr.bind();
 
   perf_counters.push_back(std::move(handshakeCtr));
   perf_counters.push_back(std::move(exuCtr));
   perf_counters.push_back(std::move(axi4Ctr));
   perf_counters.push_back(std::move(ifuStateCtr));
+	perf_counters.push_back(std::move(cacheCtr));
 }
 
 void updatePerfCounters() {
@@ -215,9 +251,9 @@ void dumpPerfCountersStatistics(std::ostream &os) {
   // fmt::println(">cycle and instruction counts:");
   // fmt::println("  total cycle count: {}", cycle_count);
   // fmt::println("  total instruction count: {}", inst_count);
-	
-	os << "Perf Counters Report\n";
-	os << "Git commit: " << _STR(GIT_COMMIT_HASH) << "\n\n";
+
+  os << "Perf Counters Report\n";
+  os << "Git commit: " << _STR(GIT_COMMIT_HASH) << "\n\n";
 
   os << "Statistics:\n";
   os << "cycle and instruction counts:\n";
@@ -269,25 +305,23 @@ void dumpPerfCounterAsCSV(std::ostream &os) {
   }
   os << "\n" << value_row;
 }
-void dumpPerfReportOnDir(const std::string &dir){
-	std::string reportPath = dir + "/perf_counter.rpt";
-	std::ofstream reportFile(reportPath);
-	if (!reportFile.is_open()) {
-		spdlog::error("cannot open perf counter report file {}", reportPath);
-		return;
-	}
-	dumpPerfCountersStatistics(reportFile);
-	reportFile.close();
-	spdlog::info("perf counter report dumped to {}", reportPath);
-	std::string csvPath = dir + "/perf_rawdata.csv";
-	std::ofstream csvFile(csvPath);
-	if (!csvFile.is_open()) {
-		spdlog::error("cannot open perf counter csv file {}", csvPath);
-		return;
-	}
-	dumpPerfCounterAsCSV(csvFile);
-	csvFile.close();
-	spdlog::info("perf counter csv dumped to {}", csvPath);
+void dumpPerfReportOnDir(const std::string &dir) {
+  std::string reportPath = dir + "/perf_counter.rpt";
+  std::ofstream reportFile(reportPath);
+  if (!reportFile.is_open()) {
+    spdlog::error("cannot open perf counter report file {}", reportPath);
+    return;
+  }
+  dumpPerfCountersStatistics(reportFile);
+  reportFile.close();
+  spdlog::info("perf counter report dumped to {}", reportPath);
+  std::string csvPath = dir + "/perf_rawdata.csv";
+  std::ofstream csvFile(csvPath);
+  if (!csvFile.is_open()) {
+    spdlog::error("cannot open perf counter csv file {}", csvPath);
+    return;
+  }
+  dumpPerfCounterAsCSV(csvFile);
+  csvFile.close();
+  spdlog::info("perf counter csv dumped to {}", csvPath);
 }
-
-
