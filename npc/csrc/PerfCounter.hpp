@@ -354,9 +354,9 @@ public:
                                 : (double)hitCount / (double)totalVisitCount;
   }
   double avgHitAccessCycles() const {
-    return totalVisitCount == 0
+    return hitCount == 0
                ? NAN
-               : (double)totalHitAccessCycles / (double)totalVisitCount;
+               : (double)totalHitAccessCycles / (double)hitCount;
   }
   double avgMissPenaltyCycles() const { return rdMemCtr.avgLatency(); }
 

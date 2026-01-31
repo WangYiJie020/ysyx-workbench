@@ -182,9 +182,6 @@ void CachePerfCounter::update() {
   auto s = (State)hState.get();
   if (s == checkCache && hCacheHit.get()) {
     hitCount++;
-		if(sim_get_time() - currentHitAccessStartCycle==0){
-			spdlog::warn("Cache hit access cycles is 0 at sim time {}", sim_get_time());
-		}
     totalHitAccessCycles += sim_get_cycle() - currentHitAccessStartCycle;
   }
 }
