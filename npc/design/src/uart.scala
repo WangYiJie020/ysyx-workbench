@@ -24,7 +24,7 @@ class UARTUnit extends Module {
   sio.bresp  := AXI4IO.BResp.OKAY
 
   when(sio.wvalid) {
-    printf("%c", sio.wdata(7, 0))
+    printf(p"${sio.wdata(7,0)}")
   }
 
   when(sio.wvalid) {
