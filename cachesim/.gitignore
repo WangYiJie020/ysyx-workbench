@@ -1,0 +1,5 @@
+!*.cc
+!*.c
+!*.h
+
+./compile_commands.json
