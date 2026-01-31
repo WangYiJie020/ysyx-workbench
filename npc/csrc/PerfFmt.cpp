@@ -138,11 +138,14 @@ void AXI4PerfCounterManager::dumpStatistics(std::ostream &os) {
   for (AXI4CounterBase &ctr : rdCounters) {
 		_AddTableRowForAXI4Counter(t, ctr);
   }
+	size_t wrTitleRowIdx = t.size();
 	t.add_row({"Write Counters"});
 	for (AXI4CounterBase &ctr : wrCounters) {
 		_AddTableRowForAXI4Counter(t, ctr);
 	}
-  _PrintTable(t, os);
+	_SetTableFmt(t);
+	t.row(wrTitleRowIdx).format().show_border_top().hide_border_left().hide_border_right();
+	os << t << std::endl;
 
   // os << "AXI4 Write Counters:\n";
 }
