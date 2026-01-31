@@ -26,6 +26,8 @@
 
 #include <limits.h>
 
+#include <itrace_pack.h>
+
 #include "encoding.out.h"
 
 // We are in riscv32
