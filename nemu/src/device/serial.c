@@ -24,7 +24,7 @@
 
 static uint8_t *serial_base = NULL;
 
-static uint32_t serial_delay = 0;
+uint32_t g_serial_delay = 0;
 
 static void serial_putc(char ch) {
   MUXDEF(CONFIG_TARGET_AM, putch(ch), putc(ch, stderr));
@@ -37,7 +37,7 @@ static void serial_io_handler(uint32_t offset, int len, bool is_write) {
   case CH_OFFSET:
     if (is_write){
       serial_putc(serial_base[0]);
-			serial_delay = 1;
+			g_serial_delay = 4;
 		}
     else
       panic("do not support read");
@@ -47,9 +47,8 @@ static void serial_io_handler(uint32_t offset, int len, bool is_write) {
 			// 5 : Line Status Register (LSR)
 			// if(offset != 5) printf("serial io do not support offset = %d\n", offset);
 			if(offset == 5) {
-				serial_base[5] = (serial_delay > 0) ? 0 : 0x20;
+				serial_base[5] = (g_serial_delay > 0) ? 0 : 0x20;
 			}
-			if(serial_delay > 0) serial_delay--;
     } else {
       panic("do not support offset = %d", offset);
     }
