@@ -64,6 +64,7 @@ static bool in_flash(paddr_t addr) {
 	return FLASH_BASE <= addr && addr < FLASH_END;
 }
 static bool in_sdram(paddr_t addr) { 
+	printf("SDRAM addr check: " FMT_PADDR " base: " FMT_PADDR " end: " FMT_PADDR "\n", addr, SDRAM_BASE, SDRAM_END);
 	return SDRAM_BASE <= addr && addr < SDRAM_END;
 }
 
@@ -86,7 +87,7 @@ uint8_t *guest_to_host(paddr_t paddr) {
 			return NULL;
 		}
 	  return sdram + paddr - SDRAM_BASE;
-	} else if (SDRAM_BASE <= paddr && paddr < SDRAM_END) {
+	} else if (NEMU_DEVICE_BASE <= paddr && paddr < NEMU_DEVICE_END) {
 		return NULL;
 	} else if (SOC_SERIAL_BASE <= paddr && paddr < SOC_SERIAL_END) {
 		return NULL;
