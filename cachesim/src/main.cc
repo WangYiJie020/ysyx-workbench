@@ -91,5 +91,7 @@ int main() {
   } while (pc != 0);
   icache.dumpStats(65.8862);
 
+	itrace_pack_close(pack);
+
   return 0;
 }
