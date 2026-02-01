@@ -79,6 +79,7 @@ class ICache extends Module {
   val rdIdx        = ICacheParameters.extractIndex(rdAddr)
   val rdCacheBlock = blocks(rdIdx)
   val cacheHit     = rdCacheBlock.matchAddr(rdAddr)
+  dontTouch(cacheHit)
 
   io.cpu.arready := (state === State.idle) && (!reset.asBool)
   io.mem.arvalid := (state === State.sendFetch)
