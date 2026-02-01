@@ -32,7 +32,7 @@ SECTIONS {
 		_ssbl_start = .;
 		*(.ssbl_text)
 		_ssbl_end = .;
-	} > sram AT> flash
+	} > psram AT> flash
 
 	__ssbl_load_start__ = LOADADDR(.secondary_boot);
 	__ssbl_size__       = SIZEOF(.secondary_boot);
