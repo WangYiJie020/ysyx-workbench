@@ -37,7 +37,9 @@ static void serial_io_handler(uint32_t offset, int len, bool is_write) {
   case CH_OFFSET:
     if (is_write){
       serial_putc(serial_base[0]);
-			g_serial_delay = 10;
+			// useless
+			// since real uart delay need cycle level simulation
+			g_serial_delay = 00;
 		}
     else
       panic("do not support read");
