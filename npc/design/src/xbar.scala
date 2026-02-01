@@ -49,11 +49,11 @@ class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4IO.SlaveT)]) extends Module 
     slaveIO(i).arvalid := isAR(i) && master.arvalid
     slaveIO(i).awvalid := isAW(i) && master.awvalid
 
-    when(slaveIO(i).arvalid && slaveIO(i).arready) {
+    when(slaveIO(i).arvalid){
       lastRdReqIdx := i.U
       hasLastRdReq := true.B
     }
-    when(slaveIO(i).awvalid && slaveIO(i).awready) {
+    when(slaveIO(i).awvalid){
       lastWrReqIdx := i.U
       hasLastWrReq := true.B
     }
