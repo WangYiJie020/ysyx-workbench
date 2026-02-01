@@ -96,6 +96,7 @@ EXTERN_C void itrace_pack_add(itrace_pack_t pack, uint32_t pc) {
     }
     pack->current.count += 1;
   } else {
+		printf("consecutive pc broken: prev=%08x count=%u new=%08x\n", pack->current.pc, pack->current.count, pc);
     if (pack->current.pc != 0)
       save_one_record(pack);
     pack->current.pc = pc;
