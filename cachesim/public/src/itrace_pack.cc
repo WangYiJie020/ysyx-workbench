@@ -6,6 +6,8 @@
 
 #define EXTERN_C extern "C"
 
+#define ONE_PC_STEP 4
+
 struct pc_record {
   uint32_t pc = 0;
   // count of consequtive occurrences
@@ -90,13 +92,13 @@ EXTERN_C size_t itrace_pack_nrecords(itrace_pack_t pack) {
   return pack->header.nRecords;
 }
 EXTERN_C void itrace_pack_add(itrace_pack_t pack, uint32_t pc) {
-  if (pack->current.pc + pack->current.count + 1 == pc) {
+  if (pack->current.pc + pack->current.count + ONE_PC_STEP == pc) {
     if (pack->current.count == 0xff) {
       assert(false && "itrace_pack_add: pc_record count overflow unhandled");
     }
     pack->current.count += 1;
   } else {
-		printf("consecutive pc broken: prev=%08x count=%u new=%08x\n", pack->current.pc, pack->current.count, pc);
+		// printf("consecutive pc broken: prev=%08x count=%u new=%08x\n", pack->current.pc, pack->current.count, pc);
     if (pack->current.pc != 0)
       save_one_record(pack);
     pack->current.pc = pc;
@@ -108,7 +110,7 @@ EXTERN_C uint32_t itrace_pack_pickone(itrace_pack_t pack) {
   if (pack->header.size == 0) {
     return 0;
   }
-  uint32_t pc = pack->current.pc + pack->current.count;
+  uint32_t pc = pack->current.pc + pack->current.count*ONE_PC_STEP;
   if (pack->current.count == 0) {
     if (pack->header.size > 1) {
       load_one_record(pack);
