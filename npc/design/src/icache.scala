@@ -92,7 +92,13 @@ class ICache extends Module {
 
   val nxtCacheData = Wire(UInt(ICacheParameters.BLOCK_SIZE_INBITS.W))
   dontTouch(nxtCacheData)
-  nxtCacheData := Cat(io.mem.rdata, rdCacheBlock.data(ICacheParameters.BLOCK_SIZE_INBITS - 1, 32))
+
+  nxtCacheData := {
+    if (ICacheParameters.BLOCK_SIZE_INBITS > 32)
+      Cat(io.mem.rdata, rdCacheBlock.data(ICacheParameters.BLOCK_SIZE_INBITS - 1, 32))
+    else
+      io.mem.rdata
+  }
 
   when(state === State.waitMem && io.mem.rvalid) {
     // fill cache
