@@ -135,9 +135,7 @@ word_t _handle_csr_rw(word_t csr, word_t src1, bool is_write) {
   }
 }
 
-extern uint32_t g_serial_delay;
 int isa_exec_once(Decode *s) {
-	if(g_serial_delay > 0) g_serial_delay--;
   s->isa.inst = inst_fetch(&s->snpc, 4);
 	itrace_pack_add(g_itrace_pack, s->pc);
 	// printf("%08x\n", s->pc);
