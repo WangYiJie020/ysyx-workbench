@@ -37,7 +37,7 @@ static void serial_io_handler(uint32_t offset, int len, bool is_write) {
   case CH_OFFSET:
     if (is_write){
       serial_putc(serial_base[0]);
-			g_serial_delay = 4;
+			g_serial_delay = 5;
 		}
     else
       panic("do not support read");
