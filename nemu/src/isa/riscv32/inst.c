@@ -81,7 +81,7 @@ static int decode_exec(Decode *s) {
   }
 
   if (IS_INST(EBREAK)) {
-		itrace_pack_close(g_itrace_pack);
+		if(g_itrace_pack)itrace_pack_close(g_itrace_pack);
     NEMUTRAP(s->pc, R(10)); // R(10) is $a0
 		matched = true;
   }
