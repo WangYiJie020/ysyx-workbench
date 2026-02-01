@@ -49,8 +49,13 @@ static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 #define NEMU_DEVICE_BASE 0xa0000000u
 #define NEMU_DEVICE_END 0xb0000000u
 
+#ifdef CONFIG_DEVICE
 #define SDRAM_BASE (isSoC ? 0xa0000000u : 0xffffffffu)
 #define SDRAM_END (isSoC ? 0xb0000000u : 0xffffffffu)
+#else
+#define SDRAM_BASE 0xa0000000u
+#define SDRAM_END 0xb0000000u
+#endif
 
 static uint8_t mrom[0x1000] PG_ALIGN; // 4KB
 static uint8_t sram[0x2000] PG_ALIGN; // 8KB
@@ -64,7 +69,7 @@ static bool in_flash(paddr_t addr) {
 	return FLASH_BASE <= addr && addr < FLASH_END;
 }
 static bool in_sdram(paddr_t addr) { 
-	printf("SDRAM addr check: " FMT_PADDR " base: " FMT_PADDR " end: " FMT_PADDR "\n", addr, SDRAM_BASE, SDRAM_END);
+	// printf("SDRAM addr check: " FMT_PADDR " base: " FMT_PADDR " end: " FMT_PADDR "\n", addr, SDRAM_BASE, SDRAM_END);
 	return SDRAM_BASE <= addr && addr < SDRAM_END;
 }
 
