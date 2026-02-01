@@ -104,7 +104,7 @@ class ICache extends Module {
     if (ICacheParameters.BLOCK_SIZE_INBITS > 32)
       Cat(io.mem.rdata, rdCacheBlock.data(ICacheParameters.BLOCK_SIZE_INBITS - 1, 32))
     else
-      io.mem.rdata
+      rdCacheBlock.data
   }
 
   when(state === State.waitMem && io.mem.rvalid) {
