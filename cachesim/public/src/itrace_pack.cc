@@ -7,12 +7,12 @@
 #define EXTERN_C extern "C"
 
 struct pc_record {
-  uint32_t pc;
+  uint32_t pc = 0;
   // count of consequtive occurrences
   // 0 means [pc]
   // 1 means [pc, pc + 1]
   // etc.
-  uint8_t count;
+  uint8_t count = 0;
   // TODO:
   // if count reaches 255, split into multiple records
 };
