@@ -36,7 +36,8 @@ object ICacheParameters {
     addr(log2Ceil(BLOCK_SIZE) - 1, 0)
   }
   def extractWordOffset(addr: UInt): UInt = {
-    addr(log2Ceil(BLOCK_SIZE) - 1, 2)
+    if (BLOCK_SIZE_INWORDS == 1) 0.U
+    else addr(log2Ceil(BLOCK_SIZE) - 1, 2)
   }
 }
 
