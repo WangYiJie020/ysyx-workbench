@@ -78,6 +78,7 @@ EXTERN_C void itrace_pack_close(itrace_pack_t pack) {
   if (pack->current.pc != 0)
     save_one_record(pack);
   // write header
+	printf("itrace_pack: saved %zu records, total pc record %zu\n", pack->header.nRecords, pack->header.size);
   ASSERT_WRITE_ONE(&pack->header);
   fclose(pack->fp);
   delete pack;
