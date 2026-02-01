@@ -18,8 +18,8 @@ struct pc_record {
 };
 
 struct PackHeader {
-  size_t size;
-  size_t nRecords;
+  size_t size = 0;
+  size_t nRecords = 0;
 };
 
 struct itrace_pack_imp {
