@@ -104,7 +104,7 @@ class ICache extends Module {
     if (ICacheParameters.BLOCK_SIZE_INBITS > 32)
       Cat(io.mem.rdata, rdCacheBlock.data(ICacheParameters.BLOCK_SIZE_INBITS - 1, 32))
     else
-      rdCacheBlock.data
+      io.mem.rdata
   }
 
   when(state === State.waitMem && io.mem.rvalid) {
@@ -121,11 +121,14 @@ class ICache extends Module {
   io.cpu.rlast  := true.B
 
   // 2^5 = 32
-  val hitedData = nxtCacheData >> (ICacheParameters.extractWordOffset(rdAddr) << 5)
+  val dataShift = (ICacheParameters.extractWordOffset(rdAddr) << 5)
 
-  // TODO: impl offset
-  // for now assume aligned access
-  io.cpu.rdata := hitedData(31, 0)
+  // when not hit, since rvaild at the end of waitMem, the data is from nxtCacheData
+  val rdData = Mux(cacheHit, rdCacheBlock.data, nxtCacheData)
+  dontTouch(rdData)
+  val shiftedData = rdData >> dataShift
+  dontTouch(shiftedData)
+  io.cpu.rdata := shiftedData(31, 0)
 
   state := MuxLookup(state, State.idle)(
     Seq(
