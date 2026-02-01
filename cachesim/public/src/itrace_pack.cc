@@ -52,6 +52,7 @@ static void load_one_record(itrace_pack_t pack) {
 static void save_one_record(itrace_pack_t pack) {
   ASSERT_WRITE_ONE(&pack->current.pc);
   ASSERT_WRITE_ONE(&pack->current.count);
+	pack->header.nRecords++;
 }
 static void init_from_file(itrace_pack_t pack) {
   // jump to the end - header size
