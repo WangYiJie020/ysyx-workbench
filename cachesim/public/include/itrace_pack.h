@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -12,6 +13,8 @@ extern "C" {
 typedef struct itrace_pack_imp* itrace_pack_t;
 
 itrace_pack_t itrace_pack_create(const char* filename);
+
+itrace_pack_t itrace_pack_openfp(FILE* fp);
 itrace_pack_t itrace_pack_open(const char* filename);
 
 void itrace_pack_close(itrace_pack_t pack);

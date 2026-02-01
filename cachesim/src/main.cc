@@ -74,7 +74,8 @@ public:
 };
 
 int main() {
-  itrace_pack_t pack = itrace_pack_open("../nemu/itrace_pack.bin");
+	auto fp = popen("bzip2 -dc ../nemu/itrace_pack.bin.bz2", "r");
+  itrace_pack_t pack = itrace_pack_openfp(fp);
   assert(pack != NULL);
 
   ICacheSim icache(4, 16);
@@ -90,6 +91,8 @@ int main() {
     }
   } while (pc != 0);
   icache.dumpStats(65.8862);
+
+	itrace_pack_close(pack);
 
   return 0;
 }
