@@ -84,6 +84,7 @@ class ICache extends Module {
   io.mem.arvalid := (state === State.sendFetch)
   // AXI4IO.noShakeConnectAR(io.cpu, io.mem)
 
+  io.mem         := io.cpu.arid
   io.mem.araddr  := io.cpu.araddr
   io.mem.arlen   := ICacheParameters.ARLEN.U
   io.mem.arsize  := AXI4IO.SizeType.WORD
