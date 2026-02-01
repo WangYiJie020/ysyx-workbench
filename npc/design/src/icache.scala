@@ -66,7 +66,7 @@ class ICache extends Module {
   val blocks = RegInit(VecInit(Seq.fill(ICacheParameters.BLOCK_NUM)(0.U.asTypeOf(new ICacheBlock))))
 
   object State extends ChiselEnum {
-    val idle, checkCache, sendFetch, waitMem, respCPU = Value
+    val idle, checkCache, sendFetch, waitMem = Value
   }
   val state = RegInit(State.idle)
 
@@ -110,7 +110,7 @@ class ICache extends Module {
     rdCacheBlock.data  := nxtCacheData
   }
 
-  io.cpu.rvalid := (state === State.respCPU)
+  io.cpu.rvalid := (state === State.waitMem && io.mem.rlast) || (state === State.checkCache && cacheHit)
   io.cpu.rresp  := AXI4IO.RResp.OKAY
   // TODO: support burst read
   io.cpu.rid    := io.mem.rid
@@ -126,10 +126,9 @@ class ICache extends Module {
   state := MuxLookup(state, State.idle)(
     Seq(
       State.idle       -> Mux(io.cpu.arvalid && io.cpu.arready, State.checkCache, State.idle),
-      State.checkCache -> Mux(cacheHit, State.respCPU, State.sendFetch),
+      State.checkCache -> Mux(cacheHit, State.idle, State.sendFetch),
       State.sendFetch  -> Mux(io.mem.arready, State.waitMem, State.sendFetch),
-      State.waitMem    -> Mux(io.mem.rvalid && io.mem.rlast, State.respCPU, State.waitMem),
-      State.respCPU    -> Mux(io.cpu.rready, State.idle, State.respCPU)
+      State.waitMem    -> Mux(io.mem.rvalid && io.mem.rlast, State.idle, State.waitMem)
     )
   )
 
