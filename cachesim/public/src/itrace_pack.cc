@@ -17,8 +17,13 @@ struct pc_record {
   // if count reaches 255, split into multiple records
 };
 
-struct itrace_pack_imp {
+struct PackHeader {
   size_t size;
+  size_t nRecords;
+};
+
+struct itrace_pack_imp {
+  PackHeader header;
   FILE *fp;
   pc_record current;
 };
@@ -36,39 +41,33 @@ struct itrace_pack_imp {
 
 EXTERN_C itrace_pack_t itrace_pack_create(const char *filename) {
   itrace_pack_t pack = new itrace_pack_imp;
-  pack->current.pc = 0;
-  pack->current.count = 0;
-  pack->size = 0;
   pack->fp = fopen(filename, "wb");
   assert(pack->fp != nullptr);
   return pack;
 }
 static void load_one_record(itrace_pack_t pack) {
-	ASSERT_READ_ONE(&pack->current.pc);
-	ASSERT_READ_ONE(&pack->current.count);
+  ASSERT_READ_ONE(&pack->current.pc);
+  ASSERT_READ_ONE(&pack->current.count);
 }
 static void save_one_record(itrace_pack_t pack) {
-	ASSERT_WRITE_ONE(&pack->current.pc);
-	ASSERT_WRITE_ONE(&pack->current.count);
+  ASSERT_WRITE_ONE(&pack->current.pc);
+  ASSERT_WRITE_ONE(&pack->current.count);
 }
 static void init_from_file(itrace_pack_t pack) {
-  // jump to the end - size_t
-  fseek(pack->fp, -sizeof(size_t), SEEK_END);
-  // read size
-  auto n = fread(&pack->size, sizeof(size_t), 1, pack->fp);
-  assert(n == 1);
+  // jump to the end - header size
+  fseek(pack->fp, -sizeof(PackHeader), SEEK_END);
+  // read "HEADER"
+  ASSERT_READ_ONE(&pack->header);
+
   // jump to the beginning
   fseek(pack->fp, 0, SEEK_SET);
   // load the first record
-  if (pack->size > 0) {
+  if (pack->header.nRecords > 0) {
     load_one_record(pack);
   }
 }
 EXTERN_C itrace_pack_t itrace_pack_open(const char *filename) {
   itrace_pack_t pack = new itrace_pack_imp;
-  pack->current.pc = 0;
-  pack->current.count = 0;
-  pack->size = 0;
   pack->fp = fopen(filename, "rb");
   assert(pack->fp != nullptr);
   init_from_file(pack);
@@ -77,11 +76,17 @@ EXTERN_C itrace_pack_t itrace_pack_open(const char *filename) {
 EXTERN_C void itrace_pack_close(itrace_pack_t pack) {
   if (pack->current.pc != 0)
     save_one_record(pack);
-  fwrite(&pack->size, sizeof(size_t), 1, pack->fp);
+  // write header
+  ASSERT_WRITE_ONE(&pack->header);
   fclose(pack->fp);
   delete pack;
 }
-EXTERN_C size_t itrace_pack_size(itrace_pack_t pack) { return pack->size; }
+EXTERN_C size_t itrace_pack_size(itrace_pack_t pack) {
+  return pack->header.size;
+}
+EXTERN_C size_t itrace_pack_nrecords(itrace_pack_t pack) {
+  return pack->header.nRecords;
+}
 EXTERN_C void itrace_pack_add(itrace_pack_t pack, uint32_t pc) {
   if (pack->current.pc + pack->current.count + 1 == pc) {
     if (pack->current.count == 0xff) {
@@ -94,24 +99,20 @@ EXTERN_C void itrace_pack_add(itrace_pack_t pack, uint32_t pc) {
     pack->current.pc = pc;
     pack->current.count = 0;
   }
-  pack->size += 1;
+  pack->header.size += 1;
 }
 EXTERN_C uint32_t itrace_pack_pickone(itrace_pack_t pack) {
-  if (pack->size == 0) {
+  if (pack->header.size == 0) {
     return 0;
   }
   uint32_t pc = pack->current.pc + pack->current.count;
   if (pack->current.count == 0) {
-    // if(pack->current.count >= 0xff){
-    // 	fprintf(stderr, "Warning: pc_record count count huge at pc=0x%08x\n",
-    // pack->current.pc);
-    // }
-    if (pack->size > 1) {
+    if (pack->header.size > 1) {
       load_one_record(pack);
     }
   } else {
     pack->current.count -= 1;
   }
-  pack->size -= 1;
+  pack->header.size -= 1;
   return pc;
 }
