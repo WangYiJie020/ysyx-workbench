@@ -124,7 +124,7 @@ class ICache extends Module {
   val dataShift = (ICacheParameters.extractWordOffset(rdAddr) << 5)
 
   // when not hit, since rvaild at the end of waitMem, the data is from nxtCacheData
-  val rdData = Mux(cacheHit, rdCacheBlock.data, nxtCacheData)
+  val rdData = Mux(io.mem.rvalid || (!cacheHit), nxtCacheData, rdCacheBlock.data)
   dontTouch(rdData)
   val shiftedData = rdData >> dataShift
   dontTouch(shiftedData)
