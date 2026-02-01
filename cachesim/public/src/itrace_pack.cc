@@ -12,7 +12,9 @@ struct pc_record {
   // 0 means [pc]
   // 1 means [pc, pc + 1]
   // etc.
-  uint32_t count;
+  uint8_t count;
+	// TODO:
+	// if count reaches 255, split into multiple records
 };
 
 struct itrace_pack_imp {
@@ -71,6 +73,9 @@ EXTERN_C void itrace_pack_close(itrace_pack_t pack) {
 EXTERN_C size_t itrace_pack_size(itrace_pack_t pack) { return pack->size; }
 EXTERN_C void itrace_pack_add(itrace_pack_t pack, uint32_t pc) {
   if (pack->current.pc + pack->current.count + 1 == pc) {
+		if(pack->current.count == 0xff){
+			assert(false && "itrace_pack_add: pc_record count overflow unhandled");
+		}
     pack->current.count += 1;
   } else {
     if (pack->current.pc != 0)
@@ -86,6 +91,9 @@ EXTERN_C uint32_t itrace_pack_pickone(itrace_pack_t pack) {
   }
   uint32_t pc = pack->current.pc + pack->current.count;
   if (pack->current.count == 0) {
+		// if(pack->current.count >= 0xff){
+		// 	fprintf(stderr, "Warning: pc_record count count huge at pc=0x%08x\n", pack->current.pc);
+		// }
     if (pack->size > 1) {
       load_one_record(pack);
     }
