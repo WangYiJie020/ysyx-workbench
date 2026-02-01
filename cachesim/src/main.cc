@@ -83,7 +83,7 @@ int main() {
   do {
     pc = itrace_pack_pickone(pack);
     if (pc != 0) {
-			printf("%08x\n", pc);
+			// printf("%08x\n", pc);
       icache.access(pc);
     }
   } while (pc != 0);

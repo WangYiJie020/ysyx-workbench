@@ -51,11 +51,11 @@ FSBL_TEXT void init_serial() {
 
 #define WAIT_UART_TX_EMPTY() do{while (!IS_UART_TRANSMIT_EMPTY()){}}while(0)
 FSBL_TEXT void fsbl_putch(char ch) {
-	// WAIT_UART_TX_EMPTY();
+	WAIT_UART_TX_EMPTY();
 	*UART_TX = ch;
 }
 SSBL_TEXT void ssbl_putch(char ch) {
-	// WAIT_UART_TX_EMPTY();
+	WAIT_UART_TX_EMPTY();
 	*UART_TX = ch;
 }
 
@@ -272,6 +272,6 @@ SSBL_TEXT void _second_boot() {
 
 #undef putch
 void putch(char ch) {
-	// WAIT_UART_TX_EMPTY();
+	WAIT_UART_TX_EMPTY();
   *UART_TX = ch;
 }
