@@ -163,6 +163,7 @@ word_t paddr_read(paddr_t addr, int len) {
   if (builtin_read(addr, len, &data)) {
     return data;
   }
+#ifdef CONFOG_DEVICE
 	if(SOC_SERIAL_BASE <= addr && addr < SOC_SERIAL_END) {
 		addr -= SOC_SERIAL_BASE;
 		addr += CONFIG_SERIAL_MMIO;
@@ -170,6 +171,7 @@ word_t paddr_read(paddr_t addr, int len) {
 		addr -= SOC_TIMER_BASE;
 		addr += CONFIG_RTC_MMIO;
 	}
+#endif
 
   IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
   out_of_bound(addr);
@@ -181,10 +183,12 @@ void paddr_write(paddr_t addr, int len, word_t data) {
 	if (builtin_write(addr, len, data)) {
 		return;
 	}
+#ifdef CONFIG_DEVICE
 	if(SOC_SERIAL_BASE <= addr && addr < SOC_SERIAL_END) {
 		addr -= SOC_SERIAL_BASE;
 		addr += CONFIG_SERIAL_MMIO;
 	}
+#endif
   IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
   out_of_bound(addr);
 }
