@@ -23,6 +23,17 @@ object AXI4IO {
     val DECERR = _v(3)
   }
 
+  object BurstType {
+    val FIXED   = 0.U(2.W)
+    val INCR    = 1.U(2.W)
+    val WRAP    = 2.U(2.W)
+  }
+  object SizeType {
+    val BYTE      = 0.U(3.W) // 1 byte
+    val HALF_WORD = 1.U(3.W) // 2 bytes
+    val WORD      = 2.U(3.W) // 4 bytes
+  }
+
   // Master interface
   class Imp(val ADDR_WIDTH: Int, val DATA_WIDTH: Int) extends Bundle {
 
