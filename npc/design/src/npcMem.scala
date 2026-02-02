@@ -38,6 +38,7 @@ class AXI4MemUnit extends Module {
       sARWait -> Mux(sio.rvalid, sARIdle, sARWait)
     )
   )
+  rdAddrBegReg := Mux(sio.arvalid && sio.arready, sio.araddr, rdAddrBegReg)
   rdAddrBeg := Mux(arState === sARIdle, sio.araddr, rdAddrBegReg)
 
   val arLen        = Reg(UInt(8.W))
