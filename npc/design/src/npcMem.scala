@@ -75,6 +75,19 @@ class AXI4MemUnit extends Module {
     )
   )
 
+  when(rState === RState.waitMem) {
+    RawClockedVoidFunctionCall("pmem_read")(
+      clock,
+      (!reset.asBool),
+      rdAddr,
+      rdFIFO.io.enq.bits
+    )
+    rdFIFO.io.enq.valid := true.B
+  }.otherwise {
+    rdFIFO.io.enq.bits := 0.U
+    rdFIFO.io.enq.valid := false.B
+  }
+
   // AW
 
   val wrAddr = Reg(Types.UWord)
