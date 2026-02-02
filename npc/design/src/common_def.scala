@@ -5,7 +5,8 @@ import chisel3.util._
 
 object Types {
   object BitWidth {
-    val reg_addr = 5
+    // N_REG = 16
+    val reg_addr = 4
     val csr_addr = 12
     val word     = 32
   }
