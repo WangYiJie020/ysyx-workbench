@@ -41,6 +41,10 @@ SECTIONS {
 	/* 		. = ORIGIN(psram) + SIZEOF(.boot) + 4; */
 	/* } > psram */
 
+	.text_padding (NOLOAD) : {
+		. = ORIGIN(runtime) + 4;
+	} > runtime
+
   .text : {
 		_text_start = .;
     *(.text*)
