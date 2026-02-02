@@ -21,6 +21,8 @@ class AXI4MemUnit extends Module {
   val rdAddrBegReg = Reg(Types.UWord)
   val rdAddrBeg    = Wire(Types.UWord)
   val rdAddr       = Wire(Types.UWord)
+  dontTouch(rdAddr)
+  dontTouch(rdAddrBeg)
 
   when(sio.arvalid && sio.arready) {
     rdAddrBeg := sio.araddr
