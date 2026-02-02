@@ -209,11 +209,14 @@ $(shell mkdir -p $(STA_NODPI_PATH))
 
 STA_VSRCS = $(shell find $(abspath $(STA_NODPI_PATH)) -maxdepth 1 -name "*.v" -or -name "*.sv")
 
+		# DESIGN=$(CPU_DESIGN_NAME) \
+			#
+
 sta: $(SIM_VSRCS)
 	@echo "Removing DPI-C void functions from verilog sources..."
 	./remove_dpi.sh $(CHISEL2V_EMIT_DIR) $(STA_NODPI_PATH)
 	make -C $(YOSYS_STA_PATH) sta \
-		DESIGN=$(CPU_DESIGN_NAME) \
+		DESIGN=ICacheBlock \
 		CLK_FREQ_MHZ=400 \
 		CLK_PORT_NAME=clock \
 		O=$(STA_OUT_DIR) \
