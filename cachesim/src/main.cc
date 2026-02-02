@@ -6,6 +6,10 @@
 #include <itrace_pack.h>
 #include <vector>
 
+#include <thread>
+
+#include <fstream>
+
 uint32_t extractBits(uint32_t num, int high, int low) {
   assert(high >= low);
   assert(high < 32);
@@ -63,36 +67,87 @@ public:
   }
 
   void dumpStats(double missPenalty) {
-    printf("ICacheSim Stats:\n");
-    printf("  Total Access: %zu\n", totalAccessCount);
-    printf("  Total Miss:   %zu\n", totalMissCount);
+    std::string filename = "icache_stat_" + std::to_string(blockSize) + "_" +
+                           std::to_string(blockNum) + ".txt";
+    std::ofstream ofs(filename);
+    if (!ofs.is_open()) {
+      std::cerr << "Failed to open file: " << filename << std::endl;
+      return;
+    }
+    ofs << "block_size: " << blockSize << "\n";
+    ofs << "block_num: " << blockNum << "\n";
+    ofs << "total_access: " << totalAccessCount << "\n";
+    ofs << "total_miss: " << totalMissCount << "\n";
+
     double hitCount = totalAccessCount - totalMissCount;
-    printf("  Hit Rate:     %.2f%%\n", hitCount / totalAccessCount * 100.0);
-    double totalMissTime = totalMissCount * missPenalty;
-    printf("  Total Miss Time: %.2f cycles\n", totalMissTime);
+		// Assume no use brust
+    double totalMissTime = totalMissCount * missPenalty * blockSize / 4.0;
+
+    ofs << "hit_rate: " << (hitCount / totalAccessCount * 100.0) << "\n";
+    ofs << "total_miss_time: " << totalMissTime << " (based on " << missPenalty
+        << " cycles per miss)\n";
+    ofs.close();
+    std::cout << "ICache simulation stats written to " << filename << std::endl;
   }
 };
 
-int main() {
-	auto fp = popen("bzip2 -dc ../nemu/itrace_pack.bin.bz2", "r");
+void sim(size_t blockSize, size_t blockNum) {
+  auto fp = popen("bzip2 -dc ../nemu/itrace_pack.bin.bz2", "r");
   itrace_pack_t pack = itrace_pack_openfp(fp);
   assert(pack != NULL);
 
-  ICacheSim icache(4, 16);
+  ICacheSim icache(blockSize, blockNum);
 
-	printf("Simulating ICache with %zu records...\n", itrace_pack_nrecords(pack));
+  printf("Simulating ICache with %zu records...\n", itrace_pack_nrecords(pack));
 
   uint32_t pc = 0;
   do {
     pc = itrace_pack_pickone(pack);
     if (pc != 0) {
-			// printf("%08x\n", pc);
+      // printf("%08x\n", pc);
       icache.access(pc);
     }
   } while (pc != 0);
-  icache.dumpStats(65.8862);
+  icache.dumpStats(24.7324);
 
-	itrace_pack_close(pack);
+  itrace_pack_close(pack);
+}
 
-  return 0;
+int main() {
+	struct parm {
+		size_t blockSize;
+		size_t blockNum;
+	};
+
+	std::vector<parm> parmlist;
+	for(size_t bs = 4; bs <= 256; bs *= 2) {
+		// 4 8 16 32 64 128 256
+		for(size_t bn = 16; bn <= 512; bn *= 2) {
+			// 16 32 64 128 256 512
+			parmlist.push_back({bs, bn});
+		}
+	}
+	// 6*7=42 combinations
+	
+	constexpr size_t numThreads = 14;
+	constexpr size_t tasksPerThread = 3;
+
+	std::thread threads[numThreads];
+
+	for(size_t i = 0; i < numThreads; i++) {
+		threads[i] = std::thread([i, &parmlist]() {
+			for(size_t j = 0; j < tasksPerThread; j++) {
+				size_t index = i * tasksPerThread + j;
+				sim(parmlist[index].blockSize, parmlist[index].blockNum);
+			}
+		});
+	}
+
+	for(size_t i = 0; i < numThreads; i++) {
+		threads[i].join();
+	}
+
+	return 0;
+
+
 }
