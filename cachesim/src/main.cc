@@ -108,7 +108,7 @@ void sim(size_t blockSize, size_t blockNum) {
       icache.access(pc);
     }
   } while (pc != 0);
-  icache.dumpStats(24.7324);
+  icache.dumpStats(30.0);
 
   itrace_pack_close(pack);
 }
@@ -122,7 +122,8 @@ int main() {
 	std::vector<parm> parmlist;
 	for(size_t bs = 4; bs <= 256; bs *= 2) {
 		// 4 8 16 32 64 128 256
-		for(size_t bn = 16; bn <= 512; bn *= 2) {
+		for(size_t bn = 2; bn <= 64; bn *= 2) {
+			// 2 4 8 16 32 64
 			// 16 32 64 128 256 512
 			parmlist.push_back({bs, bn});
 		}
