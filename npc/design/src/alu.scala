@@ -18,7 +18,6 @@ class ALU extends Module {
     val in  = Flipped(Decoupled(new ALUInput))
     val out = Decoupled(Types.UWord)
   })
-  val BADCALL_RESVALUE = "hBAADCA11".U
 
   val fsm = Module(new OneMasterOneSlaveFSM)
   fsm.connectMaster(io.in)
@@ -38,13 +37,18 @@ class ALU extends Module {
   val isAdd = (inbits.func7t === 0.U) || inbits.is_imm
 
   val add_sub_res = Wire(Types.UWord)
+  // when(inbits.is_imm || inbits.func7t === 0.U) {
+  //   add_sub_res := src1 + src2
+  // }.elsewhen(inbits.func7t === "b0100000".U) {
+  //   add_sub_res := src1 - src2
+  // }.otherwise {
+  //   add_sub_res := DontCare
+  // }
+
   when(inbits.is_imm || inbits.func7t === 0.U) {
     add_sub_res := src1 + src2
-  }.elsewhen(inbits.func7t === "b0100000".U) {
-    add_sub_res := src1 - src2
   }.otherwise {
-    add_sub_res := DontCare
-    // printf("(alu) UNKNOWN func7t %d", inbits.func7t)
+    add_sub_res := src1 - src2
   }
 
   val shift_res = Wire(Types.UWord)
