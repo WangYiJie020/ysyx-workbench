@@ -20,7 +20,7 @@ class AXI4MemUnit extends Module {
 
   val rdAddrBegReg = Reg(Types.UWord)
   val rdAddrBeg    = Wire(Types.UWord)
-  val rdAddr    = Wire(Types.UWord)
+  val rdAddr       = Wire(Types.UWord)
 
   when(sio.arvalid && sio.arready) {
     rdAddrBeg := sio.araddr
@@ -30,7 +30,7 @@ class AXI4MemUnit extends Module {
   val arState                   = RegInit(sARIdle)
   sio.arready := (arState === sARIdle) && (!reset.asBool)
 
-  arState := MuxLookup(arState, sARIdle)(
+  arState   := MuxLookup(arState, sARIdle)(
     Seq(
       sARIdle -> Mux(sio.arvalid, sARWait, sARIdle),
       sARWait -> Mux(sio.rvalid, sARIdle, sARWait)
@@ -78,12 +78,11 @@ class AXI4MemUnit extends Module {
   )
 
   val enRdDataCall = (rState === RState.waitMem) || (rState === RState.idle && sio.arvalid)
-  val rdData = RawClockedNonVoidFunctionCall("pmem_read",UInt(32.W))(
-    clock,
-    (!reset.asBool) && enRdDataCall,
-    rdAddr
-  )
   when(rState === RState.waitMem) {
+    val rdData = RawUnclockedNonVoidFunctionCall("pmem_read", UInt(32.W))(
+      (!reset.asBool) && enRdDataCall,
+      rdAddr
+    )
     rdFIFO.io.enq.bits  := rdData
     rdFIFO.io.enq.valid := true.B
   }.otherwise {
