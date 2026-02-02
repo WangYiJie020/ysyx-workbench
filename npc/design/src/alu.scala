@@ -18,7 +18,6 @@ class ALU extends Module {
     val in  = Flipped(Decoupled(new ALUInput))
     val out = Decoupled(Types.UWord)
   })
-  val BADCALL_RESVALUE = "hBAADCA11".U
 
   val fsm = Module(new OneMasterOneSlaveFSM)
   fsm.connectMaster(io.in)
@@ -35,26 +34,43 @@ class ALU extends Module {
 
   val shamt = src2(4, 0)
 
+  val isOpAlt = inbits.func7t(5)
+
+  val isAdd = (~isOpAlt) || inbits.is_imm
+
   val add_sub_res = Wire(Types.UWord)
-  when(inbits.is_imm || inbits.func7t === 0.U) {
-    add_sub_res := src1 + src2
-  }.elsewhen(inbits.func7t === "b0100000".U) {
-    add_sub_res := src1 - src2
-  }.otherwise {
-    add_sub_res := BADCALL_RESVALUE
-    // printf("(alu) UNKNOWN func7t %d", inbits.func7t)
-  }
+
+  // original implementation, but synthesis tool
+  // will add 140 um^2 area for unknown reason
+  //
+  // when((inbits.func7t === 0.U) || inbits.is_imm) {
+  //   add_sub_res := src1 + src2
+  // }.otherwise {
+  //   add_sub_res := src1 - src2
+  // }
+
+  // ok
+  // when(inbits.is_imm || (inbits.func7t === 0.U)) {
+  //   add_sub_res := src1 + src2
+  // }.otherwise {
+  //   add_sub_res := src1 - src2
+  // }
+
+  add_sub_res := Mux(isAdd, src1 + src2, src1 - src2)
 
   val shift_res = Wire(Types.UWord)
-  when(inbits.func7t === "b0100000".U) { // sra/srai
-    shift_res := (s_src1 >> shamt).asUInt
-  }.otherwise { // srl/srli
-    shift_res := src1 >> shamt
-  }
+  shift_res := Mux(isOpAlt, (s_src1 >> shamt).asUInt, src1 >> shamt)
+  // when(inbits.func7t === "b0100000".U) { // sra/srai
+  // when(isOpAlt) { // sra/srai
+  //   shift_res := (s_src1 >> shamt).asUInt
+  // }.otherwise { // srl/srli
+  //   shift_res := src1 >> shamt
+  // }
 
-  val is_sltiu_func7t = (inbits.func7t === "b0010011".U)
+  val defaultRes = Wire(Types.UWord)
+  defaultRes := DontCare
 
-  io.out.bits := MuxLookup(inbits.func3t, BADCALL_RESVALUE)(
+  io.out.bits := MuxLookup(inbits.func3t, defaultRes)(
     Seq(
       0.U -> add_sub_res,                    // 000: add/sub/addi
       1.U -> (src1 << shamt),                // 001: sll/slli
