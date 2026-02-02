@@ -291,6 +291,10 @@ extern "C" void flash_read(int32_t addr, int32_t *data) {
 extern "C" void psram_read(int32_t addr, int32_t *data) {
   // in psram high 8bit addr are 0
   // no need to minus PSRAM_BASE
+	if(addr >= sizeof(psram_data)){
+		_dpi_logger->error("psram_read addr={:08x} out of bound", addr + PSRAM_BASE);
+		return;
+	}
   assert(addr < sizeof(psram_data));
   addr &= ~0x3;
   uintptr_t ptr = (uintptr_t)psram_data + addr;

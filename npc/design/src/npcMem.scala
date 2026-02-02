@@ -18,8 +18,11 @@ class AXI4MemUnit extends Module {
 
   // AR
 
-  val rdAddrBeg = Reg(Types.UWord)
-  val rdAddr    = Wire(Types.UWord)
+  val rdAddrBegReg = Reg(Types.UWord)
+  val rdAddrBeg    = Wire(Types.UWord)
+  val rdAddr       = Wire(Types.UWord)
+  dontTouch(rdAddr)
+  dontTouch(rdAddrBeg)
 
   when(sio.arvalid && sio.arready) {
     rdAddrBeg := sio.araddr
@@ -29,15 +32,19 @@ class AXI4MemUnit extends Module {
   val arState                   = RegInit(sARIdle)
   sio.arready := (arState === sARIdle) && (!reset.asBool)
 
-  arState := MuxLookup(arState, sARIdle)(
+  arState   := MuxLookup(arState, sARIdle)(
     Seq(
       sARIdle -> Mux(sio.arvalid, sARWait, sARIdle),
       sARWait -> Mux(sio.rvalid, sARIdle, sARWait)
     )
   )
+  rdAddrBegReg := Mux(sio.arvalid && sio.arready, sio.araddr, rdAddrBegReg)
+  rdAddrBeg := Mux(arState === sARIdle, sio.araddr, rdAddrBegReg)
 
   val arLen        = Reg(UInt(8.W))
-  val curReadCount = RegInit(0.U(8.W))
+  val curReadCount = Wire(UInt(8.W))
+  dontTouch(curReadCount)
+
   when(sio.arvalid && sio.arready) {
     arLen := sio.arlen
   }
@@ -48,42 +55,43 @@ class AXI4MemUnit extends Module {
   rdAddr := rdAddrBeg + (curReadCount << 2)
 
   // R
+  // support burst read
 
-  val rdData = Reg(Types.UWord)
+  object RState extends ChiselEnum {
+    val idle, waitMem, sendData = Value
+  }
+  val rState = RegInit(RState.idle)
 
-  val sRIdle :: sRWaitMem :: sRWaitRdy :: Nil = Enum(3)
-  val rState                                  = RegInit(sRIdle)
-  sio.rvalid := (rState === sRWaitRdy)
-  sio.rresp  := AXI4IO.RResp.OKAY
-  sio.rdata  := rdData
+  val rdFIFO = Module(new Queue(Types.UWord, 16))
+  curReadCount := rdFIFO.io.count
 
-  sio.rlast := true.B
-  sio.rid   := 0.U
+  sio.rvalid          := (rState === RState.sendData) && rdFIFO.io.deq.valid
+  rdFIFO.io.deq.ready := sio.rready && sio.rvalid
+  sio.rdata           := rdFIFO.io.deq.bits
+  sio.rresp           := AXI4IO.RResp.OKAY
+  sio.rid             := 0.U
+  sio.rlast           := (curReadCount === 1.U)
 
-  val memReadFinished = Wire(Bool())
-  val memReadPrepared = (arState === sARWait)
-
-  rState := MuxLookup(rState, sRIdle)(
+  rState := MuxLookup(rState, RState.idle)(
     Seq(
-      sRIdle    -> Mux(memReadPrepared, sRWaitMem, sRIdle),
-      sRWaitMem -> Mux(memReadFinished, sRWaitRdy, sRWaitMem),
-      sRWaitRdy -> Mux(sio.rready, Mux(curReadCount === arLen, sRIdle, sRWaitMem), sRWaitRdy)
+      RState.idle     -> Mux(sio.arvalid, RState.waitMem, RState.idle),
+      RState.waitMem  -> Mux(curReadCount === arLen, RState.sendData, RState.waitMem),
+      RState.sendData -> Mux(curReadCount === 0.U, RState.idle, RState.sendData)
     )
   )
 
-  when(rState === sRWaitMem) {
-    rdData := RawClockedNonVoidFunctionCall("pmem_read", Types.UWord)(
-      clock,
-      (!memReadFinished) && (!reset.asBool),
+  val enRdDataCall = WireDefault((rState === RState.waitMem) || (rState === RState.idle && sio.arvalid))
+  dontTouch(enRdDataCall)
+  when(rState === RState.waitMem) {
+    val rdData = RawUnclockedNonVoidFunctionCall("pmem_read", UInt(32.W))(
+      (!reset.asBool) && enRdDataCall,
       rdAddr
     )
-  }
-
-  // for now mem read always finish in one cycle
-  memReadFinished := RegNext((rState === sRWaitMem)&&(curReadCount === arLen))
-
-  when(rState === sRWaitRdy && sio.rready) {
-    curReadCount := Mux(curReadCount === arLen, 0.U, curReadCount + 1.U)
+    rdFIFO.io.enq.bits  := rdData
+    rdFIFO.io.enq.valid := true.B
+  }.otherwise {
+    rdFIFO.io.enq.bits  := 0.U
+    rdFIFO.io.enq.valid := false.B
   }
 
   // AW
