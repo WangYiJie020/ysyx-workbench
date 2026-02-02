@@ -18,10 +18,11 @@ class AXI4MemUnit extends Module {
 
   // AR
 
-  val rdAddr = Reg(Types.UWord)
+  val rdAddrBeg = Reg(Types.UWord)
+  val rdAddr    = Wire(Types.UWord)
 
   when(sio.arvalid && sio.arready) {
-    rdAddr := sio.araddr
+    rdAddrBeg := sio.araddr
   }
 
   val sARIdle :: sARWait :: Nil = Enum(2)
@@ -35,6 +36,17 @@ class AXI4MemUnit extends Module {
     )
   )
 
+  val arLen        = Reg(UInt(8.W))
+  val curReadCount = RegInit(0.U(8.W))
+  when(sio.arvalid && sio.arready) {
+    arLen := sio.arlen
+  }
+  when(arLen =/= 0.U) {
+    assert(sio.arsize === AXI4IO.SizeType.WORD, "Only support word size read now")
+    assert(sio.arburst === AXI4IO.BurstType.INCR, "Only support INCR burst type now")
+  }
+  rdAddr := rdAddrBeg + (curReadCount << 2)
+
   // R
 
   val rdData = Reg(Types.UWord)
@@ -45,8 +57,8 @@ class AXI4MemUnit extends Module {
   sio.rresp  := AXI4IO.RResp.OKAY
   sio.rdata  := rdData
 
-  sio.rlast  := true.B
-  sio.rid    := 0.U
+  sio.rlast := true.B
+  sio.rid   := 0.U
 
   val memReadFinished = Wire(Bool())
   val memReadPrepared = (arState === sARWait)
@@ -55,7 +67,7 @@ class AXI4MemUnit extends Module {
     Seq(
       sRIdle    -> Mux(memReadPrepared, sRWaitMem, sRIdle),
       sRWaitMem -> Mux(memReadFinished, sRWaitRdy, sRWaitMem),
-      sRWaitRdy -> Mux(sio.rready, sRIdle, sRWaitRdy)
+      sRWaitRdy -> Mux(sio.rready, Mux(curReadCount === arLen, sRIdle, sRWaitMem), sRWaitRdy)
     )
   )
 
@@ -68,7 +80,11 @@ class AXI4MemUnit extends Module {
   }
 
   // for now mem read always finish in one cycle
-  memReadFinished := RegNext(rState === sRWaitMem)
+  memReadFinished := RegNext((rState === sRWaitMem)&&(curReadCount === arLen))
+
+  when(rState === sRWaitRdy && sio.rready) {
+    curReadCount := Mux(curReadCount === arLen, 0.U, curReadCount + 1.U)
+  }
 
   // AW
 
@@ -116,7 +132,7 @@ class AXI4MemUnit extends Module {
   sio.bvalid := (bState === sBWaitRdy)
   sio.bresp  := AXI4IO.BResp.OKAY
 
-  sio.bid    := 0.U
+  sio.bid := 0.U
 
   val memWriteFinished = Wire(Bool())
   val memWritePrepared = (awState === sAWWait) && (wState === sWWait)

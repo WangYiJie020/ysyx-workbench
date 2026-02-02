@@ -31,13 +31,27 @@ class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4IO.SlaveT)]) extends Module 
   dontTouch(isAR)
   dontTouch(isAW)
 
-  val hasLastRdReq = RegInit(false.B)
+  val hasLastRdReqReg = RegInit(false.B)
   val hasLastWrReq = RegInit(false.B)
-  val lastRdReqIdx = RegInit(0.U(log2Ceil(mappings.size).W))
+  val lastRdReqIdxReg = RegInit(0.U(log2Ceil(mappings.size).W))
   val lastWrReqIdx = RegInit(0.U(log2Ceil(mappings.size).W))
 
   val master = io.in
 
+  val hasLastRdReq = hasLastRdReqReg || (master.arvalid && master.arready)
+  val lastRdReqIdx = Mux(hasLastRdReqReg, lastRdReqIdxReg, {
+    val idx = WireDefault(0.U(log2Ceil(mappings.size).W))
+    for (i <- mappings.indices) {
+      when(isAR(i)) {
+        idx := i.U
+      }
+    }
+    idx
+  })
+
+  // when(master.arvalid && master.arready){
+  //   lastRdReqIdxReg := lastRdReqIdx
+  // }
   // val slaveIO = mappings.map(_._2.ioImp)
 
   val slaveIO = io.slaves
@@ -50,8 +64,8 @@ class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4IO.SlaveT)]) extends Module 
     slaveIO(i).awvalid := isAW(i) && master.awvalid
 
     when(slaveIO(i).arvalid){
-      lastRdReqIdx := i.U
-      hasLastRdReq := true.B
+      lastRdReqIdxReg := i.U
+      hasLastRdReqReg := true.B
     }
     when(slaveIO(i).awvalid){
       lastWrReqIdx := i.U
@@ -81,7 +95,7 @@ class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4IO.SlaveT)]) extends Module 
   }
 
   when(master.rvalid && master.rlast) {
-    hasLastRdReq := false.B
+    hasLastRdReqReg := false.B
   }
   when(master.bvalid && master.bready) {
     hasLastWrReq := false.B
