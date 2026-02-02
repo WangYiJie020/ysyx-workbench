@@ -108,14 +108,13 @@ class ControlStatusRegisterFile extends Module {
   val march_id   = "d25100261".U(32.W)
 
   // Writable CSRs
-  // 0: None
-  // 1: mstatus
-  val waregs = RegInit(VecInit(0.U +: "h00001800".U(32.W) +: Seq.fill(3)(0.U(32.W))))
+  // 0: mstatus
+  val waregs = RegInit(VecInit("h00001800".U(32.W) +: Seq.fill(3)(0.U(32.W))))
   val walut  = Seq(
-    CSRAddr.mstatus -> 1.U,
-    CSRAddr.mepc    -> 2.U,
-    CSRAddr.mcause  -> 3.U,
-    CSRAddr.mtvec   -> 4.U
+    CSRAddr.mstatus -> 0.U,
+    CSRAddr.mepc    -> 1.U,
+    CSRAddr.mcause  -> 2.U,
+    CSRAddr.mtvec   -> 3.U
   )
   val widx   = MuxLookup(io.write.addr, 0.U)(walut)
   val ridx   = MuxLookup(io.read.addr, 0.U)(walut)
@@ -134,13 +133,13 @@ class ControlStatusRegisterFile extends Module {
     io.read.data := 0.U
   }
 
-  val en_wrtie= (io.write.en && (widx =/= 0.U))||(io.is_ecall && (io.write.addr === CSRAddr.mepc))
+  val en_wrtie= (io.write.en)||(io.is_ecall && (io.write.addr === CSRAddr.mepc))
 
   when(en_wrtie) {
     waregs(widx) := io.write.data
     when(io.is_ecall && (io.write.addr === CSRAddr.mepc)) {
 //      printf("(CSR) ecall detected")
-      waregs(3) := 11.U // mcause = 11 for ecall from M-mode
+      waregs(2) := 11.U // mcause = 11 for ecall from M-mode
     }
   }
 
