@@ -59,12 +59,13 @@ class ALU extends Module {
   add_sub_res := Mux(isAdd, src1 + src2, src1 - src2)
 
   val shift_res = Wire(Types.UWord)
+  shift_res := Mux(isOpAlt, (s_src1 >> shamt).asUInt, src1 >> shamt)
   // when(inbits.func7t === "b0100000".U) { // sra/srai
-  when(isOpAlt) { // sra/srai
-    shift_res := (s_src1 >> shamt).asUInt
-  }.otherwise { // srl/srli
-    shift_res := src1 >> shamt
-  }
+  // when(isOpAlt) { // sra/srai
+  //   shift_res := (s_src1 >> shamt).asUInt
+  // }.otherwise { // srl/srli
+  //   shift_res := src1 >> shamt
+  // }
 
   val defaultRes = Wire(Types.UWord)
   defaultRes := DontCare
