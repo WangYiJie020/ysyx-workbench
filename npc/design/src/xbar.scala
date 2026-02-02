@@ -31,13 +31,14 @@ class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4IO.SlaveT)]) extends Module 
   dontTouch(isAR)
   dontTouch(isAW)
 
-  val hasLastRdReq = RegInit(false.B)
+  val hasLastRdReqReg = RegInit(false.B)
   val hasLastWrReq = RegInit(false.B)
   val lastRdReqIdx = RegInit(0.U(log2Ceil(mappings.size).W))
   val lastWrReqIdx = RegInit(0.U(log2Ceil(mappings.size).W))
 
   val master = io.in
 
+  val hasLastRdReq = hasLastRdReqReg || (master.arvalid && master.arready)
   // val slaveIO = mappings.map(_._2.ioImp)
 
   val slaveIO = io.slaves
