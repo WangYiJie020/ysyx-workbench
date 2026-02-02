@@ -35,6 +35,15 @@ class AXI4MemUnit extends Module {
     )
   )
 
+  val arLen = Reg(UInt(8.W))
+  when(sio.arvalid && sio.arready) {
+    arLen := sio.arlen
+  }
+  when(arLen =/= 0.U) {
+    assert(sio.arsize === AXI4IO.SizeType.WORD, "Only support word size read now")
+    assert(sio.arburst === AXI4IO.BurstType.INCR, "Only support INCR burst type now")
+  }
+
   // R
 
   val rdData = Reg(Types.UWord)
