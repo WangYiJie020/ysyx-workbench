@@ -49,6 +49,7 @@ int main(int argc, char **argv) {
     spdlog::info("Simulating CPU core design");
     sim_get_config()->init_pc = 0x80000000;
   }
+	spdlog::info("Git commit hash: {}", _STR(GIT_COMMIT_HASH));
   spdlog::info("Sim init pc set to 0x{:08x}", sim_get_config()->init_pc);
 
   auto &setting = sim_get_config()->setting;
