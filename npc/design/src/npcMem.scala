@@ -66,7 +66,7 @@ class AXI4MemUnit extends Module {
   curReadCount := rdFIFO.io.count
 
   sio.rvalid          := (rState === RState.sendData) && rdFIFO.io.deq.valid
-  rdFIFO.io.deq.ready := sio.rready
+  rdFIFO.io.deq.ready := sio.rready && sio.rvalid
   sio.rdata           := rdFIFO.io.deq.bits
   sio.rresp           := AXI4IO.RResp.OKAY
   sio.rid             := 0.U
