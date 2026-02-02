@@ -43,7 +43,7 @@ class ALU extends Module {
   }.elsewhen(inbits.func7t === "b0100000".U) {
     add_sub_res := src1 - src2
   }.otherwise {
-    add_sub_res := BADCALL_RESVALUE
+    add_sub_res := DontCare
     // printf("(alu) UNKNOWN func7t %d", inbits.func7t)
   }
 
