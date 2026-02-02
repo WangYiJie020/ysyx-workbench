@@ -216,7 +216,7 @@ sta: $(SIM_VSRCS)
 	@echo "Removing DPI-C void functions from verilog sources..."
 	./remove_dpi.sh $(CHISEL2V_EMIT_DIR) $(STA_NODPI_PATH)
 	make -C $(YOSYS_STA_PATH) sta \
-		DESIGN=ICacheBlock \
+		DESIGN=ICache\
 		CLK_FREQ_MHZ=400 \
 		CLK_PORT_NAME=clock \
 		O=$(STA_OUT_DIR) \
