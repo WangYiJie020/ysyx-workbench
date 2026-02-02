@@ -35,17 +35,7 @@ class ALU extends Module {
 
   val shamt = src2(4, 0)
 
-  // when(inbits.is_imm || inbits.func7t === 0.U) {
-  //   add_sub_res := src1 + src2
-  // }.elsewhen(inbits.func7t === "b0100000".U) {
-  //   add_sub_res := src1 - src2
-  // }.otherwise {
-  //   add_sub_res := BADCALL_RESVALUE
-  //   // printf("(alu) UNKNOWN func7t %d", inbits.func7t)
-  // }
-
-  val isAdd       = (inbits.func3t === 0.U)
-
+  val isAdd = (inbits.func3t === 0.U)
 
   val add_sub_res = Wire(Types.UWord)
   add_sub_res := Mux(isAdd, src1 + src2, src1 - src2)
