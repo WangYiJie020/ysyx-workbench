@@ -60,12 +60,12 @@ class AXI4MemUnit extends Module {
   val rdFIFO = Module(new Queue(Types.UWord, 16))
   curReadCount := rdFIFO.io.count
 
-  sio.rvalid := (rState === RState.sendData) && rdFIFO.io.deq.valid
+  sio.rvalid          := (rState === RState.sendData) && rdFIFO.io.deq.valid
   rdFIFO.io.deq.ready := sio.rready
-  sio.rdata  := rdFIFO.io.deq.bits
-  sio.rresp  := AXI4IO.RResp.OKAY
-  sio.rid    := 0.U
-  sio.rlast  := (curReadCount === 0.U)
+  sio.rdata           := rdFIFO.io.deq.bits
+  sio.rresp           := AXI4IO.RResp.OKAY
+  sio.rid             := 0.U
+  sio.rlast           := (curReadCount === 0.U)
 
   rState := MuxLookup(rState, RState.idle)(
     Seq(
@@ -75,16 +75,17 @@ class AXI4MemUnit extends Module {
     )
   )
 
+  val enRdDataCall = (rState === RState.waitMem) || (rState === RState.idle && sio.arvalid)
+  val rdData = RawClockedNonVoidFunctionCall("pmem_read",UInt(32.W))(
+    clock,
+    (!reset.asBool),
+    rdAddr
+  )
   when(rState === RState.waitMem) {
-    RawClockedVoidFunctionCall("pmem_read")(
-      clock,
-      (!reset.asBool),
-      rdAddr,
-      rdFIFO.io.enq.bits
-    )
+    rdFIFO.io.enq.bits  := rdData
     rdFIFO.io.enq.valid := true.B
   }.otherwise {
-    rdFIFO.io.enq.bits := 0.U
+    rdFIFO.io.enq.bits  := 0.U
     rdFIFO.io.enq.valid := false.B
   }
 
