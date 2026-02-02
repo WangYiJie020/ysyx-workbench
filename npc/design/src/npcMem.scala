@@ -80,7 +80,8 @@ class AXI4MemUnit extends Module {
     )
   )
 
-  val enRdDataCall = (rState === RState.waitMem) || (rState === RState.idle && sio.arvalid)
+  val enRdDataCall = WireDefault((rState === RState.waitMem) || (rState === RState.idle && sio.arvalid))
+  dontTouch(enRdDataCall)
   when(rState === RState.waitMem) {
     val rdData = RawUnclockedNonVoidFunctionCall("pmem_read", UInt(32.W))(
       (!reset.asBool) && enRdDataCall,
