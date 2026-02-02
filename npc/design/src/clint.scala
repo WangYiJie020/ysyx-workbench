@@ -18,7 +18,8 @@ class CLINTUnit extends Module {
   io.dontCareNonLiteR()
 
   sio.arready := true.B
-  sio.rvalid  := true.B
+  sio.rvalid  := sio.arvalid
+  assert(!(sio.arvalid && !sio.rready), "CLINTUnit does not support wait readdata")
 
   when(sio.arvalid){
     RawClockedVoidFunctionCall("skip_difftest_ref")(
