@@ -41,7 +41,7 @@ class ALU extends Module {
   add_sub_res := Mux(isAdd, src1 + src2, src1 - src2)
 
   val isLessThanU = Wire(Bool())
-  isLessThanU := Mux(s_src1 < s_src2, 1.U, 0.U)
+  isLessThanU := Mux(src1 < src2, 1.U, 0.U)
 
   val shift_res = Wire(Types.UWord)
   when(inbits.func7t === "b0100000".U) { // sra/srai
