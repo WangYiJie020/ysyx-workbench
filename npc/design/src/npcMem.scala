@@ -18,7 +18,8 @@ class AXI4MemUnit extends Module {
 
   // AR
 
-  val rdAddrBeg = Reg(Types.UWord)
+  val rdAddrBegReg = Reg(Types.UWord)
+  val rdAddrBeg    = Wire(Types.UWord)
   val rdAddr    = Wire(Types.UWord)
 
   when(sio.arvalid && sio.arready) {
@@ -35,6 +36,7 @@ class AXI4MemUnit extends Module {
       sARWait -> Mux(sio.rvalid, sARIdle, sARWait)
     )
   )
+  rdAddrBeg := Mux(arState === sARIdle, sio.araddr, rdAddrBegReg)
 
   val arLen        = Reg(UInt(8.W))
   val curReadCount = Wire(UInt(8.W))
