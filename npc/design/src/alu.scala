@@ -44,11 +44,12 @@ class ALU extends Module {
   //   // printf("(alu) UNKNOWN func7t %d", inbits.func7t)
   // }
 
-  // val isAdd       = (inbits.func3t === 0.U)
-  val isAdd       = inbits.func3t.orR === false.B
+  val isAdd       = (inbits.func3t === 0.U)
+
+  val invSrc2 = Mux(isAdd, src2, ~src2)
 
   val add_sub_res = Wire(UInt(33.W))
-  add_sub_res := src1 +& Mux(isAdd, src2, (~src2).asUInt + 1.U)
+  add_sub_res := src1 +& invSrc2 + Mux(isAdd, 0.U, 1.U)
 
   val isLessThanU = Wire(Bool())
   isLessThanU := add_sub_res(32)
