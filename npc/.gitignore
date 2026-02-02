@@ -29,3 +29,7 @@ test_run_dir/
 !*.lua
 !*.vlt
 !*.txt
+
+!history_perf/
+!*.rpt
+!*.csv
