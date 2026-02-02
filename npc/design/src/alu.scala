@@ -13,16 +13,6 @@ class ALUInput extends Bundle {
   val src2   = Types.UWord
 }
 
-class AddSub extends Module {
-  val io = IO(new Bundle {
-    val src1 = Input(Types.UWord)
-    val src2 = Input(Types.UWord)
-    val sub = Input(Bool())
-    val res  = Output(Types.UWord)
-  })
-  val op2 = Mux(io.sub, (~io.src2).asUInt + 1.U, io.src2)
-  io.res := io.src1 + op2
-}
 
 class ALU extends Module {
   val io               = IO(new Bundle {
@@ -55,12 +45,9 @@ class ALU extends Module {
   //   add_sub_res := BADCALL_RESVALUE
   //   // printf("(alu) UNKNOWN func7t %d", inbits.func7t)
   // }
-  
-  val addsub = Module(new AddSub)
-  addsub.io.src1 := src1
-  addsub.io.src2 := src2
-  addsub.io.sub  := (!inbits.is_imm) && (inbits.func7t === "b0100000".U)
-  add_sub_res := addsub.io.res
+
+  val isSub = (!inbits.is_imm) && (inbits.func7t === "b0100000".U)
+  add_sub_res := src1 + Mux(isSub, (~src2).asUInt + 1.U, src2)
 
   val shift_res = Wire(Types.UWord)
   when(inbits.func7t === "b0100000".U) { // sra/srai
@@ -69,7 +56,6 @@ class ALU extends Module {
     shift_res := src1 >> shamt
   }
 
-  val is_sltiu_func7t = (inbits.func7t === "b0010011".U)
 
   io.out.bits := MuxLookup(inbits.func3t, BADCALL_RESVALUE)(
     Seq(
