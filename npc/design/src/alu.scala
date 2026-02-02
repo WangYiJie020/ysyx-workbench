@@ -40,22 +40,24 @@ class ALU extends Module {
   val add_sub_res = Wire(Types.UWord)
   add_sub_res := Mux(isAdd, src1 + src2, src1 - src2)
 
-  val isLessThanU = Wire(Bool())
-  isLessThanU := Mux(src1 < src2, 1.U, 0.U)
 
-  val shift_res = Wire(Types.UWord)
+  val unsignedShiftRes = Wire(Types.UWord)
+  val isLeftShift = inbits.func3t === 1.U
+  unsignedShiftRes := Mux(isLeftShift, Reverse(src1), src1) >> shamt
+
+  val shift_res   = Wire(Types.UWord)
   when(inbits.func7t === "b0100000".U) { // sra/srai
     shift_res := (s_src1 >> shamt).asUInt
   }.otherwise { // srl/srli
-    shift_res := src1 >> shamt
+    shift_res := unsignedShiftRes
   }
 
   io.out.bits := MuxLookup(inbits.func3t, BADCALL_RESVALUE)(
     Seq(
       0.U -> add_sub_res,                    // 000: add/sub/addi
-      1.U -> (src1 << shamt),                // 001: sll/slli
+      1.U -> Reverse(unsignedShiftRes),                // 001: sll/slli
       2.U -> Mux(s_src1 < s_src2, 1.U, 0.U), // 010: slt/slti
-      3.U -> isLessThanU,                    // 011: sltu/sltiu
+      3.U -> Mux(src1 < src2, 1.U, 0.U),     // 011: sltu/sltiu
       4.U -> (src1 ^ src2),                  // 100: xor/xori
       5.U -> shift_res,                      // 101: srl/srli/sra/srai
       6.U -> (src1 | src2),                  // 110: or/ori
