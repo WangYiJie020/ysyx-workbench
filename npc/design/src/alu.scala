@@ -34,7 +34,9 @@ class ALU extends Module {
 
   val shamt = src2(4, 0)
 
-  val isAdd = (inbits.func7t === 0.U) || inbits.is_imm
+  val isOpAlt = inbits.func7t(5)
+
+  val isAdd = (~isOpAlt) || inbits.is_imm
 
   val add_sub_res = Wire(Types.UWord)
 
@@ -46,15 +48,19 @@ class ALU extends Module {
   // }.otherwise {
   //   add_sub_res := src1 - src2
   // }
-  when(inbits.is_imm || (inbits.func7t === 0.U)) {
-    add_sub_res := src1 + src2
-  }.otherwise {
-    add_sub_res := src1 - src2
-  }
+
+  // ok
+  // when(inbits.is_imm || (inbits.func7t === 0.U)) {
+  //   add_sub_res := src1 + src2
+  // }.otherwise {
+  //   add_sub_res := src1 - src2
+  // }
+
+  add_sub_res := Mux(isAdd, src1 + src2, src1 - src2)
 
   val shift_res = Wire(Types.UWord)
-  when(inbits.func7t === "b0100000".U) { // sra/srai
-  // when(inbits.func7t(5)){
+  // when(inbits.func7t === "b0100000".U) { // sra/srai
+  when(isOpAlt) { // sra/srai
     shift_res := (s_src1 >> shamt).asUInt
   }.otherwise { // srl/srli
     shift_res := src1 >> shamt
