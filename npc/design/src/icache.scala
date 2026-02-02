@@ -117,7 +117,7 @@ class ICache extends Module {
     rdCacheBlock.data  := nxtCacheData
   }
 
-  io.cpu.rvalid := (state === State.waitMem && io.mem.rlast) || (state === State.checkCache && cacheHit)
+  io.cpu.rvalid := (state === State.waitMem && io.mem.rlast && io.mem.rvalid) || (state === State.checkCache && cacheHit)
   io.cpu.rresp  := AXI4IO.RResp.OKAY
   // TODO: support burst read
   io.cpu.rid    := io.mem.rid
