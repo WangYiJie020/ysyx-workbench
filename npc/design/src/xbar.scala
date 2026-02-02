@@ -52,7 +52,7 @@ class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4IO.SlaveT)]) extends Module 
 
     when(slaveIO(i).arvalid){
       lastRdReqIdx := i.U
-      hasLastRdReq := true.B
+      hasLastRdReqReg := true.B
     }
     when(slaveIO(i).awvalid){
       lastWrReqIdx := i.U
@@ -82,7 +82,7 @@ class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4IO.SlaveT)]) extends Module 
   }
 
   when(master.rvalid && master.rlast) {
-    hasLastRdReq := false.B
+    hasLastRdReqReg := false.B
   }
   when(master.bvalid && master.bready) {
     hasLastWrReq := false.B
