@@ -37,7 +37,9 @@ class AXI4MemUnit extends Module {
   )
 
   val arLen        = Reg(UInt(8.W))
-  val curReadCount = RegInit(0.U(8.W))
+  val curReadCount = Wire(UInt(8.W))
+  dontTouch(curReadCount)
+
   when(sio.arvalid && sio.arready) {
     arLen := sio.arlen
   }
@@ -48,43 +50,30 @@ class AXI4MemUnit extends Module {
   rdAddr := rdAddrBeg + (curReadCount << 2)
 
   // R
+  // support burst read
 
-  val rdData = Reg(Types.UWord)
+  object RState extends ChiselEnum {
+    val idle, waitMem, sendData = Value
+  }
+  val rState = RegInit(RState.idle)
 
-  val sRIdle :: sRWaitMem :: sRWaitRdy :: Nil = Enum(3)
-  val rState                                  = RegInit(sRIdle)
-  sio.rvalid := (rState === sRWaitRdy)
+  val rdFIFO = Module(new Queue(Types.UWord, 16))
+  curReadCount := rdFIFO.io.count
+
+  sio.rvalid := (rState === RState.sendData) && rdFIFO.io.deq.valid
+  rdFIFO.io.deq.ready := sio.rready
+  sio.rdata  := rdFIFO.io.deq.bits
   sio.rresp  := AXI4IO.RResp.OKAY
-  sio.rdata  := rdData
+  sio.rid    := 0.U
+  sio.rlast  := (curReadCount === 0.U)
 
-  sio.rlast := true.B
-  sio.rid   := 0.U
-
-  val memReadFinished = Wire(Bool())
-  val memReadPrepared = (arState === sARWait)
-
-  rState := MuxLookup(rState, sRIdle)(
+  rState := MuxLookup(rState, RState.idle)(
     Seq(
-      sRIdle    -> Mux(memReadPrepared, sRWaitMem, sRIdle),
-      sRWaitMem -> Mux(memReadFinished, sRWaitRdy, sRWaitMem),
-      sRWaitRdy -> Mux(sio.rready, Mux(curReadCount === arLen, sRIdle, sRWaitMem), sRWaitRdy)
+      RState.idle     -> Mux(sio.arvalid, RState.waitMem, RState.idle),
+      RState.waitMem  -> Mux(curReadCount === arLen, RState.sendData, RState.waitMem),
+      RState.sendData -> Mux(curReadCount === 0.U, RState.idle, RState.sendData)
     )
   )
-
-  when(rState === sRWaitMem) {
-    rdData := RawClockedNonVoidFunctionCall("pmem_read", Types.UWord)(
-      clock,
-      (!memReadFinished) && (!reset.asBool),
-      rdAddr
-    )
-  }
-
-  // for now mem read always finish in one cycle
-  memReadFinished := RegNext((rState === sRWaitMem)&&(curReadCount === arLen))
-
-  when(rState === sRWaitMem && sio.rready) {
-    curReadCount := Mux(curReadCount === arLen, 0.U, curReadCount + 1.U)
-  }
 
   // AW
 

@@ -306,7 +306,7 @@ void dumpPerfCounterAsCSV(std::ostream &os) {
   os << "\n" << value_row;
 }
 void dumpPerfReportOnDir(const std::string &dir) {
-  std::string reportPath = dir + "/perf_counter.rpt";
+  std::string reportPath = dir + "/npcperf.counter.rpt";
   std::ofstream reportFile(reportPath);
   if (!reportFile.is_open()) {
     spdlog::error("cannot open perf counter report file {}", reportPath);
@@ -315,7 +315,7 @@ void dumpPerfReportOnDir(const std::string &dir) {
   dumpPerfCountersStatistics(reportFile);
   reportFile.close();
   spdlog::info("perf counter report dumped to {}", reportPath);
-  std::string csvPath = dir + "/perf_rawdata.csv";
+  std::string csvPath = dir + "/npcperf.rawdata.csv";
   std::ofstream csvFile(csvPath);
   if (!csvFile.is_open()) {
     spdlog::error("cannot open perf counter csv file {}", csvPath);
