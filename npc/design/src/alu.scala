@@ -35,7 +35,7 @@ class ALU extends Module {
 
   val shamt = src2(4, 0)
 
-  val isAdd = (inbits.func3t === 0.U)
+  val isAdd = (inbits.func7t === 0.U)
 
   val add_sub_res = Wire(Types.UWord)
   add_sub_res := Mux(isAdd, src1 + src2, src1 - src2)
