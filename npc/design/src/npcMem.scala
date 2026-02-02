@@ -82,7 +82,7 @@ class AXI4MemUnit extends Module {
   // for now mem read always finish in one cycle
   memReadFinished := RegNext((rState === sRWaitMem)&&(curReadCount === arLen))
 
-  when(rState === sRWaitRdy && sio.rready) {
+  when(rState === sRWaitMem && sio.rready) {
     curReadCount := Mux(curReadCount === arLen, 0.U, curReadCount + 1.U)
   }
 
