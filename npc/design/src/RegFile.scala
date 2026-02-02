@@ -139,7 +139,7 @@ class ControlStatusRegisterFile extends Module {
     waregs(widx) := io.write.data
     when(io.is_ecall && (io.write.addr === CSRAddr.mepc)) {
 //      printf("(CSR) ecall detected")
-      waregs(3) := 11.U // mcause = 11 for ecall from M-mode
+      waregs(2) := 11.U // mcause = 11 for ecall from M-mode
     }
   }
 
