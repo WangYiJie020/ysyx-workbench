@@ -43,6 +43,11 @@ class ALU extends Module {
   }.otherwise {
     add_sub_res := src1 - src2
   }
+  when(inbits.is_imm || (inbits.func7t === 0.U)) {
+    add_sub_res := src1 + src2
+  }.otherwise {
+    add_sub_res := src1 - src2
+  }
 
   // when(inbits.is_imm || inbits.func7t === 0.U) {
   //   add_sub_res := src1 + src2
