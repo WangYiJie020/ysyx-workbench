@@ -70,7 +70,7 @@ class AXI4MemUnit extends Module {
   sio.rdata           := rdFIFO.io.deq.bits
   sio.rresp           := AXI4IO.RResp.OKAY
   sio.rid             := 0.U
-  sio.rlast           := (curReadCount === 0.U)
+  sio.rlast           := (curReadCount === 1.U)
 
   rState := MuxLookup(rState, RState.idle)(
     Seq(
