@@ -242,10 +242,7 @@ SSBL_TEXT void _second_boot() {
 
 	volatile_u32ptr u32ptr = (volatile_u32ptr)_text_start;
 	u32ptr[0] = RISCV_INST_NOP;
-	u32ptr[1] = RISCV_INST_NOP;
-	u32ptr[2] = RISCV_INST_NOP;
-	u32ptr[3] = RISCV_INST_NOP;
-	u32ptr[4] = RISCV_INST_RET;
+	u32ptr[1] = RISCV_INST_RET;
 	
 	void(*foo)() = (void(*)())_text_start;
 
