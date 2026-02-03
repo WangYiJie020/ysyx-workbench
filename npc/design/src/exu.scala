@@ -29,10 +29,7 @@ class EXU extends Module {
   val func3t = dinst.code(14, 12)
   val func7t = dinst.code(31, 25)
 
-  val isInstImm = (dinst.info.fmt === InstFmt.imm)
-  val isInstJump = (dinst.info.fmt === InstFmt.jump)
-
-  alu_in.is_imm := isInstImm || isInstJump
+  alu_in.is_imm := (dinst.info.fmt === InstFmt.imm)
   alu_in.func3t := Mux(dinst.info.fmt === InstFmt.branch, func3t >> 1, func3t)
   alu_in.func7t := func7t
 
