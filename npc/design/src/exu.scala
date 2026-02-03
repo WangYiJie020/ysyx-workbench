@@ -45,7 +45,7 @@ class EXU extends Module {
   val aluCalcPCAddImm = isTypAUIPC | isTypJAL | isTypJALR | isTypBranch
 
   alu_in.is_imm := isFmtI
-  alu_in.func3t := Mux(isFmtB, func3t >> 1, func3t)
+  alu_in.func3t := Mux(aluCalcPCAddImm,0.U,Mux(isFmtB, func3t >> 1, func3t))
   alu_in.func7t := Mux(isTypArithmetic, func7t, 0.U)
 
   val MS_fsm = Module(new OneMasterOneSlaveFSM)
