@@ -236,7 +236,7 @@ SSBL_TEXT void _second_boot() {
 	for(int i=0;i<3;i++){
 		u32ptr[i] = RISCV_INST_NOP;
 	}
-	u32ptr[4] = RISCV_INST_RET;
+	u32ptr[3] = RISCV_INST_RET;
 	
 	void(*foo)() = (void(*)())_text_start;
 	foo();
