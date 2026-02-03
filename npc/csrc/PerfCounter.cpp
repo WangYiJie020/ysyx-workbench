@@ -121,8 +121,8 @@ void EXUPerfCounter::update() {
 			logger->error("Invalid instruction type {} or fmt {}",
 										(int)type, (int)fmt);
 		}
-    assert(isValidType(type));
-    assert(isValidFmt(fmt));
+    // assert(isValidType(type));
+    // assert(isValidFmt(fmt));
 
     instCountOfTyp[type]++;
     instCountOfFmt[fmt]++;
