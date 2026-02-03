@@ -233,13 +233,16 @@ SSBL_TEXT void _second_boot() {
   } while (0)
 
 	volatile_u32ptr u32ptr = (volatile_u32ptr)_text_start;
-	for(int i=0;i<3;i++){
+	for(int i=0;i<30;i++){
 		u32ptr[i] = RISCV_INST_NOP;
 	}
-	u32ptr[3] = RISCV_INST_RET;
+	u32ptr[30] = RISCV_INST_RET;
 	
 	void(*foo)() = (void(*)())_text_start;
+
+	boot_log("call foo\n");
 	foo();
+	boot_log("foo returned\n");
 
   LOG_STEP("copy .text", _ssbl_memcpy(_text_start, __text_load_start__,
                                       (size_t)__text_size__));
