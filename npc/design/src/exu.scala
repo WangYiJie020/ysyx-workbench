@@ -320,6 +320,7 @@ class EXU extends Module {
     (dinst.info.typ =/= InstType.store)
 
   io.out.bits.gpr.addr := dinst.info.rd
+  val sysInstWrBackData = Mux(is_ecall || is_mret, GARBAGE_UNINIT_VALUE, csr_rdata)
   val gprDataMapping = Seq(
     InstType.arithmetic -> alu.io.out.bits,
     InstType.lui        -> dinst.info.imm,
@@ -327,16 +328,7 @@ class EXU extends Module {
     InstType.jalr       -> snpc,
     InstType.jal        -> snpc,
     InstType.load       -> loadResult,
-    InstType.system     -> Mux(
-      is_ecall || is_mret,
-      GARBAGE_UNINIT_VALUE,
-      MuxLookup(func3t, GARBAGE_UNINIT_VALUE)(
-        Seq(
-          CSROp.csrrw -> csr_rdata,
-          CSROp.csrrs -> csr_rdata
-        )
-      )
-    )
+    InstType.system     -> sysInstWrBackData
   )
 
   // io.out.bits.gpr.data := MuxLookup(dinst.info.typ, GARBAGE_UNINIT_VALUE)(gprDataMapping)
@@ -356,10 +348,10 @@ class EXU extends Module {
   when(is_ecall || is_mret) {
     nxt_pc := csr_rdata
   }.otherwise {
-    when(InstType.hasSame(dinst.info.typ, InstType.jalr)) {
+    when(isTypJALR) {
       val r1AddImm = reg_v1 + dinst.info.imm
       nxt_pc := r1AddImm(31, 1) ## 0.U(1.W)
-    }.elsewhen(InstType.hasSame(dinst.info.typ, InstType.jal)) {
+    }.elsewhen(isTypJAL) {
       nxt_pc := pcAddImm
     }.elsewhen(isFmtB) {
       //
