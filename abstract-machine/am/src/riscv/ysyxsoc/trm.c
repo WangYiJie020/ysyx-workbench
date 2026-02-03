@@ -243,15 +243,15 @@ SSBL_TEXT void _second_boot() {
     putstr(" done.\n");                                                        \
   } while (0)
 
-  volatile_u32ptr u32ptr = (volatile_u32ptr)_text_start;
-  u32ptr[0] = RISCV_INST_NOP;
-  u32ptr[1] = RISCV_INST_MVA0ZERO;
-  u32ptr[2] = RISCV_INST_RET;
-
-  void (*foo)() = (void (*)())_text_start;
+  // volatile_u32ptr u32ptr = (volatile_u32ptr)_text_start;
+  // u32ptr[0] = RISCV_INST_NOP;
+  // u32ptr[1] = RISCV_INST_MVA0ZERO;
+  // u32ptr[2] = RISCV_INST_RET;
+  //
+  // void (*foo)() = (void (*)())_text_start;
 
   // boot_log("call foo\n");
-  foo();
+  // foo();
   // boot_log("foo returned\n");
 
   LOG_STEP("copy .text", _ssbl_memcpy(_text_start, __text_load_start__,
