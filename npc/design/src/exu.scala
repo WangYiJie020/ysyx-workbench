@@ -29,7 +29,7 @@ class EXU extends Module {
   val func3t = dinst.code(14, 12)
   val func7t = dinst.code(31, 25)
 
-  alu_in.is_imm := (dinst.info.fmt === InstFmt.imm)
+  alu_in.is_imm := (dinst.info.fmt.asUInt & InstFmt.imm.asUInt)
   alu_in.func3t := Mux(dinst.info.fmt === InstFmt.branch, func3t >> 1, func3t)
   alu_in.func7t := func7t
 
@@ -326,9 +326,9 @@ class EXU extends Module {
     }
   }
 
-  for (fmt <- InstFmt.all) {
-    println(s"InstFmt.${fmt} = ${fmt.asUInt.litValue}")
-  }
+  // for (fmt <- InstFmt.all) {
+  //   println(s"InstFmt.${fmt} = ${fmt.asUInt.litValue}")
+  // }
 
   // nxt_pc
 
