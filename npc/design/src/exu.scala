@@ -42,11 +42,10 @@ class EXU extends Module {
   val isTypBranch = InstType.hasSame(dinst.info.typ, InstType.branch)
   val isTypArithmetic = InstType.hasSame(dinst.info.typ, InstType.arithmetic)
 
-  val aluCalcPCAddImm = isTypAUIPC | isTypJAL | isTypJALR | isTypBranch
 
   alu_in.is_imm := isFmtI
-  alu_in.func3t := Mux(aluCalcPCAddImm,0.U,Mux(isFmtB, func3t >> 1, func3t))
-  alu_in.func7t := Mux(isTypArithmetic, func7t, 0.U)
+  alu_in.func3t := Mux(isFmtB, func3t >> 1, func3t)
+  alu_in.func7t := func7t
 
   val MS_fsm = Module(new OneMasterOneSlaveFSM)
   MS_fsm.connectMaster(io.dinst)
@@ -62,9 +61,9 @@ class EXU extends Module {
 
 
   // alu_in.src1 := reg_v1
-  alu_in.src1 := Mux(aluCalcPCAddImm, dinst.pc, reg_v1)
+  alu_in.src1 := reg_v1
   // when branch, src2 is reg_v2
-  alu_in.src2 := Mux(isFmtI | aluCalcPCAddImm, dinst.info.imm, reg_v2)
+  alu_in.src2 := Mux(isFmtI, dinst.info.imm, reg_v2)
 
   // csr
 
@@ -310,7 +309,7 @@ class EXU extends Module {
   val nxt_pc   = Wire(Types.UWord)
   // need pc+imm:
   // auipc, jal(r), branch
-  val pcAddImm = alu.io.out.bits
+  val pcAddImm = dinst.pc + dinst.info.imm
   val snpc     = dinst.pc + 4.U
 
   // for now, system inst, ecall and mret has rd == 0
