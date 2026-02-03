@@ -177,17 +177,22 @@ class EXU extends Module {
   // other mux logic and reduce area
   // synthesis area smaller than using func3t directly
   //
-  // val memOpSize = func3t(1, 0)
+  val memOpSize = func3t(1, 0)
   // val memOpSize = Mux(func3t(1), 2.U, func3t(0))
-  val memOpSize = MuxLookup(func3t, 0.U)(
-    Seq(
-      MemOp.byte     -> 0.U,
-      MemOp.halfword -> 1.U,
-      MemOp.word     -> 2.U,
-      MemOp.lbu      -> 0.U,
-      MemOp.lhu      -> 1.U
-    )
-  )
+
+  val memOpIsWord = func3t(1)
+  val memOpIsHalf = (~func3t(1)) && func3t(0)
+  val memOpIsByte = (~func3t(1)) && (~func3t(0))
+
+  // val memOpSize = MuxLookup(func3t, 0.U)(
+  //   Seq(
+  //     MemOp.byte     -> 0.U,
+  //     MemOp.halfword -> 1.U,
+  //     MemOp.word     -> 2.U,
+  //     MemOp.lbu      -> 0.U,
+  //     MemOp.lhu      -> 1.U
+  //   )
+  // )
 
   memIO.arid    := 0.U
   memIO.arlen   := 0.U
@@ -306,13 +311,20 @@ class EXU extends Module {
   )
 
   memWAddr := memAddr
-  memWMask := MuxLookup(func3t, 0.U)(
+  memWMask := Mux1H(
     Seq(
-      MemOp.byte     -> wByteMask,
-      MemOp.halfword -> wByteMaskHalf,
-      MemOp.word     -> 15.U(4.W)
+      memOpIsByte -> wByteMask,
+      memOpIsHalf -> wByteMaskHalf,
+      memOpIsWord -> "b1111".U(4.W)
     )
   )
+  // memWMask := MuxLookup(func3t, 0.U)(
+  //   Seq(
+  //     MemOp.byte     -> wByteMask,
+  //     MemOp.halfword -> wByteMaskHalf,
+  //     MemOp.word     -> 15.U(4.W)
+  //   )
+  // )
 
   MS_fsm.io.self_finished := alu.io.out.valid && (
     (!isMemOp) || memOPDone
