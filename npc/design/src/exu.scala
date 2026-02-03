@@ -364,7 +364,7 @@ class EXU extends Module {
       //   )
       // )
       //
-      val branchCalc  = Mux(func3t(2), reg_v1 === reg_v2, isLessThan)
+      val branchCalc  = Mux(func3t(2), isLessThan, (reg_v1 === reg_v2))
       val takeBranch = Mux(func3t(0), ~branchCalc, branchCalc)
       nxt_pc := Mux(takeBranch, dinst.pc + dinst.info.imm, snpc)
       when(!BranchOp.isValidBranchOp(func3t)) {
