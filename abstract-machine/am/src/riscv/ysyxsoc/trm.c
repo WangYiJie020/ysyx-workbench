@@ -226,8 +226,8 @@ FSBL_TEXT void _trm_init() {
 SSBL_TEXT void _second_boot() {
 #undef putch
 #define putch ssbl_putch
-  _ssbl_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
-  boot_log(".rodata copied.\n");
+  // _ssbl_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
+  // boot_log(".rodata copied.\n");
 
 // after rodata copy, we can use putstr directly
 #undef boot_log
