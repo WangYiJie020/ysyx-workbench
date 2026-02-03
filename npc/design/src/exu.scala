@@ -17,7 +17,8 @@ class EXU extends Module {
     val out      = Decoupled(new WriteBackInfo)
   })
 
-  val GARBAGE_UNINIT_VALUE = "hDEADBEEF".U
+  val GARBAGE_UNINIT_VALUE = Wire(Types.UWord)
+  GARBAGE_UNINIT_VALUE := DontCare
 
   val alu = Module(new ALU)
 
