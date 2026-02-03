@@ -116,6 +116,11 @@ void EXUPerfCounter::update() {
     InstType type = (InstType)hInstType.get();
     InstFmt fmt = (InstFmt)hInstFmt.get();
 
+
+		if(!isValidType(type) || !isValidFmt(fmt)) {
+			logger->error("Invalid instruction type {} or fmt {}",
+										(int)type, (int)fmt);
+		}
     assert(isValidType(type));
     assert(isValidFmt(fmt));
 
