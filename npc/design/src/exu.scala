@@ -297,7 +297,9 @@ class EXU extends Module {
       3.U -> "b1000".U(4.W)
     )
   )
-  val wByteMaskHalf = MuxLookup(memAddrUnalignPart, GARBAGE_UNINIT_VALUE)(
+  val _dt1 = Wire(UInt(4.W))
+  _dt1 := DontCare
+  val wByteMaskHalf = MuxLookup(memAddrUnalignPart, _dt1)(
     Seq(
       0.U -> "b0011".U(4.W),
       1.U -> "b0110".U(4.W),
