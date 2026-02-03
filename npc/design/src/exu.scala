@@ -321,11 +321,7 @@ class EXU extends Module {
       )
     )
 
-  io.out.bits.gpr.data := Mux1H(
-    gprDataMapping.map { case (typ, data) =>
-      (InstType.hasSame(dinst.info.typ, typ), data)
-    }
-  )
+  io.out.bits.gpr.data := MuxLookup(dinst.info.typ, GARBAGE_UNINIT_VALUE)(gprDataMapping)
 
   // for (fmt <- InstFmt.all) {
   //   println(s"InstFmt.${fmt} = ${fmt.asUInt.litValue}")
