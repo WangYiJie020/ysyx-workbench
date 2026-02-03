@@ -144,7 +144,8 @@ class EXU extends Module {
     // }
   }
 
-  val memRdRawData = Reg(Types.UWord)
+  // val memRdRawData = Reg(Types.UWord)
+  val memRdRawData = Wire(Types.UWord)
 
   val isLoad  = isTypLoad && MS_fsm.io.master_valid
   val isStore = isTypStore && MS_fsm.io.master_valid
@@ -198,11 +199,18 @@ class EXU extends Module {
   when(memIO.arvalid && memIO.arready) {
     memAddrSent := true.B
   }
+
   when(memIO.rvalid && !memRDone) {
-    memRdRawData := memIO.rdata
+    // memRdRawData := memIO.rdata
     memRDone     := true.B
   }
-  memIO.rready := true.B
+  val downStreamRecved = Reg(Bool())
+  memIO.rready := isLoad && downStreamRecved
+  when(io.out.ready && io.out.valid) {
+    downStreamRecved := true.B
+  }.elsewhen(!io.dinst.valid) {
+    downStreamRecved := false.B
+  }
   when(!isMemOp) {
     memRDone    := false.B
     memWDone    := false.B
@@ -340,6 +348,7 @@ class EXU extends Module {
     }.elsewhen(InstType.hasSame(dinst.info.typ, InstType.jal)) {
       nxt_pc := pcAddImm
     }.elsewhen(isFmtB){
+      //
       // reuse alu
       // branch func3t
       //
