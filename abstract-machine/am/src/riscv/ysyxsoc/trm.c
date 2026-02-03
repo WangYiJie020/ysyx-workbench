@@ -286,7 +286,7 @@ SSBL_TEXT void _second_boot() {
 
 
 	boot_log("flush caches...\n");
-	// __asm_call_fence_i__();
+	__asm_call_fence_i__();
   boot_log("enter main function.\n");
   int ret = main(mainargs);
   halt(ret);
