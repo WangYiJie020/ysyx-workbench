@@ -232,6 +232,15 @@ SSBL_TEXT void _second_boot() {
     putstr(" done.\n");                                                        \
   } while (0)
 
+	volatile_u32ptr u32ptr = (volatile_u32ptr)_text_start;
+	for(int i=0;i<10;i++){
+		u32ptr[i] = RISCV_INST_NOP;
+	}
+	u32ptr[10] = RISCV_INST_RET;
+	
+	void(*foo)() = (void(*)())_text_start;
+	foo();
+
   LOG_STEP("copy .text", _ssbl_memcpy(_text_start, __text_load_start__,
                                       (size_t)__text_size__));
   LOG_STEP("copy .data", _ssbl_memcpy(_data_start, __data_load_start__,
