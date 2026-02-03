@@ -258,7 +258,9 @@ class EXU extends Module {
   memIO.awvalid := isStore && (!memWDone) && (!memAddrSent)
   memIO.wvalid  := isStore && (!memWDone)
   memIO.wlast   := memIO.wvalid
-  // dontTouch(io.mem)
+  // avoid chisel opt it out
+  // to enable simulation can visit
+  dontTouch(io.mem)
   // dontTouch(memIO.wlast)
 
   memIO.awid    := 0.U
