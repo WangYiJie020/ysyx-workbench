@@ -246,10 +246,10 @@ SSBL_TEXT void _second_boot() {
 	}
 	u32ptr[4] = RISCV_INST_RET;
 	
-	// void(*foo)() = (void(*)())_text_start;
-	//
+	void(*foo)() = (void(*)())_text_start;
+
 	// boot_log("call foo\n");
-	// foo();
+	foo();
 	// boot_log("foo returned\n");
 
   LOG_STEP("copy .text", _ssbl_memcpy(_text_start, __text_load_start__,
