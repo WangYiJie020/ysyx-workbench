@@ -285,16 +285,16 @@ class EXU extends Module {
   // memWData := reg_v2
   val wByteMask = MuxLookup(memAddrUnalignPart, 0.U(4.W))(
     Seq(
-      0.U -> "b0001".U(4.W),
-      1.U -> "b0010".U(4.W),
-      2.U -> "b0100".U(4.W),
-      3.U -> "b1000".U(4.W)
+      0.U -> "b00110001".U(8.W),
+      1.U -> "b00000010".U(8.W),
+      2.U -> "b11000100".U(8.W),
+      3.U -> "b00001000".U(8.W)
     )
   )
   // val wByteMask = 1.U(4.W)
 
   memWAddr := memAddr
-  memWMask := Mux(func3t(1), 15.U(4.W), Mux(func3t(0), wByteMask | (wByteMask << 1), wByteMask))
+  memWMask := Mux(func3t(1), 15.U(4.W), Mux(func3t(0), wByteMask(7,4), wByteMask(3,0)))
   // memWMask := MuxLookup(func3t, 0.U)(
   //   Seq(
   //     MemOp.byte     -> wByteMask,
