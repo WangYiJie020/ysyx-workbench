@@ -20,6 +20,8 @@ static const char mainargs[MAINARGS_MAX_LEN] =
 #define FSBL_TEXT __attribute__((section(".fsbl_text")))
 #define SSBL_TEXT __attribute__((section(".ssbl_text")))
 
+// #define NO_BOOT_LOG 1
+
 FSBL_TEXT void init_serial() {
 
   // set UART to 8 bits, no parity, one stop bit
@@ -49,16 +51,25 @@ FSBL_TEXT void init_serial() {
   *UART_IER = 0x0;
 }
 
-#define WAIT_UART_TX_EMPTY() do{while (!IS_UART_TRANSMIT_EMPTY()){}}while(0)
+#define WAIT_UART_TX_EMPTY()                                                   \
+  do {                                                                         \
+    while (!IS_UART_TRANSMIT_EMPTY()) {                                        \
+    }                                                                          \
+  } while (0)
+
+#ifndef NO_BOOT_LOG
 FSBL_TEXT void fsbl_putch(char ch) {
-	WAIT_UART_TX_EMPTY();
-	*UART_TX = ch;
+  WAIT_UART_TX_EMPTY();
+  *UART_TX = ch;
 }
 SSBL_TEXT void ssbl_putch(char ch) {
-	WAIT_UART_TX_EMPTY();
-	*UART_TX = ch;
+  WAIT_UART_TX_EMPTY();
+  *UART_TX = ch;
 }
-
+#else
+#define fsbl_putch(ch)
+#define ssbl_putch(ch)
+#endif
 
 char try_getch() {
   if (IS_UART_RECEIVE_READY()) {
@@ -232,6 +243,17 @@ SSBL_TEXT void _second_boot() {
     putstr(" done.\n");                                                        \
   } while (0)
 
+  // volatile_u32ptr u32ptr = (volatile_u32ptr)_text_start;
+  // u32ptr[0] = RISCV_INST_NOP;
+  // u32ptr[1] = RISCV_INST_MVA0ZERO;
+  // u32ptr[2] = RISCV_INST_RET;
+  //
+  // void (*foo)() = (void (*)())_text_start;
+
+  // boot_log("call foo\n");
+  // foo();
+  // boot_log("foo returned\n");
+
   LOG_STEP("copy .text", _ssbl_memcpy(_text_start, __text_load_start__,
                                       (size_t)__text_size__));
   LOG_STEP("copy .data", _ssbl_memcpy(_data_start, __data_load_start__,
@@ -255,15 +277,19 @@ SSBL_TEXT void _second_boot() {
                           (size_t)__data_extra_size__));
   }
 
+  // NOTE: putnum func is in the sdram area
+  // before use putnum must flush icache!!!
+  // LOG_STEP("flush icache", __asm_call_fence_i__());
+
   boot_log("checking memory regions...\n");
-	putstr("heap.start = ");
-	putnum_base16((uint32_t)heap.start);
-	putstr(" heap.end = ");
-	putnum_base16((uint32_t)heap.end);
+  // putstr("heap.start = ");
+  // putnum_base16((uint32_t)heap.start);
+  // putstr(" heap.end = ");
+  // putnum_base16((uint32_t)heap.end);
   assert(heap.start < heap.end);
-	putstr("\nheap size = ");
-	putnum_base16((uint32_t)(heap.end - heap.start));
-	putch('\n');
+  // putstr("\nheap size = ");
+  // putnum_base16((uint32_t)(heap.end - heap.start));
+  // putch('\n');
 
   boot_log("enter main function.\n");
   int ret = main(mainargs);
@@ -272,6 +298,6 @@ SSBL_TEXT void _second_boot() {
 
 #undef putch
 void putch(char ch) {
-	WAIT_UART_TX_EMPTY();
+  WAIT_UART_TX_EMPTY();
   *UART_TX = ch;
 }

@@ -32,7 +32,7 @@ SECTIONS {
 		_ssbl_start = .;
 		*(.ssbl_text)
 		_ssbl_end = .;
-	} > sram AT> flash
+	} > psram AT> flash
 
 	__ssbl_load_start__ = LOADADDR(.secondary_boot);
 	__ssbl_size__       = SIZEOF(.secondary_boot);
@@ -108,7 +108,7 @@ SECTIONS {
 	__runtime_addr_start__ = ORIGIN(runtime);
 	__runtime_addr_end__ = ORIGIN(runtime) + LENGTH(runtime);
 
-  _stack_top = __sram_end__;
+  _stack_top = __psram_end__;
   _stack_pointer  = _stack_top;
 
   _heap_start = _bss_end;
