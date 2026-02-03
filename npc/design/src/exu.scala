@@ -180,7 +180,7 @@ class EXU extends Module {
       0.U -> memRdRawData,
       1.U -> memRdRawData(31, 8).pad(32),
       2.U -> memRdRawData(31, 16).pad(32),
-      3.U -> memRdRawData(31, 24).pad(32),
+      3.U -> memRdRawData(31, 24).pad(32)
     )
   )
 
@@ -244,11 +244,20 @@ class EXU extends Module {
       3.U -> Cat(reg_v2(7, 0), 0.U(24.W))
     )
   )
+  val wByteMask = MuxLookup(memAddrUnalignPart, 0.U(4.W))(
+    Seq(
+      0.U -> "b0001".U(4.W),
+      1.U -> "b0010".U(4.W),
+      2.U -> "b0100".U(4.W),
+      3.U -> "b1000".U(4.W)
+    )
+  )
+
   memWAddr := memAddr
   memWMask := MuxLookup(func3t, 0.U)(
     Seq(
-      MemOp.byte     -> (1.U(4.W) << memAddrUnalignPart),
-      MemOp.halfword -> (3.U(4.W) << memAddrUnalignPart),
+      MemOp.byte     -> wByteMask,
+      MemOp.halfword -> (wByteMask | (wByteMask << 1)), // (3.U(4.W) << memAddrUnalignPart),
       MemOp.word     -> 15.U(4.W)
     )
   )
