@@ -288,8 +288,7 @@ class EXU extends Module {
     (dinst.info.typ =/= InstType.store)
 
   io.out.bits.gpr.addr := dinst.info.rd
-  io.out.bits.gpr.data := MuxLookup(dinst.info.typ, GARBAGE_UNINIT_VALUE)(
-    Seq(
+  val gprDataMapping =     Seq(
       InstType.arithmetic -> alu.io.out.bits,
       InstType.lui        -> dinst.info.imm,
       InstType.auipc      -> pcAddImm,
@@ -315,7 +314,13 @@ class EXU extends Module {
         )
       )
     )
+
+  io.out.bits.gpr.data := Mux1H(
+    gprDataMapping.map { case (typ, data) =>
+      (InstType.hasSame(dinst.info.typ, typ), data)
+    }
   )
+
   when(dinst.info.typ === InstType.system) {
     when(!(is_ecall || is_mret)) {
       when(!CSROp.isValidCSRop(func3t)) {

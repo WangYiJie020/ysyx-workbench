@@ -38,7 +38,12 @@ object InstFmt  extends ChiselEnum {
   }
 }
 object InstType extends ChiselEnum {
-  val branch, arithmetic, load, store, jalr, jal, lui, auipc, system = Value
+  val branch, arithmetic, load, store, jalr, jal, lui, auipc, system = Value(nextValue)
+  private def nextValue: UInt = (1 << (all.size)).U
+
+  def hasSame(a: InstType.Type, b: InstType.Type): Bool = {
+    (a.asUInt & b.asUInt).orR
+  }
 }
 
 class Inst extends Bundle {
