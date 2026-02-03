@@ -268,7 +268,7 @@ class EXU extends Module {
       3.U -> Cat(reg_v2(7, 0), 0.U(24.W))
     )
   )
-  memWData := reg_v2
+  // memWData := reg_v2
   val wByteMask = MuxLookup(memAddrUnalignPart, 0.U(4.W))(
     Seq(
       0.U -> "b0001".U(4.W),
