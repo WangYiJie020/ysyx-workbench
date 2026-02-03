@@ -42,10 +42,11 @@ class EXU extends Module {
   val isTypBranch = InstType.hasSame(dinst.info.typ, InstType.branch)
   val isTypArithmetic = InstType.hasSame(dinst.info.typ, InstType.arithmetic)
 
+  val aluCalcPCAddImm = isTypAUIPC | isTypJAL | isTypJALR | isTypBranch
 
   alu_in.is_imm := isFmtI
   alu_in.func3t := Mux(isFmtB, func3t >> 1, func3t)
-  alu_in.func7t := func7t
+  alu_in.func7t := Mux(isTypArithmetic, func7t, 0.U)
 
   val MS_fsm = Module(new OneMasterOneSlaveFSM)
   MS_fsm.connectMaster(io.dinst)
@@ -59,7 +60,6 @@ class EXU extends Module {
   val reg_v1 = io.rvec.data(0)
   val reg_v2 = io.rvec.data(1)
 
-  val aluCalcPCAddImm = isTypAUIPC | isTypJAL | isTypJALR | isTypBranch
 
   // alu_in.src1 := reg_v1
   alu_in.src1 := Mux(aluCalcPCAddImm, dinst.pc, reg_v1)
