@@ -269,9 +269,9 @@ class EXU extends Module {
   when(memIO.awvalid && memIO.awready) {
     memAddrSent := true.B
   }
-  when(memIO.wvalid && memIO.wready) {
-    memWDone := true.B
-  }
+  // when(memIO.wvalid && memIO.wready) {
+  //   memWDone := true.B
+  // }
 
   //
   // need wait for bresp
