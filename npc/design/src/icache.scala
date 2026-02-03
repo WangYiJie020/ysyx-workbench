@@ -14,8 +14,8 @@ class ICacheIO extends Bundle {
 }
 
 object ICacheParameters {
-  val BLOCK_SIZE         = 16
-  val BLOCK_NUM          = 32
+  val BLOCK_SIZE         = 8
+  val BLOCK_NUM          = 128
   val BLOCK_SIZE_INBITS  = BLOCK_SIZE * 8
   val BLOCK_SIZE_INWORDS = BLOCK_SIZE / 4
 
