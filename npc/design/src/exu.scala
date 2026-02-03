@@ -326,8 +326,8 @@ class EXU extends Module {
     }
   }
 
-  for(fmt <- InstFmt.all) {
-    print("(exu) InstFmt.%s = %d\n".format(fmt.toString, fmt.asUInt))
+  for (fmt <- InstFmt.all) {
+    println(s"InstFmt.${fmt} = ${fmt.asUInt.litValue}")
   }
 
   // nxt_pc
@@ -350,8 +350,8 @@ class EXU extends Module {
       //
       // only when func3t[2] == 0 -> eq/ne
       //
-      val isLessThan  = alu.io.out.bits(0)
-      val branchCalc  = Mux(func3t(2), isLessThan, (reg_v1 === reg_v2))
+      val isLessThan = alu.io.out.bits(0)
+      val branchCalc = Mux(func3t(2), isLessThan, (reg_v1 === reg_v2))
       val takeBranch = Mux(func3t(0), ~branchCalc, branchCalc)
       nxt_pc := Mux(takeBranch, dinst.pc + dinst.info.imm, snpc)
       // when(!BranchOp.isValidBranchOp(func3t)) {
@@ -363,7 +363,7 @@ class EXU extends Module {
   }
 }
 
-object UnusedResrervedDefinition{
+object UnusedResrervedDefinition {
   object BranchOp {
     val beq  = 0.U
     val bne  = 1.U
