@@ -205,14 +205,14 @@ class EXU extends Module {
     // memRdRawData := memIO.rdata
     memRDone     := true.B
   }
-  val downStreamRecved = Reg(Bool())
+  // val downStreamRecved = Reg(Bool())
   // dontTouch(downStreamRecved)
   memIO.rready := io.out.ready
-  when(io.out.ready && io.out.valid) {
-    downStreamRecved := true.B
-  }.elsewhen(io.dinst.valid && isMemOp){
-    downStreamRecved := false.B
-  }
+  // when(io.out.ready && io.out.valid) {
+  //   downStreamRecved := true.B
+  // }.elsewhen(io.dinst.valid && isMemOp){
+  //   downStreamRecved := false.B
+  // }
   when(!isMemOp) {
     memRDone    := false.B
     memWDone    := false.B
