@@ -17,6 +17,7 @@ import xbar._
 import npcMem._
 
 import icache._
+import common_def.InstType
 
 class TopIO extends Bundle {
   val interrupt = Input(Bool())
@@ -159,6 +160,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   AXI4IO.connectMasterSlave(exu.io.mem, memArbiter.io.exu)
 
   val icache = Module(new ICache)
+  icache.io.flush := idu.io.out.valid && idu.io.out.bits.info.typ === InstType.fencei
   AXI4IO.connectMasterSlave(ifu.io.mem, icache.io.cpu)
   AXI4IO.connectMasterSlave(icache.io.mem, memArbiter.io.ifu)
 
