@@ -32,6 +32,11 @@ class EXU extends Module {
   val isFmtI = InstFmt.hasSame(dinst.info.fmt, InstFmt.imm)
   val isFmtB = InstFmt.hasSame(dinst.info.fmt, InstFmt.branch)
 
+  val isTypSys = InstType.hasSame(dinst.info.typ, InstType.system)
+  val isTypLoad = InstType.hasSame(dinst.info.typ, InstType.load)
+  val isTypStore = InstType.hasSame(dinst.info.typ, InstType.store)
+
+
   alu_in.is_imm := isFmtI
   alu_in.func3t := Mux(isFmtB, func3t >> 1, func3t)
   alu_in.func7t := func7t
@@ -75,7 +80,7 @@ class EXU extends Module {
     }
   }
 
-  when(dinst.info.typ === InstType.system) {
+  when(isTypSys) {
     when(is_ecall) {
       csrren    := true.B
       csrwen    := false.B
@@ -141,8 +146,8 @@ class EXU extends Module {
 
   val memRdRawData = Reg(Types.UWord)
 
-  val isLoad  = (dinst.info.typ === InstType.load) && MS_fsm.io.master_valid
-  val isStore = (dinst.info.typ === InstType.store) && MS_fsm.io.master_valid
+  val isLoad  = isTypLoad && MS_fsm.io.master_valid
+  val isStore = isTypStore && MS_fsm.io.master_valid
   val isMemOp = isLoad || isStore
 
   val memWDone = Reg(Bool())
@@ -266,11 +271,11 @@ class EXU extends Module {
     )
   )
 
-  when(dinst.info.typ === InstType.store) {
-    when(!MemOp.isValidStoreOp(func3t)) {
-      printf("(exu) UNKNOWN STORE func3t %d\n", func3t)
-    }
-  }
+  // when(dinst.info.typ === InstType.store) {
+  //   when(!MemOp.isValidStoreOp(func3t)) {
+  //     printf("(exu) UNKNOWN STORE func3t %d\n", func3t)
+  //   }
+  // }
 
   MS_fsm.io.self_finished := alu.io.out.valid && (
     (!isMemOp) || memOPDone
@@ -321,19 +326,6 @@ class EXU extends Module {
     }
   )
 
-  when(dinst.info.typ === InstType.system) {
-    when(!(is_ecall || is_mret)) {
-      when(!CSROp.isValidCSRop(func3t)) {
-        printf("(exu) UNKNOWN SYSTEM func3t %d\n", func3t)
-      }
-    }
-  }
-  when(dinst.info.typ === InstType.load) {
-    when(!MemOp.isValidLoadOp(func3t)) {
-      printf("(exu) UNKNOWN LOAD func3t %d\n", func3t)
-    }
-  }
-
   // for (fmt <- InstFmt.all) {
   //   println(s"InstFmt.${fmt} = ${fmt.asUInt.litValue}")
   // }
@@ -344,10 +336,10 @@ class EXU extends Module {
   when(is_ecall || is_mret) {
     nxt_pc := csr_rdata
   }.otherwise {
-    when(dinst.info.typ === InstType.jalr) {
+    when(InstType.hasSame(dinst.info.typ, InstType.jalr)) {
       val r1AddImm = reg_v1 + dinst.info.imm
       nxt_pc := r1AddImm(31, 1) ## 0.U(1.W)
-    }.elsewhen(dinst.info.typ === InstType.jal) {
+    }.elsewhen(InstType.hasSame(dinst.info.typ, InstType.jal)) {
       nxt_pc := pcAddImm
     }.elsewhen(isFmtB){
       // reuse alu
