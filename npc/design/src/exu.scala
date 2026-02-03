@@ -139,14 +139,14 @@ class EXU extends Module {
 
   // mem
 
-  object MemOp {
-    val byte     = 0.U
-    val halfword = 1.U
-    val word     = 2.U
-    val lbu      = 4.U
-    val lhu      = 5.U
-
-  }
+  // object MemOp {
+  //   val byte     = 0.U
+  //   val halfword = 1.U
+  //   val word     = 2.U
+  //   val lbu      = 4.U
+  //   val lhu      = 5.U
+  //
+  // }
 
   // val memRdRawData = Reg(Types.UWord)
   val memRdRawData = Wire(Types.UWord)
@@ -200,15 +200,15 @@ class EXU extends Module {
   memIO.arburst := 1.U
 
   // val memRdData = memRdRawData >> memAddrUnalignPartBitlen
-  val memRdData = MuxLookup(memAddrUnalignPart, 0.U(8.W))(
-    Seq(
-      0.U -> memRdRawData,
-      1.U -> memRdRawData(31, 8).pad(32),
-      2.U -> memRdRawData(31, 16).pad(32),
-      3.U -> memRdRawData(31, 24).pad(32)
-    )
-  )
-  // val memRdData = memRdRawData
+  // val memRdData = MuxLookup(memAddrUnalignPart, 0.U(8.W))(
+  //   Seq(
+  //     0.U -> memRdRawData,
+  //     1.U -> memRdRawData(31, 8).pad(32),
+  //     2.U -> memRdRawData(31, 16).pad(32),
+  //     3.U -> memRdRawData(31, 24).pad(32)
+  //   )
+  // )
+  val memRdData = memRdRawData
 
   val memRdDataByte = Cat(Fill(24, memRdData(7) && (~func3t(2))), memRdData(7, 0))
   val memRdDataHalf = Cat(Fill(16, memRdData(15) && (~func3t(2))), memRdData(15, 0))
