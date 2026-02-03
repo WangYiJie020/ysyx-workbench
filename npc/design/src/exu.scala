@@ -34,7 +34,7 @@ class EXU extends Module {
 
   alu_in.is_imm := isInstImm || isInstJump
   alu_in.func3t := Mux(dinst.info.fmt === InstFmt.branch, func3t >> 1, func3t)
-  alu_in.func7t := Mux(isInstJump, 0.U, func7t)
+  alu_in.func7t := func7t
 
   val MS_fsm = Module(new OneMasterOneSlaveFSM)
   MS_fsm.connectMaster(io.dinst)
@@ -336,7 +336,7 @@ class EXU extends Module {
     nxt_pc := csr_rdata
   }.otherwise {
     when(dinst.info.typ === InstType.jalr) {
-      val r1AddImm = alu.io.out.bits
+      val r1AddImm = reg_v1 + dinst.info.imm
       nxt_pc := r1AddImm(31, 1) ## 0.U(1.W)
     }.elsewhen(dinst.info.typ === InstType.jal) {
       nxt_pc := pcAddImm
