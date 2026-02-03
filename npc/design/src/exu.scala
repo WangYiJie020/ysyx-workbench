@@ -83,9 +83,7 @@ class EXU extends Module {
   object CSROp {
     val csrrw = 1.U
     val csrrs = 2.U
-    // def isValidCSRop(op: UInt): Bool = {
-    //   (op === csrrw) || (op === csrrs)
-    // }
+
   }
 
   when(isTypSys) {
@@ -144,12 +142,6 @@ class EXU extends Module {
     val lbu      = 4.U
     val lhu      = 5.U
 
-    // def isValidLoadOp(op: UInt):  Bool = {
-    //   (op === byte) || (op === halfword) || (op === word) || (op === lbu) || (op === lhu)
-    // }
-    // def isValidStoreOp(op: UInt): Bool = {
-    //   (op === byte) || (op === halfword) || (op === word)
-    // }
   }
 
   // val memRdRawData = Reg(Types.UWord)
@@ -195,15 +187,15 @@ class EXU extends Module {
   memIO.arburst := 1.U
 
   // val memRdData = memRdRawData >> memAddrUnalignPartBitlen
-  // val memRdData = MuxLookup(memAddrUnalignPart, 0.U(8.W))(
-  //   Seq(
-  //     0.U -> memRdRawData,
-  //     1.U -> memRdRawData(31, 8).pad(32),
-  //     2.U -> memRdRawData(31, 16).pad(32),
-  //     3.U -> memRdRawData(31, 24).pad(32)
-  //   )
-  // )
-  val memRdData = memRdRawData
+  val memRdData = MuxLookup(memAddrUnalignPart, 0.U(8.W))(
+    Seq(
+      0.U -> memRdRawData,
+      1.U -> memRdRawData(31, 8).pad(32),
+      2.U -> memRdRawData(31, 16).pad(32),
+      3.U -> memRdRawData(31, 24).pad(32)
+    )
+  )
+  // val memRdData = memRdRawData
 
   when(memIO.arvalid && memIO.arready) {
     memAddrSent := true.B
@@ -294,11 +286,7 @@ class EXU extends Module {
     )
   )
 
-  // when(dinst.info.typ === InstType.store) {
-  //   when(!MemOp.isValidStoreOp(func3t)) {
-  //     printf("(exu) UNKNOWN STORE func3t %d\n", func3t)
-  //   }
-  // }
+
 
   MS_fsm.io.self_finished := alu.io.out.valid && (
     (!isMemOp) || memOPDone
@@ -385,16 +373,4 @@ class EXU extends Module {
   }
 }
 
-object UnusedResrervedDefinition {
-  object BranchOp {
-    val beq  = 0.U
-    val bne  = 1.U
-    val blt  = 4.U
-    val bge  = 5.U
-    val bltu = 6.U
-    val bgeu = 7.U
-    def isValidBranchOp(op: UInt): Bool = {
-      (op === beq) || (op === bne) || (op === blt) || (op === bge) || (op === bltu) || (op === bgeu)
-    }
-  }
-}
+
