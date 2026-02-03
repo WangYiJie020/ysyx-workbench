@@ -289,7 +289,7 @@ class EXU extends Module {
     )
   )
   // memWData := reg_v2
-  val wByteMask = MuxLookup(memAddrUnalignPart, GARBAGE_UNINIT_VALUE)(
+  val wByteMask = MuxLookup(memAddrUnalignPart, 0.U(4.W))(
     Seq(
       0.U -> "b0001".U(4.W),
       1.U -> "b0010".U(4.W),
@@ -297,9 +297,7 @@ class EXU extends Module {
       3.U -> "b1000".U(4.W)
     )
   )
-  val _dt1 = Wire(UInt(4.W))
-  _dt1 := DontCare
-  val wByteMaskHalf = MuxLookup(memAddrUnalignPart, _dt1)(
+  val wByteMaskHalf = MuxLookup(memAddrUnalignPart, 0.U(4.W))(
     Seq(
       0.U -> "b0011".U(4.W),
       1.U -> "b0110".U(4.W),
