@@ -36,6 +36,11 @@ class EXU extends Module {
   val isTypSys = InstType.hasSame(dinst.info.typ, InstType.system)
   val isTypLoad = InstType.hasSame(dinst.info.typ, InstType.load)
   val isTypStore = InstType.hasSame(dinst.info.typ, InstType.store)
+  val isTypAUIPC = InstType.hasSame(dinst.info.typ, InstType.auipc)
+  val isTypJAL = InstType.hasSame(dinst.info.typ, InstType.jal)
+  val isTypJALR = InstType.hasSame(dinst.info.typ, InstType.jalr)
+  val isTypBranch = InstType.hasSame(dinst.info.typ, InstType.branch)
+  val isTypArithmetic = InstType.hasSame(dinst.info.typ, InstType.arithmetic)
 
 
   alu_in.is_imm := isFmtI
@@ -54,9 +59,12 @@ class EXU extends Module {
   val reg_v1 = io.rvec.data(0)
   val reg_v2 = io.rvec.data(1)
 
-  alu_in.src1 := reg_v1
+  val aluCalcPCAddImm = isTypAUIPC | isTypJAL | isTypJALR | isTypBranch
+
+  // alu_in.src1 := reg_v1
+  alu_in.src1 := Mux(aluCalcPCAddImm, dinst.pc, reg_v1)
   // when branch, src2 is reg_v2
-  alu_in.src2 := Mux(isFmtI, dinst.info.imm, reg_v2)
+  alu_in.src2 := Mux(isFmtI | aluCalcPCAddImm, dinst.info.imm, reg_v2)
 
   // csr
 
@@ -188,16 +196,15 @@ class EXU extends Module {
   memIO.arburst := 1.U
 
   // val memRdData = memRdRawData >> memAddrUnalignPartBitlen
-  // val memRdData = MuxLookup(memAddrUnalignPart, 0.U(8.W))(
-  //   Seq(
-  //     0.U -> memRdRawData,
-  //     1.U -> memRdRawData(31, 8).pad(32),
-  //     2.U -> memRdRawData(31, 16).pad(32),
-  //     3.U -> memRdRawData(31, 24).pad(32)
-  //   )
-  // )
-  val memRdData = memRdRawData
-  assert(memAddrUnalignPart === 0.U || (!isMemOp), "Unaligned mem access")
+  val memRdData = MuxLookup(memAddrUnalignPart, 0.U(8.W))(
+    Seq(
+      0.U -> memRdRawData,
+      1.U -> memRdRawData(31, 8).pad(32),
+      2.U -> memRdRawData(31, 16).pad(32),
+      3.U -> memRdRawData(31, 24).pad(32)
+    )
+  )
+  // val memRdData = memRdRawData
 
   when(memIO.arvalid && memIO.arready) {
     memAddrSent := true.B
@@ -301,7 +308,9 @@ class EXU extends Module {
   // wdata
 
   val nxt_pc   = Wire(Types.UWord)
-  val pcAddImm = dinst.pc + dinst.info.imm
+  // need pc+imm:
+  // auipc, jal(r), branch
+  val pcAddImm = alu.io.out.bits
   val snpc     = dinst.pc + 4.U
 
   // for now, system inst, ecall and mret has rd == 0
@@ -367,7 +376,7 @@ class EXU extends Module {
       val isLessThan = alu.io.out.bits(0)
       val branchCalc = Mux(func3t(2), isLessThan, (reg_v1 === reg_v2))
       val takeBranch = Mux(func3t(0), ~branchCalc, branchCalc)
-      nxt_pc := Mux(takeBranch, dinst.pc + dinst.info.imm, snpc)
+      nxt_pc := Mux(takeBranch, pcAddImm, snpc)
       // when(!BranchOp.isValidBranchOp(func3t)) {
       //   printf("(exu) UNKNOWN BRANCH func3t %d\n", func3t)
       // }
