@@ -311,7 +311,7 @@ class EXU extends Module {
       InstType.auipc      -> pcAddImm,
       InstType.jalr       -> snpc,
       InstType.jal        -> snpc,
-      InstType.load       -> MuxLookup(func3t, 0.U)(
+      InstType.load       -> MuxLookup(func3t, GARBAGE_UNINIT_VALUE)(
         Seq(
           MemOp.byte     -> Cat(Fill(24, memRdData(7)), memRdData(7, 0)),
           MemOp.halfword -> Cat(Fill(16, memRdData(15)), memRdData(15, 0)),
