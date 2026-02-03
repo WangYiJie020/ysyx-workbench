@@ -116,10 +116,16 @@ class EXU extends Module {
       csr_raddr := dinst.code(31, 20)
       csr_waddr := csr_raddr
       // printf("(exu) CSR access addr 0x%x\n", csr_addr)
-      csr_wdata := MuxLookup(func3t, GARBAGE_UNINIT_VALUE)(
+      // csr_wdata := MuxLookup(func3t, GARBAGE_UNINIT_VALUE)(
+      //   Seq(
+      //     CSROp.csrrw -> reg_v1,
+      //     CSROp.csrrs -> (csr_rdata | reg_v1)
+      //   )
+      // )
+      csr_wdata := Mux1H(
         Seq(
-          CSROp.csrrw -> reg_v1,
-          CSROp.csrrs -> (csr_rdata | reg_v1)
+          (func3t === CSROp.csrrw) -> reg_v1,
+          (func3t === CSROp.csrrs) -> (csr_rdata | reg_v1)
         )
       )
     }
@@ -320,7 +326,7 @@ class EXU extends Module {
     (dinst.info.typ =/= InstType.store)
 
   io.out.bits.gpr.addr := dinst.info.rd
-  val sysInstWrBackData = csr_raddr
+  val sysInstWrBackData = csr_rdata
   val gprDataMapping = Seq(
     InstType.arithmetic -> alu.io.out.bits,
     InstType.lui        -> dinst.info.imm,
