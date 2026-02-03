@@ -358,7 +358,7 @@ class EXU extends Module {
     InstType.jal        -> snpc,
     InstType.load       -> loadResult,
     InstType.system     -> sysInstWrBackData,
-    InstType.fencei     -> DontCare
+    InstType.fencei     -> GARBAGE_UNINIT_VALUE
   )
 
   // io.out.bits.gpr.data := MuxLookup(dinst.info.typ, GARBAGE_UNINIT_VALUE)(gprDataMapping)
