@@ -152,9 +152,9 @@ class EXU extends Module {
 
   // io.mem.dontCareNonLiteW()
 
-  val memAddr                  = reg_v1 + dinst.info.imm
-  val memAddrUnalignPart       = memAddr(1, 0)
-  val memAddrUnalignPartBitlen = memAddrUnalignPart << 3
+  val memAddr            = reg_v1 + dinst.info.imm
+  val memAddrUnalignPart = memAddr(1, 0)
+  // val memAddrUnalignPartBitlen = memAddrUnalignPart << 3
 
   memIO.araddr  := memAddr
   memIO.arvalid := isLoad && (!memRDone) && (!memAddrSent)
@@ -174,7 +174,15 @@ class EXU extends Module {
   memIO.arsize  := memOpSize
   memIO.arburst := 1.U
 
-  val memRdData = memRdRawData >> memAddrUnalignPartBitlen
+  // val memRdData = memRdRawData >> memAddrUnalignPartBitlen
+  val memRdData = MuxLookup(memAddrUnalignPart, 0.U(8.W))(
+    Seq(
+      0.U -> memRdRawData,
+      1.U -> memRdRawData(31, 8).pad(32),
+      2.U -> memRdRawData(31, 16).pad(32),
+      3.U -> memRdRawData(31, 24).pad(32)
+    )
+  )
 
   when(memIO.arvalid && memIO.arready) {
     memAddrSent := true.B
@@ -200,7 +208,7 @@ class EXU extends Module {
 
   memIO.awvalid := isStore && (!memWDone) && (!memAddrSent)
   memIO.wvalid  := isStore && (!memWDone)
-  memIO.wlast:=memIO.wvalid
+  memIO.wlast   := memIO.wvalid
   dontTouch(io.mem)
   dontTouch(memIO.wlast)
 
@@ -227,12 +235,29 @@ class EXU extends Module {
   }
   memIO.bready := true.B
 
-  memWData := reg_v2 << memAddrUnalignPartBitlen
+  // memWData := reg_v2 << memAddrUnalignPartBitlen
+  memWData := MuxLookup(memAddrUnalignPart, 0.U(32.W))(
+    Seq(
+      0.U -> reg_v2,
+      1.U -> Cat(reg_v2(23, 0), 0.U(8.W)),
+      2.U -> Cat(reg_v2(15, 0), 0.U(16.W)),
+      3.U -> Cat(reg_v2(7, 0), 0.U(24.W))
+    )
+  )
+  val wByteMask = MuxLookup(memAddrUnalignPart, 0.U(4.W))(
+    Seq(
+      0.U -> "b0001".U(4.W),
+      1.U -> "b0010".U(4.W),
+      2.U -> "b0100".U(4.W),
+      3.U -> "b1000".U(4.W)
+    )
+  )
+
   memWAddr := memAddr
   memWMask := MuxLookup(func3t, 0.U)(
     Seq(
-      MemOp.byte     -> (1.U(4.W) << memAddrUnalignPart),
-      MemOp.halfword -> (3.U(4.W) << memAddrUnalignPart),
+      MemOp.byte     -> wByteMask,
+      MemOp.halfword -> (wByteMask | (wByteMask << 1)), // (3.U(4.W) << memAddrUnalignPart),
       MemOp.word     -> 15.U(4.W)
     )
   )
