@@ -132,9 +132,9 @@ class EXU extends Module {
   }.otherwise {
     csrren    := false.B
     csrwen    := false.B
-    csr_raddr := 0.U
-    csr_waddr := 0.U
-    csr_wdata := 0.U
+    csr_raddr := DontCare
+    csr_waddr := DontCare
+    csr_wdata := DontCare
   }
 
   // mem
