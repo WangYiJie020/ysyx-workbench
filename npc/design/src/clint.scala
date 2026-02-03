@@ -34,11 +34,10 @@ class CLINTUnit extends Module {
   val mtime_lo = RegInit(0.U(32.W))
   val mtime_hi = RegInit(0.U(32.W))
 
-  val nxt_mtime_lo = Wire(UInt(33.W))
-  nxt_mtime_lo := mtime_lo +& 1.U
-
-  mtime_lo := nxt_mtime_lo(31, 0)
-  mtime_hi := mtime_hi + nxt_mtime_lo(32)
+  mtime_lo := mtime_lo + 1.U
+  when(mtime_lo === "hFFFFFFFF".U) {
+    mtime_hi := mtime_hi + 1.U
+  }
 
   val isRdHi = sio.araddr(3)
   sio.rdata := Mux(isRdHi, mtime_hi, mtime_lo)
