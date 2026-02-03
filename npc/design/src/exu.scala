@@ -345,8 +345,6 @@ class EXU extends Module {
     nxt_pc := csr_rdata
   }.otherwise {
     when(dinst.info.typ === InstType.jalr) {
-      // nxt_pc := (reg_v1 + dinst.info.imm) &
-      //   Cat(Fill(Types.BitWidth.word - 1, 1.U), 0.U(1.W)) // set bit0 to 0
       val r1AddImm = reg_v1 + dinst.info.imm
       nxt_pc := r1AddImm(31, 1) ## 0.U(1.W)
     }.elsewhen(dinst.info.typ === InstType.jal) {
@@ -358,16 +356,14 @@ class EXU extends Module {
       // blt/bge 10x -> feed alu 010 -> slt
       // bltu/bgeu 11x -> feed alu 011 -> sltu
       val isLessThan  = alu.io.out.bits(0)
-      val take_branch = MuxLookup(func3t, false.B)(
+      val branchCalc = MuxLookup(func3t(2,1), false.B)(
         Seq(
-          BranchOp.beq  -> (reg_v1 === reg_v2),
-          BranchOp.bne  -> (reg_v1 =/= reg_v2),
-          BranchOp.blt  -> isLessThan,
-          BranchOp.bge  -> (~isLessThan),
-          BranchOp.bltu -> isLessThan,
-          BranchOp.bgeu -> (~isLessThan)
+          0.U  -> (reg_v1 === reg_v2),
+          2.U  -> isLessThan,
+          3.U -> isLessThan,
         )
       )
+      val take_branch = Mux(func3t(0), ~branchCalc, branchCalc)
       nxt_pc := Mux(take_branch, dinst.pc + dinst.info.imm, snpc)
       when(!BranchOp.isValidBranchOp(func3t)) {
         printf("(exu) UNKNOWN BRANCH func3t %d\n", func3t)
