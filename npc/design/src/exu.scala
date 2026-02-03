@@ -345,8 +345,10 @@ class EXU extends Module {
     nxt_pc := csr_rdata
   }.otherwise {
     when(dinst.info.typ === InstType.jalr) {
-      nxt_pc := (reg_v1 + dinst.info.imm) &
-        Cat(Fill(Types.BitWidth.word - 1, 1.U), 0.U(1.W)) // set bit0 to 0
+      // nxt_pc := (reg_v1 + dinst.info.imm) &
+      //   Cat(Fill(Types.BitWidth.word - 1, 1.U), 0.U(1.W)) // set bit0 to 0
+      val r1AddImm = reg_v1 + dinst.info.imm
+      nxt_pc := r1AddImm(31, 1) ## 0.U(1.W)
     }.elsewhen(dinst.info.typ === InstType.jal) {
       nxt_pc := pcAddImm
     }.elsewhen(dinst.info.fmt === InstFmt.branch) {
