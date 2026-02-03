@@ -276,15 +276,15 @@ SSBL_TEXT void _second_boot() {
                           (size_t)__data_extra_size__));
   }
 
-  boot_log("checking memory regions...\n");
-	putstr("heap.start = ");
-	putnum_base16((uint32_t)heap.start);
-	putstr(" heap.end = ");
-	putnum_base16((uint32_t)heap.end);
-  assert(heap.start < heap.end);
-	putstr("\nheap size = ");
-	putnum_base16((uint32_t)(heap.end - heap.start));
-	putch('\n');
+  // boot_log("checking memory regions...\n");
+	// putstr("heap.start = ");
+	// putnum_base16((uint32_t)heap.start);
+	// putstr(" heap.end = ");
+	// putnum_base16((uint32_t)heap.end);
+ //  assert(heap.start < heap.end);
+	// putstr("\nheap size = ");
+	// putnum_base16((uint32_t)(heap.end - heap.start));
+	// putch('\n');
 
 
 	boot_log("flush caches...\n");
