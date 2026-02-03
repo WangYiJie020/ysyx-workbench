@@ -200,6 +200,7 @@ class EXU extends Module {
     memAddrSent := true.B
   }
 
+    memRdRawData := memIO.rdata
   when(memIO.rvalid && !memRDone) {
     // memRdRawData := memIO.rdata
     memRDone     := true.B
