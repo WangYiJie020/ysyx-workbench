@@ -206,6 +206,7 @@ class EXU extends Module {
     memRDone     := true.B
   }
   val downStreamRecved = Reg(Bool())
+  dontTouch(downStreamRecved)
   memIO.rready := true.B
   when(io.out.ready && io.out.valid) {
     downStreamRecved := true.B
