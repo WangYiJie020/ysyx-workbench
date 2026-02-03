@@ -1,6 +1,0 @@
-block_size: 16
-block_num: 8
-total_access: 186566742
-total_miss: 11583121
-hit_rate: 93.7914
-total_miss_time: 1.38997e+09 (based on 30 cycles per miss)
