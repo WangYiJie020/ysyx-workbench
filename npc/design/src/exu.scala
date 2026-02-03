@@ -33,15 +33,14 @@ class EXU extends Module {
   val isFmtI = InstFmt.hasSame(dinst.info.fmt, InstFmt.imm)
   val isFmtB = InstFmt.hasSame(dinst.info.fmt, InstFmt.branch)
 
-  val isTypSys = InstType.hasSame(dinst.info.typ, InstType.system)
-  val isTypLoad = InstType.hasSame(dinst.info.typ, InstType.load)
-  val isTypStore = InstType.hasSame(dinst.info.typ, InstType.store)
-  val isTypAUIPC = InstType.hasSame(dinst.info.typ, InstType.auipc)
-  val isTypJAL = InstType.hasSame(dinst.info.typ, InstType.jal)
-  val isTypJALR = InstType.hasSame(dinst.info.typ, InstType.jalr)
-  val isTypBranch = InstType.hasSame(dinst.info.typ, InstType.branch)
+  val isTypSys        = InstType.hasSame(dinst.info.typ, InstType.system)
+  val isTypLoad       = InstType.hasSame(dinst.info.typ, InstType.load)
+  val isTypStore      = InstType.hasSame(dinst.info.typ, InstType.store)
+  val isTypAUIPC      = InstType.hasSame(dinst.info.typ, InstType.auipc)
+  val isTypJAL        = InstType.hasSame(dinst.info.typ, InstType.jal)
+  val isTypJALR       = InstType.hasSame(dinst.info.typ, InstType.jalr)
+  val isTypBranch     = InstType.hasSame(dinst.info.typ, InstType.branch)
   val isTypArithmetic = InstType.hasSame(dinst.info.typ, InstType.arithmetic)
-
 
   alu_in.is_imm := isFmtI
   alu_in.func3t := Mux(isFmtB, func3t >> 1, func3t)
@@ -58,7 +57,6 @@ class EXU extends Module {
   io.rvec.addr(1) := dinst.info.rs2
   val reg_v1 = io.rvec.data(0)
   val reg_v2 = io.rvec.data(1)
-
 
   // alu_in.src1 := reg_v1
   alu_in.src1 := reg_v1
@@ -171,7 +169,7 @@ class EXU extends Module {
 
   // Weird optmization from chisel make this
   // synthesis area smaller than using func3t directly
-  val memOpSize = func3t(1,0)
+  val memOpSize = func3t(1, 0)
   // val memOpSize = MuxLookup(func3t, 0.U)(
   //   Seq(
   //     MemOp.byte     -> 0.U,
@@ -198,14 +196,28 @@ class EXU extends Module {
   )
   // val memRdData = memRdRawData
 
+  val memRdDataByte = Cat(Fill(24, memRdData(7) && (~func3t(2))), memRdData(7, 0))
+  val memRdDataHalf = Cat(Fill(16, memRdData(15) && (~func3t(2))), memRdData(15, 0))
+  val loadResult    = Mux(func3t(1), memRdData, Mux(func3t(0), memRdDataHalf, memRdDataByte))
+
+  // val loadResult = MuxLookup(func3t, GARBAGE_UNINIT_VALUE)(
+  //   Seq(
+  //     MemOp.byte     -> Cat(Fill(24, memRdData(7)), memRdData(7, 0)),
+  //     MemOp.halfword -> Cat(Fill(16, memRdData(15)), memRdData(15, 0)),
+  //     MemOp.word     -> memRdData,
+  //     MemOp.lbu      -> Cat(Fill(24, 0.U), memRdData(7, 0)),
+  //     MemOp.lhu      -> Cat(Fill(16, 0.U), memRdData(15, 0))
+  //   )
+  // )
+
   when(memIO.arvalid && memIO.arready) {
     memAddrSent := true.B
   }
 
-    memRdRawData := memIO.rdata
+  memRdRawData := memIO.rdata
   when(memIO.rvalid && !memRDone) {
     // memRdRawData := memIO.rdata
-    memRDone     := true.B
+    memRDone := true.B
   }
   // val downStreamRecved = Reg(Bool())
   // dontTouch(downStreamRecved)
@@ -287,8 +299,6 @@ class EXU extends Module {
     )
   )
 
-
-
   MS_fsm.io.self_finished := alu.io.out.valid && (
     (!isMemOp) || memOPDone
   )
@@ -307,32 +317,24 @@ class EXU extends Module {
     (dinst.info.typ =/= InstType.store)
 
   io.out.bits.gpr.addr := dinst.info.rd
-  val gprDataMapping =     Seq(
-      InstType.arithmetic -> alu.io.out.bits,
-      InstType.lui        -> dinst.info.imm,
-      InstType.auipc      -> pcAddImm,
-      InstType.jalr       -> snpc,
-      InstType.jal        -> snpc,
-      InstType.load       -> MuxLookup(func3t, GARBAGE_UNINIT_VALUE)(
+  val gprDataMapping = Seq(
+    InstType.arithmetic -> alu.io.out.bits,
+    InstType.lui        -> dinst.info.imm,
+    InstType.auipc      -> pcAddImm,
+    InstType.jalr       -> snpc,
+    InstType.jal        -> snpc,
+    InstType.load       -> loadResult,
+    InstType.system     -> Mux(
+      is_ecall || is_mret,
+      GARBAGE_UNINIT_VALUE,
+      MuxLookup(func3t, GARBAGE_UNINIT_VALUE)(
         Seq(
-          MemOp.byte     -> Cat(Fill(24, memRdData(7)), memRdData(7, 0)),
-          MemOp.halfword -> Cat(Fill(16, memRdData(15)), memRdData(15, 0)),
-          MemOp.word     -> memRdData,
-          MemOp.lbu      -> Cat(Fill(24, 0.U), memRdData(7, 0)),
-          MemOp.lhu      -> Cat(Fill(16, 0.U), memRdData(15, 0))
-        )
-      ),
-      InstType.system     -> Mux(
-        is_ecall || is_mret,
-        GARBAGE_UNINIT_VALUE,
-        MuxLookup(func3t, GARBAGE_UNINIT_VALUE)(
-          Seq(
-            CSROp.csrrw -> csr_rdata,
-            CSROp.csrrs -> csr_rdata
-          )
+          CSROp.csrrw -> csr_rdata,
+          CSROp.csrrs -> csr_rdata
         )
       )
     )
+  )
 
   // io.out.bits.gpr.data := MuxLookup(dinst.info.typ, GARBAGE_UNINIT_VALUE)(gprDataMapping)
   io.out.bits.gpr.data := Mux1H(
@@ -356,7 +358,7 @@ class EXU extends Module {
       nxt_pc := r1AddImm(31, 1) ## 0.U(1.W)
     }.elsewhen(InstType.hasSame(dinst.info.typ, InstType.jal)) {
       nxt_pc := pcAddImm
-    }.elsewhen(isFmtB){
+    }.elsewhen(isFmtB) {
       //
       // reuse alu
       // branch func3t
@@ -378,5 +380,3 @@ class EXU extends Module {
     }
   }
 }
-
-
