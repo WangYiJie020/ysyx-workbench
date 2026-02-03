@@ -30,7 +30,7 @@ class EXU extends Module {
   val func7t = dinst.code(31, 25)
 
   alu_in.is_imm := (dinst.info.fmt === InstFmt.imm)
-  alu_in.func3t := func3t
+  alu_in.func3t := Mux(dinst.info.fmt === InstFmt.branch, func3t >> 1, func3t)
   alu_in.func7t := func7t
 
   val MS_fsm = Module(new OneMasterOneSlaveFSM)
