@@ -115,6 +115,7 @@ struct EXUPerfCounter : public PerfCounterBase {
     lui,
     auipc,
     system,
+		fencei,
     TYPE_NUM
   };
 
