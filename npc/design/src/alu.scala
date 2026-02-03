@@ -78,7 +78,7 @@ class ALU extends Module {
       3.U -> Mux(src1 < src2, 1.U, 0.U),     // 011: sltu/sltiu
       4.U -> (src1 ^ src2),                  // 100: xor/xori
       5.U -> shift_res,                      // 101: srl/srli/sra/srai
-      6.U -> (src1 / src2),                  // 110: or/ori
+      6.U -> (src1 | src2),                  // 110: or/ori
       7.U -> (src1 & src2)                   // 111: and/andi
     )
   )
