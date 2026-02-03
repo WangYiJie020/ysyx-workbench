@@ -456,7 +456,7 @@ uint8_t *sim_guest_to_host(uint32_t addr) {
   return nullptr;
 }
 
-extern "C" void gpr_upd(int regno, int data) {
+extern "C" void gpr_upd(char regno, int data) {
   if (regno == 0)
     return;
   cpu.gpr[regno] = data;
