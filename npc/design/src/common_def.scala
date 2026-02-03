@@ -30,7 +30,8 @@ object DbgVal {
 }
 
 object InstFmt  extends ChiselEnum {
-  val imm, reg, store, upper, jump, branch = Value
+  val imm, reg, store, upper, jump, branch = Value(nextValue)
+  private def nextValue: UInt = (1 << (all.size)).U
 }
 object InstType extends ChiselEnum {
   val branch, arithmetic, load, store, jalr, jal, lui, auipc, system = Value

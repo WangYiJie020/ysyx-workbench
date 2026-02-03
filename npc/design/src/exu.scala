@@ -326,6 +326,10 @@ class EXU extends Module {
     }
   }
 
+  for(fmt <- InstFmt.all) {
+    print("(exu) InstFmt.%s = %d\n".format(fmt.toString, fmt.asUInt))
+  }
+
   // nxt_pc
 
   io.out.bits.nxt_pc := nxt_pc
