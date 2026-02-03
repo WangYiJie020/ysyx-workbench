@@ -64,7 +64,11 @@ static int decode_exec(Decode *s) {
 	bool matched = (execute_instruction(inst, &tmp, cpu.gpr) == 0);
 	if(matched) s->dnpc = tmp;
 
-  if (IS_INST(CSRRW)) {
+	if(inst == 0x100f){ // fence.i
+		matched = true;
+	}
+
+	if (IS_INST(CSRRW)) {
     if (rd != 0) {
       R(rd) = _csr_read(csr_imm);
     }
