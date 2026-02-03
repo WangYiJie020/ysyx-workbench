@@ -21,26 +21,16 @@ class CLINTUnit extends Module {
   sio.rvalid  := sio.arvalid
   assert(!(sio.arvalid && !sio.rready), "CLINTUnit does not support wait readdata")
 
-  when(sio.arvalid) {
+  when(sio.arvalid){
     RawClockedVoidFunctionCall("skip_difftest_ref")(
       clock,
       sio.arvalid
     )
   }
 
-  // val mtime = RegInit(0.U(64.W))
-  //
-  // mtime := mtime + 1.U
-  val mtime_lo = RegInit(0.U(32.W))
-  val mtime_hi = RegInit(0.U(32.W))
+  val mtime = RegInit(0.U(64.W))
 
-  mtime_lo := mtime_lo + 1.U
-  when(mtime_lo === "hFFFFFFFF".U) {
-    mtime_hi := mtime_hi + 1.U
-  }
-
-  val isRdHi = sio.araddr(3)
-  sio.rdata := Mux(isRdHi, mtime_hi, mtime_lo)
+  mtime := mtime + 1.U
 
   sio.rresp := AXI4IO.RResp.OKAY
   // h02000000-h0200ffff
@@ -48,6 +38,6 @@ class CLINTUnit extends Module {
   // val araddrLow = sio.araddr(3, 0)
   // 0x48 -> 8 -> 0100
   // 0x4c -> 12 -> 1100
-  // val isRdHi = sio.araddr(3)
-  // sio.rdata := Mux(isRdHi, mtime(63, 32), mtime(31, 0))
+  val isRdHi = sio.araddr(3)
+  sio.rdata := Mux(isRdHi, mtime(63, 32), mtime(31, 0))
 }
