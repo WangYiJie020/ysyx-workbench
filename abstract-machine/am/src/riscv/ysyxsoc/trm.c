@@ -20,6 +20,8 @@ static const char mainargs[MAINARGS_MAX_LEN] =
 #define FSBL_TEXT __attribute__((section(".fsbl_text")))
 #define SSBL_TEXT __attribute__((section(".ssbl_text")))
 
+#define NO_BOOT_LOG 1
+
 FSBL_TEXT void init_serial() {
 
   // set UART to 8 bits, no parity, one stop bit
@@ -50,6 +52,8 @@ FSBL_TEXT void init_serial() {
 }
 
 #define WAIT_UART_TX_EMPTY() do{while (!IS_UART_TRANSMIT_EMPTY()){}}while(0)
+
+#ifndef NO_BOOT_LOG
 FSBL_TEXT void fsbl_putch(char ch) {
 	WAIT_UART_TX_EMPTY();
 	*UART_TX = ch;
@@ -58,6 +62,10 @@ SSBL_TEXT void ssbl_putch(char ch) {
 	WAIT_UART_TX_EMPTY();
 	*UART_TX = ch;
 }
+#else
+#define fsbl_putch(ch)
+#define ssbl_putch(ch)
+#endif
 
 
 char try_getch() {
