@@ -20,7 +20,7 @@ static const char mainargs[MAINARGS_MAX_LEN] =
 #define FSBL_TEXT __attribute__((section(".fsbl_text")))
 #define SSBL_TEXT __attribute__((section(".ssbl_text")))
 
-#define NO_BOOT_LOG 1
+// #define NO_BOOT_LOG 1
 
 FSBL_TEXT void init_serial() {
 
