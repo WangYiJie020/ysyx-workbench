@@ -4,7 +4,6 @@ import chisel3.util._
 import common_def._
 import busfsm._
 
-import memory._
 import axi4._
 
 class IFU extends Module {
@@ -24,9 +23,9 @@ class IFU extends Module {
   val arSent = Reg(Bool())
   val pcChanged = io.pc.bits =/= lastPC
 
-  dontTouch(code)
-  dontTouch(fetchDone)
-  dontTouch(io)
+  // dontTouch(code)
+  // dontTouch(fetchDone)
+  // dontTouch(io)
 
   val memIO = io.mem
 

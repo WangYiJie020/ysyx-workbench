@@ -30,21 +30,21 @@ object DbgVal {
 }
 
 object InstFmt  extends ChiselEnum {
-  val imm, reg, store, upper, jump, branch = Value
+  val imm, reg, store, upper, jump, branch = Value(nextValue)
   private def nextValue: UInt = (1 << (all.size)).U
 
   def hasSame(a: InstFmt.Type, b: InstFmt.Type): Bool = {
-    // (a.asUInt & b.asUInt).orR
-    a === b
+    (a.asUInt & b.asUInt).orR
+    // a === b
   }
 }
 object InstType extends ChiselEnum {
-  val branch, arithmetic, load, store, jalr, jal, lui, auipc, system = Value
+  val branch, arithmetic, load, store, jalr, jal, lui, auipc, system = Value(nextValue)
   private def nextValue: UInt = (1 << (all.size)).U
 
   def hasSame(a: InstType.Type, b: InstType.Type): Bool = {
-    // (a.asUInt & b.asUInt).orR
-    a === b
+    (a.asUInt & b.asUInt).orR
+    // a === b
   }
 }
 

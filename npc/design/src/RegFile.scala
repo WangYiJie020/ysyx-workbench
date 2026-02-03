@@ -48,7 +48,6 @@ object CSRegReqIO extends MetaRegReqIO(addr_width = Types.BitWidth.csr_addr)
 class GPRIO(N_RD:Int=2) extends Bundle {
   val read  = GPRegReqIO.RX.VecRead(N_RD)
   val write = GPRegReqIO.RX.Write
-  val a0    = Output(Types.UWord)
 }
 
 class RegisterFile(READ_PORTS: Int = 2) extends Module {
@@ -57,8 +56,9 @@ class RegisterFile(READ_PORTS: Int = 2) extends Module {
   val io  = IO(new GPRIO(READ_PORTS))
 
   val reg = RegInit(VecInit(Seq.fill(N_REG)(0.UWord)))
+  reg(0) := 0.UWord
 
-  io.a0 := reg(10.U)
+  // io.a0 := reg(10.U)
 
   when(io.write.en) {
     reg(io.write.addr) := io.write.data
@@ -66,7 +66,7 @@ class RegisterFile(READ_PORTS: Int = 2) extends Module {
     RawClockedVoidFunctionCall("gpr_upd")(
       clock,
       io.write.en,
-      io.write.addr.pad(32),
+      io.write.addr.pad(8),
       io.write.data
     )
 

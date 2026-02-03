@@ -126,8 +126,10 @@ static void reset(int n) {
 static bool is_running = true;
 static bool is_good_trap = false;
 
-void raise_ebreak(int a0) {
+void raise_ebreak() {
   is_running = false;
+
+	int a0 = cpu.gpr[10];
 
   // sbd_set_halt(a0);
   assert(sim_cfg.raise_halt_cb);
@@ -454,7 +456,7 @@ uint8_t *sim_guest_to_host(uint32_t addr) {
   return nullptr;
 }
 
-extern "C" void gpr_upd(int regno, int data) {
+extern "C" void gpr_upd(char regno, int data) {
   if (regno == 0)
     return;
   cpu.gpr[regno] = data;

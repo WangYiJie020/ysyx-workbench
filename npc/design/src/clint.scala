@@ -34,5 +34,10 @@ class CLINTUnit extends Module {
 
   sio.rresp := AXI4IO.RResp.OKAY
   // h02000000-h0200ffff
-  sio.rdata := Mux(sio.araddr === 0x02000048.U, mtime(31, 0), Mux(sio.araddr === 0x0200004c.U, mtime(63, 32), 0.U))
+  // sio.rdata := Mux(sio.araddr === 0x02000048.U, mtime(31, 0), Mux(sio.araddr === 0x0200004c.U, mtime(63, 32), 0.U))
+  // val araddrLow = sio.araddr(3, 0)
+  // 0x48 -> 8 -> 0100
+  // 0x4c -> 12 -> 1100
+  val isRdHi = sio.araddr(3)
+  sio.rdata := Mux(isRdHi, mtime(63, 32), mtime(31, 0))
 }
