@@ -196,6 +196,7 @@ class EXU extends Module {
       3.U -> memRdRawData(31, 24).pad(32)
     )
   )
+  assert(memAddrUnalignPart === 0.U || (!isMemOp), "Unaligned mem access")
 
   when(memIO.arvalid && memIO.arready) {
     memAddrSent := true.B
