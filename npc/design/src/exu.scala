@@ -168,7 +168,8 @@ class EXU extends Module {
   memIO.araddr  := memAddr
   memIO.arvalid := isLoad && (!memRDone) && (!memAddrSent)
 
-  val memOpSize = func3t(1, 0)
+  val func3tLo2 = func3t(1, 0)
+  val memOpSize = Mux(func3tLo2 === 3.U, 0.U, func3tLo2)
   // val memOpSize = MuxLookup(func3t, 0.U)(
   //   Seq(
   //     MemOp.byte     -> 0.U,
