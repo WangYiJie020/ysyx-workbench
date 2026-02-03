@@ -207,10 +207,10 @@ class EXU extends Module {
   }
   val downStreamRecved = Reg(Bool())
   dontTouch(downStreamRecved)
-  memIO.rready := io.out.ready
+  memIO.rready := downStreamRecved
   when(io.out.ready && io.out.valid) {
     downStreamRecved := true.B
-  }.elsewhen(!io.dinst.valid) {
+  }.elsewhen(io.dinst.valid && isMemOp){
     downStreamRecved := false.B
   }
   when(!isMemOp) {
