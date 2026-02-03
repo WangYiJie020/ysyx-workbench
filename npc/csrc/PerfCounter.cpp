@@ -66,7 +66,7 @@ void HandShakeCounterManager::update() {
 const char *EXUPerfCounter::nameOfTyp(int type) {
   static const char *type_names[] = {
       "branch", "arithmetic", "load",  "store",  "jalr",
-      "jal",    "lui",        "auipc", "system",
+      "jal",    "lui",        "auipc", "system", "fence.i",
   };
   if (type < sizeof(type_names) / sizeof(type_names[0])) {
     return type_names[type];
