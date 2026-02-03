@@ -9,6 +9,8 @@ import axi4._
 class ICacheIO extends Bundle {
   val cpu = AXI4IO.Slave
   val mem = AXI4IO.Master
+
+  val flush = Input(Bool())
 }
 
 object ICacheParameters {
@@ -115,6 +117,11 @@ class ICache extends Module {
     rdCacheBlock.valid := true.B
     rdCacheBlock.tag   := ICacheParameters.extractTag(rdAddr)
     rdCacheBlock.data  := nxtCacheData
+  }
+  when(io.flush) {
+    for (i <- 0 until ICacheParameters.BLOCK_NUM) {
+      blocks(i).valid := false.B
+    }
   }
 
   io.cpu.rvalid := (state === State.waitMem && io.mem.rlast && io.mem.rvalid) || (state === State.checkCache && cacheHit)

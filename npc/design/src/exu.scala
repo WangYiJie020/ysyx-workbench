@@ -41,6 +41,7 @@ class EXU extends Module {
   val isTypJALR       = InstType.hasSame(dinst.info.typ, InstType.jalr)
   val isTypBranch     = InstType.hasSame(dinst.info.typ, InstType.branch)
   val isTypArithmetic = InstType.hasSame(dinst.info.typ, InstType.arithmetic)
+  val isTypFencei     = InstType.hasSame(dinst.info.typ, InstType.fencei)
 
   alu_in.is_imm := isFmtI
   alu_in.func3t := Mux(isFmtB, func3t >> 1, func3t)
@@ -341,10 +342,11 @@ class EXU extends Module {
   val pcAddImm = dinst.pc + dinst.info.imm
   val snpc     = dinst.pc + 4.U
 
+  val isNoWrBackType = isTypStore || isTypBranch || isTypFencei
+
   // for now, system inst, ecall and mret has rd == 0
   // TODO: handle rd != 0 case
-  io.out.bits.gpr.en := (dinst.info.typ =/= InstType.branch) &&
-    (dinst.info.typ =/= InstType.store)
+  io.out.bits.gpr.en := (~isNoWrBackType)
 
   io.out.bits.gpr.addr := dinst.info.rd
   val sysInstWrBackData = csr_rdata
@@ -355,7 +357,8 @@ class EXU extends Module {
     InstType.jalr       -> snpc,
     InstType.jal        -> snpc,
     InstType.load       -> loadResult,
-    InstType.system     -> sysInstWrBackData
+    InstType.system     -> sysInstWrBackData,
+    InstType.fencei     -> GARBAGE_UNINIT_VALUE
   )
 
   // io.out.bits.gpr.data := MuxLookup(dinst.info.typ, GARBAGE_UNINIT_VALUE)(gprDataMapping)
