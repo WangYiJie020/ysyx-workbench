@@ -320,7 +320,7 @@ class EXU extends Module {
     (dinst.info.typ =/= InstType.store)
 
   io.out.bits.gpr.addr := dinst.info.rd
-  val sysInstWrBackData = Mux(is_ecall || is_mret, GARBAGE_UNINIT_VALUE, csr_rdata)
+  val sysInstWrBackData = csr_raddr
   val gprDataMapping = Seq(
     InstType.arithmetic -> alu.io.out.bits,
     InstType.lui        -> dinst.info.imm,
