@@ -170,7 +170,9 @@ class EXU extends Module {
 
   val func3tLo2 = func3t(1, 0)
   // val memOpSize = Mux(func3tLo2 === 3.U, 0.U, func3tLo2)
-  val memOpSize = MuxLookup(func3t, DontCare.asUInt)(
+  val sizeDontCare = Wire(UInt(2.W))
+  sizeDontCare := DontCare
+  val memOpSize = MuxLookup(func3t, sizeDontCare)(
     Seq(
       MemOp.byte     -> 0.U,
       MemOp.halfword -> 1.U,
