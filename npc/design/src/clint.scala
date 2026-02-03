@@ -38,9 +38,7 @@ class CLINTUnit extends Module {
   nxt_mtime_lo := mtime_lo +& 1.U
 
   mtime_lo := nxt_mtime_lo(31, 0)
-  when(nxt_mtime_lo(32)) {
-    mtime_hi := mtime_hi + 1.U
-  }
+  mtime_hi := mtime_hi + nxt_mtime_lo(32)
 
   val isRdHi = sio.araddr(3)
   sio.rdata := Mux(isRdHi, mtime_hi, mtime_lo)
