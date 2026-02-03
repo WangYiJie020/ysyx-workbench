@@ -136,12 +136,12 @@ class EXU extends Module {
     val lbu      = 4.U
     val lhu      = 5.U
 
-    def isValidLoadOp(op: UInt):  Bool = {
-      (op === byte) || (op === halfword) || (op === word) || (op === lbu) || (op === lhu)
-    }
-    def isValidStoreOp(op: UInt): Bool = {
-      (op === byte) || (op === halfword) || (op === word)
-    }
+    // def isValidLoadOp(op: UInt):  Bool = {
+    //   (op === byte) || (op === halfword) || (op === word) || (op === lbu) || (op === lhu)
+    // }
+    // def isValidStoreOp(op: UInt): Bool = {
+    //   (op === byte) || (op === halfword) || (op === word)
+    // }
   }
 
   val memRdRawData = Reg(Types.UWord)
@@ -168,11 +168,9 @@ class EXU extends Module {
   memIO.araddr  := memAddr
   memIO.arvalid := isLoad && (!memRDone) && (!memAddrSent)
 
-  val func3tLo2 = func3t(1, 0)
-  // val memOpSize = Mux(func3tLo2 === 3.U, 0.U, func3tLo2)
-  val sizeDontCare = Wire(UInt(2.W))
-  sizeDontCare := DontCare
-  val memOpSize = MuxLookup(func3t, sizeDontCare)(
+  // Weird optmization from chisel make this
+  // synthesis area smaller than using func3t directly
+  val memOpSize = MuxLookup(func3t, 0.U)(
     Seq(
       MemOp.byte     -> 0.U,
       MemOp.halfword -> 1.U,
@@ -303,7 +301,7 @@ class EXU extends Module {
       InstType.auipc      -> pcAddImm,
       InstType.jalr       -> snpc,
       InstType.jal        -> snpc,
-      InstType.load       -> MuxLookup(func3t, GARBAGE_UNINIT_VALUE)(
+      InstType.load       -> MuxLookup(func3t, 0.U)(
         Seq(
           MemOp.byte     -> Cat(Fill(24, memRdData(7)), memRdData(7, 0)),
           MemOp.halfword -> Cat(Fill(16, memRdData(15)), memRdData(15, 0)),
