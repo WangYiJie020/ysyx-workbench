@@ -195,15 +195,15 @@ class EXU extends Module {
   memIO.arburst := 1.U
 
   // val memRdData = memRdRawData >> memAddrUnalignPartBitlen
-  val memRdData = MuxLookup(memAddrUnalignPart, 0.U(8.W))(
-    Seq(
-      0.U -> memRdRawData,
-      1.U -> memRdRawData(31, 8).pad(32),
-      2.U -> memRdRawData(31, 16).pad(32),
-      3.U -> memRdRawData(31, 24).pad(32)
-    )
-  )
-  // val memRdData = memRdRawData
+  // val memRdData = MuxLookup(memAddrUnalignPart, 0.U(8.W))(
+  //   Seq(
+  //     0.U -> memRdRawData,
+  //     1.U -> memRdRawData(31, 8).pad(32),
+  //     2.U -> memRdRawData(31, 16).pad(32),
+  //     3.U -> memRdRawData(31, 24).pad(32)
+  //   )
+  // )
+  val memRdData = memRdRawData
 
   when(memIO.arvalid && memIO.arready) {
     memAddrSent := true.B
