@@ -249,7 +249,7 @@ SSBL_TEXT void _second_boot() {
 	
 	void(*foo)() = (void(*)())_text_start;
 
-	boot_log("call foo\n");
+	// boot_log("call foo\n");
 	foo();
 	// boot_log("foo returned\n");
 
