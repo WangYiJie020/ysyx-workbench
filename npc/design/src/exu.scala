@@ -274,35 +274,33 @@ class EXU extends Module {
   memIO.bready := true.B
 
   // memWData := reg_v2 << memAddrUnalignPartBitlen
-  // memWData := MuxLookup(memAddrUnalignPart, 0.U(32.W))(
-  //   Seq(
-  //     0.U -> reg_v2,
-  //     1.U -> Cat(reg_v2(23, 0), 0.U(8.W)),
-  //     2.U -> Cat(reg_v2(15, 0), 0.U(16.W)),
-  //     3.U -> Cat(reg_v2(7, 0), 0.U(24.W))
-  //   )
-  // )
-  memWData := reg_v2
-  // val wByteMask = MuxLookup(memAddrUnalignPart, 0.U(4.W))(
-  //   Seq(
-  //     0.U -> "b0001".U(4.W),
-  //     1.U -> "b0010".U(4.W),
-  //     2.U -> "b0100".U(4.W),
-  //     3.U -> "b1000".U(4.W)
-  //   )
-  // )
+  memWData := MuxLookup(memAddrUnalignPart, 0.U(32.W))(
+    Seq(
+      0.U -> reg_v2,
+      1.U -> Cat(reg_v2(23, 0), 0.U(8.W)),
+      2.U -> Cat(reg_v2(15, 0), 0.U(16.W)),
+      3.U -> Cat(reg_v2(7, 0), 0.U(24.W))
+    )
+  )
+  // memWData := reg_v2
+  val wByteMask = MuxLookup(memAddrUnalignPart, 0.U(4.W))(
+    Seq(
+      0.U -> "b0001".U(4.W),
+      1.U -> "b0010".U(4.W),
+      2.U -> "b0100".U(4.W),
+      3.U -> "b1000".U(4.W)
+    )
+  )
   // val wByteMask = 1.U(4.W)
 
   memWAddr := memAddr
-  memWMask := Mux(func3t(1), "b1111".U(4.W), Mux(func3t(0), "b0011".U(4.W), "b0001".U(4.W)))
-  // memWMask := Mux(func3t(1), 15.U(4.W), Mux(func3t(0), wByteMask | (wByteMask << 1), wByteMask))
-  // memWMask := MuxLookup(func3t, 0.U)(
-  //   Seq(
-  //     MemOp.byte     -> wByteMask,
-  //     MemOp.halfword -> (wByteMask | (wByteMask << 1)), // (3.U(4.W) << memAddrUnalignPart),
-  //     MemOp.word     -> 15.U(4.W)
-  //   )
-  // )
+  memWMask := MuxLookup(func3t, 0.U)(
+    Seq(
+      MemOp.byte     -> wByteMask,
+      MemOp.halfword -> (wByteMask | (wByteMask << 1)), // (3.U(4.W) << memAddrUnalignPart),
+      MemOp.word     -> 15.U(4.W)
+    )
+  )
 
   MS_fsm.io.self_finished := alu.io.out.valid && (
     (!isMemOp) || memOPDone
