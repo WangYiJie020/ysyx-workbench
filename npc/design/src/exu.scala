@@ -188,14 +188,15 @@ class EXU extends Module {
   memIO.arburst := 1.U
 
   // val memRdData = memRdRawData >> memAddrUnalignPartBitlen
-  val memRdData = MuxLookup(memAddrUnalignPart, 0.U(8.W))(
-    Seq(
-      0.U -> memRdRawData,
-      1.U -> memRdRawData(31, 8).pad(32),
-      2.U -> memRdRawData(31, 16).pad(32),
-      3.U -> memRdRawData(31, 24).pad(32)
-    )
-  )
+  // val memRdData = MuxLookup(memAddrUnalignPart, 0.U(8.W))(
+  //   Seq(
+  //     0.U -> memRdRawData,
+  //     1.U -> memRdRawData(31, 8).pad(32),
+  //     2.U -> memRdRawData(31, 16).pad(32),
+  //     3.U -> memRdRawData(31, 24).pad(32)
+  //   )
+  // )
+  val memRdData = memRdRawData
   assert(memAddrUnalignPart === 0.U || (!isMemOp), "Unaligned mem access")
 
   when(memIO.arvalid && memIO.arready) {
@@ -259,22 +260,24 @@ class EXU extends Module {
   memIO.bready := true.B
 
   // memWData := reg_v2 << memAddrUnalignPartBitlen
-  memWData := MuxLookup(memAddrUnalignPart, 0.U(32.W))(
-    Seq(
-      0.U -> reg_v2,
-      1.U -> Cat(reg_v2(23, 0), 0.U(8.W)),
-      2.U -> Cat(reg_v2(15, 0), 0.U(16.W)),
-      3.U -> Cat(reg_v2(7, 0), 0.U(24.W))
-    )
-  )
-  val wByteMask = MuxLookup(memAddrUnalignPart, 0.U(4.W))(
-    Seq(
-      0.U -> "b0001".U(4.W),
-      1.U -> "b0010".U(4.W),
-      2.U -> "b0100".U(4.W),
-      3.U -> "b1000".U(4.W)
-    )
-  )
+  // memWData := MuxLookup(memAddrUnalignPart, 0.U(32.W))(
+  //   Seq(
+  //     0.U -> reg_v2,
+  //     1.U -> Cat(reg_v2(23, 0), 0.U(8.W)),
+  //     2.U -> Cat(reg_v2(15, 0), 0.U(16.W)),
+  //     3.U -> Cat(reg_v2(7, 0), 0.U(24.W))
+  //   )
+  // )
+  memWData := reg_v2
+  // val wByteMask = MuxLookup(memAddrUnalignPart, 0.U(4.W))(
+  //   Seq(
+  //     0.U -> "b0001".U(4.W),
+  //     1.U -> "b0010".U(4.W),
+  //     2.U -> "b0100".U(4.W),
+  //     3.U -> "b1000".U(4.W)
+  //   )
+  // )
+  val wByteMask = 1.U(4.W)
 
   memWAddr := memAddr
   memWMask := MuxLookup(func3t, 0.U)(
