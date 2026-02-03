@@ -167,8 +167,10 @@ class EXU extends Module {
   memIO.araddr  := memAddr
   memIO.arvalid := isLoad && (!memRDone) && (!memAddrSent)
 
-  // Weird optmization from chisel make this
+  // Weird optmization from chisel make this mux can reuse
+  // other mux logic and reduce area
   // synthesis area smaller than using func3t directly
+  //
   // val memOpSize = func3t(1, 0)
   // val memOpSize = Mux(func3t(1), 2.U, func3t(0))
   val memOpSize = MuxLookup(func3t, 0.U)(
@@ -292,13 +294,14 @@ class EXU extends Module {
   // val wByteMask = 1.U(4.W)
 
   memWAddr := memAddr
-  memWMask := MuxLookup(func3t, 0.U)(
-    Seq(
-      MemOp.byte     -> wByteMask,
-      MemOp.halfword -> (wByteMask | (wByteMask << 1)), // (3.U(4.W) << memAddrUnalignPart),
-      MemOp.word     -> 15.U(4.W)
-    )
-  )
+  memWMask := Mux(func3t(1), 15.U(4.W), Mux(func3t(0), wByteMask | (wByteMask << 1), wByteMask))
+  // memWMask := MuxLookup(func3t, 0.U)(
+  //   Seq(
+  //     MemOp.byte     -> wByteMask,
+  //     MemOp.halfword -> (wByteMask | (wByteMask << 1)), // (3.U(4.W) << memAddrUnalignPart),
+  //     MemOp.word     -> 15.U(4.W)
+  //   )
+  // )
 
   MS_fsm.io.self_finished := alu.io.out.valid && (
     (!isMemOp) || memOPDone
