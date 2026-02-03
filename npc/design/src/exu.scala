@@ -347,15 +347,19 @@ class EXU extends Module {
     }.elsewhen(dinst.info.typ === InstType.jal) {
       nxt_pc := dinst.pc + dinst.info.imm
     }.elsewhen(dinst.info.fmt === InstFmt.branch) {
-      val isSLT = alu.io.out.bits(0)
+      // reuse alu
+      // branch func3t
+      // blt/bge 10x -> feed alu 010 -> slt
+      // bltu/bgeu 11x -> feed alu 011 -> sltu
+      val isLessThan = alu.io.out.bits(0)
       val take_branch = MuxLookup(func3t, false.B)(
         Seq(
           BranchOp.beq  -> (reg_v1 === reg_v2),
           BranchOp.bne  -> (reg_v1 =/= reg_v2),
-          BranchOp.blt  -> isSLT,
-          BranchOp.bge  -> (~isSLT),
-          BranchOp.bltu -> (reg_v1 < reg_v2),
-          BranchOp.bgeu -> (reg_v1 >= reg_v2)
+          BranchOp.blt  -> isLessThan,
+          BranchOp.bge  -> (~isLessThan),
+          BranchOp.bltu -> isLessThan,
+          BranchOp.bgeu -> (~isLessThan)
         )
       )
       nxt_pc := Mux(take_branch, dinst.pc + dinst.info.imm, snpc)
