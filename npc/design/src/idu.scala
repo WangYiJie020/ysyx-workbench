@@ -29,7 +29,8 @@ class InstInfoDecoder extends Module {
     "b01101".U -> (InstFmt.upper, InstType.lui),
     "b00101".U -> (InstFmt.upper, InstType.auipc),
     "b11011".U -> (InstFmt.jump, InstType.jal),
-    "b11000".U -> (InstFmt.branch, InstType.branch)
+    "b11000".U -> (InstFmt.branch, InstType.branch),
+    "b00011".U -> (InstFmt.imm, InstType.fencei)
   ).map { case (key, (fmt, typ)) =>
     key -> {
       val info = Wire(new InstMetaInfo)
