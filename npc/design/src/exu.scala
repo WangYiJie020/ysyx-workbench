@@ -29,8 +29,11 @@ class EXU extends Module {
   val func3t = dinst.code(14, 12)
   val func7t = dinst.code(31, 25)
 
-  alu_in.is_imm := (dinst.info.fmt.asUInt & InstFmt.imm.asUInt)
-  alu_in.func3t := Mux(dinst.info.fmt === InstFmt.branch, func3t >> 1, func3t)
+  val isFmtI = InstFmt.hasSame(dinst.info.fmt, InstFmt.imm)
+  val isFmtB = InstFmt.hasSame(dinst.info.fmt, InstFmt.branch)
+
+  alu_in.is_imm := isFmtI
+  alu_in.func3t := Mux(isFmtB, func3t >> 1, func3t)
   alu_in.func7t := func7t
 
   val MS_fsm = Module(new OneMasterOneSlaveFSM)
@@ -47,7 +50,7 @@ class EXU extends Module {
 
   alu_in.src1 := reg_v1
   // when branch, src2 is reg_v2
-  alu_in.src2 := Mux(dinst.info.fmt === InstFmt.imm, dinst.info.imm, reg_v2)
+  alu_in.src2 := Mux(isFmtI, dinst.info.imm, reg_v2)
 
   // csr
 
@@ -341,7 +344,7 @@ class EXU extends Module {
       nxt_pc := r1AddImm(31, 1) ## 0.U(1.W)
     }.elsewhen(dinst.info.typ === InstType.jal) {
       nxt_pc := pcAddImm
-    }.elsewhen(dinst.info.fmt === InstFmt.branch) {
+    }.elsewhen(isFmtB){
       // reuse alu
       // branch func3t
       //
