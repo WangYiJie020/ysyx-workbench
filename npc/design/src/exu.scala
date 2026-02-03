@@ -29,9 +29,12 @@ class EXU extends Module {
   val func3t = dinst.code(14, 12)
   val func7t = dinst.code(31, 25)
 
-  alu_in.is_imm := (dinst.info.fmt === InstFmt.imm)
+  val isInstImm = (dinst.info.fmt === InstFmt.imm)
+  val isInstJump = (dinst.info.fmt === InstFmt.jump)
+
+  alu_in.is_imm := isInstImm || isInstJump
   alu_in.func3t := Mux(dinst.info.fmt === InstFmt.branch, func3t >> 1, func3t)
-  alu_in.func7t := func7t
+  alu_in.func7t := Mux(isInstJump, 0.U, func7t)
 
   val MS_fsm = Module(new OneMasterOneSlaveFSM)
   MS_fsm.connectMaster(io.dinst)
@@ -328,24 +331,12 @@ class EXU extends Module {
 
   // nxt_pc
 
-  object BranchOp {
-    val beq  = 0.U
-    val bne  = 1.U
-    val blt  = 4.U
-    val bge  = 5.U
-    val bltu = 6.U
-    val bgeu = 7.U
-    def isValidBranchOp(op: UInt): Bool = {
-      (op === beq) || (op === bne) || (op === blt) || (op === bge) || (op === bltu) || (op === bgeu)
-    }
-  }
-
   io.out.bits.nxt_pc := nxt_pc
   when(is_ecall || is_mret) {
     nxt_pc := csr_rdata
   }.otherwise {
     when(dinst.info.typ === InstType.jalr) {
-      val r1AddImm = reg_v1 + dinst.info.imm
+      val r1AddImm = alu.io.out.bits
       nxt_pc := r1AddImm(31, 1) ## 0.U(1.W)
     }.elsewhen(dinst.info.typ === InstType.jal) {
       nxt_pc := pcAddImm
@@ -355,23 +346,32 @@ class EXU extends Module {
       //
       // blt/bge 10x -> feed alu 010 -> slt
       // bltu/bgeu 11x -> feed alu 011 -> sltu
-      val isLessThan  = alu.io.out.bits(0)
-      // val branchCalc = MuxLookup(func3t(2,1), false.B)(
-      //   Seq(
-      //     0.U  -> (reg_v1 === reg_v2),
-      //     2.U  -> isLessThan,
-      //     3.U -> isLessThan,
-      //   )
-      // )
       //
+      // only when func3t[2] == 0 -> eq/ne
+      //
+      val isLessThan  = alu.io.out.bits(0)
       val branchCalc  = Mux(func3t(2), isLessThan, (reg_v1 === reg_v2))
       val takeBranch = Mux(func3t(0), ~branchCalc, branchCalc)
       nxt_pc := Mux(takeBranch, dinst.pc + dinst.info.imm, snpc)
-      when(!BranchOp.isValidBranchOp(func3t)) {
-        printf("(exu) UNKNOWN BRANCH func3t %d\n", func3t)
-      }
+      // when(!BranchOp.isValidBranchOp(func3t)) {
+      //   printf("(exu) UNKNOWN BRANCH func3t %d\n", func3t)
+      // }
     }.otherwise {
       nxt_pc := snpc
+    }
+  }
+}
+
+object UnusedResrervedDefinition{
+  object BranchOp {
+    val beq  = 0.U
+    val bne  = 1.U
+    val blt  = 4.U
+    val bge  = 5.U
+    val bltu = 6.U
+    val bgeu = 7.U
+    def isValidBranchOp(op: UInt): Bool = {
+      (op === beq) || (op === bne) || (op === blt) || (op === bge) || (op === bltu) || (op === bgeu)
     }
   }
 }
