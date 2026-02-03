@@ -46,7 +46,8 @@ class EXU extends Module {
   val reg_v2 = io.rvec.data(1)
 
   alu_in.src1 := reg_v1
-  alu_in.src2 := Mux(dinst.info.fmt === InstFmt.reg, reg_v2, dinst.info.imm)
+  // when branch, src2 is reg_v2
+  alu_in.src2 := Mux(dinst.info.fmt === InstFmt.imm, dinst.info.imm, reg_v2)
 
   // csr
 
@@ -346,12 +347,13 @@ class EXU extends Module {
     }.elsewhen(dinst.info.typ === InstType.jal) {
       nxt_pc := dinst.pc + dinst.info.imm
     }.elsewhen(dinst.info.fmt === InstFmt.branch) {
+      val isSLT = alu.io.out.bits(0)
       val take_branch = MuxLookup(func3t, false.B)(
         Seq(
           BranchOp.beq  -> (reg_v1 === reg_v2),
           BranchOp.bne  -> (reg_v1 =/= reg_v2),
-          BranchOp.blt  -> (reg_v1.asSInt < reg_v2.asSInt),
-          BranchOp.bge  -> (reg_v1.asSInt >= reg_v2.asSInt),
+          BranchOp.blt  -> isSLT,
+          BranchOp.bge  -> (~isSLT),
           BranchOp.bltu -> (reg_v1 < reg_v2),
           BranchOp.bgeu -> (reg_v1 >= reg_v2)
         )
