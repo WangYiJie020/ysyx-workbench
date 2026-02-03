@@ -94,7 +94,7 @@ class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4IO.SlaveT)]) extends Module 
     slaveIO(i).bready := (i.U === lastWrReqIdx) && master.bready
   }
 
-  when(master.rvalid && master.rlast) {
+  when(master.rvalid && master.rlast && master.rready) {
     hasLastRdReqReg := false.B
   }
   when(master.bvalid && master.bready) {

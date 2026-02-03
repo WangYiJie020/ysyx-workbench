@@ -136,15 +136,16 @@ class EXU extends Module {
     val lbu      = 4.U
     val lhu      = 5.U
 
-    def isValidLoadOp(op: UInt):  Bool = {
-      (op === byte) || (op === halfword) || (op === word) || (op === lbu) || (op === lhu)
-    }
-    def isValidStoreOp(op: UInt): Bool = {
-      (op === byte) || (op === halfword) || (op === word)
-    }
+    // def isValidLoadOp(op: UInt):  Bool = {
+    //   (op === byte) || (op === halfword) || (op === word) || (op === lbu) || (op === lhu)
+    // }
+    // def isValidStoreOp(op: UInt): Bool = {
+    //   (op === byte) || (op === halfword) || (op === word)
+    // }
   }
 
-  val memRdRawData = Reg(Types.UWord)
+  // val memRdRawData = Reg(Types.UWord)
+  val memRdRawData = Wire(Types.UWord)
 
   val isLoad  = isTypLoad && MS_fsm.io.master_valid
   val isStore = isTypStore && MS_fsm.io.master_valid
@@ -198,11 +199,20 @@ class EXU extends Module {
   when(memIO.arvalid && memIO.arready) {
     memAddrSent := true.B
   }
-  when(memIO.rvalid && !memRDone) {
+
     memRdRawData := memIO.rdata
+  when(memIO.rvalid && !memRDone) {
+    // memRdRawData := memIO.rdata
     memRDone     := true.B
   }
-  memIO.rready := true.B
+  // val downStreamRecved = Reg(Bool())
+  // dontTouch(downStreamRecved)
+  memIO.rready := io.out.ready
+  // when(io.out.ready && io.out.valid) {
+  //   downStreamRecved := true.B
+  // }.elsewhen(io.dinst.valid && isMemOp){
+  //   downStreamRecved := false.B
+  // }
   when(!isMemOp) {
     memRDone    := false.B
     memWDone    := false.B
@@ -340,6 +350,7 @@ class EXU extends Module {
     }.elsewhen(InstType.hasSame(dinst.info.typ, InstType.jal)) {
       nxt_pc := pcAddImm
     }.elsewhen(isFmtB){
+      //
       // reuse alu
       // branch func3t
       //
