@@ -21,7 +21,7 @@ void halt(int code) {
   while (1);
 }
 void _trm_init() {
-	init_kasan();
+	kasan_init();
   int ret = main(mainargs);
   halt(ret);
 }

@@ -4,6 +4,7 @@ KASAN_DIR ?= /home/wuser/gitclones/baremetal_kasan
 SRC_FILENAMES = kasan.c heap.c rt_utils.c
 
 SRCS = $(addprefix $(KASAN_DIR)/,$(SRC_FILENAMES))
+SRCS += $(shell find . -name '*.c')
 CFLAGS += -I$(KASAN_DIR) -I$(abspath .)
 
 IS_BUILDKASAN = 1

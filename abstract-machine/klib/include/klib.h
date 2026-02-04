@@ -13,6 +13,8 @@ extern "C" {
 
 // string.h
 void  *memset    (void *s, int c, unsigned long n);
+void  *kmemset    (void *s, int c, size_t n);
+void  *_no_asan_kmemset    (void *s, int c, size_t n);
 void  *memcpy    (void *dst, const void *src, unsigned long n);
 
 void  *memmove   (void *dst, const void *src, size_t n);

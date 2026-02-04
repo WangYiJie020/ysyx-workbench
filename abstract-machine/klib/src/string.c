@@ -3,6 +3,8 @@
 #include <klib-macros.h>
 #include <stdint.h>
 
+#define ATTRIBUTE_NO_SANITIZE_ADDRESS __attribute__((no_sanitize_address))
+
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 
 size_t strlen(const char *s) {
@@ -63,6 +65,18 @@ int strncmp(const char *s1, const char *s2, size_t n) {
 			 s2++;
 	}
 	return (int)*s1-(int)*s2;
+}
+
+
+ATTRIBUTE_NO_SANITIZE_ADDRESS
+void *_no_asan_kmemset(void *s, int c, size_t n) {
+    char* bs=(char*)s;
+    char* es=bs+n;
+    while(bs!=es){
+        *bs=c;
+        bs++;
+    }
+    return s;
 }
 
 void *kmemset(void *s, int c, size_t n) {
