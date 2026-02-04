@@ -182,7 +182,7 @@ word_t paddr_read(paddr_t addr, int len) {
 	}
   word_t data;
   if (builtin_read(addr, len, &data)) {
-		IFDEF(CONFIG_MTRACE, printf("%ld mem r from builtin return %08X\n",g_nr_guest_inst, data););
+		// IFDEF(CONFIG_MTRACE, printf("%ld mem r from builtin return %08X\n",g_nr_guest_inst, data););
     return data;
   }
 #ifdef CONFIG_DEVICE
@@ -202,9 +202,9 @@ word_t paddr_read(paddr_t addr, int len) {
 
 void paddr_write(paddr_t addr, int len, word_t data) {
   mtrace(addr, printf("%ld mem w %08X %db %08X\n",g_nr_guest_inst, addr, len, data));
-	if(pmem[0x7000460] != 0){
-		printf("Debug: paddr_write addr=" FMT_PADDR " len=%d data=" FMT_WORD " pmem[0x7000460]=%02X\n", addr, len, data, pmem[0x7000460]);
-	}
+	// if(pmem[0x7000460] != 0){
+	// 	printf("Debug: paddr_write addr=" FMT_PADDR " len=%d data=" FMT_WORD " pmem[0x7000460]=%02X\n", addr, len, data, pmem[0x7000460]);
+	// }
 	if (builtin_write(addr, len, data)) {
 		return;
 	}
