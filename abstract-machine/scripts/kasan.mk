@@ -1,4 +1,3 @@
-# CFLAGS += -fsanitize=kernel-address
 
 # KASAN configuration
 TARGET_DRAM_START := 0x80000000
@@ -29,6 +28,7 @@ ifeq ($(IS_BUILDKASAN),1)
 KASAN_CC_FLAGS :=
 else
 KASAN_CC_FLAGS := -fsanitize=kernel-address
+KASAN_CC_FLAGS += -DKASAN_ENABLED
 endif
 
 KASAN_CC_FLAGS += -fno-builtin
@@ -36,6 +36,5 @@ KASAN_CC_FLAGS += -mllvm -asan-mapping-offset=$(KASAN_SHADOW_MAPPING_OFFSET)
 KASAN_CC_FLAGS += -mllvm -asan-instrumentation-with-call-threshold=0
 KASAN_CC_FLAGS += -mllvm -asan-stack=$(KASAN_SANITIZE_STACK)
 KASAN_CC_FLAGS += -mllvm -asan-globals=$(KASAN_SANITIZE_GLOBALS)
-KASAN_CC_FLAGS += -DKASAN_ENABLED
 
 CFLAGS += $(KASAN_CC_FLAGS)
