@@ -38,7 +38,7 @@ SECTIONS {
   _heap_start = ALIGN(0x1000);
 	__heap_start = _heap_start;
 	/* resrve 16 MB for SANITIZER */
-	__heap_end = _pmem_start + 0x700000; /* 128MB */
+	__heap_end = _pmem_start + 0x7000000; /* 128MB */
 
 /* . = 0x87000000; */
 /*   __kasan_shadow_memory_start = .; */
