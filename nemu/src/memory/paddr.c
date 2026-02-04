@@ -176,7 +176,7 @@ word_t paddr_read(paddr_t addr, int len) {
   if (builtin_read(addr, len, &data)) {
     return data;
   }
-#ifdef CONFOG_DEVICE
+#ifdef CONFIG_DEVICE
 	if(SOC_SERIAL_BASE <= addr && addr < SOC_SERIAL_END) {
 		addr -= SOC_SERIAL_BASE;
 		addr += CONFIG_SERIAL_MMIO;
