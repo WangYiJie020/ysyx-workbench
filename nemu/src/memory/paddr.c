@@ -157,6 +157,7 @@ void init_mem() {
   IFDEF(CONFIG_MEM_RANDOM, memset(pmem, rand(), CONFIG_MSIZE));
   Log("physical memory area [" FMT_PADDR ", " FMT_PADDR "]", PMEM_LEFT,
       PMEM_RIGHT);
+	printf("pmem[0x7000460]=%02X\n", pmem[0x7000460]);
 }
 
 #define is_addr_inmtrace(p)                                                    \
