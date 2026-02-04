@@ -30,4 +30,9 @@ SECTIONS {
   end = .;
   _end = .;
   _heap_start = ALIGN(0x1000);
+
+. = 0x87000000;
+  __kasan_shadow_memory_start = .;
+  . = . + 0x2000000;
+  __kasan_shadow_memory_end = .;
 }
