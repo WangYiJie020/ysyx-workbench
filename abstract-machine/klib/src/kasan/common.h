@@ -19,6 +19,7 @@
 #include <stdint.h>
 
 #define CALLER_PC ((unsigned long)__builtin_return_address(0))
+#define ATTRIBUTE_NO_SANITIZE_ADDRESS __attribute__((no_sanitize_address))
 
 #ifdef KASAN_ENABLED
 

@@ -215,6 +215,7 @@ void kasan_free_hook(void *ptr) {
 
 // Implement KAsan error reporting routines.
 
+ATTRIBUTE_NO_SANITIZE_ADDRESS
 static void kasan_print_16_bytes_no_bug(const char *prefix,
                                         unsigned long address) {
   printf("%s0x%X:", prefix, address);

@@ -14,8 +14,6 @@
 #undef KASAN_ENABLED
 #include "common.h"
 
-#define ATTRIBUTE_NO_SANITIZE_ADDRESS __attribute__((no_sanitize_address))
-
 ATTRIBUTE_NO_SANITIZE_ADDRESS void my_memset(void *dest, int c, unsigned long n) {
   unsigned char *ptr = (unsigned char *)dest;
   for (size_t i = 0; i < n; i++) ptr[i] = (unsigned char)c;
