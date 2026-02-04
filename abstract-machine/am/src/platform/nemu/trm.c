@@ -22,7 +22,6 @@ void halt(int code) {
 }
 void _trm_init() {
 	kasan_init();
-	printf("kasan init done!\n");
 
   int ret = main(mainargs);
   halt(ret);

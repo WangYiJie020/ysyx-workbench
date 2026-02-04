@@ -160,10 +160,12 @@ void init_mem() {
   Log("physical memory area [" FMT_PADDR ", " FMT_PADDR "]", PMEM_LEFT,
       PMEM_RIGHT);
 
-// #define ASAN_SHADOW_MEMORY_START 0x7000000
-// #define ASAN_SHADOW_MEMORY_SIZE 0x1000000
-//
-// 	memset(pmem + ASAN_SHADOW_MEMORY_START, 0, ASAN_SHADOW_MEMORY_SIZE);
+	// memset the ASAN shadow memory to zero
+	// instead at trm_init to optimise the init time
+#define ASAN_SHADOW_MEMORY_START 0x7000000
+#define ASAN_SHADOW_MEMORY_SIZE 0x1000000
+
+	memset(pmem + ASAN_SHADOW_MEMORY_START, 0, ASAN_SHADOW_MEMORY_SIZE);
 }
 
 #define is_addr_inmtrace(p)                                                    \
