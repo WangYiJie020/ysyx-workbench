@@ -1,6 +1,8 @@
 #include <am.h>
 #include <nemu.h>
 
+#include <kasan_init.h>
+
 extern char _heap_start;
 extern char __heap_end;
 int main(const char *args);
@@ -18,15 +20,8 @@ void halt(int code) {
   // should not reach here
   while (1);
 }
-
 void _trm_init() {
-  void initialize_heap();
-  void initialize_kasan();
-  void call_global_ctors();
-  // Needed to invoke KASan globals instrumentation.
-  call_global_ctors();
-  initialize_heap();
-  initialize_kasan();
+	init_kasan();
   int ret = main(mainargs);
   halt(ret);
 }

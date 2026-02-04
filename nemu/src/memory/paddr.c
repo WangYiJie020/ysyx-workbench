@@ -14,6 +14,7 @@
  ***************************************************************************************/
 
 #include "common.h"
+#include "macro.h"
 #include "utils.h"
 #include <device/mmio.h>
 #include <isa.h>
@@ -154,16 +155,15 @@ void init_mem() {
   pmem = malloc(CONFIG_MSIZE);
   assert(pmem);
 #endif
-	
+	IFDEF(CONFIG_MEM_RANDOM, srand(time(0)));
   IFDEF(CONFIG_MEM_RANDOM, memset(pmem, rand(), CONFIG_MSIZE));
   Log("physical memory area [" FMT_PADDR ", " FMT_PADDR "]", PMEM_LEFT,
       PMEM_RIGHT);
 
-#define ASAN_SHADOW_MEMORY_START 0x7000000
-#define ASAN_SHADOW_MEMORY_SIZE 0x1000000
-
-	memset(pmem + ASAN_SHADOW_MEMORY_START, 0, ASAN_SHADOW_MEMORY_SIZE);
-	// printf("pmem[0x7000460]=%02X\n", pmem[0x7000460]);
+// #define ASAN_SHADOW_MEMORY_START 0x7000000
+// #define ASAN_SHADOW_MEMORY_SIZE 0x1000000
+//
+// 	memset(pmem + ASAN_SHADOW_MEMORY_START, 0, ASAN_SHADOW_MEMORY_SIZE);
 }
 
 #define is_addr_inmtrace(p)                                                    \

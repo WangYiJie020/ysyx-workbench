@@ -20,6 +20,8 @@ CFLAGS += -DUART_BASE_ADDRESS=$(UART_BASE_ADDRESS)
 
 CFLAGS += -ffreestanding
 
+CFLAGS += -I$(AM_HOME)/kasan/
+
 # KASan-specific compiler options
 KASAN_SANITIZE_STACK := 1
 KASAN_SANITIZE_GLOBALS := 1
