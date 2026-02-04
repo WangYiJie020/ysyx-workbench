@@ -174,6 +174,7 @@ word_t paddr_read(paddr_t addr, int len) {
 	}
   word_t data;
   if (builtin_read(addr, len, &data)) {
+		IFDEF(CONFIG_MTRACE, printf("%ld mem r from builtin return %08X\n",g_nr_guest_inst, data););
     return data;
   }
 #ifdef CONFIG_DEVICE
