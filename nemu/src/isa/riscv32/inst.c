@@ -28,7 +28,7 @@
 
 #include <itrace_pack.h>
 
-#include "encoding.out.h"
+#include <encoding.out.h>
 #include "memory/paddr.h"
 
 // We are in riscv32
