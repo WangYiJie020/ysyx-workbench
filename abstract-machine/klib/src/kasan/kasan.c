@@ -224,6 +224,7 @@ static void kasan_print_16_bytes_no_bug(const char *prefix,
   printf("\n");
 }
 
+ATTRIBUTE_NO_SANITIZE_ADDRESS
 static void kasan_print_16_bytes_with_bug(const char *prefix,
                                           unsigned long address,
                                           int buggy_offset) {
@@ -238,6 +239,7 @@ static void kasan_print_16_bytes_with_bug(const char *prefix,
   printf("\n");
 }
 
+ATTRIBUTE_NO_SANITIZE_ADDRESS
 static void kasan_print_shadow_memory(unsigned long address, int range_before,
                                       int range_after) {
   unsigned long shadow_address = KASAN_MEM_TO_SHADOW(address);
