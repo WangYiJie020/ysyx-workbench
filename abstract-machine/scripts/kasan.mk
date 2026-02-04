@@ -1,4 +1,4 @@
-CFLAGS += -fsanitize=kernel-address
+# CFLAGS += -fsanitize=kernel-address
 
 # KASAN configuration
 TARGET_DRAM_START := 0x80000000
