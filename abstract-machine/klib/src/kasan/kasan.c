@@ -38,6 +38,7 @@ int    printf    (const char *format, ...);
 #define KASAN_SHADOW_TO_MEM(shadow) \
   (((shadow) - KASAN_SHADOW_MAPPING_OFFSET) << KASAN_SHADOW_SHIFT)
 
+ATTRIBUTE_NO_SANITIZE_ADDRESS
 void kasan_bug_report(unsigned long addr, size_t size,
                       unsigned long buggy_shadow_address, uint8_t is_write,
                       unsigned long ip);
