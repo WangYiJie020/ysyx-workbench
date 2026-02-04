@@ -16,7 +16,7 @@ SECTIONS {
 
   .init_array : {
     __global_ctors_start = .;
-    *(.init_array*)
+    KEEP(*(.init_array*))
     __global_ctors_end = .;
  }
   .data : {
