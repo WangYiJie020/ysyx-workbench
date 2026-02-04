@@ -65,7 +65,7 @@ int strncmp(const char *s1, const char *s2, size_t n) {
 	return (int)*s1-(int)*s2;
 }
 
-void *memset(void *s, int c, size_t n) {
+void *kmemset(void *s, int c, size_t n) {
     char* bs=(char*)s;
     char* es=bs+n;
     while(bs!=es){
@@ -82,7 +82,7 @@ void *memmove(void *dst, const void *src, size_t n) {
 	return dst;
 }
 
-void *memcpy(void *out, const void *in, size_t n) {
+void *kmemcpy(void *out, const void *in, size_t n) {
 	const char* ibeg=in;
 	char* obeg=out;
 	const char* iend=ibeg+n;

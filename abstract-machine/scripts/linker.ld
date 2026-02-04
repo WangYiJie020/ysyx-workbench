@@ -13,6 +13,12 @@ SECTIONS {
   .rodata : {
     *(.rodata*)
   }
+
+  .init_array : {
+    __global_ctors_start = .;
+    *(.init_array*)
+    __global_ctors_end = .;
+ }
   .data : {
     *(.data*)
   } : data
@@ -30,6 +36,8 @@ SECTIONS {
   end = .;
   _end = .;
   _heap_start = ALIGN(0x1000);
+	__heap_start = _heap_start;
+	__heap_end = _pmem_start + 0x800000; /* 128MB */
 
 /* . = 0x87000000; */
 /*   __kasan_shadow_memory_start = .; */
