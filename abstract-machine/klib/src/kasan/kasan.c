@@ -11,8 +11,11 @@
  * GNU General Public License for more details.
  */
 
+#undef KASAN_ENABLED
 #include "common.h"
+
 #include "heap.h"
+#include <stdint.h>
 // #include "./third_party/printf/printf.h"
 int    printf    (const char *format, ...);
 
@@ -153,14 +156,14 @@ void __asan_handle_no_return(void) {}
 // KASan memcpy/memset hooks.
 
 void *__kasan_memcpy(void *dst, const void *src, unsigned int size,
-                     unsigned long pc) {
+                     uintptr_t pc) {
   kasan_check_memory((unsigned long)dst, size, /*is_write*/ true, pc);
   kasan_check_memory((unsigned long)src, size, /*is_write*/ false, pc);
 
   return memcpy(dst, src, size);
 }
 
-void *__kasan_memset(void *buf, int c, unsigned int size, unsigned long pc) {
+void *__kasan_memset(void *buf, int c, unsigned int size, uintptr_t pc) {
   kasan_check_memory((unsigned long)buf, size, /*is_write*/ true, pc);
 
   return memset(buf, c, size);
