@@ -16,8 +16,9 @@ LINKSCRIPT = extra.ld
 endif
 
 LDFLAGS += -T $(LINKSCRIPT)
+
 -include $(FILE_MK)
--include $(AM_APPS_MK)
+# -include $(AM_APPS_MK)
 include $(AM_HOME)/Makefile
 
 $(RTCONFIG_H):

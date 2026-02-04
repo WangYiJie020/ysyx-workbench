@@ -66,7 +66,8 @@ LINKAGE   = $(OBJS)  # library archives are added by LIB_TEMPLATE below
 AS        = $(CROSS_COMPILE)gcc
 # CC        = $(CROSS_COMPILE)gcc
 CC        = clang --target=riscv64-linux-gnu
-CXX       = $(CROSS_COMPILE)g++
+CXX        = clang++ --target=riscv64-linux-gnu
+# CXX       = $(CROSS_COMPILE)g++
 LD        = $(CROSS_COMPILE)ld
 # LD        = mold
 AR        = $(CROSS_COMPILE)ar
@@ -87,6 +88,13 @@ CFLAGS   += -O2 -MMD -Wall -Werror $(INCFLAGS) \
             -fno-asynchronous-unwind-tables -fno-builtin -fno-stack-protector \
             -Wno-main -U_FORTIFY_SOURCE -fvisibility=hidden
 CXXFLAGS +=  $(CFLAGS) -ffreestanding -fno-rtti -fno-exceptions
+CXXFLAGS += -Wno-error=non-c-typedef-for-linkage
+CXXFLAGS += -Wno-error=tautological-constant-out-of-range-compare
+CFLAGS += -Wno-error=unknown-warning-option
+CFLAGS += -Wno-error=macro-redefined
+CFLAGS += -Wno-error=pointer-bool-conversion
+CFLAGS += -Wno-error=tautological-pointer-compare
+
 ASFLAGS  += -MMD $(INCFLAGS)
 LDFLAGS  += -z noexecstack $(addprefix -T, $(LDSCRIPTS))
 
