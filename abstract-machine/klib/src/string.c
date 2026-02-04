@@ -71,15 +71,12 @@ int strncmp(const char *s1, const char *s2, size_t n) {
 }
 
 ATTRIBUTE_NO_SANITIZE_ADDRESS
-void *_no_asan_kmemset(void *s, int c, size_t n) {
+void *_no_asan_kmemzero(void *s, size_t n) {
   if (n % 4 == 0) {
-		uint32_t cc = (uint8_t)c;
-		cc = (cc << 8) | cc;
-		cc = (cc << 16) | cc;
 		uint32_t *bs = (uint32_t *)s;
 		uint32_t *es = bs + n / 4;
 		while (bs != es) {
-			*bs = cc;
+			*bs = 0;
 			bs++;
 		}
 		return s;
@@ -87,7 +84,7 @@ void *_no_asan_kmemset(void *s, int c, size_t n) {
   char *bs = (char *)s;
   char *es = bs + n;
   while (bs != es) {
-    *bs = c;
+    *bs = 0;
     bs++;
   }
   return s;
