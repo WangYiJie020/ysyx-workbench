@@ -21,7 +21,9 @@ void halt(int code) {
   while (1);
 }
 void _trm_init() {
+#ifdef KASAN_ENABLED
 	kasan_init();
+#endif
 
   int ret = main(mainargs);
   halt(ret);
