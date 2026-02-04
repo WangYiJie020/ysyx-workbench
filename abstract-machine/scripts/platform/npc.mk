@@ -12,7 +12,7 @@ CFLAGS += -g
 
 # CFLAGS += -fsanitize=address
 
-include $(AM_HOME)/scripts/kasan.mk
+# include $(AM_HOME)/scripts/kasan.mk
 
 CFLAGS    += -fdata-sections -ffunction-sections
 LDSCRIPTS += $(AM_HOME)/scripts/linker.ld
