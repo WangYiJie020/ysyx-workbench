@@ -279,7 +279,7 @@ SSBL_TEXT void _second_boot() {
 
   // NOTE: putnum func is in the sdram area
   // before use putnum must flush icache!!!
-  // LOG_STEP("flush icache", __asm_call_fence_i__());
+  LOG_STEP("flush icache", __asm_call_fence_i__());
 
   boot_log("checking memory regions...\n");
   // putstr("heap.start = ");
