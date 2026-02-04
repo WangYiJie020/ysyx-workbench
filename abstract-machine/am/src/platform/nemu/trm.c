@@ -19,6 +19,13 @@ void halt(int code) {
 }
 
 void _trm_init() {
+  void initialize_heap();
+  void initialize_kasan();
+  void call_global_ctors();
+  // Needed to invoke KASan globals instrumentation.
+  call_global_ctors();
+  initialize_heap();
+  initialize_kasan();
   int ret = main(mainargs);
   halt(ret);
 }
