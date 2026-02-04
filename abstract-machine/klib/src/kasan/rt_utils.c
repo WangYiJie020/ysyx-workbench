@@ -14,12 +14,14 @@
 #undef KASAN_ENABLED
 #include "common.h"
 
-void my_memset(void *dest, int c, unsigned long n) {
+#define ATTRIBUTE_NO_SANITIZE_ADDRESS __attribute__((no_sanitize_address))
+
+ATTRIBUTE_NO_SANITIZE_ADDRESS void my_memset(void *dest, int c, unsigned long n) {
   unsigned char *ptr = (unsigned char *)dest;
   for (size_t i = 0; i < n; i++) ptr[i] = (unsigned char)c;
 }
 
-void my_memcpy(void *dest, const void *src, unsigned long n) {
+ATTRIBUTE_NO_SANITIZE_ADDRESS void my_memcpy(void *dest, const void *src, unsigned long n) {
   unsigned char *ptr_dest = (unsigned char *)dest;
   const unsigned char *ptr_src = (const unsigned char *)src;
   for (size_t i = 0; i < n; i++) ptr_dest[i] = ptr_src[i];
@@ -39,11 +41,13 @@ void __aeabi_memcpy(void *dest, const void *src, unsigned long n) {
 
 #endif  // TARGET_ARCH_arm
 
+ATTRIBUTE_NO_SANITIZE_ADDRESS 
 void *memset(void *dest, int c, unsigned long n) {
   my_memset(dest, c, n);
   return dest;
 }
 
+ATTRIBUTE_NO_SANITIZE_ADDRESS 
 void *memcpy(void *dest, const void *src, unsigned long n) {
   my_memcpy(dest, src, n);
   return dest;
