@@ -77,7 +77,7 @@ static bool in_sdram(paddr_t addr) {
 
 uint8_t *guest_to_host(paddr_t paddr) {
   if (likely(in_pmem(paddr))) {
-		printf("pmem addr translate: " FMT_PADDR " to host addr %p\n", paddr, pmem + paddr - CONFIG_MBASE);
+		// printf("pmem addr translate: " FMT_PADDR " to host addr %p\n", paddr, pmem + paddr - CONFIG_MBASE);
     return pmem + paddr - CONFIG_MBASE;
   } else if (in_mrom(paddr)) {
     return mrom + paddr - MROM_BASE;
@@ -195,6 +195,9 @@ word_t paddr_read(paddr_t addr, int len) {
 
 void paddr_write(paddr_t addr, int len, word_t data) {
   mtrace(addr, printf("%ld mem w %08X %db %08X\n",g_nr_guest_inst, addr, len, data));
+	if(pmem[0x7000460] != 0){
+		printf("Debug: paddr_write addr=" FMT_PADDR " len=%d data=" FMT_WORD "\n", addr, len, data);
+	}
 	if (builtin_write(addr, len, data)) {
 		return;
 	}
