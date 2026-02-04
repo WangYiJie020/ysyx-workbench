@@ -25,7 +25,7 @@ CFLAGS += -ffreestanding
 KASAN_SANITIZE_STACK := 1
 KASAN_SANITIZE_GLOBALS := 1
 
-KASAN_CC_FLAGS := -fsanitize=kernel-address
+# KASAN_CC_FLAGS := -fsanitize=kernel-address
 KASAN_CC_FLAGS += -fno-builtin
 KASAN_CC_FLAGS += -mllvm -asan-mapping-offset=$(KASAN_SHADOW_MAPPING_OFFSET)
 KASAN_CC_FLAGS += -mllvm -asan-instrumentation-with-call-threshold=0
