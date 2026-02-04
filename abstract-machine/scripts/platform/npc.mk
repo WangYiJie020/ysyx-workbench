@@ -11,7 +11,7 @@ AM_SRCS := riscv/npc/start.S \
 CFLAGS += -g
 
 # CFLAGS += -fsanitize=address
-CFLAGS += -fsanitize=kernel-address
+# CFLAGS += -fsanitize=kernel-address
 
 CFLAGS    += -fdata-sections -ffunction-sections
 LDSCRIPTS += $(AM_HOME)/scripts/linker.ld
