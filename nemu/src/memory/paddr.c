@@ -77,6 +77,7 @@ static bool in_sdram(paddr_t addr) {
 
 uint8_t *guest_to_host(paddr_t paddr) {
   if (likely(in_pmem(paddr))) {
+		printf("pmem addr translate: " FMT_PADDR " to host addr %p\n", paddr, pmem + paddr - CONFIG_MBASE);
     return pmem + paddr - CONFIG_MBASE;
   } else if (in_mrom(paddr)) {
     return mrom + paddr - MROM_BASE;
