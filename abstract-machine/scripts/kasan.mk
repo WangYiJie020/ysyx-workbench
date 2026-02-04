@@ -26,6 +26,7 @@ KASAN_SANITIZE_STACK := 1
 KASAN_SANITIZE_GLOBALS := 1
 
 ifeq ($(IS_BUILDKASAN),1)
+KASAN_CC_FLAGS :=
 else
 KASAN_CC_FLAGS := -fsanitize=kernel-address
 endif
