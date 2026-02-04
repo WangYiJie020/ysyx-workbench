@@ -31,12 +31,12 @@ void call_global_ctors();
 
 void _trm_init() {
 
-  // Needed to invoke KASan globals instrumentation.
-  call_global_ctors();
-
-  initialize_heap();
-
-  initialize_kasan();
+  // // Needed to invoke KASan globals instrumentation.
+  // call_global_ctors();
+  //
+  // initialize_heap();
+  //
+  // initialize_kasan();
 
 	uint32_t mvendor_id, marchid;
 	asm volatile("csrr %0, mvendorid" : "=r"(mvendor_id));
