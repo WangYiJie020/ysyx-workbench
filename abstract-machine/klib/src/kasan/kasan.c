@@ -176,6 +176,7 @@ struct KASAN_HEAP_HEADER {
   unsigned int aligned_size;
 };
 
+ATTRIBUTE_NO_SANITIZE_ADDRESS
 void *kasan_malloc_hook(unsigned int size) {
   struct KASAN_HEAP_HEADER *kasan_heap_hdr = NULL;
   unsigned int algined_size = (size + KASAN_SHADOW_MASK) & (~KASAN_SHADOW_MASK);
@@ -198,6 +199,7 @@ void *kasan_malloc_hook(unsigned int size) {
   return ptr + KASAN_HEAP_HEAD_REDZONE_SIZE;
 }
 
+ATTRIBUTE_NO_SANITIZE_ADDRESS
 void kasan_free_hook(void *ptr) {
   struct KASAN_HEAP_HEADER *kasan_heap_hdr = NULL;
   unsigned int aligned_size = 0;
