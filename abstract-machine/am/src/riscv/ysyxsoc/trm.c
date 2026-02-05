@@ -272,7 +272,7 @@ SSBL_TEXT void _second_boot() {
   boot_log("skip clear .bss.extra\n");
 #endif
 
-  if ((size_t)__data_extra_size__) {
+  if ((size_t)__data_extra_size__ != 0) {
     LOG_STEP("copy .data.extra",
              _ssbl_memcpy(_data_extra_start, __data_extra_load_start__,
                           (size_t)__data_extra_size__));
