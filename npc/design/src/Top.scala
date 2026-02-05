@@ -101,9 +101,10 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     thisIn:  DecoupledIO[T],
     thisOut: DecoupledIO[T2]
   ) = {
-    prevOut.ready := thisIn.ready
-    thisIn.bits   := RegEnable(prevOut.bits, prevOut.valid && thisIn.ready)
-    thisIn.valid  := ???
+    prevOut <> thisIn
+    // prevOut.ready := thisIn.ready
+    // thisIn.bits   := RegEnable(prevOut.bits, prevOut.valid && thisIn.ready)
+    // thisIn.valid  := ???
   }
 
   val io = IO(new TopIO)
@@ -246,15 +247,19 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   ifu.io.pc.bits  := pc
   ifu.io.pc.valid := true.B
 
-  ifu.io.out <> idu.io.in
-  idu.io.out <> exu.io.in
+  // ifu.io.out <> idu.io.in
+  pipelineConnect(ifu.io.out, idu.io.in, idu.io.out)
+  // idu.io.out <> exu.io.in
+  pipelineConnect(idu.io.out, exu.io.in, exu.io.out)
 
   exu.io.rvec <> gprs.io.read
   exu.io.csr_rvec <> csrs.io.read
 
   // Write back
 
-  wbu.io.data <> exu.io.out
+  val foo = Wire(Decoupled(UInt(32.W)))
+  pipelineConnect(exu.io.out, wbu.io.in, foo)
+  // wbu.io.in <> exu.io.out
   gprs.io.write <> wbu.io.gpr
   csrs.io.write <> wbu.io.csr
   csrs.io.is_ecall := wbu.io.is_ecall
