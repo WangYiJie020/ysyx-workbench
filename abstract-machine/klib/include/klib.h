@@ -12,10 +12,16 @@ extern "C" {
 // #define __NATIVE_USE_KLIB__
 
 // string.h
+
+#ifdef KASAN_ENABLED
+#include KASAN_MEM_H
+#else
 void  *memset    (void *s, int c, unsigned long n);
+void  *memcpy    (void *dst, const void *src, unsigned long n);
+#endif
+
 void  *kmemset    (void *s, int c, size_t n);
 void  *_no_asan_kmemzero(void *s,size_t n);
-void  *memcpy    (void *dst, const void *src, unsigned long n);
 
 void  *memmove   (void *dst, const void *src, size_t n);
 int    memcmp    (const void *s1, const void *s2, size_t n);

@@ -9,4 +9,8 @@ CFLAGS += -I$(KASAN_DIR) -I$(abspath .)
 
 IS_BUILDKASAN = 1
 
+$(shell mkdir -p ./build)
+$(shell cp $(KASAN_DIR)/common.h ./build/mem.h)
+# $(shell echo "test")
+
 include $(AM_HOME)/Makefile
