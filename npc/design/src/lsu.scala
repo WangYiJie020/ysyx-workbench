@@ -31,13 +31,6 @@ class LSU extends Module {
   val outWriteBackInfo   = io.out.bits
   val inExuWriteBackInfo = io.in.bits.exuWriteBack
 
-  outWriteBackInfo.csr <> inExuWriteBackInfo.csr
-  outWriteBackInfo.csr_ecallflag := inExuWriteBackInfo.csr_ecallflag
-  outWriteBackInfo.gpr.addr      := inExuWriteBackInfo.gpr.addr
-  outWriteBackInfo.gpr.en        := inExuWriteBackInfo.gpr.en
-  outWriteBackInfo.gpr.data      := Mux(isMemOp, loadResult, inExuWriteBackInfo.gpr.data)
-  outWriteBackInfo.nxt_pc        := inExuWriteBackInfo.nxt_pc
-
   // mem
 
   // object MemOp {
@@ -233,4 +226,12 @@ class LSU extends Module {
   //     MemOp.word     -> 15.U(4.W)
   //   )
   // )
+
+  outWriteBackInfo.csr <> inExuWriteBackInfo.csr
+  outWriteBackInfo.csr_ecallflag := inExuWriteBackInfo.csr_ecallflag
+  outWriteBackInfo.gpr.addr      := inExuWriteBackInfo.gpr.addr
+  outWriteBackInfo.gpr.en        := inExuWriteBackInfo.gpr.en
+  outWriteBackInfo.gpr.data      := Mux(isMemOp, loadResult, inExuWriteBackInfo.gpr.data)
+  outWriteBackInfo.nxt_pc        := inExuWriteBackInfo.nxt_pc
+
 }
