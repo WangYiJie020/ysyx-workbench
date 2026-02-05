@@ -33,10 +33,17 @@ int    strcmp    (const char *s1, const char *s2);
 int    strncmp   (const char *s1, const char *s2, size_t n);
 
 // stdlib.h
-void   srand     (unsigned int seed);
-int    rand      (void);
+#ifdef KASAN_ENABLED
 void  *malloc    (unsigned long size);
 void   free      (void *ptr);
+#else
+void  *kmalloc   (size_t size);
+void   kfree     (void *ptr);
+#define malloc  kmalloc
+#define free    kfree
+#endif
+void   srand     (unsigned int seed);
+int    rand      (void);
 int    abs       (int x);
 int    atoi      (const char *nptr);
 
