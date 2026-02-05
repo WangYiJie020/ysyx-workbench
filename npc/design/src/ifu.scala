@@ -35,7 +35,7 @@ class IFU extends Module {
     Seq(
       State.idle   -> Mux(io.pc.fire, State.waitAR, State.idle),
       State.waitAR -> Mux(memIO.arready, State.waitR, State.waitAR),
-      State.waitR  -> Mux(memIO.rvalid, State.idle, State.waitR)
+      State.waitR  -> Mux(memIO.rvalid, Mux(io.pc.fire, State.waitAR, State.idle), State.waitR)
     )
   )
   val pcReg = Reg(Types.UWord)
