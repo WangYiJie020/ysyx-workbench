@@ -15,6 +15,7 @@ auto _GetCPU() {
 
 auto _GetIFU() { return _GetCPU()->ifu; }
 auto _GetEXU() { return _GetCPU()->exu; }
+auto _GetLSU() { return _GetCPU()->lsu; }
 auto _GetALU() { return _GetEXU()->alu; }
 auto _GetIDU() { return _GetCPU()->idu; }
 
@@ -221,17 +222,17 @@ void initPerfCounters() {
   handshakeCtr.init();
   handshakeCtr.add(&_GetIFU()->io_mem_rvalid, &_GetIFU()->io_mem_rready,
                    "ifu.io_mem_r", "IFU fetch inst");
-  handshakeCtr.add(&_GetEXU()->io_mem_rvalid, &_GetEXU()->io_mem_rready,
-                   "exu.io_mem_r", "EXU load data");
+  handshakeCtr.add(&_GetLSU()->io_mem_rvalid, &_GetLSU()->io_mem_rready,
+                   "lsu.io_mem_r", "EXU load data");
   handshakeCtr.add(&_GetALU()->io_out_valid, &_GetALU()->io_out_ready,
                    "exu.alu.io_out", "EXU calc");
   handshakeCtr.add(&_GetIDU()->io_out_valid, &_GetIDU()->io_out_ready,
                    "idu.io_out", "IDU decode inst");
 
-  axi4Ctr.add(AXI4WritePerfCounter().BIND_AXI4_W_BASE(_GetEXU()->io_mem),
-              "exu_mem_write");
-  axi4Ctr.add(AXI4ReadPerfCounter().BIND_AXI4_R_BASE(_GetEXU()->io_mem),
-              "exu_mem_read");
+  axi4Ctr.add(AXI4WritePerfCounter().BIND_AXI4_W_BASE(_GetLSU()->io_mem),
+              "lsu_mem_write");
+  axi4Ctr.add(AXI4ReadPerfCounter().BIND_AXI4_R_BASE(_GetLSU()->io_mem),
+              "lsu_mem_read");
   axi4Ctr.add(AXI4ReadPerfCounter().BIND_AXI4_R_BASE(_GetIFU()->io_mem),
               "ifu_mem_read");
 

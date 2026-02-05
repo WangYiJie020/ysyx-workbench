@@ -159,7 +159,10 @@ class LSU extends Module {
   memIO.awvalid := isStore && (!memWDone) && (!memAddrSent)
   memIO.wvalid  := isStore && (!memWDone)
   memIO.wlast   := memIO.wvalid
-  // dontTouch(io.mem)
+
+  // NOTE: need keep to make simulation bind signal by names
+  dontTouch(io.mem)
+
   // dontTouch(memIO.wlast)
 
   memIO.awid    := 0.U
