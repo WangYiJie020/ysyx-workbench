@@ -135,8 +135,7 @@ extern char __data_load_start__[];
 extern char __data_size__[];
 
 extern char __data_extra_load_start__[];
-extern char __data_extra_size__[];
-static size_t data_extra_size= (size_t)&__data_extra_size__;
+extern char __data_extra_size__[] __attribute__((weak));
 
 extern char __bss_extra_load_start__[];
 extern char __bss_extra_size__[];
@@ -196,8 +195,7 @@ SSBL_TEXT void _ssbl_clear(void *dst, size_t n) {
 }
 
 SSBL_TEXT void _ssbl_memcpy(void *dst, const void *src, size_t n) {
-	if(n == 0)
-		return;
+	assert(n != 0);
   assert(IS_4BYTE_ALIGNED(dst));
   assert(IS_4BYTE_ALIGNED(src));
   assert(IS_4BYTE_ALIGNED(n));
@@ -274,12 +272,13 @@ SSBL_TEXT void _second_boot() {
   boot_log("skip clear .bss.extra\n");
 #endif
 
-  if ((size_t)data_extra_size != 0) {
+  if ((size_t)__data_extra_size__ != 0) {
 		putstr(".data.extra size = ");
-		putnum_base16(data_extra_size);
+		putnum_base16((uint32_t)(size_t)__data_extra_size__);
 		putch('\n');
-    // LOG_STEP("copy .data.extra",
-    //          _ssbl_memcpy(_data_extra_start, __data_extra_load_start__,data_extra_size));
+    LOG_STEP("copy .data.extra",
+             _ssbl_memcpy(_data_extra_start, __data_extra_load_start__,
+                          (size_t)__data_extra_size__));
   }
 
   // NOTE: putnum func is in the sdram area
