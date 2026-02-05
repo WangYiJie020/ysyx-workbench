@@ -101,10 +101,23 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     thisIn:  DecoupledIO[T],
     thisOut: DecoupledIO[T2]
   ) = {
-    prevOut <> thisIn
-    // prevOut.ready := thisIn.ready
-    // thisIn.bits   := RegEnable(prevOut.bits, prevOut.valid && thisIn.ready)
-    // thisIn.valid  := ???
+    // prevOut <> thisIn
+    val preFire = prevOut.valid && thisIn.ready
+
+    prevOut.ready := thisIn.ready
+    thisIn.bits   := RegEnable(prevOut.bits, preFire)
+
+    object State extends ChiselEnum {
+      val idle, busy = Value
+    }
+    val stateReg = RegInit(State.idle)
+    stateReg := MuxLookup(stateReg, State.idle)(
+      Seq(
+        State.idle -> Mux(preFire, State.busy, State.idle),
+        State.busy -> Mux(thisOut.ready, State.idle, State.busy)
+      )
+    )
+    thisIn.valid := (stateReg === State.busy) && (!thisIn.ready)
   }
 
   val io = IO(new TopIO)
@@ -261,7 +274,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   // Write back
 
   val foo = Wire(Decoupled(UInt(32.W)))
-  foo := DontCare
+  foo              := DontCare
   pipelineConnect(lsu.io.out, wbu.io.in, foo)
   // wbu.io.in <> exu.io.out
   gprs.io.write <> wbu.io.gpr
