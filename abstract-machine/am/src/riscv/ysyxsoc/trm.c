@@ -127,6 +127,7 @@ extern char _bss_extra_start[];
 extern char _bss_extra_end[];
 #define BSS_EXTRA_SIZE ((size_t)(_bss_extra_end - _bss_extra_start))
 __attribute__((weak)) extern char __bss_extra_size__[];
+__attribute__((weak)) extern char __data_extra_size__[];
 
 extern char _ssbl_start[], _ssbl_end[];
 extern char __ssbl_load_start__[];
@@ -284,13 +285,13 @@ SSBL_TEXT void _second_boot() {
 	}
 #pragma clang optimize on
 
-  if (DATA_EXTRA_SIZE != 0) {
+  if ((size_t)__data_extra_size__ != 0) {
     putstr(".data.extra size = ");
     putnum_base16((uint32_t)DATA_EXTRA_SIZE);
     putch('\n');
     LOG_STEP("copy .data.extra",
              _ssbl_memcpy(_data_extra_start, __data_extra_load_start__,
-                          DATA_EXTRA_SIZE));
+                          (size_t)__data_extra_size__ ));
   }
 
   // NOTE: putnum func is in the sdram area
