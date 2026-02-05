@@ -127,7 +127,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
       )
     )
     if (isIDUtoEXU) {
-      thisIn.valid := (stateReg === State.busy) && (!isRdAfterWrReg) && (!isRdAfterWr)
+      thisIn.valid := (stateReg === State.busy) && (!isRdAfterWr)
     } else {
       thisIn.valid := (stateReg === State.busy)
     }
