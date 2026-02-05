@@ -19,6 +19,7 @@
 
 #include "spdlog/fmt/bundled/base.h"
 #include "verilated_fst_c.h"
+#include "vsrc.hpp"
 
 #if ENABLE_NVBOARD
 #include <nvboard.h>
@@ -96,7 +97,7 @@ void sim_step_cycle() {
   _sim_eval();
 
   cycle_count++;
-	// fmt::println("cycle {}", cycle_count);
+  // fmt::println("cycle {}", cycle_count);
 
 #if ENABLE_NVBOARD
   if (sim_settings.nvboard) {
@@ -129,7 +130,7 @@ static bool is_good_trap = false;
 void raise_ebreak() {
   is_running = false;
 
-	int a0 = cpu.gpr[10];
+  int a0 = cpu.gpr[10];
 
   // sbd_set_halt(a0);
   assert(sim_cfg.raise_halt_cb);
@@ -257,8 +258,8 @@ uint32_t psram_data[128 * 1024 * 1024 / 4];
 #endif
 
 extern "C" void uart_send(char ch) {
-	putchar(ch);
-	fflush(stdout);
+  putchar(ch);
+  fflush(stdout);
 }
 
 extern "C" void mrom_read(int32_t addr, int32_t *data) {
@@ -293,10 +294,11 @@ extern "C" void flash_read(int32_t addr, int32_t *data) {
 extern "C" void psram_read(int32_t addr, int32_t *data) {
   // in psram high 8bit addr are 0
   // no need to minus PSRAM_BASE
-	if(addr >= sizeof(psram_data)){
-		_dpi_logger->error("psram_read addr={:08x} out of bound", addr + PSRAM_BASE);
-		return;
-	}
+  if (addr >= sizeof(psram_data)) {
+    _dpi_logger->error("psram_read addr={:08x} out of bound",
+                       addr + PSRAM_BASE);
+    return;
+  }
   assert(addr < sizeof(psram_data));
   addr &= ~0x3;
   uintptr_t ptr = (uintptr_t)psram_data + addr;
@@ -305,12 +307,13 @@ extern "C" void psram_read(int32_t addr, int32_t *data) {
 }
 // compatible interface for npc core
 extern "C" void pmem_read(int addr, int *data) {
-	return psram_read(addr-PSRAM_BASE, data);
+  return psram_read(addr - PSRAM_BASE, data);
 }
 extern "C" void psram_write(int32_t addr, char strb8, int32_t data, int32_t *) {
-	if(addr >= sizeof(psram_data)){
-		_dpi_logger->error("psram_write addr={:08x} out of bound", addr + PSRAM_BASE);
-	}
+  if (addr >= sizeof(psram_data)) {
+    _dpi_logger->error("psram_write addr={:08x} out of bound",
+                       addr + PSRAM_BASE);
+  }
   assert(addr < sizeof(psram_data));
   uint8_t shift = (addr & 0x3) * 8;
   uint32_t aligned_addr = addr & (~0x3);
@@ -336,10 +339,10 @@ extern "C" void psram_write(int32_t addr, char strb8, int32_t data, int32_t *) {
 }
 // compatible interface for npc core
 extern "C" void pmem_write(int addr, int data, int mask) {
-	uint8_t unaligned_part = addr & 0x3;
-	uint32_t udata = ((uint32_t)data) >> (unaligned_part * 8);
-	uint8_t umask = (mask >> unaligned_part) & 0xf;
-	return psram_write(addr-PSRAM_BASE, umask, udata, nullptr);
+  uint8_t unaligned_part = addr & 0x3;
+  uint32_t udata = ((uint32_t)data) >> (unaligned_part * 8);
+  uint8_t umask = (mask >> unaligned_part) & 0xf;
+  return psram_write(addr - PSRAM_BASE, umask, udata, nullptr);
 }
 
 constexpr uint32_t SDRAM_BASE = 0xa0000000u;
@@ -503,7 +506,7 @@ bool sim_write_vmem(word_t addr, word_t data) {
 void sim_step_inst() {
   size_t cnt = 0;
   // SPI flash may need many cycles to respond
-  constexpr size_t MAYBE_DEADLOOP_THRESHOLD = 8192*8;
+  constexpr size_t MAYBE_DEADLOOP_THRESHOLD = 8192 * 8;
   while (!pc_changed) {
     sim_step_cycle();
     if (sim_halted()) {
@@ -593,6 +596,16 @@ static void _fill_rams_uninit() {
   }
   spdlog::info("RAMs uninitialized area filled with {}",
                sim_settings.zero_uninit_ram ? "zeros" : "non-zero patterns");
+
+  if (!is_soc()) {
+    // memset the ASAN shadow memory to zero
+    // instead at trm_init to optimise the init time
+#define ASAN_SHADOW_MEMORY_START 0x7000000
+#define ASAN_SHADOW_MEMORY_SIZE 0x1000000
+
+    memset(psram_data + ASAN_SHADOW_MEMORY_START, 0, ASAN_SHADOW_MEMORY_SIZE);
+		spdlog::info("ASAN shadow memory in psram zeroed");
+  }
 }
 
 // ARG
