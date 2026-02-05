@@ -50,7 +50,7 @@ class IFU extends Module {
   }
   memIO.rready := true.B
 
-  when(!fsm.io.master_valid || pcChanged) {
+  when(!fsm.io.master_valid || pcChanged || io.pc.ready) {
     fetchDone := false.B
     arSent := false.B
   }
