@@ -111,10 +111,9 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     } else {
       thisIn.ready
     }
-    val preFire = prevOut.valid && thisInReady
 
     prevOut.ready := thisInReady
-    thisIn.bits := RegEnable(prevOut.bits, preFire)
+    thisIn.bits := RegEnable(prevOut.bits, prevOut.fire)
 
     object State extends ChiselEnum {
       val idle, busy = Value
@@ -122,8 +121,8 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     val stateReg = RegInit(State.idle)
     stateReg := MuxLookup(stateReg, State.idle)(
       Seq(
-        State.idle -> Mux(preFire, State.busy, State.idle),
-        State.busy -> Mux(thisOut.ready && thisOut.valid, State.idle, State.busy)
+        State.idle -> Mux(prevOut.fire, State.busy, State.idle),
+        State.busy -> Mux(thisOut.fire, State.idle, State.busy)
       )
     )
     if (isIDUtoEXU) {
