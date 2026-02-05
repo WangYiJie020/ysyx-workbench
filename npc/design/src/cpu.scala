@@ -50,4 +50,6 @@ class WBU extends Module {
   io.is_ecall := wbinfo.csr_ecallflag && valid
 
   io.done := valid
+
+  dontTouch(io)
 }

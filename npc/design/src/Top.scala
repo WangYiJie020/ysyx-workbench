@@ -274,9 +274,11 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
   // Write back
 
-  val foo = Wire(Decoupled(UInt(32.W)))
+  val foo = Wire(Decoupled(Bool()))
   foo              := DontCare
+  foo.ready := true.B
   pipelineConnect(lsu.io.out, wbu.io.in, foo)
+
   // wbu.io.in <> exu.io.out
   gprs.io.write <> wbu.io.gpr
   csrs.io.write <> wbu.io.csr
