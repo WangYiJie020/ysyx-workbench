@@ -109,9 +109,9 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     val preFire = prevOut.valid && thisIn.ready
 
     if (isIDUtoEXU) {
-      prevOut.valid := thisIn.ready && !isRdAfterWrReg
+      prevOut.ready := thisIn.ready && (!isRdAfterWrReg)
     } else {
-      prevOut.valid := thisIn.ready
+      prevOut.ready := thisIn.ready
     }
     thisIn.bits := RegEnable(prevOut.bits, preFire)
 
