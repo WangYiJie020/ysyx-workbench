@@ -120,6 +120,8 @@ extern char __bss_size__[];
 
 extern char _data_extra_start[];
 extern char _data_extra_end[];
+// Fuck clang opt extern symbol non-null/0
+// Fuck clang opt &xxx non-zero
 #define DATA_EXTRA_SIZE ((size_t)(_data_extra_end - _data_extra_start))
 extern char _bss_extra_start[];
 extern char _bss_extra_end[];
