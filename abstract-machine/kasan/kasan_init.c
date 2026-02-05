@@ -1,5 +1,6 @@
 #include "kasan_init.h"
 #include "klib.h"
+#ifdef KASAN_ENABLED
 void kasan_init() {
   void initialize_heap();
   void initialize_kasan();
@@ -15,3 +16,4 @@ void kasan_init() {
   initialize_kasan();
   call_global_ctors();
 }
+#endif

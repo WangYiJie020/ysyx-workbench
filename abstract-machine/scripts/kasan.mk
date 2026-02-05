@@ -1,3 +1,10 @@
+CONFIG_KASAN ?= n
+
+CFLAGS += -I$(AM_HOME)/kasan/
+CFLAGS += -DKASAN_MEM_H=\"$(AM_HOME)/kasan/build/mem.h\"
+
+ifeq ($(CONFIG_KASAN),y)
+KASAN_CC_FLAGS += -DKASAN_ENABLED
 
 # KASAN configuration
 TARGET_DRAM_START := 0x80000000
@@ -18,11 +25,6 @@ CFLAGS += -DTARGET_DRAM_START=$(TARGET_DRAM_START)
 CFLAGS += -DTARGET_DRAM_END=$(TARGET_DRAM_END)
 CFLAGS += -DUART_BASE_ADDRESS=$(UART_BASE_ADDRESS)
 
-CFLAGS += -ffreestanding
-
-CFLAGS += -I$(AM_HOME)/kasan/
-CFLAGS += -DKASAN_MEM_H=\"$(AM_HOME)/kasan/build/mem.h\"
-
 # KASan-specific compiler options
 KASAN_SANITIZE_STACK := 1
 KASAN_SANITIZE_GLOBALS := 1
@@ -31,8 +33,6 @@ ifeq ($(IS_BUILDKASAN),1)
 KASAN_CC_FLAGS :=
 else
 KASAN_CC_FLAGS := -fsanitize=kernel-address
-KASAN_CC_FLAGS += -DKASAN_ENABLED
-endif
 
 KASAN_CC_FLAGS += -fno-builtin
 KASAN_CC_FLAGS += -mllvm -asan-mapping-offset=$(KASAN_SHADOW_MAPPING_OFFSET)
@@ -41,3 +41,6 @@ KASAN_CC_FLAGS += -mllvm -asan-stack=$(KASAN_SANITIZE_STACK)
 KASAN_CC_FLAGS += -mllvm -asan-globals=$(KASAN_SANITIZE_GLOBALS)
 
 CFLAGS += $(KASAN_CC_FLAGS)
+endif
+
+endif
