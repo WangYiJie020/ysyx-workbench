@@ -93,7 +93,7 @@ CXXFLAGS +=  $(CFLAGS) -ffreestanding -fno-rtti -fno-exceptions
 CXXFLAGS += -Wno-error=non-c-typedef-for-linkage
 CXXFLAGS += -Wno-error=tautological-constant-out-of-range-compare
 
-CFLAGS	 += -ffreestanding -mstrict-align
+CFLAGS	 += -ffreestanding -mstrict-align -mno-unaligned-access
 
 CFLAGS += -Wno-error=unknown-warning-option
 CFLAGS += -Wno-error=macro-redefined
