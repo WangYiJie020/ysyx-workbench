@@ -30,4 +30,6 @@ test_run_dir/
 !*.vlt
 !*.txt
 
-!history_perf/*
+!history_perf/
+!*.rpt
+!*.csv
