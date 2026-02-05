@@ -106,13 +106,14 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     isIDUtoEXU: Boolean = false
   ) = {
     // prevOut <> thisIn
-    val preFire = prevOut.valid && thisIn.ready
-
-    if (isIDUtoEXU) {
-      prevOut.ready := thisIn.ready && (!isRdAfterWrReg) && (!isRdAfterWr)
+    val thisInReady = if (isIDUtoEXU) {
+      thisIn.ready && (!isRdAfterWr)
     } else {
-      prevOut.ready := thisIn.ready
+      thisIn.ready
     }
+    val preFire = prevOut.valid && thisInReady
+
+    prevOut.ready := thisInReady
     thisIn.bits := RegEnable(prevOut.bits, preFire)
 
     object State extends ChiselEnum {
