@@ -17,7 +17,7 @@ import xbar._
 import npcMem._
 
 import icache._
-import common_def.InstType
+import common_def.{HasRs, InstType}
 
 class TopIO extends Bundle {
   val interrupt = Input(Bool())
@@ -96,6 +96,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     dontTouch(m.io)
     m
   }
+  val isRdAfterWr = Wire(Bool())
   def pipelineConnect[T <: Data, T2 <: Data](
     prevOut: DecoupledIO[T],
     thisIn:  DecoupledIO[T],
@@ -111,13 +112,17 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
       val idle, busy = Value
     }
     val stateReg = RegInit(State.idle)
-    stateReg := MuxLookup(stateReg, State.idle)(
+    stateReg     := MuxLookup(stateReg, State.idle)(
       Seq(
         State.idle -> Mux(preFire, State.busy, State.idle),
         State.busy -> Mux(thisOut.ready, State.idle, State.busy)
       )
     )
-    thisIn.valid := (stateReg === State.busy)
+    thisIn.valid := (stateReg === State.busy) && (!isRdAfterWr)
+  }
+  def conflict(rs: UInt, rd: UInt) = (rs === rd)
+  def conflictWithStage[T <: HasRs](info: T, stageRd: UInt): Bool = {
+    conflict(info.rs1, stageRd) || conflict(info.rs2, stageRd)
   }
 
   val io = IO(new TopIO)
@@ -262,11 +267,19 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   ifu.io.pc.bits  := pc
   ifu.io.pc.valid := true.B
 
-  // ifu.io.out <> idu.io.in
-  pipelineConnect(ifu.io.out, idu.io.in, idu.io.out)
-  // idu.io.out <> exu.io.in
-  pipelineConnect(idu.io.out, exu.io.in, exu.io.out)
+  isRdAfterWr := conflictWithStage(
+    idu.io.out.bits.info,
+    exu.io.out.bits.exuWriteBack.gpr.addr
+  ) || conflictWithStage(
+    idu.io.out.bits.info,
+    lsu.io.out.bits.gpr.addr
+  ) || conflictWithStage(
+    idu.io.out.bits.info,
+    wbu.io.in.bits.gpr.addr
+  )
 
+  pipelineConnect(ifu.io.out, idu.io.in, idu.io.out)
+  pipelineConnect(idu.io.out, exu.io.in, exu.io.out)
   pipelineConnect(exu.io.out, lsu.io.in, lsu.io.out)
 
   exu.io.rvec <> gprs.io.read
@@ -275,7 +288,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   // Write back
 
   val foo = Wire(Decoupled(Bool()))
-  foo              := DontCare
+  foo       := DontCare
   foo.ready := true.B
   pipelineConnect(lsu.io.out, wbu.io.in, foo)
 
