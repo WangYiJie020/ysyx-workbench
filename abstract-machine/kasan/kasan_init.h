@@ -3,10 +3,6 @@
 
 #include <klib.h>
 
-#ifdef KASAN_ENABLED
-void kasan_init(void);
-#else
-#define kasan_init() do { } while (0)
-#endif
+void kasan_init();
 
 #endif // __KASAN_INIT_H__

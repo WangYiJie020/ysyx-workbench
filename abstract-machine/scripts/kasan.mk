@@ -1,5 +1,5 @@
 CFLAGS += -I$(AM_HOME)/kasan/
-CFLAGS += -DKASAN_MEM_H=\"$(AM_HOME)/kasan/build/mem.h\"
+CFLAGS += -DKASAN_MEM_H=\"$(AM_HOME)/kasan/common.h\"
 
 ifeq ($(CONFIG_KASAN),y)
 KASAN_CC_FLAGS :=
