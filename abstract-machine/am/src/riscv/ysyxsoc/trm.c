@@ -119,7 +119,11 @@ extern char _bss_start[];
 extern char __bss_size__[];
 
 extern char _data_extra_start[];
+extern char _data_extra_end[];
+#define DATA_EXTRA_SIZE ((size_t)(_data_extra_end - _data_extra_start))
 extern char _bss_extra_start[];
+extern char _bss_extra_end[];
+#define BSS_EXTRA_SIZE ((size_t)(_bss_extra_end - _bss_extra_start))
 
 extern char _ssbl_start[], _ssbl_end[];
 extern char __ssbl_load_start__[];
@@ -135,12 +139,8 @@ extern char __data_load_start__[];
 extern char __data_size__[];
 
 extern char __data_extra_load_start__[];
-extern int __data_extra_size__;
-#define DATA_EXTRA_SIZE ((uintptr_t)(volatile void*) & __data_extra_size__)
 
 extern char __bss_extra_load_start__[];
-extern int __bss_extra_size__;
-#define BSS_EXTRA_SIZE ((uintptr_t)(volatile void*) & __bss_extra_size__)
 
 extern char __sram_start__[];
 extern char __sram_end__[];
