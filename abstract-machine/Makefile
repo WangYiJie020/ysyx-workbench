@@ -100,7 +100,7 @@ CFLAGS += -Wno-error=macro-redefined
 CFLAGS += -Wno-error=pointer-bool-conversion
 CFLAGS += -Wno-error=tautological-pointer-compare
 
-CONFIG_KASAN = y
+CFLAGS	 += -ffreestanding
 
 ASFLAGS  += -MMD $(INCFLAGS)
 LDFLAGS  += -z noexecstack $(addprefix -T, $(LDSCRIPTS))
