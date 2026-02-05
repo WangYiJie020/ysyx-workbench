@@ -50,14 +50,6 @@ class EXU extends Module {
   MS_fsm.connectMaster(io.in)
   MS_fsm.connectSlave(io.out)
 
-  val lsuInfo = io.out.bits
-  lsuInfo.destAddr  := reg_v1 + dinst.info.imm
-  lsuInfo.isLoad    := isTypLoad
-  lsuInfo.isStore   := isTypStore
-  lsuInfo.func3t    := func3t
-  lsuInfo.storeData := reg_v2
-  val writeBackInfo = lsuInfo.exuWriteBack
-
   // reg
 
   io.rvec.en      := true.B
@@ -70,6 +62,15 @@ class EXU extends Module {
   alu_in.src1 := reg_v1
   // when branch, src2 is reg_v2
   alu_in.src2 := Mux(isFmtI, dinst.info.imm, reg_v2)
+
+  // lsu
+  val lsuInfo = io.out.bits
+  lsuInfo.destAddr  := reg_v1 + dinst.info.imm
+  lsuInfo.isLoad    := isTypLoad
+  lsuInfo.isStore   := isTypStore
+  lsuInfo.func3t    := func3t
+  lsuInfo.storeData := reg_v2
+  val writeBackInfo = lsuInfo.exuWriteBack
 
   // csr
 
