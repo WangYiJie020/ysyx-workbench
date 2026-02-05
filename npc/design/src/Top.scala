@@ -166,7 +166,8 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     halted := true.B
   }
 
-  pc := Mux(wbu.io.done, nxt_pc, pc)
+  // pc := Mux(wbu.io.done, nxt_pc, pc)
+  pc := pc + 4.U
 
   when(nxt_pc_valid) {
     RawClockedVoidFunctionCall("pc_upd")(
