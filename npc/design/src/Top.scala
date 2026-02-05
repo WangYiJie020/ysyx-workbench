@@ -318,6 +318,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val foo = Wire(Decoupled(Bool()))
   foo       := DontCare
   foo.ready := true.B
+  foo.valid := true.B
   pipelineConnect(lsu.io.out, wbu.io.in, foo)
 
   // wbu.io.in <> exu.io.out
