@@ -292,6 +292,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   dontTouch(isConflictWithWBU)
 
   isRdAfterWr := isConflictWithEXU || isConflictWithLSU || isConflictWithWBU
+  dontTouch(isRdAfterWr)
 
   pipelineConnect(ifu.io.out, idu.io.in, idu.io.out)
   pipelineConnect(idu.io.out, exu.io.in, exu.io.out, isIDUtoEXU = true)
