@@ -196,7 +196,8 @@ SSBL_TEXT void _ssbl_clear(void *dst, size_t n) {
 }
 
 SSBL_TEXT void _ssbl_memcpy(void *dst, const void *src, size_t n) {
-	assert(n != 0);
+	if(n == 0)
+		return;
   assert(IS_4BYTE_ALIGNED(dst));
   assert(IS_4BYTE_ALIGNED(src));
   assert(IS_4BYTE_ALIGNED(n));
