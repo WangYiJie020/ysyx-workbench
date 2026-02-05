@@ -156,7 +156,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
   val is_ebreak = (ifu.io.out.valid) && (ifu.io.out.bits.code === "h00100073".U)
 
-  val nxt_pc       = lsu.io.out.bits.nxt_pc
+  val nxt_pc       = wbu.io.in.bits.nxt_pc
   val nxt_pc_valid = wbu.io.done
 
   val halted = RegInit(false.B)
