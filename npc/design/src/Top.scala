@@ -109,7 +109,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     val preFire = prevOut.valid && thisIn.ready
 
     if (isIDUtoEXU) {
-      prevOut.ready := thisIn.ready && (!isRdAfterWrReg)
+      prevOut.ready := thisIn.ready && (!isRdAfterWrReg) && (!isRdAfterWr)
     } else {
       prevOut.ready := thisIn.ready
     }
@@ -126,7 +126,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
       )
     )
     if (isIDUtoEXU) {
-      thisIn.valid := (stateReg === State.busy) && (!isRdAfterWrReg)
+      thisIn.valid := (stateReg === State.busy) && (!isRdAfterWrReg) && (!isRdAfterWr)
     } else {
       thisIn.valid := (stateReg === State.busy)
     }
