@@ -28,7 +28,7 @@ class OneMasterOneSlaveFSM extends Module {
     )
   )
 
-  io.master_ready := (state === s_wait_slave) && (io.self_finished) && (io.slave_ready)
+  io.master_ready := (state === s_wait_slave) && (io.self_finished) // && (io.slave_ready)
   io.slave_valid  := (state === s_wait_slave)
 
   def connectMaster[T <: Data](master: DecoupledIO[T]): Unit = {
