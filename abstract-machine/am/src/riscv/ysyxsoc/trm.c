@@ -285,13 +285,13 @@ SSBL_TEXT void _second_boot() {
 	}
 #pragma clang optimize on
 
-  if ((size_t)__data_extra_size__ != 0) {
+  if ((size_t)&__data_extra_size__ != 0) {
     putstr(".data.extra size = ");
     putnum_base16((uint32_t)DATA_EXTRA_SIZE);
     putch('\n');
     LOG_STEP("copy .data.extra",
              _ssbl_memcpy(_data_extra_start, __data_extra_load_start__,
-                          (size_t)__data_extra_size__ ));
+                          (size_t)&__data_extra_size__ ));
   }
 
   // NOTE: putnum func is in the sdram area
