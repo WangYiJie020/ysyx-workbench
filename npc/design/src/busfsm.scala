@@ -73,6 +73,8 @@ class OneMasterOneSlaveFSM extends Module {
 
   when(ready) {
     full := io.master_valid
+  }.elsewhen(slave_picked) {
+    full := false.B
   }
 
   def connectMaster[T <: Data](master: DecoupledIO[T]): Unit = {
