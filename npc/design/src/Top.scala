@@ -101,7 +101,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     prevOut:    DecoupledIO[T],
     thisIn:     DecoupledIO[T],
     thisOut:    DecoupledIO[T2],
-    isIFUtoIDU: Boolean = false
+    isIDUtoEXU: Boolean = false
   ) = {
     // prevOut <> thisIn
     val preFire = prevOut.valid && thisIn.ready
@@ -119,15 +119,15 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
         State.busy -> Mux(thisOut.ready, State.idle, State.busy)
       )
     )
-    if (isIFUtoIDU) {
+    if (isIDUtoEXU) {
       thisIn.valid := (stateReg === State.busy) && (!isRdAfterWr)
     } else {
       thisIn.valid := (stateReg === State.busy)
     }
   }
   def conflict(rs: UInt, rd: GPRegReqIO._WriteRX) = (rs === rd.addr) && (rd.addr =/= 0.U) && rd.en
-  def conflictWithStage[T <: HasRs](info: T, gprWr: GPRegReqIO._WriteRX, valid: Bool): Bool = {
-    valid && (conflict(info.rs1, gprWr) || conflict(info.rs2, gprWr))
+  def conflictWithStage[T <: HasRs](info: T, gprWr: GPRegReqIO._WriteRX, valid: Bool) = {
+    WireDefault(valid && (conflict(info.rs1, gprWr) || conflict(info.rs2, gprWr)))
   }
 
   val io = IO(new TopIO)
@@ -272,22 +272,29 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   ifu.io.pc.bits  := pc
   ifu.io.pc.valid := true.B
 
-  isRdAfterWr := conflictWithStage(
+  val isConflictWithEXU = conflictWithStage(
     idu.io.out.bits.info,
     exu.io.out.bits.exuWriteBack.gpr,
     exu.io.out.valid
-  ) || conflictWithStage(
+  )
+  val isConflictWithLSU = conflictWithStage(
     idu.io.out.bits.info,
     lsu.io.out.bits.gpr,
     lsu.io.out.valid
-  ) || conflictWithStage(
+  )
+  val isConflictWithWBU = conflictWithStage(
     idu.io.out.bits.info,
     wbu.io.in.bits.gpr,
     wbu.io.in.valid
   )
+  dontTouch(isConflictWithEXU)
+  dontTouch(isConflictWithLSU)
+  dontTouch(isConflictWithWBU)
 
-  pipelineConnect(ifu.io.out, idu.io.in, idu.io.out, isIFUtoIDU = true)
-  pipelineConnect(idu.io.out, exu.io.in, exu.io.out)
+  isRdAfterWr := isConflictWithEXU || isConflictWithLSU || isConflictWithWBU
+
+  pipelineConnect(ifu.io.out, idu.io.in, idu.io.out)
+  pipelineConnect(idu.io.out, exu.io.in, exu.io.out, isIDUtoEXU = true)
   pipelineConnect(exu.io.out, lsu.io.in, lsu.io.out)
 
   exu.io.rvec <> gprs.io.read
