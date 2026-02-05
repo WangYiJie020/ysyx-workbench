@@ -603,7 +603,7 @@ static void _fill_rams_uninit() {
 #define ASAN_SHADOW_MEMORY_START 0x7000000
 #define ASAN_SHADOW_MEMORY_SIZE 0x1000000
 
-    memset(psram_data + ASAN_SHADOW_MEMORY_START, 0, ASAN_SHADOW_MEMORY_SIZE);
+    memset((uint8_t*)psram_data + ASAN_SHADOW_MEMORY_START, 0, ASAN_SHADOW_MEMORY_SIZE);
 		spdlog::info("ASAN shadow memory in psram zeroed");
   }
 }
