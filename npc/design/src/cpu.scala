@@ -17,6 +17,8 @@ class WriteBackInfo extends Bundle {
   val csr           = CSRegReqIO.TX.Write
   val csr_ecallflag = Bool()
 
+  val pc     = Types.UWord
+
   val nxt_pc = Types.UWord
 }
 

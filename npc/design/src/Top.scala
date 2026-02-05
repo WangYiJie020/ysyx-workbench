@@ -173,7 +173,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     RawClockedVoidFunctionCall("pc_upd")(
       clock,
       nxt_pc_valid,
-      pc,
+      wbu.io.in.bits.pc,
       nxt_pc
     )
   }
