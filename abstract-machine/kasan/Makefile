@@ -7,12 +7,8 @@ SRC_FILENAMES = kasan.c heap.c rt_utils.c
 # $(shell mkdir -p ./build)
 # $(shell cp $(KASAN_DIR)/common.h ./build/mem.h)
 
-ifeq ($(CONFIG_KASAN),y)
 SRCS = $(addprefix $(KASAN_DIR)/,$(SRC_FILENAMES))
 CFLAGS += -I$(KASAN_DIR) -I$(abspath .)
-else
-SRCS = 
-endif
 
 SRCS += $(shell find . -name '*.c')
 

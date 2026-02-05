@@ -10,8 +10,6 @@ AM_SRCS := riscv/npc/start.S \
 
 CFLAGS += -g
 
-# CFLAGS += -fsanitize=address
-
 include $(AM_HOME)/scripts/kasan.mk
 
 CFLAGS    += -fdata-sections -ffunction-sections
