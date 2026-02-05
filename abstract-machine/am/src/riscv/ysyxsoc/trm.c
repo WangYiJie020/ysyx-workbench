@@ -135,10 +135,10 @@ extern char __data_load_start__[];
 extern char __data_size__[];
 
 extern char __data_extra_load_start__[];
-extern char __data_extra_size__[] __attribute__((weak));
+extern int __data_extra_size__[] __attribute__((weak));
 
 extern char __bss_extra_load_start__[];
-extern char __bss_extra_size__[];
+extern char __bss_extra_size__[] __attribute__((weak));
 
 extern char __sram_start__[];
 extern char __sram_end__[];
