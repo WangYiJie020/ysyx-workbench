@@ -276,11 +276,13 @@ SSBL_TEXT void _second_boot() {
   boot_log("skip clear .bss.extra\n");
 #endif
 
+#pragma clang optimize off
 	if((size_t)__bss_extra_size__ != 0) {
 		putstr(".bss.extra size = ");
 		putnum_base16((uint32_t)__bss_extra_size__);
 		putch('\n');
 	}
+#pragma clang optimize on
 
   if (DATA_EXTRA_SIZE != 0) {
     putstr(".data.extra size = ");
