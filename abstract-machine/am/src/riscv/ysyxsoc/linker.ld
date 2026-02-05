@@ -59,6 +59,7 @@ SECTIONS {
     *(.rodata*)
 		*(.srodata*)
 		_rodata_end = .;
+__data_extra_size__  = 0;
   } > runtime AT> flash
 
 	__rodata_load_start__ = LOADADDR(.rodata);
@@ -66,7 +67,6 @@ SECTIONS {
 
 	PROVIDE(_data_extra_start = .);
 	PROVIDE(__data_extra_load_start__ = .);
-__data_extra_size__  = 0;
   /* PROVIDE(__data_extra_size__ = 0); */
 	_data_extra_end = . + __data_extra_size__;
 
