@@ -97,6 +97,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     m
   }
   val isRdAfterWr = Wire(Bool())
+  val isRdAfterWrReg = Reg(Bool())
   def pipelineConnect[T <: Data, T2 <: Data](
     prevOut:    DecoupledIO[T],
     thisIn:     DecoupledIO[T],
@@ -120,7 +121,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
       )
     )
     if (isIDUtoEXU) {
-      thisIn.valid := (stateReg === State.busy) && (!isRdAfterWr)
+      thisIn.valid := (stateReg === State.busy) && (!isRdAfterWrReg)
     } else {
       thisIn.valid := (stateReg === State.busy)
     }
@@ -144,6 +145,12 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val exu = Module(new EXU)
   val lsu = Module(new LSU)
   val wbu = Module(new WBU)
+
+  when(isRdAfterWr) {
+    isRdAfterWrReg := true.B
+  }.elsewhen(wbu.io.done) {
+    isRdAfterWrReg := false.B
+  }
 
   val isSoC = sys.env.getOrElse("ARCH", "") == "riscv32e-ysyxsoc"
 
