@@ -185,7 +185,6 @@ config DTRACE
 
 config DIFFTEST
   depends on TARGET_NATIVE_ELF
-	depends on ITRACE
   bool "Enable differential testing"
   default n
   help

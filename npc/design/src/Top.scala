@@ -96,16 +96,6 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     dontTouch(m.io)
     m
   }
-  def pipelineConnect[T <: Data, T2 <: Data](
-    prevOut: DecoupledIO[T],
-    thisIn:  DecoupledIO[T],
-    thisOut: DecoupledIO[T2]
-  ) = {
-    prevOut <> thisIn
-    // prevOut.ready := thisIn.ready
-    // thisIn.bits   := RegEnable(prevOut.bits, prevOut.valid && thisIn.ready)
-    // thisIn.valid  := ???
-  }
 
   val io = IO(new TopIO)
   dontTouch(io)
@@ -148,6 +138,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val halted = RegInit(false.B)
 
   when(is_ebreak && !halted) {
+    // printf(p"EBREAK at PC = 0x${Hexadecimal(ifu.io.out.bits.pc)} a0 = 0x${Hexadecimal(gprs.io.a0)}\n")
     RawClockedVoidFunctionCall("raise_ebreak")(clock, is_ebreak)
     halted := true.B
   }
@@ -193,15 +184,13 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     val mem  = Module(new AXI4MemUnit)
 
     otherReqSlave := DontCare
-    Module(
-      new AXI4LiteXBar(
-        Seq(
-          ("h02000000".U(32.W), "h0200ffff".U(32.W)) -> clint.io,
-          (MEM_BASE, MEM_END)                        -> mem.io,
-          (SERIAL_BASE, SERIAL_END)                  -> uart.io
-        )
+    Module(new AXI4LiteXBar(
+      Seq(
+        ("h02000000".U(32.W), "h0200ffff".U(32.W)) -> clint.io,
+        (MEM_BASE, MEM_END)                        -> mem.io,
+        (SERIAL_BASE, SERIAL_END)                  -> uart.io
       )
-    )
+    ))
   }
 
   when(io.master.bvalid && io.master.bresp === AXI4IO.BResp.DECERR) {
@@ -241,26 +230,33 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     )
   }
 
+  val MinAccessAddr = "h02000000".U(32.W)
+  when(io.master.awvalid && io.master.awaddr < MinAccessAddr) {
+    printf("AXI4 Invalid Write Address 0x%x\n", io.master.awaddr)
+    stop()
+    stop()
+  }
+  when(io.master.arvalid && io.master.araddr < MinAccessAddr) {
+    printf("AXI4 Invalid Read Address 0x%x\n", io.master.araddr)
+    stop()
+    stop()
+  }
+
   AXI4IO.connectMasterSlave(memArbiter.io.out, memXBar.io.in)
   memXBar.connect()
 
   ifu.io.pc.bits  := pc
   ifu.io.pc.valid := true.B
 
-  // ifu.io.out <> idu.io.in
-  pipelineConnect(ifu.io.out, idu.io.in, idu.io.out)
-  // idu.io.out <> exu.io.in
-  pipelineConnect(idu.io.out, exu.io.in, exu.io.out)
+  ifu.io.out <> idu.io.in
+  idu.io.out <> exu.io.dinst
 
   exu.io.rvec <> gprs.io.read
   exu.io.csr_rvec <> csrs.io.read
 
   // Write back
 
-  val foo = Wire(Decoupled(UInt(32.W)))
-  foo := DontCare
-  pipelineConnect(exu.io.out, wbu.io.in, foo)
-  // wbu.io.in <> exu.io.out
+  wbu.io.data <> exu.io.out
   gprs.io.write <> wbu.io.gpr
   csrs.io.write <> wbu.io.csr
   csrs.io.is_ecall := wbu.io.is_ecall

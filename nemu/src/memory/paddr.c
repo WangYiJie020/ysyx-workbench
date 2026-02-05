@@ -14,7 +14,6 @@
  ***************************************************************************************/
 
 #include "common.h"
-#include "macro.h"
 #include "utils.h"
 #include <device/mmio.h>
 #include <isa.h>
@@ -78,7 +77,6 @@ static bool in_sdram(paddr_t addr) {
 
 uint8_t *guest_to_host(paddr_t paddr) {
   if (likely(in_pmem(paddr))) {
-		// printf("pmem addr translate: " FMT_PADDR " to host addr %p\n", paddr, pmem + paddr - CONFIG_MBASE);
     return pmem + paddr - CONFIG_MBASE;
   } else if (in_mrom(paddr)) {
     return mrom + paddr - MROM_BASE;
@@ -155,17 +153,9 @@ void init_mem() {
   pmem = malloc(CONFIG_MSIZE);
   assert(pmem);
 #endif
-	IFDEF(CONFIG_MEM_RANDOM, srand(time(0)));
   IFDEF(CONFIG_MEM_RANDOM, memset(pmem, rand(), CONFIG_MSIZE));
   Log("physical memory area [" FMT_PADDR ", " FMT_PADDR "]", PMEM_LEFT,
       PMEM_RIGHT);
-
-	// memset the ASAN shadow memory to zero
-	// instead at trm_init to optimise the init time
-#define ASAN_SHADOW_MEMORY_START 0x7000000
-#define ASAN_SHADOW_MEMORY_SIZE 0x1000000
-
-	memset(pmem + ASAN_SHADOW_MEMORY_START, 0, ASAN_SHADOW_MEMORY_SIZE);
 }
 
 #define is_addr_inmtrace(p)                                                    \
@@ -184,7 +174,6 @@ word_t paddr_read(paddr_t addr, int len) {
 	}
   word_t data;
   if (builtin_read(addr, len, &data)) {
-		// IFDEF(CONFIG_MTRACE, printf("%ld mem r from builtin return %08X\n",g_nr_guest_inst, data););
     return data;
   }
 #ifdef CONFIG_DEVICE
@@ -204,9 +193,6 @@ word_t paddr_read(paddr_t addr, int len) {
 
 void paddr_write(paddr_t addr, int len, word_t data) {
   mtrace(addr, printf("%ld mem w %08X %db %08X\n",g_nr_guest_inst, addr, len, data));
-	// if(pmem[0x7000460] != 0){
-	// 	printf("Debug: paddr_write addr=" FMT_PADDR " len=%d data=" FMT_WORD " pmem[0x7000460]=%02X\n", addr, len, data, pmem[0x7000460]);
-	// }
 	if (builtin_write(addr, len, data)) {
 		return;
 	}

@@ -150,10 +150,6 @@ void init_sdb() {
 #ifdef CONFIG_FTRACE
 	flags|=SDB_ENTRACE_FUNC;
 #endif
-#else
-#ifdef CONFIG_DIFFTEST
-	printf("[W] difftest unwork when itrace turn off\n");
-#endif
 #endif
 	sdb_enable_entrace(dbg, flags);
 }
