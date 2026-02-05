@@ -123,7 +123,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     stateReg := MuxLookup(stateReg, State.idle)(
       Seq(
         State.idle -> Mux(preFire, State.busy, State.idle),
-        State.busy -> Mux(thisOut.ready, State.idle, State.busy)
+        State.busy -> Mux(thisOut.ready && thisOut.valid, State.idle, State.busy)
       )
     )
     if (isIDUtoEXU) {
