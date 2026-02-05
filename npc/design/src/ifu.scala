@@ -17,7 +17,10 @@ class IFU extends Module {
   fsm.connectMaster(io.pc)
   fsm.connectSlave(io.out)
 
-  val lastPC = RegNext(io.pc.bits)
+  val lastPC = RegInit(0.U(Types.UWord.getWidth.W))
+  when(io.pc.fire) {
+    lastPC := io.pc.bits
+  }
   val code = Reg(Types.UWord)
   val fetchDone = Reg(Bool())
   val arSent = Reg(Bool())
@@ -34,7 +37,7 @@ class IFU extends Module {
   io.mem.dontCareB()
 
   memIO.arvalid := io.pc.valid && (!fetchDone) && (!arSent)
-  memIO.araddr  := io.pc.bits
+  memIO.araddr  := lastPC
 
   // not use now
   io.mem.dontCareNonLiteAR()
@@ -60,7 +63,7 @@ class IFU extends Module {
   // NOTICE: dpi function auto generated with void return
   // see https://github.com/llvm/circt/blob/main/docs/Dialects/FIRRTL/FIRRTLIntrinsics.md#dpi-intrinsic-abi
   io.out.bits.code := code
-  io.out.bits.pc   := io.pc.bits
+  io.out.bits.pc   := lastPC
 }
 
 
