@@ -268,7 +268,7 @@ SSBL_TEXT void _second_boot() {
 #ifndef SKIP_BSS_CLEAR
   _ssbl_clear(_bss_start, (size_t)__bss_size__);
   boot_log(".bss cleared.\n");
-  if (BSS_EXTRA_SIZE != 0) {
+  if ((size_t)__bss_extra_size__ != 0) {
     LOG_STEP("clear .bss.extra", _ssbl_clear(_bss_extra_start, (size_t)__bss_extra_size__));
   }
 #else
