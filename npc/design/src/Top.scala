@@ -111,7 +111,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     if (isIDUtoEXU) {
       prevOut.valid := thisIn.ready && !isRdAfterWrReg
     } else {
-      prevOut.ready := thisIn.ready
+      prevOut.valid := thisIn.ready
     }
     thisIn.bits := RegEnable(prevOut.bits, preFire)
 
