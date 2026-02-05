@@ -54,6 +54,16 @@ class OneMasterOneSlaveFSM extends Module {
 
   val full = RegInit(false.B)
 
+  val state = Wire(UInt(2.W))
+  when(!full) {
+    state := 0.U
+  }.elsewhen(full && !io.self_finished) {
+    state := 1.U
+  }.otherwise {
+    state := 2.U
+  }
+  dontTouch(state)
+
   val slave_picked = io.slave_ready && io.self_finished
 
   val ready = !full || slave_picked
