@@ -117,7 +117,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
         State.busy -> Mux(thisOut.ready, State.idle, State.busy)
       )
     )
-    thisIn.valid := (stateReg === State.busy) && (!thisIn.ready)
+    thisIn.valid := (stateReg === State.busy)
   }
 
   val io = IO(new TopIO)
