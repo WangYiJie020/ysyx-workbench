@@ -57,7 +57,12 @@ ARCHIVE   = $(WORK_DIR)/build/$(NAME)-$(ARCH).a
 
 ### Collect the files to be linked: object files (`.o`) and libraries (`.a`)
 OBJS      = $(addprefix $(DST_DIR)/, $(addsuffix .o, $(basename $(SRCS))))
-LIBS     := $(sort $(LIBS) am klib kasan) # lazy evaluation ("=") causes infinite recursions
+LIBS     := $(sort $(LIBS) am klib) # lazy evaluation ("=") causes infinite recursions
+
+ifneq ($(ARCH),riscv32e-ysyxsoc)
+LIBS += kasan
+endif
+
 LINKAGE   = $(OBJS)  # library archives are added by LIB_TEMPLATE below
 
 ## 3. General Compilation Flags
@@ -65,7 +70,7 @@ LINKAGE   = $(OBJS)  # library archives are added by LIB_TEMPLATE below
 ### (Cross) compilers, e.g., mips-linux-gnu-g++
 AS        = $(CROSS_COMPILE)gcc
 # CC        = $(CROSS_COMPILE)gcc
-CC        = clang --target=riscv64-linux-gnu -mstrict-align
+CC        = clang --target=riscv64-linux-gnu
 CXX        = clang++ --target=riscv64-linux-gnu
 # CXX       = $(CROSS_COMPILE)g++
 LD        = $(CROSS_COMPILE)ld
@@ -93,7 +98,7 @@ CXXFLAGS +=  $(CFLAGS) -ffreestanding -fno-rtti -fno-exceptions
 CXXFLAGS += -Wno-error=non-c-typedef-for-linkage
 CXXFLAGS += -Wno-error=tautological-constant-out-of-range-compare
 
-CFLAGS	 += -ffreestanding -mstrict-align -mno-unaligned-access
+CFLAGS	 += -ffreestanding
 
 CFLAGS += -Wno-error=unknown-warning-option
 CFLAGS += -Wno-error=macro-redefined
