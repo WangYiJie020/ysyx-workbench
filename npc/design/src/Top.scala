@@ -98,6 +98,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   }
   val isRdAfterWr = Wire(Bool())
   val isRdAfterWrReg = Reg(Bool())
+
   def pipelineConnect[T <: Data, T2 <: Data](
     prevOut:    DecoupledIO[T],
     thisIn:     DecoupledIO[T],
@@ -107,8 +108,12 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     // prevOut <> thisIn
     val preFire = prevOut.valid && thisIn.ready
 
-    prevOut.ready := thisIn.ready
-    thisIn.bits   := RegEnable(prevOut.bits, preFire)
+    if (isIDUtoEXU) {
+      prevOut.valid := thisIn.ready && !isRdAfterWrReg
+    } else {
+      prevOut.ready := thisIn.ready
+    }
+    thisIn.bits := RegEnable(prevOut.bits, preFire)
 
     object State extends ChiselEnum {
       val idle, busy = Value
