@@ -16,7 +16,7 @@ class LSUInput extends Bundle {
 }
 
 class LSUIO extends Bundle {
-  val mem = AXI4IO.Slave
+  val mem = AXI4IO.Master
 
   val in  = Flipped(Decoupled(new LSUInput))
   val out = Decoupled(new WriteBackInfo)
