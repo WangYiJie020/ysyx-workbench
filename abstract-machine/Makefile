@@ -87,15 +87,20 @@ CFLAGS   += -O2 -MMD -Wall -Werror $(INCFLAGS) \
             -DARCH_H=\"$(ARCH_H)\" \
             -fno-asynchronous-unwind-tables -fno-builtin -fno-stack-protector \
             -Wno-main -U_FORTIFY_SOURCE -fvisibility=hidden
-CFLAGS	 += -ffreestanding
 
 CXXFLAGS +=  $(CFLAGS) -ffreestanding -fno-rtti -fno-exceptions
+
 CXXFLAGS += -Wno-error=non-c-typedef-for-linkage
 CXXFLAGS += -Wno-error=tautological-constant-out-of-range-compare
+
+CFLAGS	 += -ffreestanding
+
 CFLAGS += -Wno-error=unknown-warning-option
 CFLAGS += -Wno-error=macro-redefined
 CFLAGS += -Wno-error=pointer-bool-conversion
 CFLAGS += -Wno-error=tautological-pointer-compare
+
+CONFIG_KASAN = y
 
 ASFLAGS  += -MMD $(INCFLAGS)
 LDFLAGS  += -z noexecstack $(addprefix -T, $(LDSCRIPTS))

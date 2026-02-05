@@ -20,11 +20,8 @@ void halt(int code) {
   // should not reach here
   while (1);
 }
-void _trm_init() {
-#ifdef KASAN_ENABLED
+void _trm_init() { 
 	kasan_init();
-#endif
-
   int ret = main(mainargs);
   halt(ret);
 }
