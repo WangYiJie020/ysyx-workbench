@@ -81,7 +81,7 @@ SECTIONS {
 
   .bss : {
 		_bss_start = .;
-    *(.bss*)
+    KEEP(*(.bss*))
     *(.sbss*)
     *(.scommon)
 		_bss_end = .;
