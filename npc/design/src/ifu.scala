@@ -53,6 +53,6 @@ class IFU extends Module {
 
   fsm.io.self_finished := (state === State.waitR) && memIO.rvalid
 
-  io.out.bits.code := instReg
+  io.out.bits.code := Mux(memIO.rvalid, memIO.rdata, instReg)
   io.out.bits.pc   := pcReg
 }
