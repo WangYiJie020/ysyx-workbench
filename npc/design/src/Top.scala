@@ -98,9 +98,9 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   }
   val isRdAfterWr = Wire(Bool())
   def pipelineConnect[T <: Data, T2 <: Data](
-    prevOut: DecoupledIO[T],
-    thisIn:  DecoupledIO[T],
-    thisOut: DecoupledIO[T2],
+    prevOut:   DecoupledIO[T],
+    thisIn:    DecoupledIO[T],
+    thisOut:   DecoupledIO[T2],
     ignoreRAW: Boolean = false
   ) = {
     // prevOut <> thisIn
@@ -113,13 +113,17 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
       val idle, busy = Value
     }
     val stateReg = RegInit(State.idle)
-    stateReg     := MuxLookup(stateReg, State.idle)(
+    stateReg := MuxLookup(stateReg, State.idle)(
       Seq(
         State.idle -> Mux(preFire, State.busy, State.idle),
         State.busy -> Mux(thisOut.ready, State.idle, State.busy)
       )
     )
-    thisIn.valid := (stateReg === State.busy) && (!isRdAfterWr)
+    if (!ignoreRAW) {
+      thisIn.valid := (stateReg === State.busy) && (!isRdAfterWr)
+    } else {
+      thisIn.valid := (stateReg === State.busy)
+    }
   }
   def conflict(rs: UInt, rd: GPRegReqIO._WriteRX) = (rs === rd.addr) && (rd.addr =/= 0.U) && rd.en
   def conflictWithStage[T <: HasRs](info: T, gprWr: GPRegReqIO._WriteRX, valid: Bool): Bool = {
