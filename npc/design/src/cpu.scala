@@ -8,7 +8,6 @@ import chisel3.util.{Cat, Decoupled, DecoupledIO, Enum, Fill, MuxLookup}
 import chisel3.experimental.dataview._
 
 import regfile._
-import memory._
 import common_def._
 import busfsm._
 
