@@ -52,8 +52,6 @@ class IDU extends Module {
     val out = Decoupled(new DecodedInst)
   })
 
-  dontTouch(io)
-
   val fsm = Module(new OneMasterOneSlaveFSM)
   fsm.connectMaster(io.in)
   fsm.connectSlave(io.out)

@@ -235,7 +235,6 @@ class LSU extends Module {
   outWriteBackInfo.gpr.addr      := inExuWriteBackInfo.gpr.addr
   outWriteBackInfo.gpr.en        := inExuWriteBackInfo.gpr.en
   outWriteBackInfo.gpr.data      := Mux(isMemOp, loadResult, inExuWriteBackInfo.gpr.data)
-  outWriteBackInfo.pc            := inExuWriteBackInfo.pc
   outWriteBackInfo.nxt_pc        := inExuWriteBackInfo.nxt_pc
 
 }
