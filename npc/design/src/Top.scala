@@ -98,10 +98,10 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   }
   val isRdAfterWr = Wire(Bool())
   def pipelineConnect[T <: Data, T2 <: Data](
-    prevOut:   DecoupledIO[T],
-    thisIn:    DecoupledIO[T],
-    thisOut:   DecoupledIO[T2],
-    ignoreRAW: Boolean = false
+    prevOut:    DecoupledIO[T],
+    thisIn:     DecoupledIO[T],
+    thisOut:    DecoupledIO[T2],
+    isIFUtoIDU: Boolean = false
   ) = {
     // prevOut <> thisIn
     val preFire = prevOut.valid && thisIn.ready
@@ -119,7 +119,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
         State.busy -> Mux(thisOut.ready, State.idle, State.busy)
       )
     )
-    if (!ignoreRAW) {
+    if (isIFUtoIDU) {
       thisIn.valid := (stateReg === State.busy) && (!isRdAfterWr)
     } else {
       thisIn.valid := (stateReg === State.busy)
@@ -298,7 +298,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val foo = Wire(Decoupled(Bool()))
   foo       := DontCare
   foo.ready := true.B
-  pipelineConnect(lsu.io.out, wbu.io.in, foo, ignoreRAW = true)
+  pipelineConnect(lsu.io.out, wbu.io.in, foo)
 
   // wbu.io.in <> exu.io.out
   gprs.io.write <> wbu.io.gpr
