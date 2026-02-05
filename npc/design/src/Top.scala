@@ -100,7 +100,8 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   def pipelineConnect[T <: Data, T2 <: Data](
     prevOut: DecoupledIO[T],
     thisIn:  DecoupledIO[T],
-    thisOut: DecoupledIO[T2]
+    thisOut: DecoupledIO[T2],
+    ignoreRAW: Boolean = false
   ) = {
     // prevOut <> thisIn
     val preFire = prevOut.valid && thisIn.ready
@@ -293,7 +294,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val foo = Wire(Decoupled(Bool()))
   foo       := DontCare
   foo.ready := true.B
-  pipelineConnect(lsu.io.out, wbu.io.in, foo)
+  pipelineConnect(lsu.io.out, wbu.io.in, foo, ignoreRAW = true)
 
   // wbu.io.in <> exu.io.out
   gprs.io.write <> wbu.io.gpr
