@@ -120,9 +120,9 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     )
     thisIn.valid := (stateReg === State.busy) && (!isRdAfterWr)
   }
-  def conflict(rs: UInt, rd: UInt) = (rs === rd) && (rd =/= 0.U)
-  def conflictWithStage[T <: HasRs](info: T, stageRd: UInt): Bool = {
-    conflict(info.rs1, stageRd) || conflict(info.rs2, stageRd)
+  def conflict(rs: UInt, rd: GPRegReqIO._WriteRX) = (rs === rd.addr) && (rd.addr =/= 0.U) && rd.en
+  def conflictWithStage[T <: HasRs](info: T, gprWr: GPRegReqIO._WriteRX, valid: Bool): Bool = {
+    valid && (conflict(info.rs1, gprWr) || conflict(info.rs2, gprWr))
   }
 
   val io = IO(new TopIO)
@@ -269,13 +269,16 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
   isRdAfterWr := conflictWithStage(
     idu.io.out.bits.info,
-    exu.io.out.bits.exuWriteBack.gpr.addr
+    exu.io.out.bits.exuWriteBack.gpr,
+    exu.io.out.valid
   ) || conflictWithStage(
     idu.io.out.bits.info,
-    lsu.io.out.bits.gpr.addr
+    lsu.io.out.bits.gpr,
+    lsu.io.out.valid
   ) || conflictWithStage(
     idu.io.out.bits.info,
-    wbu.io.in.bits.gpr.addr
+    wbu.io.in.bits.gpr,
+    wbu.io.in.valid
   )
 
   pipelineConnect(ifu.io.out, idu.io.in, idu.io.out)
