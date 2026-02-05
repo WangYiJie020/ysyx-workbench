@@ -275,7 +275,7 @@ SSBL_TEXT void _second_boot() {
 
   if ((size_t)data_extra_size != 0) {
 		putstr(".data.extra size = ");
-		putnum_base16((uint32_t)(size_t)__data_extra_size__);
+		putnum_base16(data_extra_size);
 		putch('\n');
     LOG_STEP("copy .data.extra",
              _ssbl_memcpy(_data_extra_start, __data_extra_load_start__,data_extra_size));
