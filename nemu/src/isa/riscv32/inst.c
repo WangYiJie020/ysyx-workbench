@@ -28,8 +28,8 @@
 
 #include <itrace_pack.h>
 
-#include "encoding.out.h"
 #include "memory/paddr.h"
+#include <encoding.out.h>
 
 // We are in riscv32
 #define signed_min INT_MIN
@@ -47,7 +47,7 @@ itrace_pack_t g_itrace_pack;
 itrace_pack_t g_mtrace_pack;
 
 // generate in out.cc
-int execute_instruction(word_t instruction, word_t* pc, word_t* regs);
+int execute_instruction(word_t instruction, word_t *pc, word_t *regs);
 
 static int decode_exec(Decode *s) {
   s->dnpc = s->snpc;
@@ -59,52 +59,53 @@ static int decode_exec(Decode *s) {
   word_t rd = (inst & INSN_FIELD_RD) >> 7;
   word_t rs1 = (inst & INSN_FIELD_RS1) >> 15;
 
-#define IS_INST(name) (((inst & MASK_##name) == MATCH_##name)&&(!matched))
+#define IS_INST(name) (((inst & MASK_##name) == MATCH_##name) && (!matched))
 
-	word_t tmp = s->pc;
-	bool matched = (execute_instruction(inst, &tmp, cpu.gpr) == 0);
-	if(matched) s->dnpc = tmp;
+  word_t tmp = s->pc;
+  bool matched = (execute_instruction(inst, &tmp, cpu.gpr) == 0);
+  if (matched)
+    s->dnpc = tmp;
 
-	if(inst == 0x100f){ // fence.i
-		matched = true;
-	}
+  if (inst == 0x100f) { // fence.i
+    matched = true;
+  }
 
-	if (IS_INST(CSRRW)) {
+  if (IS_INST(CSRRW)) {
     if (rd != 0) {
       R(rd) = _csr_read(csr_imm);
     }
     word_t src1 = R(rs1);
     _csr_write(csr_imm, src1);
-		matched = true;
+    matched = true;
   }
   if (IS_INST(CSRRS)) {
     word_t old = _csr_read(csr_imm);
     R(rd) = old;
     word_t src1 = R(rs1);
     _csr_write(csr_imm, old | src1);
-		matched = true;
+    matched = true;
   }
 
   if (IS_INST(EBREAK)) {
     NEMUTRAP(s->pc, R(10)); // R(10) is $a0
-		matched = true;
+    matched = true;
   }
-	if (IS_INST(ECALL)) {
-		_csr_write(CSR_MEPC, s->pc);
-		_csr_write(CSR_MCAUSE, CAUSE_MACHINE_ECALL);
-		s->dnpc = isa_raise_intr(0x11451419, s->pc);
-		matched = true;
-	}
+  if (IS_INST(ECALL)) {
+    _csr_write(CSR_MEPC, s->pc);
+    _csr_write(CSR_MCAUSE, CAUSE_MACHINE_ECALL);
+    s->dnpc = isa_raise_intr(0x11451419, s->pc);
+    matched = true;
+  }
 
   // xRET sets the pc to the value stored in the xepc register.
-	if (IS_INST(MRET)) {
-		s->dnpc = _csr_read(CSR_MEPC);
-		matched = true;
-	}
+  if (IS_INST(MRET)) {
+    s->dnpc = _csr_read(CSR_MEPC);
+    matched = true;
+  }
 
-	if (!matched){
-		INV(s->pc);
-	}
+  if (!matched) {
+    INV(s->pc);
+  }
 
   R(0) = 0; // reset $zero to 0
 
@@ -142,9 +143,9 @@ word_t _handle_csr_rw(word_t csr, word_t src1, bool is_write) {
 
 int isa_exec_once(Decode *s) {
   s->isa.inst = inst_fetch(&s->snpc, 4);
-	if(isSoC){
-	itrace_pack_add(g_itrace_pack, s->pc);
-	}
-	// printf("%08x\n", s->pc);
+  if (isSoC) {
+    itrace_pack_add(g_itrace_pack, s->pc);
+  }
+  // printf("%08x\n", s->pc);
   return decode_exec(s);
 }
