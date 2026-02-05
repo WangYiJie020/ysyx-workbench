@@ -119,6 +119,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val ifu = Module(new IFU)
   val idu = Module(new IDU)
   val exu = Module(new EXU)
+  val lsu = Module(new LSU)
   val wbu = Module(new WBU)
 
   val isSoC = sys.env.getOrElse("ARCH", "") == "riscv32e-ysyxsoc"
@@ -142,7 +143,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
   val is_ebreak = (ifu.io.out.valid) && (ifu.io.out.bits.code === "h00100073".U)
 
-  val nxt_pc       = exu.io.out.bits.nxt_pc
+  val nxt_pc       = lsu.io.out.bits.nxt_pc
   val nxt_pc_valid = wbu.io.done
 
   val halted = RegInit(false.B)
@@ -166,7 +167,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   dontTouch(exu.io)
 
   val memArbiter = Module(new EXUIFU_MemVisitArbiter)
-  AXI4IO.connectMasterSlave(exu.io.mem, memArbiter.io.exu)
+  AXI4IO.connectMasterSlave(lsu.io.mem, memArbiter.io.exu)
 
   val icache = Module(new ICache)
   icache.io.flush := idu.io.out.valid && idu.io.out.bits.info.typ === InstType.fencei
@@ -252,6 +253,8 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   // idu.io.out <> exu.io.in
   pipelineConnect(idu.io.out, exu.io.in, exu.io.out)
 
+  pipelineConnect(exu.io.out, lsu.io.in, lsu.io.out)
+
   exu.io.rvec <> gprs.io.read
   exu.io.csr_rvec <> csrs.io.read
 
@@ -259,7 +262,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
   val foo = Wire(Decoupled(UInt(32.W)))
   foo := DontCare
-  pipelineConnect(exu.io.out, wbu.io.in, foo)
+  pipelineConnect(lsu.io.out, wbu.io.in, foo)
   // wbu.io.in <> exu.io.out
   gprs.io.write <> wbu.io.gpr
   csrs.io.write <> wbu.io.csr
