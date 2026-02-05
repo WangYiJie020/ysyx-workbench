@@ -286,7 +286,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     wbu.io.in.valid
   )
 
-  pipelineConnect(ifu.io.out, idu.io.in, idu.io.out)
+  pipelineConnect(ifu.io.out, idu.io.in, idu.io.out, isIFUtoIDU = true)
   pipelineConnect(idu.io.out, exu.io.in, exu.io.out)
   pipelineConnect(exu.io.out, lsu.io.in, lsu.io.out)
 
