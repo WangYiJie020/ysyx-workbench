@@ -2,6 +2,8 @@
 #include <klib-macros.h>
 #include <stdio.h>
 
+#include <kasan_init.h>
+
 extern char _heap_start;
 int main(const char *args);
 
@@ -24,14 +26,7 @@ void halt(int code) {
 }
 
 void _trm_init() {
-
-  void initialize_heap();
-  void initialize_kasan();
-  void call_global_ctors();
-  // Needed to invoke KASan globals instrumentation.
-  call_global_ctors();
-  initialize_heap();
-  initialize_kasan();
+	kasan_init();
 
   uint32_t mvendor_id, marchid;
   asm volatile("csrr %0, mvendorid" : "=r"(mvendor_id));
