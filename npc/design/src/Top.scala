@@ -120,7 +120,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     )
     thisIn.valid := (stateReg === State.busy) && (!isRdAfterWr)
   }
-  def conflict(rs: UInt, rd: UInt) = (rs === rd)
+  def conflict(rs: UInt, rd: UInt) = (rs === rd) && (rd =/= 0.U)
   def conflictWithStage[T <: HasRs](info: T, stageRd: UInt): Bool = {
     conflict(info.rs1, stageRd) || conflict(info.rs2, stageRd)
   }
