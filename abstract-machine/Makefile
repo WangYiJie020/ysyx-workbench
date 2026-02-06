@@ -100,12 +100,12 @@ CXXFLAGS += -Wno-error=tautological-constant-out-of-range-compare
 
 CFLAGS	 += -ffreestanding
 
-# CFLAGS += -Wno-error=unknown-warning-option
-# CFLAGS += -Wno-error=macro-redefined
-# CFLAGS += -Wno-error=pointer-bool-conversion
-# CFLAGS += -Wno-error=tautological-pointer-compare
-#
-# CFLAGS	 += -ffreestanding
+CFLAGS += -Wno-error=unknown-warning-option
+CFLAGS += -Wno-error=macro-redefined
+CFLAGS += -Wno-error=pointer-bool-conversion
+CFLAGS += -Wno-error=tautological-pointer-compare
+
+CFLAGS	 += -ffreestanding
 
 ASFLAGS  += -MMD $(INCFLAGS)
 LDFLAGS  += -z noexecstack $(addprefix -T, $(LDSCRIPTS))
