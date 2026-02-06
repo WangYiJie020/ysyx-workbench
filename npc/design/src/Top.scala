@@ -153,15 +153,6 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     pc
   )
 
-  when(wbu.io.done) {
-    RawClockedVoidFunctionCall("pc_upd")(
-      clock,
-      wbu.io.done,
-      wbu.io.in.bits.pc,
-      wbu.io.in.bits.nxt_pc
-    )
-  }
-
   dontTouch(exu.io)
 
   val memArbiter = Module(new EXUIFU_MemVisitArbiter)

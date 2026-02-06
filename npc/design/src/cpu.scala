@@ -49,6 +49,15 @@ class WBU extends Module {
     halted := true.B
   }
 
+  when(valid && !halted) {
+    RawClockedVoidFunctionCall("pc_upd")(
+      clock,
+      valid && !halted,
+      wbinfo.pc,
+      wbinfo.nxt_pc
+    )
+  }
+
   io.gpr.en   := wbinfo.gpr.en && valid
   io.gpr.addr := wbinfo.gpr.addr
   io.gpr.data := wbinfo.gpr.data
