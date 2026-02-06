@@ -39,7 +39,8 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val isBranchGuessWrong  = Wire(Bool())
   val curCorrectJmpTarget = Wire(UInt(32.W))
 
-  val isIDUWaitEXU = RegInit(false.B)
+  val isIDUWaitEXUReg = RegInit(false.B)
+  val isIDUWaitEXU = Wire(Bool())
   val isFlushIDU = RegInit(false.B)
 
   def pipelineConnect[T <: Data, T2 <: Data](
@@ -265,10 +266,11 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   dontTouch(isRdAfterWr)
 
   when(isRdAfterWr) {
-    isIDUWaitEXU := true.B
+    isIDUWaitEXUReg := true.B
   }.elsewhen(wbu.io.done) {
-    isIDUWaitEXU := false.B
+    isIDUWaitEXUReg := false.B
   }
+  isIDUWaitEXU := isIDUWaitEXUReg || isRdAfterWr
 
   pipelineConnect(ifu.io.out, idu.io.in, idu.io.out, isIFUtoIDU = true)
   pipelineConnect(idu.io.out, exu.io.in, exu.io.out, isIDUtoEXU = true)
