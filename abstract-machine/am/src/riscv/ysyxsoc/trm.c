@@ -282,7 +282,7 @@ SSBL_TEXT void _second_boot() {
     putch('\n');
     LOG_STEP("copy .data.extra",
              _ssbl_memcpy(_data_extra_start, __data_extra_load_start__,
-                          DATA_EXTRA_SIZE));
+                          (size_t)__data_extra_size__));
   }
 
   // NOTE: putnum func is in the sdram area
