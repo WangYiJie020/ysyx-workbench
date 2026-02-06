@@ -35,10 +35,11 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     dontTouch(m.io)
     m
   }
-  val isRdAfterWr = Wire(Bool())
+  // val isRdAfterWr = Wire(Bool())
   val isBranchGuessWrong  = Wire(Bool())
   val curCorrectJmpTarget = Wire(UInt(32.W))
 
+  val isIDUWaitEXU = RegInit(false.B)
   val isFlushIDU = RegInit(false.B)
 
   def pipelineConnect[T <: Data, T2 <: Data](
@@ -62,7 +63,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     isThisBusy := Mux(isThisBusy, !(thisOut.fire), prevOut.fire)
 
     if (isIDUtoEXU) {
-      thisIn.valid := isThisBusy && (!isRdAfterWr)
+      thisIn.valid := isThisBusy && (!isIDUWaitEXU)
     } else if (isIFUtoIDU) {
       thisIn.valid := isThisBusy && (!isFlushIDU)
     } else {
@@ -259,8 +260,15 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   dontTouch(isConflictWithLSU)
   dontTouch(isConflictWithWBU)
 
+  val isRdAfterWr = Wire(Bool())
   isRdAfterWr := isConflictWithEXU || isConflictWithLSU || isConflictWithWBU
   dontTouch(isRdAfterWr)
+
+  when(isRdAfterWr) {
+    isIDUWaitEXU := true.B
+  }.elsewhen(wbu.io.done) {
+    isIDUWaitEXU := false.B
+  }
 
   pipelineConnect(ifu.io.out, idu.io.in, idu.io.out, isIFUtoIDU = true)
   pipelineConnect(idu.io.out, exu.io.in, exu.io.out, isIDUtoEXU = true)
