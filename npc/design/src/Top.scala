@@ -52,7 +52,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     }
 
     prevOut.ready := thisInReady
-    thisIn.bits := RegEnable(prevOut.bits, prevOut.fire)
+    thisIn.bits   := RegEnable(prevOut.bits, prevOut.fire)
 
     val isThisBusy = RegInit(false.B)
     isThisBusy := Mux(isThisBusy, !(thisOut.fire), prevOut.fire)
@@ -107,9 +107,6 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   isBranchGuessWrong := exu.io.jmpHappen
   dontTouch(isBranchGuessWrong)
 
-  val nxt_pc       = wbu.io.in.bits.nxt_pc
-  val nxt_pc_valid = wbu.io.done
-
   val halted = RegInit(false.B)
 
   when(is_ebreak && !halted) {
@@ -118,14 +115,18 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   }
 
   // pc := Mux(wbu.io.done, nxt_pc, pc)
-  pc := Mux(ifu.io.pc.ready, pc + 4.U, pc)
+  pc := Mux(
+    ifu.io.pc.ready,
+    Mux(isBranchGuessWrong, exu.io.out.bits.exuWriteBack.nxt_pc, pc + 4.U),
+    pc
+  )
 
-  when(nxt_pc_valid) {
+  when(wbu.io.done) {
     RawClockedVoidFunctionCall("pc_upd")(
       clock,
-      nxt_pc_valid,
+      wbu.io.done,
       wbu.io.in.bits.pc,
-      nxt_pc
+      wbu.io.in.bits.nxt_pc
     )
   }
 
