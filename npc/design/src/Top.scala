@@ -132,7 +132,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val pcUpdateState = RegInit(PCUpdateState.plus4)
   pcUpdateState := Mux(
     pcUpdateState === PCUpdateState.plus4,
-    Mux(isBranchGuessWrong, PCUpdateState.fromEXU, PCUpdateState.plus4),
+    Mux(isBranchGuessWrong && exu.io.out.valid, PCUpdateState.fromEXU, PCUpdateState.plus4),
     Mux(isIFUFetchedCorrectJmpTarget, PCUpdateState.plus4, PCUpdateState.fromEXU)
   )
   dontTouch(pcUpdateState)
