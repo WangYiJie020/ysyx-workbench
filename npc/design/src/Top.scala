@@ -37,6 +37,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   }
   val isRdAfterWr = Wire(Bool())
   val isBranchGuessWrong = Wire(Bool())
+  isBranchGuessWrong := false.B
 
   def pipelineConnect[T <: Data, T2 <: Data](
     prevOut:    DecoupledIO[T],
