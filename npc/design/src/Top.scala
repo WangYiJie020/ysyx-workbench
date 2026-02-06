@@ -136,6 +136,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     isFlushIDUReg := false.B
   }
   isFlushIDU := isFlushIDUReg || isBranchGuessWrong
+  dontTouch(isFlushIDU)
 
   val halted = RegInit(false.B)
 
