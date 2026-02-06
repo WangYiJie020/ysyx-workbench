@@ -99,7 +99,7 @@ CXXFLAGS += -Wno-error=non-c-typedef-for-linkage
 CXXFLAGS += -Wno-error=tautological-constant-out-of-range-compare
 
 CFLAGS	 += -ffreestanding
-CFLAGS += -fsanitize=kernel-address
+CFLAGS += -fsanitize=address
 
 # CFLAGS += -Wno-error=unknown-warning-option
 # CFLAGS += -Wno-error=macro-redefined
