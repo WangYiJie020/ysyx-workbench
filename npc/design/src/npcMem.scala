@@ -76,7 +76,7 @@ class AXI4MemUnit extends Module {
     Seq(
       RState.idle     -> Mux(sio.arvalid, RState.waitMem, RState.idle),
       RState.waitMem  -> Mux(curReadCount === arLen, RState.sendData, RState.waitMem),
-      RState.sendData -> Mux(curReadCount === 0.U, RState.idle, RState.sendData)
+      RState.sendData -> Mux(curReadCount === 0.U, Mux(sio.arvalid,RState.waitMem,RState.idle), RState.sendData)
     )
   )
 
