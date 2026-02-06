@@ -127,8 +127,8 @@ extern char _bss_extra_start[];
 extern char _bss_extra_end[];
 #define BSS_EXTRA_SIZE ((size_t)(_bss_extra_end - _bss_extra_start))
 
-__attribute__ ((weak))
-extern char __data_extra_size__[];
+// __attribute__ ((weak))
+extern char __data_extra_size__[] __attribute__ ((weak));
 
 extern char _ssbl_start[], _ssbl_end[];
 extern char __ssbl_load_start__[];
