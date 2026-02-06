@@ -41,7 +41,8 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
   val isIDUWaitEXUReg = RegInit(false.B)
   val isIDUWaitEXU = Wire(Bool())
-  val isFlushIDU = RegInit(false.B)
+  val isFlushIDUReg = RegInit(false.B)
+  val isFlushIDU = Wire(Bool())
 
   def pipelineConnect[T <: Data, T2 <: Data](
     prevOut:    DecoupledIO[T],
@@ -130,10 +131,11 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   isIDUMeetCorrectJmpTarget := ifu.io.out.valid && (ifu.io.out.bits.pc === curCorrectJmpTarget)
 
   when(isBranchGuessWrong) {
-    isFlushIDU := true.B
+    isFlushIDUReg := true.B
   }.elsewhen(isIDUMeetCorrectJmpTarget) {
-    isFlushIDU := false.B
+    isFlushIDUReg := false.B
   }
+  isFlushIDU := isFlushIDUReg || isBranchGuessWrong
 
   val halted = RegInit(false.B)
 
