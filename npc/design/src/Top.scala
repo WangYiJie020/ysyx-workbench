@@ -37,7 +37,6 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   }
   val isRdAfterWr = Wire(Bool())
   val isBranchGuessWrong = Wire(Bool())
-  isBranchGuessWrong := false.B
 
   def pipelineConnect[T <: Data, T2 <: Data](
     prevOut:    DecoupledIO[T],
@@ -55,16 +54,6 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     prevOut.ready := thisInReady
     thisIn.bits := RegEnable(prevOut.bits, prevOut.fire)
 
-    // object State extends ChiselEnum {
-    //   val idle, busy = Value
-    // }
-    // val stateReg = RegInit(State.idle)
-    // stateReg := MuxLookup(stateReg, State.idle)(
-    //   Seq(
-    //     State.idle -> Mux(prevOut.fire, State.busy, State.idle),
-    //     State.busy -> Mux(thisOut.fire || isBranchGuessWrong, State.idle, State.busy)
-    //   )
-    // )
     val isThisBusy = RegInit(false.B)
     isThisBusy := Mux(isThisBusy, !(thisOut.fire), prevOut.fire)
 
@@ -114,6 +103,9 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val pc = RegInit(INIT_PC)
 
   val is_ebreak = (ifu.io.out.valid) && (ifu.io.out.bits.code === "h00100073".U)
+
+  isBranchGuessWrong := exu.io.jmpHappen
+  dontTouch(isBranchGuessWrong)
 
   val nxt_pc       = wbu.io.in.bits.nxt_pc
   val nxt_pc_valid = wbu.io.done
