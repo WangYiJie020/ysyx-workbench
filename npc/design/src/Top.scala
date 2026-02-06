@@ -53,7 +53,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   ) = {
     // prevOut <> thisIn
     val thisInReady = if (isIDUtoEXU) {
-      thisIn.ready && (!isIDUWaitEXU)
+      thisIn.ready && (!isIDUWaitEXU) && (!isFlushIDU)
     } else {
       thisIn.ready
     }
