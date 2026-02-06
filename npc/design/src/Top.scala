@@ -150,7 +150,8 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   // pc := Mux(wbu.io.done, nxt_pc, pc)
   pc := Mux(
     ifu.io.pc.ready,
-    Mux(isBranchGuessWrong, curCorrectJmpTarget, pc + 4.U),
+    // Sometimes although jump target is near current pc and IFU just meets it
+    Mux(isBranchGuessWrong && (!isIFUMeetCorrectJmpTarget), curCorrectJmpTarget, pc + 4.U),
     pc
   )
 
