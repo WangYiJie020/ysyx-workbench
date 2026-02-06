@@ -117,8 +117,6 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
   val pc = RegInit(INIT_PC)
 
-  val is_ebreak = (ifu.io.out.valid) && (ifu.io.out.bits.code === "h00100073".U)
-
   val isBranchGuessWrongReg     = RegInit(false.B)
   val isIFUMeetCorrectJmpTarget = Wire(Bool())
   isBranchGuessWrong := isBranchGuessWrongReg
@@ -147,13 +145,6 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   }
   isFlushIDU := isFlushIDUReg || isBranchGuessWrong
   dontTouch(isFlushIDU)
-
-  val halted = RegInit(false.B)
-
-  when(is_ebreak && !halted) {
-    RawClockedVoidFunctionCall("raise_ebreak")(clock, is_ebreak)
-    halted := true.B
-  }
 
   // pc := Mux(wbu.io.done, nxt_pc, pc)
   pc := Mux(

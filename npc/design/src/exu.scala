@@ -180,6 +180,7 @@ class EXU extends Module {
 
   writeBackInfo.pc     := dinst.pc
   writeBackInfo.nxt_pc := nxt_pc
+  writeBackInfo.is_ebreak := (dinst.code === "h00100073".U)
 
   // TODO: handle exception
   io.jmpHappen := takeBranch || isTypJALR || isTypJAL
