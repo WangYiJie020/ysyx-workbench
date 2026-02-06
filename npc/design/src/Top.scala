@@ -36,7 +36,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     m
   }
   val isRdAfterWr = Wire(Bool())
-  val isRdAfterWrReg = Reg(Bool())
+  val isBranchGuessWrong = Wire(Bool())
 
   def pipelineConnect[T <: Data, T2 <: Data](
     prevOut:    DecoupledIO[T],
@@ -54,20 +54,23 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     prevOut.ready := thisInReady
     thisIn.bits := RegEnable(prevOut.bits, prevOut.fire)
 
-    object State extends ChiselEnum {
-      val idle, busy = Value
-    }
-    val stateReg = RegInit(State.idle)
-    stateReg := MuxLookup(stateReg, State.idle)(
-      Seq(
-        State.idle -> Mux(prevOut.fire, State.busy, State.idle),
-        State.busy -> Mux(thisOut.fire, State.idle, State.busy)
-      )
-    )
+    // object State extends ChiselEnum {
+    //   val idle, busy = Value
+    // }
+    // val stateReg = RegInit(State.idle)
+    // stateReg := MuxLookup(stateReg, State.idle)(
+    //   Seq(
+    //     State.idle -> Mux(prevOut.fire, State.busy, State.idle),
+    //     State.busy -> Mux(thisOut.fire || isBranchGuessWrong, State.idle, State.busy)
+    //   )
+    // )
+    val isThisBusy = RegInit(false.B)
+    isThisBusy := Mux(isThisBusy, !(thisOut.fire), prevOut.fire)
+
     if (isIDUtoEXU) {
-      thisIn.valid := (stateReg === State.busy) && (!isRdAfterWr)
+      thisIn.valid := isThisBusy && (!isRdAfterWr)
     } else {
-      thisIn.valid := (stateReg === State.busy)
+      thisIn.valid := isThisBusy
     }
   }
   def conflict(rs: UInt, rd: GPRegReqIO._WriteRX) = (rs === rd.addr) && (rd.addr =/= 0.U) && rd.en
@@ -89,12 +92,6 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val exu = Module(new EXU)
   val lsu = Module(new LSU)
   val wbu = Module(new WBU)
-
-  when(isRdAfterWr) {
-    isRdAfterWrReg := true.B
-  }.elsewhen(wbu.io.done) {
-    isRdAfterWrReg := false.B
-  }
 
   val isSoC = sys.env.getOrElse("ARCH", "") == "riscv32e-ysyxsoc"
 
