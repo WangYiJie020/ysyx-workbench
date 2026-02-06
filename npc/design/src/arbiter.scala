@@ -1,6 +1,7 @@
 package cpu
 
 import chisel3._
+import chisel3.util._
 import axi4._
 
 // make exu and ifu access memory
@@ -12,25 +13,32 @@ class EXUIFU_MemVisitArbiter extends Module {
     val out = AXI4IO.Master
   })
 
-  // Simple arbiter, since IFU and EXU won't access memory at the same time
-
-  val isExuReg = Reg(Bool())
-  val isIfuReg = Reg(Bool())
+  // Simple arbiter
+  //
+  // exu has higher priority than ifu
 
   val ifuIO = io.ifu
   val exuIO = io.exu
   val outIO = io.out
 
-  val isExu = (isExuReg && (!ifuIO.arvalid)) || (exuIO.arvalid)
-  val isIfu = (isIfuReg && (!exuIO.arvalid)) || (ifuIO.arvalid)
 
-  when(exuIO.arvalid) {
-    isExuReg := true.B
-    isIfuReg := false.B
-  }.elsewhen(ifuIO.arvalid) {
-    isExuReg := false.B
-    isIfuReg := true.B
+  object State extends ChiselEnum {
+    val idle, exuAccess, ifuAccess = Value
   }
+
+  val txnDone = outIO.rvalid && outIO.rready && outIO.rlast
+
+  val state = RegInit(State.idle)
+  state := MuxLookup(state, State.idle)(
+    Seq(
+      State.idle      -> Mux(exuIO.arvalid, State.exuAccess, Mux(ifuIO.arvalid, State.ifuAccess, State.idle)),
+      State.exuAccess -> Mux(txnDone, Mux(ifuIO.arvalid, State.ifuAccess, State.idle), State.exuAccess),
+      State.ifuAccess -> Mux(txnDone, Mux(exuIO.arvalid, State.exuAccess, State.idle), State.ifuAccess)
+    )
+  )
+
+  val isExu = (state === State.exuAccess) || ((state === State.idle) && exuIO.arvalid)
+  val isIfu = (state === State.ifuAccess) || ((state === State.idle) && !exuIO.arvalid && ifuIO.arvalid)
 
   // AR channel
   outIO.arvalid := exuIO.arvalid || ifuIO.arvalid
