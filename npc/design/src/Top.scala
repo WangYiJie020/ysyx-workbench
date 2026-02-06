@@ -152,7 +152,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   // pc := Mux(wbu.io.done, nxt_pc, pc)
   pc := Mux(
     ifu.io.pc.ready,
-    Mux(isBranchGuessWrong, exu.io.out.bits.exuWriteBack.nxt_pc, pc + 4.U),
+    Mux(isBranchGuessWrong, curCorrectJmpTarget, pc + 4.U),
     pc
   )
 
