@@ -42,7 +42,8 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     prevOut:    DecoupledIO[T],
     thisIn:     DecoupledIO[T],
     thisOut:    DecoupledIO[T2],
-    isIDUtoEXU: Boolean = false
+    isIDUtoEXU: Boolean = false,
+    isIFUtoIDU: Boolean = false
   ) = {
     // prevOut <> thisIn
     val thisInReady = if (isIDUtoEXU) {
@@ -59,6 +60,8 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
     if (isIDUtoEXU) {
       thisIn.valid := isThisBusy && (!isRdAfterWr)
+    } else if (isIFUtoIDU) {
+      thisIn.valid := isThisBusy && (!isBranchGuessWrong)
     } else {
       thisIn.valid := isThisBusy
     }
