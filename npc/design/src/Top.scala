@@ -111,7 +111,14 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
   val is_ebreak = (ifu.io.out.valid) && (ifu.io.out.bits.code === "h00100073".U)
 
-  isBranchGuessWrong  := exu.io.jmpHappen
+  val isBranchGuessWrongReg = RegInit(false.B)
+  isBranchGuessWrong  := isBranchGuessWrongReg
+  when(exu.io.out.valid) {
+    isBranchGuessWrongReg := exu.io.jmpHappen
+  }.elsewhen(isIFUFetchedCorrectJmpTarget) {
+    isBranchGuessWrongReg := false.B
+  }
+
   dontTouch(isBranchGuessWrong)
   curCorrectJmpTarget := exu.io.out.bits.exuWriteBack.nxt_pc
 
@@ -126,21 +133,10 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     halted := true.B
   }
 
-  object PCUpdateState extends ChiselEnum {
-    val plus4, fromEXU = Value
-  }
-  val pcUpdateState = RegInit(PCUpdateState.plus4)
-  pcUpdateState := Mux(
-    pcUpdateState === PCUpdateState.plus4,
-    Mux(isBranchGuessWrong && exu.io.out.valid, PCUpdateState.fromEXU, PCUpdateState.plus4),
-    Mux(isIFUFetchedCorrectJmpTarget, PCUpdateState.plus4, PCUpdateState.fromEXU)
-  )
-  dontTouch(pcUpdateState)
-
   // pc := Mux(wbu.io.done, nxt_pc, pc)
   pc := Mux(
     ifu.io.pc.ready,
-    Mux((!isBranchGuessWrong) && (pcUpdateState === PCUpdateState.plus4), pc+4.U,exu.io.out.bits.exuWriteBack.nxt_pc),
+    Mux(isBranchGuessWrong, exu.io.out.bits.exuWriteBack.nxt_pc, pc + 4.U),
     pc
   )
 
