@@ -114,7 +114,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   dontTouch(isBranchGuessWrong)
   curCorrectJmpTarget := exu.io.out.bits.exuWriteBack.nxt_pc
 
-  isCurIDUMeetCorrectJmpTarget := (idu.io.in.bits.pc === curCorrectJmpTarget) && idu.io.in.valid
+  isCurIDUMeetCorrectJmpTarget := (ifu.io.out.bits.pc === curCorrectJmpTarget) && ifu.io.out.valid
   dontTouch(isCurIDUMeetCorrectJmpTarget)
 
   val halted = RegInit(false.B)
