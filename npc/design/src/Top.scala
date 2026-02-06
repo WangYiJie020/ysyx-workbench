@@ -265,10 +265,10 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   isRdAfterWr := isConflictWithEXU || isConflictWithLSU || isConflictWithWBU
   dontTouch(isRdAfterWr)
 
-  when(wbu.io.done){
-    isIDUWaitEXUReg := false.B
-  }.elsewhen(isRdAfterWr){
+  when(isRdAfterWr) {
     isIDUWaitEXUReg := true.B
+  }.elsewhen(wbu.io.done) {
+    isIDUWaitEXUReg := false.B
   }
   isIDUWaitEXU := isIDUWaitEXUReg || isRdAfterWr
   dontTouch(isIDUWaitEXU)
