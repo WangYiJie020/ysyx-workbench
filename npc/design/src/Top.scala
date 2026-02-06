@@ -135,6 +135,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
   val isIDUMeetCorrectJmpTarget = Wire(Bool())
   isIDUMeetCorrectJmpTarget := ifu.io.out.valid && (ifu.io.out.bits.pc === curCorrectJmpTarget)
+  dontTouch(isIFUMeetCorrectJmpTarget)
   dontTouch(isIDUMeetCorrectJmpTarget)
   dontTouch(curCorrectJmpTarget)
 
