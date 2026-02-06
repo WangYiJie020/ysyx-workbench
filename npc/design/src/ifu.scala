@@ -49,7 +49,7 @@ class IFU extends Module {
   when(memIO.rvalid) {
     instReg := memIO.rdata
   }
-  memIO.rready := true.B
+  memIO.rready := (state === State.waitR) && io.out.ready
 
   fsm.io.self_finished := (state === State.waitR) && memIO.rvalid
 
