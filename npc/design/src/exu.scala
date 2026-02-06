@@ -180,6 +180,7 @@ class EXU extends Module {
 
   // nxt_pc
 
+  writeBackInfo.pc := dinst.pc
   writeBackInfo.nxt_pc := nxt_pc
   when(is_ecall || is_mret) {
     nxt_pc := csr_rdata

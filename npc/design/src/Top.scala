@@ -17,7 +17,7 @@ import xbar._
 import npcMem._
 
 import icache._
-import common_def.InstType
+import common_def.{HasRs, InstType}
 
 class TopIO extends Bundle {
   val interrupt = Input(Bool())
@@ -96,15 +96,44 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     dontTouch(m.io)
     m
   }
+  val isRdAfterWr = Wire(Bool())
+  val isRdAfterWrReg = Reg(Bool())
+
   def pipelineConnect[T <: Data, T2 <: Data](
-    prevOut: DecoupledIO[T],
-    thisIn:  DecoupledIO[T],
-    thisOut: DecoupledIO[T2]
+    prevOut:    DecoupledIO[T],
+    thisIn:     DecoupledIO[T],
+    thisOut:    DecoupledIO[T2],
+    isIDUtoEXU: Boolean = false
   ) = {
-    prevOut <> thisIn
-    // prevOut.ready := thisIn.ready
-    // thisIn.bits   := RegEnable(prevOut.bits, prevOut.valid && thisIn.ready)
-    // thisIn.valid  := ???
+    // prevOut <> thisIn
+    val thisInReady = if (isIDUtoEXU) {
+      thisIn.ready && (!isRdAfterWr)
+    } else {
+      thisIn.ready
+    }
+
+    prevOut.ready := thisInReady
+    thisIn.bits := RegEnable(prevOut.bits, prevOut.fire)
+
+    object State extends ChiselEnum {
+      val idle, busy = Value
+    }
+    val stateReg = RegInit(State.idle)
+    stateReg := MuxLookup(stateReg, State.idle)(
+      Seq(
+        State.idle -> Mux(prevOut.fire, State.busy, State.idle),
+        State.busy -> Mux(thisOut.fire, State.idle, State.busy)
+      )
+    )
+    if (isIDUtoEXU) {
+      thisIn.valid := (stateReg === State.busy) && (!isRdAfterWr)
+    } else {
+      thisIn.valid := (stateReg === State.busy)
+    }
+  }
+  def conflict(rs: UInt, rd: GPRegReqIO._WriteRX) = (rs === rd.addr) && (rd.addr =/= 0.U) && rd.en
+  def conflictWithStage[T <: HasRs](info: T, gprWr: GPRegReqIO._WriteRX, valid: Bool) = {
+    WireDefault(valid && (conflict(info.rs1, gprWr) || conflict(info.rs2, gprWr)))
   }
 
   val io = IO(new TopIO)
@@ -121,6 +150,12 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val exu = Module(new EXU)
   val lsu = Module(new LSU)
   val wbu = Module(new WBU)
+
+  when(isRdAfterWr) {
+    isRdAfterWrReg := true.B
+  }.elsewhen(wbu.io.done) {
+    isRdAfterWrReg := false.B
+  }
 
   val isSoC = sys.env.getOrElse("ARCH", "") == "riscv32e-ysyxsoc"
 
@@ -143,7 +178,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
   val is_ebreak = (ifu.io.out.valid) && (ifu.io.out.bits.code === "h00100073".U)
 
-  val nxt_pc       = lsu.io.out.bits.nxt_pc
+  val nxt_pc       = wbu.io.in.bits.nxt_pc
   val nxt_pc_valid = wbu.io.done
 
   val halted = RegInit(false.B)
@@ -153,13 +188,14 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     halted := true.B
   }
 
-  pc := Mux(wbu.io.done, nxt_pc, pc)
+  // pc := Mux(wbu.io.done, nxt_pc, pc)
+  pc := Mux(ifu.io.pc.ready, pc + 4.U, pc)
 
   when(nxt_pc_valid) {
     RawClockedVoidFunctionCall("pc_upd")(
       clock,
       nxt_pc_valid,
-      pc,
+      wbu.io.in.bits.pc,
       nxt_pc
     )
   }
@@ -248,11 +284,30 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   ifu.io.pc.bits  := pc
   ifu.io.pc.valid := true.B
 
-  // ifu.io.out <> idu.io.in
-  pipelineConnect(ifu.io.out, idu.io.in, idu.io.out)
-  // idu.io.out <> exu.io.in
-  pipelineConnect(idu.io.out, exu.io.in, exu.io.out)
+  val isConflictWithEXU = conflictWithStage(
+    idu.io.out.bits.info,
+    exu.io.out.bits.exuWriteBack.gpr,
+    exu.io.out.valid
+  )
+  val isConflictWithLSU = conflictWithStage(
+    idu.io.out.bits.info,
+    lsu.io.out.bits.gpr,
+    lsu.io.out.valid
+  )
+  val isConflictWithWBU = conflictWithStage(
+    idu.io.out.bits.info,
+    wbu.io.in.bits.gpr,
+    wbu.io.in.valid
+  )
+  dontTouch(isConflictWithEXU)
+  dontTouch(isConflictWithLSU)
+  dontTouch(isConflictWithWBU)
 
+  isRdAfterWr := isConflictWithEXU || isConflictWithLSU || isConflictWithWBU
+  dontTouch(isRdAfterWr)
+
+  pipelineConnect(ifu.io.out, idu.io.in, idu.io.out)
+  pipelineConnect(idu.io.out, exu.io.in, exu.io.out, isIDUtoEXU = true)
   pipelineConnect(exu.io.out, lsu.io.in, lsu.io.out)
 
   exu.io.rvec <> gprs.io.read
@@ -260,9 +315,12 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
   // Write back
 
-  val foo = Wire(Decoupled(UInt(32.W)))
-  foo := DontCare
+  val foo = Wire(Decoupled(Bool()))
+  foo       := DontCare
+  foo.ready := true.B
+  foo.valid := true.B
   pipelineConnect(lsu.io.out, wbu.io.in, foo)
+
   // wbu.io.in <> exu.io.out
   gprs.io.write <> wbu.io.gpr
   csrs.io.write <> wbu.io.csr
