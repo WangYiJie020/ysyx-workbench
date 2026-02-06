@@ -271,6 +271,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     isIDUWaitEXUReg := false.B
   }
   isIDUWaitEXU := isIDUWaitEXUReg || isRdAfterWr
+  dontTouch(isIDUWaitEXU)
 
   pipelineConnect(ifu.io.out, idu.io.in, idu.io.out, isIFUtoIDU = true)
   pipelineConnect(idu.io.out, exu.io.in, exu.io.out, isIDUtoEXU = true)
