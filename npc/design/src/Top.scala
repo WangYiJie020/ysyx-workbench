@@ -40,7 +40,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val curCorrectJmpTarget = Wire(UInt(32.W))
 
   val isCurIDUMeetCorrectJmpTarget = Wire(Bool())
-  val isIFUFetchedCorrectJmpTarget = Wire(Bool())
+  val isIFUMeetCorrectJmpTarget = Wire(Bool())
 
   def pipelineConnect[T <: Data, T2 <: Data](
     prevOut:    DecoupledIO[T],
@@ -115,15 +115,15 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   isBranchGuessWrong  := isBranchGuessWrongReg
   when(exu.io.out.valid) {
     isBranchGuessWrongReg := exu.io.jmpHappen
-  }.elsewhen(isIFUFetchedCorrectJmpTarget) {
+  }.elsewhen(isIFUMeetCorrectJmpTarget) {
     isBranchGuessWrongReg := false.B
   }
 
   dontTouch(isBranchGuessWrong)
   curCorrectJmpTarget := exu.io.out.bits.exuWriteBack.nxt_pc
 
-  isIFUFetchedCorrectJmpTarget := (ifu.io.out.bits.pc === curCorrectJmpTarget) && ifu.io.out.valid
-  isCurIDUMeetCorrectJmpTarget := isIFUFetchedCorrectJmpTarget
+  isIFUMeetCorrectJmpTarget := ifu.io.pc.valid && (ifu.io.pc.bits === curCorrectJmpTarget)
+  isCurIDUMeetCorrectJmpTarget := isIFUMeetCorrectJmpTarget
   dontTouch(isCurIDUMeetCorrectJmpTarget)
 
   val halted = RegInit(false.B)
