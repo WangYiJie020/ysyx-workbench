@@ -49,10 +49,10 @@ class WBU extends Module {
     halted := true.B
   }
 
-  when(valid && !halted) {
+  when(valid && (!is_ebreak)){
     RawClockedVoidFunctionCall("pc_upd")(
       clock,
-      valid && !halted,
+      valid && !is_ebreak,
       wbinfo.pc,
       wbinfo.nxt_pc
     )
