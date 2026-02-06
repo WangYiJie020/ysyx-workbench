@@ -68,6 +68,7 @@ class IDU extends Module {
   iinfo_dec.io.opcode                   := io.in.bits.code(6, 0)
   res.viewAsSupertype(new InstMetaInfo) := iinfo_dec.io.out
 
+  // TODO: handle invalid instruction
   fsm.io.self_finished := true.B
 
   res.rd  := inst(11, 7)
