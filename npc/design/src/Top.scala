@@ -40,6 +40,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val curCorrectJmpTarget = Wire(UInt(32.W))
 
   val isCurIDUMeetCorrectJmpTarget = Wire(Bool())
+  val isIFUFetchedCorrectJmpTarget = Wire(Bool())
 
   def pipelineConnect[T <: Data, T2 <: Data](
     prevOut:    DecoupledIO[T],
@@ -114,7 +115,8 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   dontTouch(isBranchGuessWrong)
   curCorrectJmpTarget := exu.io.out.bits.exuWriteBack.nxt_pc
 
-  isCurIDUMeetCorrectJmpTarget := (ifu.io.out.bits.pc === curCorrectJmpTarget) && ifu.io.out.valid
+  isIFUFetchedCorrectJmpTarget := (ifu.io.out.bits.pc === curCorrectJmpTarget) && ifu.io.out.valid
+  isCurIDUMeetCorrectJmpTarget := isIFUFetchedCorrectJmpTarget
   dontTouch(isCurIDUMeetCorrectJmpTarget)
 
   val halted = RegInit(false.B)
@@ -124,10 +126,21 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     halted := true.B
   }
 
+  object PCUpdateState extends ChiselEnum {
+    val plus4, fromEXU = Value
+  }
+  val pcUpdateState = RegInit(PCUpdateState.plus4)
+  when(isBranchGuessWrong) {
+    pcUpdateState := PCUpdateState.fromEXU
+  }.elsewhen(isCurIDUMeetCorrectJmpTarget) {
+    pcUpdateState := PCUpdateState.plus4
+  }
+  dontTouch(pcUpdateState)
+
   // pc := Mux(wbu.io.done, nxt_pc, pc)
   pc := Mux(
     ifu.io.pc.ready,
-    Mux(isBranchGuessWrong, exu.io.out.bits.exuWriteBack.nxt_pc, pc + 4.U),
+    Mux((!isBranchGuessWrong) && (pcUpdateState === PCUpdateState.plus4), pc+4.U,exu.io.out.bits.exuWriteBack.nxt_pc),
     pc
   )
 
