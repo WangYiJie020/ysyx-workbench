@@ -129,14 +129,14 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
   isIFUMeetCorrectJmpTarget := ifu.io.pc.valid && (ifu.io.pc.bits === curCorrectJmpTarget)
 
-  val isIDUOutCorrectJmpTarget = Wire(Bool())
-  isIDUOutCorrectJmpTarget := idu.io.out.valid && (idu.io.out.bits.pc === curCorrectJmpTarget)
-  dontTouch(isIDUOutCorrectJmpTarget)
+  val isIDUMeetCorrectJmpTarget = Wire(Bool())
+  isIDUMeetCorrectJmpTarget := ifu.io.out.valid && (ifu.io.out.bits.pc === curCorrectJmpTarget)
+  dontTouch(isIDUMeetCorrectJmpTarget)
   dontTouch(curCorrectJmpTarget)
 
   when(isBranchGuessWrong) {
     isFlushIDUReg := true.B
-  }.elsewhen(isIDUOutCorrectJmpTarget) {
+  }.elsewhen(isIDUMeetCorrectJmpTarget) {
     isFlushIDUReg := false.B
   }
   isFlushIDU := isFlushIDUReg || isBranchGuessWrong
