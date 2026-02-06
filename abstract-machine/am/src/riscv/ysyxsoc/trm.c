@@ -126,8 +126,6 @@ extern char _data_extra_end[];
 extern char _bss_extra_start[];
 extern char _bss_extra_end[];
 #define BSS_EXTRA_SIZE ((size_t)(_bss_extra_end - _bss_extra_start))
-__attribute__((weak)) extern char __bss_extra_size__[];
-extern char __data_extra_size__[];
 
 extern char _ssbl_start[], _ssbl_end[];
 extern char __ssbl_load_start__[];
@@ -269,29 +267,21 @@ SSBL_TEXT void _second_boot() {
 #ifndef SKIP_BSS_CLEAR
   _ssbl_clear(_bss_start, (size_t)__bss_size__);
   boot_log(".bss cleared.\n");
-  if ((size_t)__bss_extra_size__ != 0) {
-    LOG_STEP("clear .bss.extra", _ssbl_clear(_bss_extra_start, (size_t)__bss_extra_size__));
+  if (BSS_EXTRA_SIZE != 0) {
+    LOG_STEP("clear .bss.extra", _ssbl_clear(_bss_extra_start, BSS_EXTRA_SIZE));
   }
 #else
   boot_log("skip clear .bss\n");
   boot_log("skip clear .bss.extra\n");
 #endif
 
-#pragma clang optimize off
-	if((size_t)__bss_extra_size__ != 0) {
-		putstr(".bss.extra size = ");
-		putnum_base16((uint32_t)__bss_extra_size__);
-		putch('\n');
-	}
-#pragma clang optimize on
-
-  if ((size_t)*__data_extra_size__ != 0) {
+  if (DATA_EXTRA_SIZE != 0) {
     putstr(".data.extra size = ");
-    putnum_base16((uint32_t)*__data_extra_size__);
+    putnum_base16((uint32_t)DATA_EXTRA_SIZE);
     putch('\n');
     LOG_STEP("copy .data.extra",
              _ssbl_memcpy(_data_extra_start, __data_extra_load_start__,
-                          (size_t)*__data_extra_size__ ));
+                          DATA_EXTRA_SIZE));
   }
 
   // NOTE: putnum func is in the sdram area
