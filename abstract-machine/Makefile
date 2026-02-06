@@ -69,8 +69,8 @@ LINKAGE   = $(OBJS)  # library archives are added by LIB_TEMPLATE below
 
 ### (Cross) compilers, e.g., mips-linux-gnu-g++
 AS        = $(CROSS_COMPILE)gcc
-# CC        = $(CROSS_COMPILE)gcc
-CC        = clang --target=riscv64-linux-gnu
+CC        = $(CROSS_COMPILE)gcc
+# CC        = clang --target=riscv64-linux-gnu
 CXX        = clang++ --target=riscv64-linux-gnu
 # CXX       = $(CROSS_COMPILE)g++
 LD        = $(CROSS_COMPILE)ld
@@ -99,6 +99,7 @@ CXXFLAGS += -Wno-error=non-c-typedef-for-linkage
 CXXFLAGS += -Wno-error=tautological-constant-out-of-range-compare
 
 CFLAGS	 += -ffreestanding
+CFLAGS += -fsanitize=kernel-address
 
 CFLAGS += -Wno-error=unknown-warning-option
 CFLAGS += -Wno-error=macro-redefined
