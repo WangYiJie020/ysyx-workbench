@@ -91,8 +91,10 @@ public:
   }
 };
 
-void sim(size_t blockSize, size_t blockNum) {
-  auto fp = popen("bzip2 -dc ../nemu/itrace_pack.bin.bz2", "r");
+void sim(std::string path,size_t blockSize, size_t blockNum) {
+	auto cmd = "bzip2 -dc " + path;
+  auto fp = popen(cmd.c_str(), "r");
+	assert(fp != NULL);
   itrace_pack_t pack = itrace_pack_openfp(fp);
   assert(pack != NULL);
 
@@ -108,12 +110,16 @@ void sim(size_t blockSize, size_t blockNum) {
       icache.access(pc);
     }
   } while (pc != 0);
-  icache.dumpStats(24.7324);
+  icache.dumpStats(30.0);
 
   itrace_pack_close(pack);
 }
 
 int main() {
+
+	sim("../nemu/mtrace_pack.bin.bz2",16,4);
+
+	return 0;
 	struct parm {
 		size_t blockSize;
 		size_t blockNum;
@@ -122,7 +128,8 @@ int main() {
 	std::vector<parm> parmlist;
 	for(size_t bs = 4; bs <= 256; bs *= 2) {
 		// 4 8 16 32 64 128 256
-		for(size_t bn = 16; bn <= 512; bn *= 2) {
+		for(size_t bn = 2; bn <= 64; bn *= 2) {
+			// 2 4 8 16 32 64
 			// 16 32 64 128 256 512
 			parmlist.push_back({bs, bn});
 		}
@@ -138,7 +145,7 @@ int main() {
 		threads[i] = std::thread([i, &parmlist]() {
 			for(size_t j = 0; j < tasksPerThread; j++) {
 				size_t index = i * tasksPerThread + j;
-				sim(parmlist[index].blockSize, parmlist[index].blockNum);
+				sim("../nemu/itrace_pack.bin.bz2",parmlist[index].blockSize, parmlist[index].blockNum);
 			}
 		});
 	}

@@ -99,12 +99,6 @@ CXXFLAGS += -Wno-error=non-c-typedef-for-linkage
 CXXFLAGS += -Wno-error=tautological-constant-out-of-range-compare
 
 CFLAGS	 += -ffreestanding
-# CFLAGS += -fsanitize=address
-# LDFLAGS += -fsanitize=address
-
-CFLAGS += -Wno-error=unused-function
-CFLAGS += -Wno-error=misleading-indentation
-CFLAGS += -Wno-error=unused-but-set-variable
 
 CFLAGS += -Wno-error=unknown-warning-option
 CFLAGS += -Wno-error=macro-redefined
@@ -115,6 +109,8 @@ CFLAGS	 += -ffreestanding
 
 ASFLAGS  += -MMD $(INCFLAGS)
 LDFLAGS  += -z noexecstack $(addprefix -T, $(LDSCRIPTS))
+
+## kasan
 
 include $(AM_HOME)/scripts/kasan.mk
 
