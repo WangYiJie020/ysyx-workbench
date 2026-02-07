@@ -10,8 +10,6 @@ AM_SRCS := riscv/npc/start.S \
 
 CFLAGS += -g
 
-include $(AM_HOME)/scripts/kasan.mk
-
 CFLAGS    += -fdata-sections -ffunction-sections
 LDSCRIPTS += $(AM_HOME)/scripts/linker.ld
 LDFLAGS   += --defsym=_pmem_start=0x80000000 --defsym=_entry_offset=0x0
