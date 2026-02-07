@@ -19,6 +19,7 @@ extern "C" sdb_debuger sdb_create_debuger(
 		vector<string_view>(reg_names,reg_names+n_reg_names),
 		fetcher?(sdb::inst_fetcher)[fetcher](sdb::paddr_t pc){
 			auto cinst=fetcher(pc);
+			assert(cinst.data != nullptr);
 			return sdb::vlen_inst_code(cinst.data,cinst.data+cinst.len);
 		}:(sdb::inst_fetcher)[loadmem](sdb::paddr_t pc){
 			// default fetcher: fetch 4 bytes
