@@ -126,8 +126,9 @@ void EXUPerfCounter::update() {
 
 
 		if(!isValidType(type) || !isValidFmt(fmt)) {
-			logger->error("Invalid instruction type {} or fmt {}",
+			logger->warn("Invalid instruction type {} or fmt {} (maybe due to prefetching), ignoring this instruction",
 										(int)type, (int)fmt);
+			return;
 		}
     // assert(isValidType(type));
     // assert(isValidFmt(fmt));
