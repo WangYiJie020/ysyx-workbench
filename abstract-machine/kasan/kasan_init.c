@@ -1,6 +1,12 @@
 #include "kasan_init.h"
 #include "klib.h"
 #undef kasan_init
+
+#ifdef KASAN_ENABLED
+#error "kasan should not be enable when build kasan"
+#endif
+
+
 void kasan_init() {
   void initialize_heap();
   void initialize_kasan();
