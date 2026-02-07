@@ -100,6 +100,10 @@ CXXFLAGS += -Wno-error=tautological-constant-out-of-range-compare
 
 CFLAGS	 += -ffreestanding
 
+CFLAGS += -Wno-error=unused-function
+CFLAGS += -Wno-error=misleading-indentation
+CFLAGS += -Wno-error=unused-but-set-variable
+
 CFLAGS += -Wno-error=unknown-warning-option
 CFLAGS += -Wno-error=macro-redefined
 CFLAGS += -Wno-error=pointer-bool-conversion
