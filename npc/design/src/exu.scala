@@ -182,10 +182,12 @@ class EXU extends Module {
   writeBackInfo.nxt_pc := nxt_pc
   writeBackInfo.is_ebreak := (dinst.code === "h00100073".U)
 
-  // TODO: handle exception
-  io.jmpHappen := takeBranch || isTypJALR || isTypJAL
+  val isJmpCsr = is_ecall || is_mret
 
-  when(is_ecall || is_mret) {
+  // TODO: handle exception
+  io.jmpHappen := takeBranch || isTypJALR || isTypJAL || isJmpCsr
+
+  when(isJmpCsr) {
     nxt_pc := csr_rdata
   }.otherwise {
     when(isTypJALR) {

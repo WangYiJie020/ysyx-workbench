@@ -26,17 +26,8 @@ class TopIO extends Bundle {
 }
 
 class ysyx_25100261(word_width: Int = 32) extends Module {
-  type HasIO = {
-    val io: Data
-  }
-  def instantiateForTest[M <: Module with HasIO](gen: => M): M = {
-    val m = Module(gen)
-    m.io := DontCare
-    dontTouch(m.io)
-    m
-  }
   // val isRdAfterWr = Wire(Bool())
-  val isBranchGuessWrong = Wire(Bool())
+  val isBranchGuessWrong  = Wire(Bool())
   val curCorrectJmpTarget = Reg(UInt(32.W))
 
   val isIDUWaitEXUReg = RegInit(false.B)
@@ -90,8 +81,6 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val gprs = Module(new RegisterFile(READ_PORTS = 2))
   val csrs = Module(new ControlStatusRegisterFile())
 
-  // val mem = Module(new AXI4LiteMemUnit)
-
   val ifu = Module(new IFU)
   val idu = Module(new IDU)
   val exu = Module(new EXU)
@@ -107,13 +96,6 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   }
 
   val INIT_PC = if (isSoC) "h30000000".U(32.W) else "h80000000".U(32.W)
-
-  // "h30000000".U(32.W)
-  val MEM_BASE = "h80000000".U(32.W)
-  val MEM_END  = "h8FFFFFFF".U(32.W)
-
-  val SERIAL_BASE = "h10000000".U(32.W)
-  val SERIAL_END  = "h10001000".U(32.W)
 
   val pc = RegInit(INIT_PC)
 
@@ -184,6 +166,11 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     val uart = Module(new UARTUnit)
     val mem  = Module(new AXI4MemUnit)
 
+    val MEM_BASE = "h80000000".U(32.W)
+    val MEM_END  = "h8FFFFFFF".U(32.W)
+
+    val SERIAL_BASE = "h10000000".U(32.W)
+    val SERIAL_END  = "h10001000".U(32.W)
     otherReqSlave := DontCare
     Module(
       new AXI4LiteXBar(
