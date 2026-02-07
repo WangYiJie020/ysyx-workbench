@@ -15,12 +15,10 @@ class CLINTUnit extends Module {
   val sio = io
 
   io.dontCareNonLiteB()
+  io.dontCareNonLiteR()
 
   sio.arready := true.B
   sio.rvalid  := sio.arvalid
-  sio.rid := 0.U
-  assert(sio.arid === 0.U || (!sio.arvalid), "CLINTUnit does not support txn id")
-  sio.rlast := true.B
   assert(!(sio.arvalid && !sio.rready), "CLINTUnit does not support wait readdata")
 
   when(sio.arvalid){
