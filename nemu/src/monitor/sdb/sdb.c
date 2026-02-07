@@ -114,7 +114,7 @@ sdbc_vlen_inst wrap_fetch_inst(sdb_paddr_t pc){
 	sdbc_vlen_inst	inst_code;
 	inst_code.data=(uint8_t*)guest_to_host(pc);
 	if(inst_code.data==NULL){
-		printf("Failed to fetch instruction at pc = " FMT_PADDR, pc);
+		printf("Failed to fetch instruction at pc = " FMT_PADDR "\n", pc);
 	}
 	inst_code.len=4;
 	return inst_code;
