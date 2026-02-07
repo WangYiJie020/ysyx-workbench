@@ -31,7 +31,6 @@ class CLINTUnit extends Module {
   }
 
   val mtime = RegInit(0.U(64.W))
-
   mtime := mtime + 1.U
 
   sio.rresp := AXI4IO.RResp.OKAY
