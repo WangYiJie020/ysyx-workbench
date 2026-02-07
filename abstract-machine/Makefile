@@ -99,6 +99,7 @@ CXXFLAGS += -Wno-error=non-c-typedef-for-linkage
 CXXFLAGS += -Wno-error=tautological-constant-out-of-range-compare
 
 CFLAGS	 += -ffreestanding
+CFLAGS += -fsanitize=address
 
 CFLAGS += -Wno-error=unused-function
 CFLAGS += -Wno-error=misleading-indentation
