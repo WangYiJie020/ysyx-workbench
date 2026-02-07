@@ -110,6 +110,10 @@ CFLAGS	 += -ffreestanding
 ASFLAGS  += -MMD $(INCFLAGS)
 LDFLAGS  += -z noexecstack $(addprefix -T, $(LDSCRIPTS))
 
+## kasan
+
+include $(AM_HOME)/scripts/kasan.mk
+
 ## 4. Arch-Specific Configurations
 
 ### Paste in arch-specific configurations (e.g., from `scripts/x86_64-qemu.mk`)
