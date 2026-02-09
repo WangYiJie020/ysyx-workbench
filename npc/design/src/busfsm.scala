@@ -96,6 +96,6 @@ object InnerBusCtrl {
 
   def apply(master: DecoupledIO[Data], slave: DecoupledIO[Data], alwaysComb: Boolean) = {
     slave.valid  := master.valid
-    master.ready := true.B
+    master.ready := slave.ready
   }
 }
