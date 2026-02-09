@@ -49,7 +49,7 @@ class IFU extends Module {
   }
   memIO.rready := (state === State.waitR) && io.out.ready
 
-  fsm.io.self_finished := ((state === State.waitR) && memIO.rvalid) || (state === State.idle) && (!reset.asBool)
+  fsm.io.self_finished := ((state === State.waitR) && memIO.rvalid) || (state === State.idle && memIO.rvalid) && (!reset.asBool)
 
   io.out.bits.code := Mux(memIO.rvalid, memIO.rdata, instReg)
   io.out.bits.pc   := pcReg
