@@ -154,8 +154,7 @@ void EXUPerfCounter::update() {
 void IFUStateCounter::bind() {
   hRValid = &_GetIFU()->io_mem_rvalid;
   hRReady = &_GetIFU()->io_mem_rready;
-  // hState = &_GetIFU()->fsm->state;
-	hState = &_GetIFU()->dbgState;
+  hState = &_GetIFU()->fsm->state;
 }
 void IFUStateCounter::update() {
   bool fetchInstHappened = (hRReady.get() && hRValid.get());
