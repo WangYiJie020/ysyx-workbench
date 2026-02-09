@@ -42,6 +42,7 @@ class EXU extends Module {
   val isTypBranch     = InstType.hasSame(dinst.info.typ, InstType.branch)
   val isTypArithmetic = InstType.hasSame(dinst.info.typ, InstType.arithmetic)
   val isTypFencei     = InstType.hasSame(dinst.info.typ, InstType.fencei)
+  val isTypLUI        = InstType.hasSame(dinst.info.typ, InstType.lui)
 
   alu_in.is_imm := isFmtI
   alu_in.func3t := Mux(isFmtB, func3t >> 1, func3t)
@@ -155,23 +156,33 @@ class EXU extends Module {
 
   writeBackInfo.gpr.addr := dinst.info.rd
   val sysInstWrBackData = csr_rdata
-  val gprDataMapping    = Seq(
-    InstType.arithmetic -> alu.io.out.bits,
-    InstType.lui        -> dinst.info.imm,
-    InstType.auipc      -> pcAddImm,
-    InstType.jalr       -> snpc,
-    InstType.jal        -> snpc,
-    InstType.load       -> GARBAGE_UNINIT_VALUE, // load data will be from lsu
-    InstType.system     -> sysInstWrBackData,
-    InstType.fencei     -> GARBAGE_UNINIT_VALUE
-  )
+  // val gprDataMapping    = Seq(
+  //   InstType.arithmetic -> alu.io.out.bits,
+  //   InstType.lui        -> dinst.info.imm,
+  //   InstType.auipc      -> pcAddImm,
+  //   InstType.jalr       -> snpc,
+  //   InstType.jal        -> snpc,
+  //   InstType.load       -> GARBAGE_UNINIT_VALUE, // load data will be from lsu
+  //   InstType.system     -> sysInstWrBackData,
+  //   InstType.fencei     -> GARBAGE_UNINIT_VALUE
+  // )
 
-  writeBackInfo.gpr.data := MuxLookup(dinst.info.typ, GARBAGE_UNINIT_VALUE)(gprDataMapping)
+  // io.out.bits.gpr.data := MuxLookup(dinst.info.typ, GARBAGE_UNINIT_VALUE)(gprDataMapping)
   // writeBackInfo.gpr.data := Mux1H(
   //   gprDataMapping.map { case (typ, data) =>
   //     InstType.hasSame(dinst.info.typ, typ) -> data
   //   }
   // )
+  writeBackInfo.gpr.data := Mux(isTypArithmetic, alu.io.out.bits, 
+    Mux(isTypLUI, dinst.info.imm,
+      Mux(isTypAUIPC, pcAddImm,
+        Mux(isTypJALR || isTypJAL, snpc,
+          Mux(isTypSys, sysInstWrBackData, GARBAGE_UNINIT_VALUE)
+        )
+      )
+    )
+  )
+
 
   // nxt_pc
   val takeBranch = WireDefault(false.B)
