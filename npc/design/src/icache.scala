@@ -124,7 +124,7 @@ class ICache extends Module {
     }
   }
 
-  io.cpu.rvalid := (state === State.waitMem && io.mem.rlast && io.mem.rvalid) || (state === State.idle && cacheHit)
+  io.cpu.rvalid := (state === State.waitMem && io.mem.rlast && io.mem.rvalid) || (state === State.idle && cacheHit && io.cpu.arvalid && io.cpu.arready)
   io.cpu.rresp  := AXI4IO.RResp.OKAY
   // TODO: support burst read
   io.cpu.rid    := io.mem.rid
