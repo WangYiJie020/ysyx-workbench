@@ -15,20 +15,6 @@
 
 int gdb_mainloop();
 
-void test_table() {
-  EXUPerfCounter exu_counter;
-  for (int i = 0; i < 1000; i++) {
-    exu_counter.instCountOfTyp[random() % EXUPerfCounter::TYPE_NUM]++;
-    exu_counter.totalCycleOfTyp[random() % EXUPerfCounter::TYPE_NUM] +=
-        random() % 5 + 1;
-
-    exu_counter.instCountOfFmt[random() % EXUPerfCounter::FMT_NUM]++;
-    exu_counter.totalCycleOfFmt[random() % EXUPerfCounter::FMT_NUM] +=
-        random() % 5 + 1;
-  }
-  exu_counter.dumpStatistics(std::cout);
-}
-
 int main(int argc, char **argv) {
 	auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
 	console_sink->set_level(spdlog::level::info);

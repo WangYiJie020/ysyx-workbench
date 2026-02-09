@@ -100,8 +100,9 @@ public:
   void dumpStatistics(std::ostream &os) override;
 };
 
+struct 
 [[deprecated("work bad for pipelined design")]]
-struct EXUPerfCounter : public PerfCounterBase {
+EXUPerfCounter : public PerfCounterBase {
   // in common_def.scala
   //   val imm, reg, store, upper, jump, branch = Value
   //   val branch, arithmetic, load, store, jalr, jal, lui, auipc, system =
@@ -373,7 +374,7 @@ public:
 };
 
 using PerfCounterVariant =
-    std::variant<HandShakeCounterManager, EXUPerfCounter,
+    std::variant<HandShakeCounterManager,
                  AXI4PerfCounterManager, IFUStateCounter, CachePerfCounter>;
 
 void initPerfCounters();

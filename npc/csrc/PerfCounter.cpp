@@ -211,7 +211,7 @@ std::vector<PerfCounterVariant> perf_counters;
 void initPerfCounters() {
 
   HandShakeCounterManager handshakeCtr;
-  EXUPerfCounter exuCtr;
+  // EXUPerfCounter exuCtr;
   AXI4PerfCounterManager axi4Ctr;
   IFUStateCounter ifuStateCtr;
 
@@ -241,12 +241,12 @@ void initPerfCounters() {
   //
   // axi4Ctr.addRead("ifu.io_mem", "IFU fetch inst");
 
-  exuCtr.bind();
+  // exuCtr.bind();
   ifuStateCtr.bind();
   cacheCtr.bind();
 
   perf_counters.push_back(std::move(handshakeCtr));
-  perf_counters.push_back(std::move(exuCtr));
+  // perf_counters.push_back(std::move(exuCtr));
   perf_counters.push_back(std::move(axi4Ctr));
   perf_counters.push_back(std::move(ifuStateCtr));
   perf_counters.push_back(std::move(cacheCtr));
