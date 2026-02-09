@@ -53,7 +53,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     thisIn.bits   := RegEnable(prevOut.bits, prevOut.fire)
 
     val isThisBusy   = RegInit(false.B)
-    val normalNxtBsy = Mux(isThisBusy, !(thisOut.fire), prevOut.fire)
+    val normalNxtBsy = Mux(isThisBusy, (!thisOut.fire) || (prevOut.fire), prevOut.fire)
 
     if (isIDUtoEXU) {
       isThisBusy := normalNxtBsy && (!isFlushIDU)

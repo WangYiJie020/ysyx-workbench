@@ -76,15 +76,6 @@ class OneMasterOneSlaveFSM extends Module {
   }.elsewhen(slave_picked) {
     full := false.B
   }
-
-  // def connectMaster[T <: Data](master: DecoupledIO[T]): Unit = {
-  //   master.ready    := io.master_ready
-  //   io.master_valid := master.valid
-  // }
-  // def connectSlave[T <: Data](slave: DecoupledIO[T]):   Unit = {
-  //   slave.valid    := io.slave_valid
-  //   io.slave_ready := slave.ready
-  // }
 }
 
 object InnerBusCtrl {
