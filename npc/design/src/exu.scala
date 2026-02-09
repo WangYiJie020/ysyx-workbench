@@ -227,7 +227,7 @@ class EXU extends Module {
   val isJmpCsr = is_ecall || is_mret
 
   // TODO: handle exception
-  io.jmpHappen := takeBranch || isTypJALR || isTypJAL || isJmpCsr
+  io.jmpHappen := (isTypBranch && takeBranch) || isTypJALR || isTypJAL || isJmpCsr
 
   // blt/bge 10x
   // bltu/bgeu 11x
