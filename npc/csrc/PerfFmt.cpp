@@ -77,7 +77,7 @@ void IFUStateCounter::dumpStatistics(std::ostream &os) {
 	double vacancyRate = totalFetchCount == 0
 		? NAN
 		: ((double)totalCantReplyBackCount / (double)sim_get_cycle()) * 100.0;
-	os << fmt::format("total cycles supply vacancy: {} ({} %)\n", totalCantReplyBackCount, vacancyRate);
+	os << fmt::format("total cycles supply vacancy: {} ({:.2f} %)\n", totalCantReplyBackCount, vacancyRate);
 
   os << "state statistics:\n";
   Table t;
