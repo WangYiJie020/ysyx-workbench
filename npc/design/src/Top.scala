@@ -243,7 +243,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   ifu.io.pc.valid := true.B
 
   val exuWriteBackInfoGen = Module(new EXUWriteBackGen)
-  exuWriteBackInfoGen.io.in := exu.io.out.bits
+  exuWriteBackInfoGen.io.in := idu.io.out.bits
 
   val isConflictWithEXU = conflictWithStage(
     idu.io.out.bits.info,
