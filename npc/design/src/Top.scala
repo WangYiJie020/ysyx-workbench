@@ -30,17 +30,18 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val isBranchGuessWrong  = Wire(Bool())
   val curCorrectJmpTarget = Reg(UInt(32.W))
 
-  val isIDUWaitEXUReg = RegInit(false.B)
   val isIDUStall    = Wire(Bool())
-  val isFlushIDUReg   = RegInit(false.B)
-  val isFlushIDU      = Wire(Bool())
+  val isEXUStall    = Wire(Bool())
+  val isFlushIDUReg = RegInit(false.B)
+  val isFlushIDU    = Wire(Bool())
 
   def pipelineConnect[T <: Data, T2 <: Data](
     prevOut:    DecoupledIO[T],
     thisIn:     DecoupledIO[T],
     thisOut:    DecoupledIO[T2],
     isIDUtoEXU: Boolean = false,
-    isIFUtoIDU: Boolean = false
+    isIFUtoIDU: Boolean = false,
+    isEXUtoLSU: Boolean = false
   ) = {
     // prevOut <> thisIn
     val thisInReady = if (isIDUtoEXU) {
@@ -49,12 +50,12 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
       thisIn.ready
     }
 
-    val dataValid = RegInit(false.B)
+    val dataValid   = RegInit(false.B)
     val readyToPrev = (!dataValid) || thisInReady
 
     prevOut.ready := readyToPrev
 
-    when(readyToPrev){
+    when(readyToPrev) {
       dataValid := prevOut.valid
     }
 
@@ -115,7 +116,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val isIFUMeetCorrectJmpTarget = Wire(Bool())
   isBranchGuessWrong := isBranchGuessWrongReg
   when(exu.io.out.valid) {
-    isBranchGuessWrongReg := exu.io.jmpHappen// && exu.io.out.bits.exuWriteBack.nxt_pc =/= exu.io.out.bits.exuWriteBack.pc + 4.U
+    isBranchGuessWrongReg := exu.io.jmpHappen // && exu.io.out.bits.exuWriteBack.nxt_pc =/= exu.io.out.bits.exuWriteBack.pc + 4.U
   }.elsewhen(isIFUMeetCorrectJmpTarget) {
     isBranchGuessWrongReg := false.B
   }
@@ -240,8 +241,6 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
   val isConflictWithEXU = conflictWithStage(
     idu.io.out.bits.info,
-    // exu.io.out.bits.exuWriteBack.gpr,
-    // exu.io.out.valid
     lsu.io.in.bits.exuWriteBack.gpr,
     lsu.io.in.valid
   )
@@ -255,24 +254,29 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     wbu.io.in.bits.gpr,
     wbu.io.in.valid
   )
+
   val isEXUConflictWithWBU = conflictWithStage(
-    exu.io.in.bits.info,
+    {
+      class rs1rs2Wrapper extends Bundle with HasRs {
+        val rs1 = exu.io.out.bits.exuWriteBack.gpr.addr(1)
+        val rs2 = exu.io.out.bits.exuWriteBack.gpr.addr(2)
+      }
+      (new rs1rs2Wrapper).asInstanceOf[HasRs]
+    },
     wbu.io.in.bits.gpr,
     wbu.io.in.valid
   )
   dontTouch(isConflictWithEXU)
   dontTouch(isConflictWithLSU)
   dontTouch(isConflictWithWBU)
+  dontTouch(isEXUConflictWithWBU)
+
+  isEXUStall := isEXUConflictWithWBU
 
   val isRdAfterWr = Wire(Bool())
   isRdAfterWr := isConflictWithEXU || isConflictWithLSU || isConflictWithWBU || isEXUConflictWithWBU
   dontTouch(isRdAfterWr)
 
-  when(isRdAfterWr) {
-    isIDUWaitEXUReg := true.B
-  }.elsewhen(wbu.io.done) {
-    isIDUWaitEXUReg := false.B
-  }
   isIDUStall := isRdAfterWr
   dontTouch(isIDUStall)
 
