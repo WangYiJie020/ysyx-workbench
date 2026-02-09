@@ -100,6 +100,7 @@ public:
   void dumpStatistics(std::ostream &os) override;
 };
 
+[[deprecated("work bad for pipelined design")]]
 struct EXUPerfCounter : public PerfCounterBase {
   // in common_def.scala
   //   val imm, reg, store, upper, jump, branch = Value
