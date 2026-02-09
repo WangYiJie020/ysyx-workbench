@@ -17,7 +17,7 @@ object RegEnableReadNew{
 
 class IFU extends Module {
   val io = IO(new Bundle {
-    val in  = Flipped(Decoupled(Types.UWord))
+    val pc  = Flipped(Decoupled(Types.UWord))
     val mem = AXI4IO.Master
     val out = Decoupled(new Inst)
   })
@@ -33,24 +33,24 @@ class IFU extends Module {
   io.mem.dontCareB()
   io.mem.dontCareNonLiteAR()
 
-  val pc = RegEnableReadNew(io.in.bits, io.in.valid)
+  val pc = RegEnableReadNew(io.pc.bits, io.in.valid)
   val state = RegInit(State.idle)
 
-  io.in.ready := (state === State.idle) && !reset.asBool
-  memIO.arvalid := (state === State.waitAR) || (state === State.idle && io.in.valid)
+  io.pc.ready := (state === State.idle) && !reset.asBool
+  memIO.arvalid := (state === State.waitAR) || (state === State.idle && io.pc.valid)
   memIO.araddr  := pc
 
   val inst = RegEnableReadNew(memIO.rdata, memIO.rvalid)
   memIO.rready := io.out.ready
   io.out.bits.code := inst
   io.out.bits.pc   := pc
-  io.out.valid := (state === State.waitR && memIO.rvalid) || (state === State.idle && io.in.valid && memIO.rvalid)
+  io.out.valid := (state === State.waitR && memIO.rvalid) || (state === State.idle && io.pc.valid && memIO.rvalid)
 
-  io.in.ready := (state === State.idle) && !reset.asBool
+  io.pc.ready := (state === State.idle) && !reset.asBool
 
   state := MuxLookup(state, State.idle)(
     Seq(
-      State.idle   -> Mux(io.in.fire, Mux(memIO.arready, Mux(memIO.rvalid, State.idle, State.waitR), State.waitAR), State.idle),
+      State.idle   -> Mux(io.pc.fire, Mux(memIO.arready, Mux(memIO.rvalid, State.idle, State.waitR), State.waitAR), State.idle),
       State.waitAR -> Mux(memIO.arready, Mux(memIO.rvalid, State.idle, State.waitR), State.waitAR),
       State.waitR  -> Mux(memIO.rvalid, State.idle, State.waitR)
     )
