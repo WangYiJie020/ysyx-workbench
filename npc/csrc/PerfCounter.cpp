@@ -79,8 +79,11 @@ void IFUStateCounter::update() {
     countOfStateWhenNoFetch[s]++;
   }
 
-	if (hOutReady.get() && !hOutValid.get()) {
-		totalSupplyCacancyCyc++;
+	if (hOutReady.get()){
+		totalOutReadyHighCyc++;
+		if (!hOutValid.get()) {
+			totalSupplyCacancyCyc++;
+		}
 	}
 }
 
