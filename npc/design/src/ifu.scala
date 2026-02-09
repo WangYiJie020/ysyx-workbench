@@ -35,6 +35,7 @@ class IFU extends Module {
 
   val pcReg = RegEnable(io.pc.bits, io.pc.fire)
   val pc = Mux(io.pc.fire, io.pc.bits, pcReg)
+  dontTouch(pc)
   val state = RegInit(State.idle)
 
   io.pc.ready := (state === State.idle) && !reset.asBool
