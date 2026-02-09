@@ -11,7 +11,7 @@ import axi4._
 // update reg when enable,
 // and output the new value immediately
 object RegEnableReadNew{
-  def apply[T <: Data](nxt: T, en: Bool)(implicit sourceInfo: SourceInfo): T = {
+  def apply[T <: Data](nxt: T, en: Bool): T = {
     val reg = RegEnable(nxt, en)
     Mux(en, nxt, reg)
   }
