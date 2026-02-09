@@ -297,19 +297,25 @@ struct IFUStateCounter : public PerfCounterBase {
   // ifu fsm state
   SignalHandle hState;
 
-  enum State {
-    IDLE,
-    WAIT_INST,
-    WAIT_DOWNSTREAM,
+	SignalHandle hOutValid;
+	SignalHandle hOutReady;
 
-    STATE_NUM
-  };
+	enum State{
+		Idle,
+		WaitARReady,
+		WaitRValid,
+		STATE_NUM
+	};
 
   size_t countOfState[STATE_NUM] = {0};
   size_t countOfStateWhenNoFetch[STATE_NUM] = {0};
   size_t totalFetchCount = 0;
 
-  const char *nameOfState(int state);
+	// total cycles when later stage ready high but self
+	// not able to reply valid
+	size_t totalCantReplyBackCount = 0;
+
+  static const char *nameOfState(int state);
 
   void bind();
   void update();
@@ -323,6 +329,7 @@ struct IFUStateCounter : public PerfCounterBase {
     }
   }
 };
+
 
 class CachePerfCounter : public PerfCounterBase {
 public:
