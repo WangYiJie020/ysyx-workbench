@@ -64,7 +64,10 @@ void HandShakeCounterManager::update() {
 void IFUStateCounter::bind() {
   hRValid = &_GetIFU()->io_mem_rvalid;
   hRReady = &_GetIFU()->io_mem_rready;
-  hState = &_GetIFU()->fsm->state;
+  hState = &_GetIFU()->state;
+
+	hOutValid = &_GetIFU()->io_out_valid;
+	hOutReady = &_GetIFU()->io_out_ready;
 }
 void IFUStateCounter::update() {
   bool fetchInstHappened = (hRReady.get() && hRValid.get());
