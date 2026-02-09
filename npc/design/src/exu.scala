@@ -8,6 +8,25 @@ import regfile._
 import cpu.alu._
 import axi4._
 
+class EXUWriteBackGen extends Module {
+  val io = IO(new Bundle {
+    val in = Input(new DecodedInst)
+    val out = GPRegReqIO.TX.Write
+  })
+
+  val dinst  = io.in
+
+  val isTypStore      = InstType.hasSame(dinst.info.typ, InstType.store)
+  val isTypBranch     = InstType.hasSame(dinst.info.typ, InstType.branch)
+  val isTypFencei     = InstType.hasSame(dinst.info.typ, InstType.fencei)
+
+  val isNoWrBackType = isTypStore || isTypBranch || isTypFencei
+
+  io.out.en   := ~isNoWrBackType
+  io.out.addr := dinst.info.rd
+  io.out.data := DontCare
+}
+
 class EXU extends Module {
   val io = IO(new Bundle {
     val in        = Flipped(Decoupled(new DecodedInst))

@@ -82,11 +82,11 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
       thisIn.valid := dataValid
     }
   }
-  def conflict(rs: UInt, rd: GPRegReqIO._WriteRX) = (rs === rd.addr) && (rd.addr =/= 0.U) && rd.en
+  def conflict(rs: UInt, rd: UInt, en: Bool) = (rs === rd) && (rd =/= 0.U) && en
   def conflictWithStage(rs1: UInt, rs2: UInt, gprWr: GPRegReqIO._WriteRX, valid: Bool) = {
-    WireDefault(valid && (conflict(rs1, gprWr) || conflict(rs2, gprWr)))
+    WireDefault(valid && (conflict(rs1, gprWr.addr, gprWr.en) || conflict(rs2, gprWr.addr, gprWr.en)))
   }
-  def conflictWithStage[T <: HasRs](info: T, gprWr: GPRegReqIO._WriteRX, valid: Bool) : Bool = {
+  def conflictWithStage[T <: HasRs](info: T, gprWr: GPRegReqIO._WriteRX, valid: Bool): Bool = {
     conflictWithStage(info.rs1, info.rs2, gprWr, valid)
   }
 
@@ -242,10 +242,13 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   ifu.io.pc.bits  := pc
   ifu.io.pc.valid := true.B
 
+  val exuWriteBackInfoGen = Module(new EXUWriteBackGen)
+  exuWriteBackInfoGen.io.in := exu.io.out.bits
+
   val isConflictWithEXU = conflictWithStage(
     idu.io.out.bits.info,
-    exu.io.out.bits.exuWriteBack.gpr,
-    exu.io.in.valid
+    exuWriteBackInfoGen.io.out,
+    idu.io.out.valid
   )
   val isConflictWithLSU = conflictWithStage(
     idu.io.out.bits.info,
