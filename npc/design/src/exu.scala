@@ -166,12 +166,12 @@ class EXU extends Module {
     InstType.fencei     -> GARBAGE_UNINIT_VALUE
   )
 
-  // io.out.bits.gpr.data := MuxLookup(dinst.info.typ, GARBAGE_UNINIT_VALUE)(gprDataMapping)
-  writeBackInfo.gpr.data := Mux1H(
-    gprDataMapping.map { case (typ, data) =>
-      InstType.hasSame(dinst.info.typ, typ) -> data
-    }
-  )
+  writeBackInfo.gpr.data := MuxLookup(dinst.info.typ, GARBAGE_UNINIT_VALUE)(gprDataMapping)
+  // writeBackInfo.gpr.data := Mux1H(
+  //   gprDataMapping.map { case (typ, data) =>
+  //     InstType.hasSame(dinst.info.typ, typ) -> data
+  //   }
+  // )
 
   // nxt_pc
   val takeBranch = WireDefault(false.B)
