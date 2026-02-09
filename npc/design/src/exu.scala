@@ -115,8 +115,8 @@ class EXU extends Module {
       // csrren    := true.B
       // csrwen    := false.B
       csr_raddr := CSRAddr.mepc
-      csr_waddr := 0.U
-      csr_wdata := 0.U
+      csr_waddr := DontCare
+      csr_wdata := DontCare
     }.otherwise {
       // csrren    := MuxLookup(func3t, false.B)(
       //   Seq(
@@ -239,9 +239,9 @@ class EXU extends Module {
       isTypJALR,
       (r1AddImm(31, 1) ## 0.U(1.W)),
       Mux(
-        isTypJAL,
+        isTypJAL || (isFmtB && takeBranch),
         pcAddImm,
-        Mux(isFmtB && takeBranch, pcAddImm, snpc)
+        snpc
       )
     )
   )
