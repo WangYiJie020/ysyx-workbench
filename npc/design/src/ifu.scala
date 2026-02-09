@@ -40,8 +40,8 @@ class IFU extends Module {
   when(io.pc.fire) {
     pcReg := io.pc.bits
   }
-  memIO.arvalid := (state === State.waitAR)
-  memIO.araddr  := pcReg
+  memIO.arvalid := (state === State.waitAR) || (state === State.idle && io.pc.fire)
+  memIO.araddr  := Mux(io.pc.fire, io.pc.bits, pcReg)
 
   val instReg = Reg(Types.UWord)
   when(memIO.rvalid) {
