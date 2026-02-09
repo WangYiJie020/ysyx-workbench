@@ -66,7 +66,7 @@ class OneMasterOneSlaveFSM extends Module {
 
   val slave_picked = io.slave_ready && io.self_finished
 
-  val ready = !full // || slave_picked
+  val ready = !full && (!reset.asBool)
   io.master_ready := ready
 
   io.slave_valid := full && io.self_finished
