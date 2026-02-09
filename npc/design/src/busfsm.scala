@@ -72,7 +72,7 @@ class OneMasterOneSlaveFSM extends Module {
   io.slave_valid := full && io.self_finished
 
   when(ready) {
-    full := io.master_valid
+    full := io.master_valid && (!io.self_finished)
   }.elsewhen(slave_picked) {
     full := false.B
   }
