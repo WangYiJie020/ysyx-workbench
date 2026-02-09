@@ -4,8 +4,6 @@ import chisel3.util._
 import common_def._
 import busfsm._
 
-import chisel3.experimental.SourceInfo
-
 import axi4._
 
 // update reg when enable,
@@ -19,10 +17,15 @@ object RegEnableReadNew{
 
 class IFU extends Module {
   val io = IO(new Bundle {
-    val pc  = Flipped(Decoupled(Types.UWord))
+    val in  = Flipped(Decoupled(Types.UWord))
     val mem = AXI4IO.Master
     val out = Decoupled(new Inst)
   })
+
+  object State extends ChiselEnum {
+    val idle, waitAR, waitR = Value
+  }
+
   dontTouch(io)
   val memIO = io.mem
   io.mem.dontCareAW()
@@ -30,21 +33,32 @@ class IFU extends Module {
   io.mem.dontCareB()
   io.mem.dontCareNonLiteAR()
 
-  val pc = RegEnableReadNew(io.pc.bits, io.pc.valid)
+  val pc = RegEnableReadNew(io.in.bits, io.in.valid)
+  val state = RegInit(State.idle)
 
-  dontTouch(pc)
+  io.in.ready := (state === State.idle) && !reset.asBool
+  memIO.arvalid := (state === State.waitAR) || (state === State.idle && io.in.valid)
+  memIO.araddr  := pc
 
-  io.out <> DontCare
-  io.pc <> DontCare
-  io.mem <> DontCare
+  val inst = RegEnableReadNew(memIO.rdata, memIO.rvalid)
+  memIO.rready := io.out.ready
+  io.out.bits.code := inst
+  io.out.bits.pc   := pc
+  io.out.valid := (state === State.waitR && memIO.rvalid) || (state === State.idle && io.in.valid && memIO.rvalid)
 
+  io.in.ready := (state === State.idle) && !reset.asBool
+
+  state := MuxLookup(state, State.idle)(
+    Seq(
+      State.idle   -> Mux(io.in.fire, Mux(memIO.arready, Mux(memIO.rvalid, State.idle, State.waitR), State.waitAR), State.idle),
+      State.waitAR -> Mux(memIO.arready, Mux(memIO.rvalid, State.idle, State.waitR), State.waitAR),
+      State.waitR  -> Mux(memIO.rvalid, State.idle, State.waitR)
+    )
+  )
 }
 
 /* 
 
-  object State extends ChiselEnum {
-    val idle, waitAR, waitR = Value
-  }
 
   val state = RegInit(State.idle)
   state         := MuxLookup(state, State.idle)(
