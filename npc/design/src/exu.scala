@@ -185,25 +185,35 @@ class EXU extends Module {
   //     InstType.hasSame(dinst.info.typ, typ) -> data
   //   }
   // )
-  writeBackInfo.gpr.data := Mux(
-    isTypArithmetic,
-    alu.io.out.bits,
-    Mux(
-      isTypLUI,
-      dinst.info.imm,
-      Mux(
-        isTypAUIPC,
-        pcAddImm,
-        Mux(
-          isTypJALR || isTypJAL,
-          snpc,
-          Mux(
-            isTypSys,
-            sysInstWrBackData,
-            GARBAGE_UNINIT_VALUE
-          )
-        )
-      )
+  // writeBackInfo.gpr.data := Mux(
+  //   isTypArithmetic,
+  //   alu.io.out.bits,
+  //   Mux(
+  //     isTypLUI,
+  //     dinst.info.imm,
+  //     Mux(
+  //       isTypAUIPC,
+  //       pcAddImm,
+  //       Mux(
+  //         isTypJALR || isTypJAL,
+  //         snpc,
+  //         Mux(
+  //           isTypSys,
+  //           sysInstWrBackData,
+  //           GARBAGE_UNINIT_VALUE
+  //         )
+  //       )
+  //     )
+  //   )
+  // )
+
+  writeBackInfo.gpr.data := Mux1H(
+    Seq(
+      isTypArithmetic -> alu.io.out.bits,
+      isTypLUI        -> dinst.info.imm,
+      isTypAUIPC      -> pcAddImm,
+      (isTypJALR || isTypJAL) -> snpc,
+      isTypSys        -> sysInstWrBackData
     )
   )
 
