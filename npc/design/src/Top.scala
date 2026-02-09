@@ -128,7 +128,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   }.elsewhen(isIDUMeetCorrectJmpTarget) {
     isFlushIDUReg := false.B
   }
-  isFlushIDU := isFlushIDUReg || isBranchGuessWrong
+  isFlushIDU := (isFlushIDUReg & (!isIDUMeetCorrectJmpTarget)) || isBranchGuessWrong
   dontTouch(isFlushIDU)
 
   // pc := Mux(wbu.io.done, nxt_pc, pc)
