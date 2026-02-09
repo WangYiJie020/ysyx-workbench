@@ -244,8 +244,8 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
   val isConflictWithEXU = conflictWithStage(
     idu.io.out.bits.info,
-    lsu.io.in.bits.exuWriteBack.gpr,
-    lsu.io.in.valid
+    exu.io.out.bits.exuWriteBack.gpr,
+    exu.io.out.valid
   )
   val isConflictWithLSU = conflictWithStage(
     idu.io.out.bits.info,
