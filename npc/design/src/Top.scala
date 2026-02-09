@@ -31,7 +31,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val curCorrectJmpTarget = Reg(UInt(32.W))
 
   val isIDUWaitEXUReg = RegInit(false.B)
-  val isIDUWaitEXU    = Wire(Bool())
+  val isIDUStall    = Wire(Bool())
   val isFlushIDUReg   = RegInit(false.B)
   val isFlushIDU      = Wire(Bool())
 
@@ -44,7 +44,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   ) = {
     // prevOut <> thisIn
     val thisInReady = if (isIDUtoEXU) {
-      thisIn.ready && (!isIDUWaitEXU)
+      thisIn.ready && (!isIDUStall)
     } else {
       thisIn.ready
     }
@@ -74,7 +74,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     // val isThisBusy = isThisBusyReg
 
     if (isIDUtoEXU) {
-      thisIn.valid := dataValid && (!isIDUWaitEXU) && (!isFlushIDU)
+      thisIn.valid := dataValid && (!isIDUStall) && (!isFlushIDU)
     } else if (isIFUtoIDU) {
       thisIn.valid := dataValid && (!isFlushIDU)
     } else {
@@ -255,12 +255,17 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     wbu.io.in.bits.gpr,
     wbu.io.in.valid
   )
+  val isEXUConflictWithWBU = conflictWithStage(
+    exu.io.in.bits.info,
+    wbu.io.in.bits.gpr,
+    wbu.io.in.valid
+  )
   dontTouch(isConflictWithEXU)
   dontTouch(isConflictWithLSU)
   dontTouch(isConflictWithWBU)
 
   val isRdAfterWr = Wire(Bool())
-  isRdAfterWr := isConflictWithEXU || isConflictWithLSU || isConflictWithWBU
+  isRdAfterWr := isConflictWithEXU || isConflictWithLSU || isConflictWithWBU || isEXUConflictWithWBU
   dontTouch(isRdAfterWr)
 
   when(isRdAfterWr) {
@@ -268,8 +273,8 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   }.elsewhen(wbu.io.done) {
     isIDUWaitEXUReg := false.B
   }
-  isIDUWaitEXU := isRdAfterWr
-  dontTouch(isIDUWaitEXU)
+  isIDUStall := isRdAfterWr
+  dontTouch(isIDUStall)
 
   pipelineConnect(ifu.io.out, idu.io.in, idu.io.out, isIFUtoIDU = true)
   pipelineConnect(idu.io.out, exu.io.in, exu.io.out, isIDUtoEXU = true)
