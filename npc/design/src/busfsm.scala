@@ -96,9 +96,10 @@ object InnerBusCtrl {
     fsm
   }
 
-  def apply(master: DecoupledIO[Data], slave: DecoupledIO[Data], alwaysComb: Boolean): OneMasterOneSlaveFSM = {
-    // slave.valid  := master.valid
-    // master.ready := slave.ready
-    apply(master, slave, alwaysComb.B)
+  def apply(master: DecoupledIO[Data], slave: DecoupledIO[Data], alwaysComb: Boolean) = {
+    slave.valid  := master.valid
+    master.ready := slave.ready
+
+    // apply(master, slave, alwaysComb.B)
   }
 }
