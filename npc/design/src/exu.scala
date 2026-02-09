@@ -96,19 +96,24 @@ class EXU extends Module {
   val isCSRRW = (func3t === CSROp.csrrw)
   val isCSRRS = (func3t === CSROp.csrrs)
 
+  csrren := isCSRRS || (isCSRRW && (dinst.info.rd =/= 0.U)) || is_ecall || is_mret
+  csrwen := isCSRRW || (isCSRRS && (reg_v1 =/= 0.U))
+
   when(isTypSys) {
     when(is_ecall) {
-      csrren    := true.B
-      csrwen    := false.B
+      // csrren    := true.B
+      // csrwen    := false.B
       csr_waddr := CSRAddr.mepc
       csr_raddr := CSRAddr.mtvec
+
       // ecall: set mepc to pc
+      // !!!note:
       // although wen = falase
       // is_ecall flag make csr to write wdata to mepc
       csr_wdata := dinst.pc
     }.elsewhen(is_mret) {
-      csrren    := true.B
-      csrwen    := false.B
+      // csrren    := true.B
+      // csrwen    := false.B
       csr_raddr := CSRAddr.mepc
       csr_waddr := 0.U
       csr_wdata := 0.U
@@ -119,8 +124,6 @@ class EXU extends Module {
       //     CSROp.csrrs -> true.B
       //   )
       // )
-      csrren := isCSRRS || (isCSRRW && (dinst.info.rd =/= 0.U))
-      csrwen := isCSRRW || (isCSRRS && (reg_v1 =/= 0.U))
       // csrwen    := MuxLookup(func3t, false.B)(
       //   Seq(
       //     CSROp.csrrw -> true.B,
@@ -142,8 +145,8 @@ class EXU extends Module {
       // )
     }
   }.otherwise {
-    csrren    := false.B
-    csrwen    := false.B
+    // csrren    := false.B
+    // csrwen    := false.B
     csr_raddr := DontCare
     csr_waddr := DontCare
     csr_wdata := DontCare
