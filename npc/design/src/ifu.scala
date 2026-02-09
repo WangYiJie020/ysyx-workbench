@@ -13,7 +13,7 @@ class IFU extends Module {
     val out = Decoupled(new Inst)
   })
 
-  val fsm = InnerBusCtrl(io.pc, io.out)
+  // val fsm = InnerBusCtrl(io.pc, io.out)
 
   dontTouch(io)
 
@@ -49,7 +49,10 @@ class IFU extends Module {
   }
   memIO.rready := (state === State.waitR) && io.out.ready
 
-  fsm.io.self_finished := ((state === State.waitR) && memIO.rvalid) || (state === State.idle)
+  // fsm.io.self_finished := ((state === State.waitR) && memIO.rvalid) || (state === State.idle)
+
+  io.pc.ready := (state === State.idle) || ((state === State.waitR) && memIO.rvalid)
+  io.out.valid := (state === State.waitR) && memIO.rvalid
 
   io.out.bits.code := Mux(memIO.rvalid, memIO.rdata, instReg)
   io.out.bits.pc   := pcReg
