@@ -64,15 +64,17 @@ class OneMasterOneSlaveFSM extends Module {
   }
   dontTouch(state)
 
-  val slave_picked = io.slave_ready && io.self_finished
+  val selfFinished = io.self_finished && (!reset.asBool)
+
+  val slave_picked = io.slave_ready && selfFinished
 
   val ready = !full && (!reset.asBool)
   io.master_ready := ready
 
-  io.slave_valid := full && io.self_finished
+  io.slave_valid := full && selfFinished
 
   when(ready) {
-    full := io.master_valid && (!io.self_finished)
+    full := io.master_valid && selfFinished
   }.elsewhen(slave_picked) {
     full := false.B
   }
