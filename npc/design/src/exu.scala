@@ -47,7 +47,8 @@ class EXU extends Module {
   alu_in.func3t := Mux(isFmtB, func3t >> 1, func3t)
   alu_in.func7t := func7t
 
-  val MS_fsm = InnerBusCtrl(io.in, io.out, alu.io.out.valid)
+  // val MS_fsm = InnerBusCtrl(io.in, io.out, alu.io.out.valid)
+  val MS_fsm = InnerBusCtrl(io.in, io.out, alwaysComb = true)
 
   // reg
 
