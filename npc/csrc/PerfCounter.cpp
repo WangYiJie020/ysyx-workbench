@@ -80,7 +80,7 @@ void IFUStateCounter::update() {
   }
 
 	if (hOutReady.get() && !hOutValid.get()) {
-		totalCantReplyBackCount++;
+		totalSupplyCacancyCyc++;
 	}
 }
 

@@ -74,10 +74,10 @@ const char *IFUStateCounter::nameOfState(int s) {
 void IFUStateCounter::dumpStatistics(std::ostream &os) {
   os << "IFU State Counter Statistics:\n";
   os << "total instruction fetch count: " << totalFetchCount << "\n";
-	double vacancyRate = totalFetchCount == 0
+	double vacancyRate = totalOutReadyHighCyc == 0
 		? NAN
-		: ((double)totalCantReplyBackCount / (double)sim_get_cycle()) * 100.0;
-	os << fmt::format("total cycles supply vacancy: {} ({:.2f} %)\n", totalCantReplyBackCount, vacancyRate);
+		: ((double)totalSupplyCacancyCyc / (double)totalOutReadyHighCyc) * 100.0;
+	os << fmt::format("total cycles supply vacancy: {} ({:.2f} %)\n", totalSupplyCacancyCyc, vacancyRate);
 
   os << "state statistics:\n";
   Table t;
