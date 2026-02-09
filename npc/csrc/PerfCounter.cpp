@@ -222,8 +222,10 @@ void initPerfCounters() {
                    "ifu.io_mem_r", "IFU fetch inst");
   handshakeCtr.add(&_GetLSU()->io_mem_rvalid, &_GetLSU()->io_mem_rready,
                    "lsu.io_mem_r", "EXU load data");
-  handshakeCtr.add(&_GetALU()->io_out_valid, &_GetALU()->io_out_ready,
-                   "exu.alu.io_out", "EXU calc");
+	// ALU now is combintional logic, no handshake
+	//
+  // handshakeCtr.add(&_GetALU()->io_out_valid, &_GetALU()->io_out_ready,
+  //                  "exu.alu.io_out", "EXU calc");
   handshakeCtr.add(&_GetIDU()->io_out_valid, &_GetIDU()->io_out_ready,
                    "idu.io_out", "IDU decode inst");
 
