@@ -48,29 +48,37 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     } else {
       thisIn.ready
     }
-    prevOut.ready := thisInReady
+
+    val dataValid = RegInit(false.B)
+    val readyToPrev = (!dataValid) || thisInReady
+
+    prevOut.ready := readyToPrev
+
+    when(readyToPrev){
+      dataValid := prevOut.valid
+    }
 
     thisIn.bits := RegEnable(prevOut.bits, prevOut.fire)
 
-    val isThisBusyReg   = RegInit(false.B)
-    val normalNxtBsy = Mux(isThisBusyReg, (!thisOut.fire) || (prevOut.fire), prevOut.fire)
+    // val isThisBusyReg   = RegInit(false.B)
+    // val normalNxtBsy = Mux(isThisBusyReg, (!thisOut.fire) || (prevOut.fire), prevOut.fire)
+    //
+    // if (isIDUtoEXU) {
+    //   isThisBusyReg := normalNxtBsy && (!isFlushIDU)
+    // } else if (isIFUtoIDU) {
+    //   isThisBusyReg := normalNxtBsy && (!isFlushIDU)
+    // } else {
+    //   isThisBusyReg := normalNxtBsy
+    // }
+
+    // val isThisBusy = isThisBusyReg
 
     if (isIDUtoEXU) {
-      isThisBusyReg := normalNxtBsy && (!isFlushIDU)
+      thisIn.valid := dataValid && (!isIDUWaitEXU) && (!isFlushIDU)
     } else if (isIFUtoIDU) {
-      isThisBusyReg := normalNxtBsy && (!isFlushIDU)
+      thisIn.valid := dataValid && (!isFlushIDU)
     } else {
-      isThisBusyReg := normalNxtBsy
-    }
-
-    val isThisBusy = isThisBusyReg || normalNxtBsy
-
-    if (isIDUtoEXU) {
-      thisIn.valid := isThisBusy && (!isIDUWaitEXU) && (!isFlushIDU)
-    } else if (isIFUtoIDU) {
-      thisIn.valid := isThisBusy && (!isFlushIDU)
-    } else {
-      thisIn.valid := isThisBusy
+      thisIn.valid := dataValid
     }
   }
   def conflict(rs: UInt, rd: GPRegReqIO._WriteRX) = (rs === rd.addr) && (rd.addr =/= 0.U) && rd.en
