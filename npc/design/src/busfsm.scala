@@ -66,7 +66,7 @@ class OneMasterOneSlaveFSM extends Module {
 
   val slave_picked = io.slave_ready && io.self_finished
 
-  val ready = !full //|| slave_picked
+  val ready = !full // || slave_picked
   io.master_ready := ready
 
   io.slave_valid := full && io.self_finished
@@ -77,12 +77,34 @@ class OneMasterOneSlaveFSM extends Module {
     full := false.B
   }
 
-  def connectMaster[T <: Data](master: DecoupledIO[T]): Unit = {
-    master.ready    := io.master_ready
-    io.master_valid := master.valid
+  // def connectMaster[T <: Data](master: DecoupledIO[T]): Unit = {
+  //   master.ready    := io.master_ready
+  //   io.master_valid := master.valid
+  // }
+  // def connectSlave[T <: Data](slave: DecoupledIO[T]):   Unit = {
+  //   slave.valid    := io.slave_valid
+  //   io.slave_ready := slave.ready
+  // }
+}
+
+object InnerBusCtrl {
+  def apply(master: DecoupledIO[Data], slave: DecoupledIO[Data]): OneMasterOneSlaveFSM = {
+    val fsm = Module(new OneMasterOneSlaveFSM)
+    fsm.io.master_valid := master.valid
+    fsm.io.slave_ready  := slave.ready
+    master.ready        := fsm.io.master_ready
+    slave.valid         := fsm.io.slave_valid
+    fsm
   }
-  def connectSlave[T <: Data](slave: DecoupledIO[T]):   Unit = {
-    slave.valid    := io.slave_valid
-    io.slave_ready := slave.ready
+
+  def apply(master: DecoupledIO[Data], slave: DecoupledIO[Data], self_finished: Bool): OneMasterOneSlaveFSM = {
+    val fsm = apply(master, slave)
+    fsm.io.self_finished := self_finished
+    fsm
+  }
+
+  def apply(master: DecoupledIO[Data], slave: DecoupledIO[Data], alwaysComb: Boolean) = {
+    slave.valid  := master.valid
+    master.ready := slave.ready
   }
 }
