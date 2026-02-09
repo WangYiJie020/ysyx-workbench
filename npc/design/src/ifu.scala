@@ -32,7 +32,7 @@ class IFU extends Module {
   state         := MuxLookup(state, State.idle)(
     Seq(
       State.idle   -> Mux(io.pc.fire, State.waitAR, State.idle),
-      State.waitAR -> Mux(memIO.arready, State.waitR, State.waitAR),
+      State.waitAR -> Mux(memIO.arready, Mux(memIO.rvalid,State.idle,State.waitR), State.waitAR),
       State.waitR  -> Mux(memIO.rvalid, Mux(io.pc.fire, State.waitAR, State.idle), State.waitR)
     )
   )
