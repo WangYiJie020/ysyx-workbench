@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
 
   spdlog::info("sim ended");
 
-  if (is_soc()) {
+  if (true||is_soc()) {
     dumpPerfCountersStatistics(std::cout);
 		dumpPerfReportOnDir(".");
   }
