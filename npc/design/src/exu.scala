@@ -99,6 +99,18 @@ class EXU extends Module {
   csrren := isCSRRS || (isCSRRW && (dinst.info.rd =/= 0.U)) || is_ecall || is_mret
   csrwen := isCSRRW || (isCSRRS && (reg_v1 =/= 0.U))
 
+  csr_wdata := Mux1H(
+    Seq(
+      // ecall: set mepc to pc
+      // !!!note:
+      // although wen = falase
+      // is_ecall flag make csr to write wdata to mepc
+      is_ecall -> dinst.pc,
+      isCSRRW -> reg_v1,
+      isCSRRS -> (csr_rdata | reg_v1)
+    )
+  )
+
   when(isTypSys) {
     when(is_ecall) {
       // csrren    := true.B
@@ -106,17 +118,13 @@ class EXU extends Module {
       csr_waddr := CSRAddr.mepc
       csr_raddr := CSRAddr.mtvec
 
-      // ecall: set mepc to pc
-      // !!!note:
-      // although wen = falase
-      // is_ecall flag make csr to write wdata to mepc
-      csr_wdata := dinst.pc
+      // csr_wdata := dinst.pc
     }.elsewhen(is_mret) {
       // csrren    := true.B
       // csrwen    := false.B
       csr_raddr := CSRAddr.mepc
       csr_waddr := DontCare
-      csr_wdata := DontCare
+      // csr_wdata := DontCare
     }.otherwise {
       // csrren    := MuxLookup(func3t, false.B)(
       //   Seq(
@@ -132,11 +140,11 @@ class EXU extends Module {
       // )
       csr_raddr := dinst.code(31, 20)
       csr_waddr := csr_raddr
-      csr_wdata := Mux(
-        isCSRRW,
-        reg_v1,
-        (csr_rdata | reg_v1)
-      )
+      // csr_wdata := Mux(
+      //   isCSRRW,
+      //   reg_v1,
+      //   (csr_rdata | reg_v1)
+      // )
       // csr_wdata := Mux1H(
       //   Seq(
       //     isCSRRW -> reg_v1,
@@ -149,7 +157,7 @@ class EXU extends Module {
     // csrwen    := false.B
     csr_raddr := DontCare
     csr_waddr := DontCare
-    csr_wdata := DontCare
+    // csr_wdata := DontCare
   }
 
   // wdata
