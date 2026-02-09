@@ -33,7 +33,7 @@ class IFU extends Module {
   io.mem.dontCareB()
   io.mem.dontCareNonLiteAR()
 
-  val pc = RegEnableReadNew(io.pc.bits, io.in.valid)
+  val pc = RegEnableReadNew(io.pc.bits, io.pc.valid)
   val state = RegInit(State.idle)
 
   io.pc.ready := (state === State.idle) && !reset.asBool
