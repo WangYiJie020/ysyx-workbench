@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  if (true||is_soc()) {
+  if (is_soc()) {
     initPerfCounters();
     spdlog::info("perf counters initialized");
   }
@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
 
   spdlog::info("sim ended");
 
-  if (true||is_soc()) {
+  if (is_soc()) {
     dumpPerfCountersStatistics(std::cout);
 		dumpPerfReportOnDir(".");
   }
