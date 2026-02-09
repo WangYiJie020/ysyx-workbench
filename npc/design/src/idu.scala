@@ -54,7 +54,8 @@ class IDU extends Module {
 
   dontTouch(io)
 
-  val inReg = RegEnable(io.in.bits, io.in.fire)
+  // val inReg = RegEnable(io.in.bits, io.in.fire)
+  val inReg = io.in.bits
 
   // TODO: handle invalid instruction
 
