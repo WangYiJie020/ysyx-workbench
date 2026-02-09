@@ -139,7 +139,6 @@ class EXU extends Module {
     csr_wdata := DontCare
   }
 
-
   // wdata
 
   val nxt_pc   = Wire(Types.UWord)
@@ -173,22 +172,33 @@ class EXU extends Module {
   //     InstType.hasSame(dinst.info.typ, typ) -> data
   //   }
   // )
-  writeBackInfo.gpr.data := Mux(isTypArithmetic, alu.io.out.bits, 
-    Mux(isTypLUI, dinst.info.imm,
-      Mux(isTypAUIPC, pcAddImm,
-        Mux(isTypJALR || isTypJAL, snpc,
-          Mux(isTypSys, sysInstWrBackData, GARBAGE_UNINIT_VALUE)
+  writeBackInfo.gpr.data := Mux(
+    isTypArithmetic,
+    alu.io.out.bits,
+    Mux(
+      isTypLUI,
+      dinst.info.imm,
+      Mux(
+        isTypAUIPC,
+        pcAddImm,
+        Mux(
+          isTypJALR || isTypJAL,
+          snpc,
+          Mux(
+            isTypSys,
+            sysInstWrBackData,
+            GARBAGE_UNINIT_VALUE
+          )
         )
       )
     )
   )
 
-
   // nxt_pc
   val takeBranch = WireDefault(false.B)
 
-  writeBackInfo.pc     := dinst.pc
-  writeBackInfo.nxt_pc := nxt_pc
+  writeBackInfo.pc        := dinst.pc
+  writeBackInfo.nxt_pc    := nxt_pc
   writeBackInfo.is_ebreak := (dinst.code === "h00100073".U)
 
   val isJmpCsr = is_ecall || is_mret
@@ -196,37 +206,47 @@ class EXU extends Module {
   // TODO: handle exception
   io.jmpHappen := takeBranch || isTypJALR || isTypJAL || isJmpCsr
 
-  when(isJmpCsr) {
-    nxt_pc := csr_rdata
-  }.otherwise {
-    when(isTypJALR) {
-      val r1AddImm = reg_v1 + dinst.info.imm
-      nxt_pc := r1AddImm(31, 1) ## 0.U(1.W)
-    }.elsewhen(isTypJAL) {
-      nxt_pc := pcAddImm
-    }.elsewhen(isFmtB) {
-      //
-      // reuse alu
-      // branch func3t
-      //
-      // blt/bge 10x -> feed alu 010 -> slt
-      // bltu/bgeu 11x -> feed alu 011 -> sltu
-      //
-      // only when func3t[2] == 0 -> eq/ne
-      //
-      // val isLessThan = alu.io.out.bits(0)
-      val isLessThanU = reg_v1 < reg_v2
-      val isLessThanS = (reg_v1.asSInt < reg_v2.asSInt)
-      val isLessThan = Mux(func3t(1),isLessThanU, isLessThanS)
-      val branchCalc = Mux(func3t(2), isLessThan, (reg_v1 === reg_v2))
-      takeBranch := Mux(func3t(0), ~branchCalc, branchCalc)
+  // blt/bge 10x
+  // bltu/bgeu 11x
+  //
+  // only when func3t[2] == 0 -> eq/ne
+  val isLessThanU = reg_v1 < reg_v2
+  val isLessThanS = (reg_v1.asSInt < reg_v2.asSInt)
+  val isLessThan  = Mux(func3t(1), isLessThanU, isLessThanS)
+  val branchCalc  = Mux(func3t(2), isLessThan, (reg_v1 === reg_v2))
+  takeBranch := Mux(func3t(0), ~branchCalc, branchCalc)
 
-      nxt_pc := Mux(takeBranch, pcAddImm, snpc)
-      // when(!BranchOp.isValidBranchOp(func3t)) {
-      //   printf("(exu) UNKNOWN BRANCH func3t %d\n", func3t)
-      // }
-    }.otherwise {
-      nxt_pc := snpc
-    }
-  }
+  // val branchNxtPC = Mux(takeBranch, pcAddImm, snpc)
+
+  val r1AddImm = reg_v1 + dinst.info.imm
+  nxt_pc := Mux(
+    isJmpCsr,
+    csr_rdata,
+    Mux(
+      isTypJALR,
+      (r1AddImm(31, 1) ## 0.U(1.W)),
+      Mux(
+        isTypJAL,
+        pcAddImm,
+        Mux(isFmtB && takeBranch, pcAddImm, snpc)
+      )
+    )
+  )
+
+  // when(isJmpCsr) {
+  //   nxt_pc := csr_rdata
+  // }.otherwise {
+  //   when(isTypJALR) {
+  //     nxt_pc := r1AddImm(31, 1) ## 0.U(1.W)
+  //   }.elsewhen(isTypJAL) {
+  //     nxt_pc := pcAddImm
+  //   }.elsewhen(isFmtB) {
+  //
+  //     // when(!BranchOp.isValidBranchOp(func3t)) {
+  //     //   printf("(exu) UNKNOWN BRANCH func3t %d\n", func3t)
+  //     // }
+  //   }.otherwise {
+  //     nxt_pc := snpc
+  //   }
+  // }
 }
