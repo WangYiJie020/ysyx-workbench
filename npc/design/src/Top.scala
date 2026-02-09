@@ -83,8 +83,11 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     }
   }
   def conflict(rs: UInt, rd: GPRegReqIO._WriteRX) = (rs === rd.addr) && (rd.addr =/= 0.U) && rd.en
-  def conflictWithStage[T <: HasRs](info: T, gprWr: GPRegReqIO._WriteRX, valid: Bool) = {
-    WireDefault(valid && (conflict(info.rs1, gprWr) || conflict(info.rs2, gprWr)))
+  def conflictWithStage(rs1: UInt, rs2: UInt, gprWr: GPRegReqIO._WriteRX, valid: Bool) = {
+    WireDefault(valid && (conflict(rs1, gprWr) || conflict(rs2, gprWr)))
+  }
+  def conflictWithStage[T <: HasRs](info: T, gprWr: GPRegReqIO._WriteRX, valid: Bool) : Bool = {
+    conflictWithStage(info.rs1, info.rs2, gprWr, valid)
   }
 
   val io = IO(new TopIO)
@@ -256,13 +259,8 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   )
 
   val isEXUConflictWithWBU = conflictWithStage(
-    {
-      class rs1rs2Wrapper extends Bundle with HasRs {
-        val rs1 = exu.io.out.bits.exuWriteBack.gpr.addr(1)
-        val rs2 = exu.io.out.bits.exuWriteBack.gpr.addr(2)
-      }
-      (new rs1rs2Wrapper).asInstanceOf[HasRs]
-    },
+    exu.io.rvec.addr(0),
+    exu.io.rvec.addr(1),
     wbu.io.in.bits.gpr,
     wbu.io.in.valid
   )
