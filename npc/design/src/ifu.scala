@@ -4,7 +4,18 @@ import chisel3.util._
 import common_def._
 import busfsm._
 
+import chisel3.experimental.SourceInfo
+
 import axi4._
+
+// update reg when enable,
+// and output the new value immediately
+object RegEnableReadNew{
+  def apply[T <: Data](nxt: T, en: Bool)(implicit sourceInfo: SourceInfo): T = {
+    val reg = RegEnable(nxt, en)
+    Mux(en, nxt, reg)
+  }
+}
 
 class IFU extends Module {
   val io = IO(new Bundle {
@@ -12,17 +23,24 @@ class IFU extends Module {
     val mem = AXI4IO.Master
     val out = Decoupled(new Inst)
   })
-
-  val fsm = InnerBusCtrl(io.pc, io.out)
-
   dontTouch(io)
-
   val memIO = io.mem
-
   io.mem.dontCareAW()
   io.mem.dontCareW()
   io.mem.dontCareB()
   io.mem.dontCareNonLiteAR()
+
+  val pc = RegEnableReadNew(io.pc.bits, io.pc.valid)
+
+  dontTouch(pc)
+
+  io.out <> DontCare
+  io.pc <> DontCare
+  io.mem <> DontCare
+
+}
+
+/* 
 
   object State extends ChiselEnum {
     val idle, waitAR, waitR = Value
@@ -49,8 +67,9 @@ class IFU extends Module {
   }
   memIO.rready := (state === State.waitR) && io.out.ready
 
-  fsm.io.self_finished := ((state === State.waitR) && memIO.rvalid) || (state === State.idle && memIO.rvalid) && (!reset.asBool)
+  io.out.valid := (state === State.waitR && memIO.rvalid) || (state === State.idle && io.pc.fire && memIO.rvalid)
+  io.pc.ready 
 
   io.out.bits.code := Mux(memIO.rvalid, memIO.rdata, instReg)
-  io.out.bits.pc   := pcReg
-}
+  io.out.bits.pc   := Mux(io.pc.fire, io.pc.bits, pcReg)
+ * */
