@@ -75,11 +75,12 @@ class ICache extends Module {
   }
   val state = RegInit(State.idle)
 
-  val rdAddr = Reg(Types.UWord)
+  val rdAddrReg = Reg(Types.UWord)
 
   when(io.cpu.arvalid && io.cpu.arready) {
-    rdAddr := io.cpu.araddr
+    rdAddrReg := io.cpu.araddr
   }
+  val rdAddr       = Mux(io.cpu.arvalid && io.cpu.arready, io.cpu.araddr, rdAddrReg)
 
   val rdIdx        = ICacheParameters.extractIndex(rdAddr)
   val rdCacheBlock = blocks(rdIdx)
