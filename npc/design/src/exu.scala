@@ -93,6 +93,9 @@ class EXU extends Module {
     val csrrs = 2.U
   }
 
+  val isCSRRW = (func3t === CSROp.csrrw)
+  val isCSRRS = (func3t === CSROp.csrrs)
+
   when(isTypSys) {
     when(is_ecall) {
       csrren    := true.B
@@ -124,12 +127,17 @@ class EXU extends Module {
       )
       csr_raddr := dinst.code(31, 20)
       csr_waddr := csr_raddr
-      csr_wdata := Mux1H(
-        Seq(
-          (func3t === CSROp.csrrw) -> reg_v1,
-          (func3t === CSROp.csrrs) -> (csr_rdata | reg_v1)
-        )
+      csr_wdata := Mux(
+        isCSRRW,
+        reg_v1,
+        (csr_rdata | reg_v1)
       )
+      // csr_wdata := Mux1H(
+      //   Seq(
+      //     isCSRRW -> reg_v1,
+      //     isCSRRS -> (csr_rdata | reg_v1)
+      //   )
+      // )
     }
   }.otherwise {
     csrren    := false.B
