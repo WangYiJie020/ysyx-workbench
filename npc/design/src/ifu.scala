@@ -51,6 +51,10 @@ class IFU extends Module {
 
   // fsm.io.self_finished := ((state === State.waitR) && memIO.rvalid) || (state === State.idle)
 
+  val dbgState = Wire(UInt(2.W))
+  dontTouch(dbgState)
+  dbgState := state.asUInt
+
   io.pc.ready := (state === State.idle) || ((state === State.waitR) && memIO.rvalid)
   io.out.valid := (state === State.waitR) && memIO.rvalid
 
