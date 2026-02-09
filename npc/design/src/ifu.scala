@@ -44,7 +44,7 @@ class IFU extends Module {
   val inst = RegEnableReadNew(memIO.rdata, memIO.rvalid)
   memIO.rready := io.out.ready
   io.out.bits.code := inst
-  io.out.bits.pc   := pc
+  io.out.bits.pc   := pcReg
   io.out.valid := (state === State.waitR && memIO.rvalid) || (state === State.idle && io.pc.valid && memIO.rvalid)
 
   io.pc.ready := (state === State.idle) && !reset.asBool
