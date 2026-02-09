@@ -29,7 +29,12 @@ class LSU extends Module {
   val fsm = InnerBusCtrl(io.in, io.out, selfFinish)
 
   val outWriteBackInfo   = io.out.bits
-  val inExuWriteBackInfo = io.in.bits.exuWriteBack
+
+  val inReg = RegEnable(io.in.bits, io.in.fire)
+
+  val in = inReg
+
+  val inExuWriteBackInfo = in.exuWriteBack
 
   // mem
 
@@ -45,8 +50,8 @@ class LSU extends Module {
   val memRdRawData = Reg(Types.UWord)
   // val memRdRawData = Wire(Types.UWord)
 
-  val isLoad  = io.in.bits.isLoad && io.in.valid
-  val isStore = io.in.bits.isStore && io.in.valid
+  val isLoad  = in.isLoad //&& io.in.valid
+  val isStore = in.isStore //&& io.in.valid
   val isMemOp = isLoad || isStore
 
   val memWDone = Reg(Bool())
@@ -60,9 +65,9 @@ class LSU extends Module {
 
   selfFinish := ((!isMemOp) || memOPDone)
 
-  val memAddr            = io.in.bits.destAddr
-  val func3t             = io.in.bits.func3t
-  val storeData          = io.in.bits.storeData
+  val memAddr            = in.destAddr
+  val func3t             = in.func3t
+  val storeData          = in.storeData
   val memAddrUnalignPart = memAddr(1, 0)
   // val memAddrUnalignPartBitlen = memAddrUnalignPart << 3
 
