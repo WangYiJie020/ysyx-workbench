@@ -113,18 +113,20 @@ class EXU extends Module {
       csr_waddr := 0.U
       csr_wdata := 0.U
     }.otherwise {
-      csrren    := MuxLookup(func3t, false.B)(
-        Seq(
-          CSROp.csrrw -> (dinst.info.rd =/= 0.U),
-          CSROp.csrrs -> true.B
-        )
-      )
-      csrwen    := MuxLookup(func3t, false.B)(
-        Seq(
-          CSROp.csrrw -> true.B,
-          CSROp.csrrs -> (reg_v1 =/= 0.U)
-        )
-      )
+      // csrren    := MuxLookup(func3t, false.B)(
+      //   Seq(
+      //     CSROp.csrrw -> (dinst.info.rd =/= 0.U),
+      //     CSROp.csrrs -> true.B
+      //   )
+      // )
+      csrren := isCSRRS || (isCSRRW && (dinst.info.rd =/= 0.U))
+      csrwen := isCSRRW || (isCSRRS && (reg_v1 =/= 0.U))
+      // csrwen    := MuxLookup(func3t, false.B)(
+      //   Seq(
+      //     CSROp.csrrw -> true.B,
+      //     CSROp.csrrs -> (reg_v1 =/= 0.U)
+      //   )
+      // )
       csr_raddr := dinst.code(31, 20)
       csr_waddr := csr_raddr
       csr_wdata := Mux(
