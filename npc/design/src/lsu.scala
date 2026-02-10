@@ -82,7 +82,7 @@ class LSU extends Module {
   ctrlState := MuxLookup(ctrlState, CtrlState.direct)(
     Seq(
       CtrlState.direct -> Mux(io.in.valid && isMemOp, CtrlState.waitMem, CtrlState.direct),
-      CtrlState.waitMem -> Mux(memOPDone, CtrlState.waitOut, CtrlState.waitMem),
+      CtrlState.waitMem -> Mux(memOPDone, Mux(io.out.ready,CtrlState.direct,CtrlState.waitOut), CtrlState.waitMem),
       CtrlState.waitOut -> Mux(io.out.ready, CtrlState.direct, CtrlState.waitOut)
     )
   )
