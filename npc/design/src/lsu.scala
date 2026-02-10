@@ -37,6 +37,9 @@ class LSU extends Module {
   val isWaitB   = state === State.waitB
   val isWaitOut = state === State.waitOut
 
+  io.in.ready := isIdle
+  io.out.valid := isWaitOut
+
   val outWriteBackInfo = io.out.bits
 
   // val inReg = RegEnable(io.in.bits, io.in.fire)
