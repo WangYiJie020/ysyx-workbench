@@ -58,10 +58,10 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
       val clearDataValid = isFlushIDU || isIDUStall
 
-      when(readyToPrev && (!clearDataValid)) {
+      when(readyToPrev){
         dataValid := prevOut.valid
-      }.elsewhen(clearDataValid) {
-        // dataValid := false.B
+      }.elsewhen(thisOut.fire) {
+        dataValid := false.B
       }
       prevOut.ready := readyToPrev //&& (!clearDataValid)
     } else {
