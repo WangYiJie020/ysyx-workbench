@@ -262,13 +262,9 @@ class LSU extends Module {
   outWriteBackInfo.pc            := inExuWriteBackInfo.pc
   outWriteBackInfo.nxt_pc        := inExuWriteBackInfo.nxt_pc
 
-  def inRng(beg: UInt, end: UInt): Bool = {
-    (memAddr >= beg) && (memAddr < end)
-  }
-
-  val isSerialAddr = inRng(AddrSpace.SERIAL_ADDR_BASE, AddrSpace.SERIAL_ADDR_END)
-  val isSPIAddr    = inRng(AddrSpace.SPI_ADDR_BASE, AddrSpace.SPI_ADDR_END)
-  val isClintAddr  = inRng(AddrSpace.CLINT_ADDR_BASE, AddrSpace.CLINT_ADDR_END)
+  val isSerialAddr = AddrSpace.inRng(memAddr, AddrSpace.SERIAL)
+  val isSPIAddr    = AddrSpace.inRng(memAddr, AddrSpace.SPI)
+  val isClintAddr  = AddrSpace.inRng(memAddr, AddrSpace.CLINT)
 
   val needSkipDifftest = isMemOp && (isSerialAddr || isSPIAddr || isClintAddr)
 

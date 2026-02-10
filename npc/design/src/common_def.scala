@@ -9,13 +9,17 @@ trait HasRs {
 }
 
 object AddrSpace {
-  val SERIAL_ADDR_BASE = "h10000000".U(32.W)
-  val SERIAL_ADDR_END  = "h10001000".U(32.W)
-  val SPI_ADDR_BASE    = "h10001000".U(32.W)
-  val SPI_ADDR_END     = "h10002000".U(32.W)
+  val CLINT = ("h02000000".U(32.W), "h0200ffff".U(32.W))
+  val SPI   = ("h10001000".U(32.W), "h10002000".U(32.W))
+  val SERIAL = ("h10000000".U(32.W), "h10001000".U(32.W))
 
-  val CLINT_ADDR_BASE = "h02000000".U(32.W)
-  val CLINT_ADDR_END  = "h0200ffff".U(32.W)
+  val SOC = ("h0f000000".U(32.W), "hffffffff".U(32.W))
+
+  val NPCMEM = ("h80000000".U(32.W), "h8fffffff".U(32.W))
+
+  def inRng(addr: UInt, rng: (UInt, UInt)): Bool = {
+    (addr >= rng._1) && (addr < rng._2)
+  }
 }
 
 object Types {

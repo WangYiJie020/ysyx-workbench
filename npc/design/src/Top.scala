@@ -18,6 +18,7 @@ import npcMem._
 
 import icache._
 import common_def.{HasRs, InstType}
+import common_def.AddrSpace
 
 class TopIO extends Bundle {
   val interrupt = Input(Bool())
@@ -192,8 +193,10 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     Module(
       new AXI4LiteXBar(
         Seq(
-          ("h02000000".U(32.W), "h0200ffff".U(32.W)) -> clint.io,
-          ("h0f000000".U(32.W), "hffffffff".U(32.W)) -> otherReqSlave
+          // ("h02000000".U(32.W), "h0200ffff".U(32.W)) -> clint.io,
+          // ("h0f000000".U(32.W), "hffffffff".U(32.W)) -> otherReqSlave
+          AddrSpace.CLINT  -> clint.io,
+          AddrSpace.SOC    -> otherReqSlave,
         )
       )
     )
@@ -201,18 +204,13 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     val uart = Module(new UARTUnit)
     val mem  = Module(new AXI4MemUnit)
 
-    val MEM_BASE = "h80000000".U(32.W)
-    val MEM_END  = "h8FFFFFFF".U(32.W)
-
-    val SERIAL_BASE = "h10000000".U(32.W)
-    val SERIAL_END  = "h10001000".U(32.W)
     otherReqSlave := DontCare
     Module(
       new AXI4LiteXBar(
         Seq(
-          ("h02000000".U(32.W), "h0200ffff".U(32.W)) -> clint.io,
-          (MEM_BASE, MEM_END)                        -> mem.io,
-          (SERIAL_BASE, SERIAL_END)                  -> uart.io
+          AddrSpace.CLINT     -> clint.io,
+          AddrSpace.NPCMEM    -> mem.io,
+          AddrSpace.SERIAL    -> uart.io
         )
       )
     )
@@ -227,10 +225,6 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     printf("AXI4 DECERR on read address 0x%x\n", io.master.araddr)
     stop()
     stop()
-  }
-
-  def inRng(beg: UInt, end: UInt, addr: UInt): Bool = {
-    (addr >= beg) && (addr < end)
   }
 
   // dontTouch(wNeedSkip)
