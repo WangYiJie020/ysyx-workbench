@@ -31,7 +31,6 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val curCorrectJmpTarget = Reg(UInt(32.W))
 
   val isIDUStall    = Wire(Bool())
-  val isEXUStall    = Wire(Bool())
   val isFlushIDUReg = RegInit(false.B)
   val isFlushIDU    = Wire(Bool())
 
