@@ -54,17 +54,8 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
     prevOut.ready := readyToPrev
 
-    if (isIDUtoEXU) {
-      when(readyToPrev) {
-        dataValid := prevOut.valid
-      }
-    } else {
-      val clearDataValid = isFlushIDU || isIDUStall
-      when(readyToPrev && !clearDataValid) {
-        dataValid := prevOut.valid
-      }.elsewhen(clearDataValid) {
-        dataValid := false.B
-      }
+    when(readyToPrev) {
+      dataValid := prevOut.valid
     }
 
     thisIn.bits := RegEnable(prevOut.bits, prevOut.fire)
