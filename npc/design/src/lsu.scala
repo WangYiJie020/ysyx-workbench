@@ -67,7 +67,7 @@ class LSU extends Module {
 
   io.in.ready := Mux1H(
     Seq(
-      isDirect -> io.out.ready,
+      isDirect -> (selfFinish && io.out.ready),
       isWaitMem -> (selfFinish && io.out.ready),
       isWaitOut -> io.out.ready
     )
