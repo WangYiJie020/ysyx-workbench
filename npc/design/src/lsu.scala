@@ -74,19 +74,19 @@ class LSU extends Module {
 
   val nxtStateWhenAddrAck = Mux(isLoad, nxtStateWhenWaitR, State.waitW)
 
-  state := Mux1H[State.Type](
+  state := MuxLookup(state, State.idle)(
     Seq(
-      isIdle    -> Mux[State.Type](
+      State.idle    -> Mux(
         isMemOp,
-        Mux[State.Type](addrAck, nxtStateWhenAddrAck, nxtStateWhenIdleMeetMemOp),
+        Mux(addrAck, nxtStateWhenAddrAck, nxtStateWhenIdleMeetMemOp),
         State.idle
       ),
-      isWaitAR  -> Mux[State.Type](addrAck, State.waitR, State.waitAR),
-      isWaitAW  -> Mux[State.Type](addrAck, nxtStateWhenWaitW, State.waitAW),
-      isWaitR   -> nxtStateWhenWaitR,
-      isWaitW   -> nxtStateWhenWaitW,
-      isWaitB   -> nxtStateWhenWaitB,
-      isWaitOut -> nxtStateWhenWaitOut
+      State.waitAR  -> Mux(addrAck, State.waitR, State.waitAR),
+      State.waitAW  -> Mux(addrAck, nxtStateWhenWaitW, State.waitAW),
+      State.waitR   -> nxtStateWhenWaitR,
+      State.waitW   -> nxtStateWhenWaitW,
+      State.waitB   -> nxtStateWhenWaitB,
+      State.waitOut -> nxtStateWhenWaitOut
     )
   )
 
