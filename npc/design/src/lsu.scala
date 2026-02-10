@@ -74,7 +74,7 @@ class LSU extends Module {
 
   val nxtStateWhenAddrAck = Mux(isLoad, nxtStateWhenWaitR, State.waitW)
 
-  state := Mux1H(
+  state := Mux1H[State.Type](
     Seq(
       isIdle    -> Mux(
         isMemOp,
