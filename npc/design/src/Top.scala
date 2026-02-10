@@ -54,20 +54,19 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     val dataValid   = RegInit(false.B)
     val readyToPrev = (!dataValid) || thisInReady
 
-
     if (isIDUtoEXU) {
       when(readyToPrev && (!isIDUStall)) {
         dataValid := prevOut.valid
       }.elsewhen(isIDUStall) {
         dataValid := false.B
       }
-    prevOut.ready := readyToPrev && (!isIDUStall)
+      prevOut.ready := readyToPrev && (!isIDUStall)
     } else {
 
       when(readyToPrev) {
         dataValid := prevOut.valid
       }
-    prevOut.ready := readyToPrev
+      prevOut.ready := readyToPrev
     }
 
     thisIn.bits  := RegEnable(prevOut.bits, prevOut.fire)
@@ -264,8 +263,8 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   )
   val isConflictWithLSU = conflictWithStage(
     idu.io.out.bits.info,
-    lsu.io.out.bits.gpr,
-    lsu.io.out.valid
+    lsu.io.in.bits.exuWriteBack.gpr,
+    lsu.io.in.valid
   )
   val isConflictWithWBU = conflictWithStage(
     idu.io.out.bits.info,
