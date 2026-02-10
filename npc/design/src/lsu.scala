@@ -55,7 +55,7 @@ class LSU extends Module {
 
   val memIO = io.mem
   io.out.valid := io.in.valid && ((!isMemOp) || isWaitOut || ((isWaitB | isWaitW) && memIO.bvalid) || (isWaitR && memIO.rvalid))
-  io.in.ready  := ((!isMemOp) || (isWaitOut) || (isWaitB && memIO.bvalid) || (isWaitR && memIO.rvalid)) && io.out.ready
+  io.in.ready  := ((!isMemOp) || (isWaitOut) || ((isWaitB | isWaitB) && memIO.bvalid) || (isWaitR && memIO.rvalid)) && io.out.ready
 
   val addrAck = Mux(isLoad, io.mem.arready, io.mem.awready)
 
