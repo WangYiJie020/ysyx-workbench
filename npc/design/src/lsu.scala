@@ -76,13 +76,13 @@ class LSU extends Module {
 
   state := Mux1H[State.Type](
     Seq(
-      isIdle    -> Mux(
+      isIdle    -> Mux[State.Type](
         isMemOp,
         Mux(addrAck, nxtStateWhenAddrAck, nxtStateWhenIdleMeetMemOp),
         State.idle
       ),
-      isWaitAR  -> Mux(addrAck, State.waitR, State.waitAR),
-      isWaitAW  -> Mux(addrAck, nxtStateWhenWaitW, State.waitAW),
+      isWaitAR  -> Mux[State.Type](addrAck, State.waitR, State.waitAR),
+      isWaitAW  -> Mux[State.Type](addrAck, nxtStateWhenWaitW, State.waitAW),
       isWaitR   -> nxtStateWhenWaitR,
       isWaitW   -> nxtStateWhenWaitW,
       isWaitB   -> nxtStateWhenWaitB,
