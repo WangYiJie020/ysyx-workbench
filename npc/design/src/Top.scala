@@ -74,7 +74,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     // val isThisBusy = isThisBusyReg
 
     if (isIDUtoEXU) {
-      thisIn.valid := dataValid && (!isIDUStall) && (!isFlushIDU)
+      thisIn.valid := dataValid && (!isFlushIDU)
     } else if (isIFUtoIDU) {
       thisIn.valid := dataValid && (!isFlushIDU)
     } else {
