@@ -37,7 +37,6 @@ class LSU extends Module {
   val isWaitB   = state === State.waitB
   val isWaitOut = state === State.waitOut
 
-
   val outWriteBackInfo = io.out.bits
 
   // val inReg = RegEnable(io.in.bits, io.in.fire)
@@ -50,18 +49,17 @@ class LSU extends Module {
   val memRdRawData = Wire(Types.UWord)
   memRdRawData := io.mem.rdata
 
-  val isLoad  = in.isLoad  && io.in.valid
+  val isLoad  = in.isLoad && io.in.valid
   val isStore = in.isStore && io.in.valid
   val isMemOp = isLoad || isStore
 
   val memIO = io.mem
-  io.out.valid := io.in.valid && ((!isMemOp) || isWaitOut || ((isWaitB|isWaitW) && memIO.bvalid) || (isWaitR && memIO.rvalid))
-  io.in.ready := ((!isMemOp) || (isWaitOut) || (isWaitB && memIO.bvalid) || (isWaitR && memIO.rvalid)) && io.out.ready
+  io.out.valid := io.in.valid && ((!isMemOp) || isWaitOut || ((isWaitB | isWaitW) && memIO.bvalid) || (isWaitR && memIO.rvalid))
+  io.in.ready  := ((!isMemOp) || (isWaitOut) || (isWaitB && memIO.bvalid) || (isWaitR && memIO.rvalid)) && io.out.ready
 
   val addrAck = Mux(isLoad, io.mem.arready, io.mem.awready)
 
 // val memOPDone = ???
-
 
   // val selfFinish = Wire(Bool())
   // selfFinish := ((!isMemOp) || memOPDone)
@@ -81,7 +79,7 @@ class LSU extends Module {
       isWaitAR  -> Mux(addrAck, State.waitR, State.waitAR),
       isWaitAW  -> Mux(addrAck, State.waitW, State.waitAW),
       isWaitR   -> Mux(memIO.rvalid && memIO.rready, nxtStateWhenWaitOut, State.waitR),
-      isWaitW   -> Mux(memIO.wvalid && memIO.wready, State.waitB, State.waitW),
+      isWaitW   -> Mux(memIO.wvalid && memIO.wready, Mux(io.out.ready, State.idle, State.waitB), State.waitW),
       isWaitB   -> Mux(memIO.bvalid && memIO.bready, nxtStateWhenWaitOut, State.waitB),
       isWaitOut -> nxtStateWhenWaitOut
     )
