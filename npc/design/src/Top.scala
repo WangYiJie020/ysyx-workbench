@@ -54,7 +54,6 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     val dataValid   = RegInit(false.B)
     val readyToPrev = (!dataValid) || thisInReady
 
-    prevOut.ready := readyToPrev
 
     if (isIDUtoEXU) {
       when(readyToPrev && (!isIDUStall)) {
@@ -62,11 +61,13 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
       }.elsewhen(isIDUStall) {
         dataValid := false.B
       }
+    prevOut.ready := readyToPrev && (!isIDUStall)
     } else {
 
       when(readyToPrev) {
         dataValid := prevOut.valid
       }
+    prevOut.ready := readyToPrev
     }
 
     thisIn.bits  := RegEnable(prevOut.bits, prevOut.fire)
