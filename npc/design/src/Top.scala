@@ -52,7 +52,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
     // val thisInReady = thisIn.ready
     val dataValid   = RegInit(false.B)
-    val readyToPrev = (!dataValid) || thisInReady
+    val readyToPrev = (!dataValid) || thisIn.ready
 
     if (isIDUtoEXU) {
 
