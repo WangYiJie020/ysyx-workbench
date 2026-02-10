@@ -25,27 +25,25 @@ class LSUIO extends Bundle {
 class LSU extends Module {
   val io = IO(new LSUIO)
 
-  val selfFinish = Wire(Bool())
+  object State extends ChiselEnum {
+    val idle, waitAR, waitAW, waitR, waitW, waitB, waitOut = Value
+  }
+  val state = RegInit(State.idle)
+  val isIdle    = state === State.idle
+  val isWaitAR  = state === State.waitAR
+  val isWaitAW  = state === State.waitAW
+  val isWaitR   = state === State.waitR
+  val isWaitW   = state === State.waitW
+  val isWaitB   = state === State.waitB
+  val isWaitOut = state === State.waitOut
 
   val outWriteBackInfo = io.out.bits
-
-  object CtrlState extends ChiselEnum {
-    val direct, waitMem, waitOut = Value
-  }
-  val ctrlState = RegInit(CtrlState.direct)
-
-  val isDirect  = (ctrlState === CtrlState.direct)
-  val isWaitMem = (ctrlState === CtrlState.waitMem)
-  val isWaitOut = (ctrlState === CtrlState.waitOut)
 
   // val inReg = RegEnable(io.in.bits, io.in.fire)
   // val inReg = RegEnableReadNew(io.in.bits, io.in.fire)
 
-  val in = io.in.bits
-
+  val in                 = io.in.bits
   val inExuWriteBackInfo = in.exuWriteBack
-
-  // mem
 
   val memRdRawData = Reg(Types.UWord)
   // val memRdRawData = Wire(Types.UWord)
@@ -54,36 +52,33 @@ class LSU extends Module {
   val isStore = in.isStore // && io.in.valid
   val isMemOp = isLoad || isStore
 
-  val memWDone = Reg(Bool())
-  val memRDone = Reg(Bool())
+  val addrAck = Mux(isLoad, io.mem.arready, io.mem.awready)
 
-  val memAddrSent = Reg(Bool())
-
-  val memOPDone = memWDone || memRDone
+// val memOPDone = ???
 
   val memIO = io.mem
 
-  selfFinish := ((!isMemOp) || memOPDone)
+  // val selfFinish = Wire(Bool())
+  // selfFinish := ((!isMemOp) || memOPDone)
 
-  io.in.ready := Mux1H(
+  val nxtStateWhenAddrAck       = Mux(isLoad, State.waitR, State.waitW)
+  val nxtStateWhenIdleMeetMemOp = Mux(isLoad, State.waitAR, State.waitAW)
+
+  val nxtStateWhenWaitOut = Mux(io.out.ready, State.idle, State.waitOut)
+
+  state := Mux1H(
     Seq(
-      isDirect -> (selfFinish && io.out.ready),
-      isWaitMem -> (selfFinish && io.out.ready),
-      isWaitOut -> io.out.ready
-    )
-  )
-  io.out.valid := Mux1H(
-    Seq(
-      isDirect -> (io.in.valid && (!isMemOp)),
-      isWaitMem -> (memOPDone),
-      isWaitOut -> (memOPDone)
-    )
-  )
-  ctrlState := MuxLookup(ctrlState, CtrlState.direct)(
-    Seq(
-      CtrlState.direct -> Mux(io.in.valid && isMemOp, CtrlState.waitMem, CtrlState.direct),
-      CtrlState.waitMem -> Mux(memOPDone, Mux(io.out.ready,CtrlState.direct,CtrlState.waitOut), CtrlState.waitMem),
-      CtrlState.waitOut -> Mux(io.out.ready, CtrlState.direct, CtrlState.waitOut)
+      isIdle    -> Mux(
+        isMemOp,
+        Mux(addrAck, nxtStateWhenAddrAck, nxtStateWhenIdleMeetMemOp),
+        State.idle
+      ),
+      isWaitAR  -> Mux(addrAck, State.waitR, State.waitAR),
+      isWaitAW  -> Mux(addrAck, State.waitW, State.waitAW),
+      isWaitR   -> Mux(memIO.rvalid && memIO.rready, nxtStateWhenWaitOut, State.waitR),
+      isWaitW   -> Mux(memIO.wvalid && memIO.wready, State.waitB, State.waitW),
+      isWaitB   -> Mux(memIO.bvalid && memIO.bready, nxtStateWhenWaitOut, State.waitB),
+      isWaitOut -> nxtStateWhenWaitOut
     )
   )
 
@@ -94,18 +89,7 @@ class LSU extends Module {
   // val memAddrUnalignPartBitlen = memAddrUnalignPart << 3
 
   memIO.araddr  := memAddr
-  memIO.arvalid := isLoad && (!memRDone) && (!memAddrSent)
-
-  // Weird optmization from chisel make this mux can reuse
-  // other mux logic and reduce area
-  // synthesis area smaller than using func3t directly
-  //
-  val memOpSize = func3t(1, 0)
-  // val memOpSize = Mux(func3t(1), 2.U, func3t(0))
-
-  val memOpIsWord = func3t(1)
-  val memOpIsHalf = (~func3t(1)) && func3t(0)
-  val memOpIsByte = (~func3t(1)) && (~func3t(0))
+  memIO.arvalid := isLoad && (isIdle || isWaitAR)
 
   // val memOpSize = MuxLookup(func3t, 0.U)(
   //   Seq(
@@ -116,6 +100,11 @@ class LSU extends Module {
   //     MemOp.lhu      -> 1.U
   //   )
   // )
+  val memOpSize = func3t(1, 0)
+
+  val memOpIsWord = func3t(1)
+  val memOpIsHalf = (~func3t(1)) && func3t(0)
+  val memOpIsByte = (~func3t(1)) && (~func3t(0))
 
   memIO.arid    := 0.U
   memIO.arlen   := 0.U
@@ -147,15 +136,15 @@ class LSU extends Module {
   //   )
   // )
 
-  when(memIO.arvalid && memIO.arready) {
-    memAddrSent := true.B
-  }
+  // when(memIO.arvalid && memIO.arready) {
+  //   memAddrSent := true.B
+  // }
 
   // memRdRawData := memIO.rdata
-  when(memIO.rvalid && !memRDone) {
-    memRdRawData := memIO.rdata
-    memRDone     := true.B
-  }
+  // when(memIO.rvalid && !memRDone) {
+  //   memRdRawData := memIO.rdata
+  //   memRDone     := true.B
+  // }
   // val downStreamRecved = Reg(Bool())
   // dontTouch(downStreamRecved)
   // memIO.rready := io.out.ready
@@ -167,11 +156,11 @@ class LSU extends Module {
   // }.elsewhen(io.dinst.valid && isMemOp){
   //   downStreamRecved := false.B
   // }
-  when((!isMemOp) || (io.out.fire)) {
-    memRDone    := false.B
-    memWDone    := false.B
-    memAddrSent := false.B
-  }
+  // when((!isMemOp) || (io.out.fire)) {
+  //   memRDone    := false.B
+  //   memWDone    := false.B
+  //   memAddrSent := false.B
+  // }
 
   // mem write
 
@@ -181,9 +170,11 @@ class LSU extends Module {
   val memWData = memIO.wdata
   val memWMask = memIO.wstrb
 
-  memIO.awvalid := isStore && (!memWDone) && (!memAddrSent)
-  memIO.wvalid  := isStore && (!memWDone)
-  memIO.wlast   := memIO.wvalid
+  // memIO.awvalid := isStore && (!memWDone) && (!memAddrSent)
+  // memIO.wvalid  := isStore && (!memWDone)
+  memIO.awvalid := isStore && (isIdle || isWaitAR)
+  memIO.wvalid  := isStore && (isIdle || isWaitAW || isWaitW)
+  memIO.wlast   := true.B
 
   // NOTE: need keep to make simulation bind signal by names
   dontTouch(io.mem)
@@ -195,9 +186,9 @@ class LSU extends Module {
   memIO.awsize  := memOpSize
   memIO.awburst := 1.U
 
-  when(memIO.awvalid && memIO.awready) {
-    memAddrSent := true.B
-  }
+  // when(memIO.awvalid && memIO.awready) {
+  //   memAddrSent := true.B
+  // }
   // when(memIO.wvalid && memIO.wready) {
   //   memWDone := true.B
   // }
@@ -208,9 +199,9 @@ class LSU extends Module {
   // later read operation may have higher priority and
   // the write may not be finished yet
   //
-  when(memIO.bvalid && memIO.bready) {
-    memWDone := true.B
-  }
+  // when(memIO.bvalid && memIO.bready) {
+  //   memWDone := true.B
+  // }
   memIO.bready := true.B
 
   // memWData := storeData << memAddrUnalignPartBitlen
