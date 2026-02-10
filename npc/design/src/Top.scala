@@ -42,44 +42,45 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     isIFUtoIDU: Boolean = false,
     isEXUtoLSU: Boolean = false
   ) = {
-    // prevOut <> thisIn
-    val thisInReady = if (isIDUtoEXU) {
-      thisIn.ready && (!isIDUStall)
-    } else {
-      thisIn.ready
-    }
 
-    val dataValid   = RegInit(false.B)
-    val readyToPrev = (!dataValid) || thisInReady
-
-    prevOut.ready := readyToPrev
-
-    when(readyToPrev) {
-      dataValid := prevOut.valid
-    }
-
-    thisIn.bits := RegEnable(prevOut.bits, prevOut.fire)
-
-    // val isThisBusyReg   = RegInit(false.B)
-    // val normalNxtBsy = Mux(isThisBusyReg, (!thisOut.fire) || (prevOut.fire), prevOut.fire)
+    prevOut <> thisIn
+    // val thisInReady = if (isIDUtoEXU) {
+    //   thisIn.ready && (!isIDUStall)
+    // } else {
+    //   thisIn.ready
+    // }
+    //
+    // val dataValid   = RegInit(false.B)
+    // val readyToPrev = (!dataValid) || thisInReady
+    //
+    // prevOut.ready := readyToPrev
+    //
+    // when(readyToPrev) {
+    //   dataValid := prevOut.valid
+    // }
+    //
+    // thisIn.bits := RegEnable(prevOut.bits, prevOut.fire)
+    //
+    // // val isThisBusyReg   = RegInit(false.B)
+    // // val normalNxtBsy = Mux(isThisBusyReg, (!thisOut.fire) || (prevOut.fire), prevOut.fire)
+    // //
+    // // if (isIDUtoEXU) {
+    // //   isThisBusyReg := normalNxtBsy && (!isFlushIDU)
+    // // } else if (isIFUtoIDU) {
+    // //   isThisBusyReg := normalNxtBsy && (!isFlushIDU)
+    // // } else {
+    // //   isThisBusyReg := normalNxtBsy
+    // // }
+    //
+    // // val isThisBusy = isThisBusyReg
     //
     // if (isIDUtoEXU) {
-    //   isThisBusyReg := normalNxtBsy && (!isFlushIDU)
+    //   thisIn.valid := dataValid && (!isFlushIDU)
     // } else if (isIFUtoIDU) {
-    //   isThisBusyReg := normalNxtBsy && (!isFlushIDU)
+    //   thisIn.valid := dataValid && (!isFlushIDU)
     // } else {
-    //   isThisBusyReg := normalNxtBsy
+    //   thisIn.valid := dataValid
     // }
-
-    // val isThisBusy = isThisBusyReg
-
-    if (isIDUtoEXU) {
-      thisIn.valid := dataValid && (!isFlushIDU)
-    } else if (isIFUtoIDU) {
-      thisIn.valid := dataValid && (!isFlushIDU)
-    } else {
-      thisIn.valid := dataValid
-    }
   }
   def conflict(rs: UInt, rd: UInt, en: Bool) = (rs === rd) && (rd =/= 0.U) && en
   def conflictWithStage(rs1: UInt, rs2: UInt, gprWr: GPRegReqIO._WriteRX, valid: Bool) = {
