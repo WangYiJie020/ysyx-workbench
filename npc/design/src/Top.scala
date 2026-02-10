@@ -155,7 +155,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   dontTouch(isIDUMeetCorrectJmpTarget)
   dontTouch(curCorrectJmpTarget)
 
-  when(isBranchGuessWrong) {
+  when(isBranchGuessWrong && (!isIFUMeetCorrectJmpTarget)) {
     isFlushIDUReg := true.B
   }.elsewhen(isIDUMeetCorrectJmpTarget) {
     isFlushIDUReg := false.B
