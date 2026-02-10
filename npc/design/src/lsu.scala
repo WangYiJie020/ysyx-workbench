@@ -234,7 +234,7 @@ class LSU extends Module {
   //   )
   // )
 
-  outWriteBackInfo.csr <> inExuWriteBackInfo.csr
+  outWriteBackInfo.csr := inExuWriteBackInfo.csr
   outWriteBackInfo.csr_ecallflag := inExuWriteBackInfo.csr_ecallflag
   outWriteBackInfo.gpr.addr      := inExuWriteBackInfo.gpr.addr
   outWriteBackInfo.gpr.en        := inExuWriteBackInfo.gpr.en
