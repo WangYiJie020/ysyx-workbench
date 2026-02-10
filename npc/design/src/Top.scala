@@ -135,7 +135,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
   val isBranchGuessWrongReg     = RegInit(false.B)
   val isIFUMeetCorrectJmpTarget = Wire(Bool())
-  isBranchGuessWrong := isBranchGuessWrongReg
+  isBranchGuessWrong := isBranchGuessWrongReg || (exu.io.out.valid && exu.io.jmpHappen)
   when(exu.io.out.valid) {
     isBranchGuessWrongReg := exu.io.jmpHappen // && exu.io.out.bits.exuWriteBack.nxt_pc =/= exu.io.out.bits.exuWriteBack.pc + 4.U
   }.elsewhen(isIFUMeetCorrectJmpTarget) {
