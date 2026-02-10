@@ -8,6 +8,16 @@ trait HasRs {
   val rs2: UInt
 }
 
+object AddrSpace {
+  val SERIAL_ADDR_BASE = "h10000000".U(32.W)
+  val SERIAL_ADDR_END  = "h10001000".U(32.W)
+  val SPI_ADDR_BASE    = "h10001000".U(32.W)
+  val SPI_ADDR_END     = "h10002000".U(32.W)
+
+  val CLINT_ADDR_BASE = "h02000000".U(32.W)
+  val CLINT_ADDR_END  = "h0200ffff".U(32.W)
+}
+
 object Types {
   object BitWidth {
     // N_REG = 16

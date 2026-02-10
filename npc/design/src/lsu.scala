@@ -55,7 +55,7 @@ class LSU extends Module {
 
   val memIO = io.mem
   io.out.valid := io.in.valid && ((!isMemOp) || isWaitOut || ((isWaitB | isWaitW) && memIO.bvalid) || ((isWaitR | isIdle) && memIO.rvalid))
-  io.in.ready  := ((!isMemOp) || (isWaitOut) || ((isWaitW | isWaitB) && memIO.bvalid) || ((isWaitR|isIdle) && memIO.rvalid)) && io.out.ready
+  io.in.ready  := ((!isMemOp) || (isWaitOut) || ((isWaitW | isWaitB) && memIO.bvalid) || ((isWaitR | isIdle) && memIO.rvalid)) && io.out.ready
 
   val addrAck = Mux(isLoad, io.mem.arready, io.mem.awready)
 
@@ -67,11 +67,11 @@ class LSU extends Module {
   val nxtStateWhenIdleMeetMemOp = Mux(isLoad, State.waitAR, State.waitAW)
 
   val nxtStateWhenWaitOut = Mux(io.out.ready, State.idle, State.waitOut)
-  val nxtStateWhenWaitB = Mux(memIO.bvalid && memIO.bready, nxtStateWhenWaitOut, State.waitB)
+  val nxtStateWhenWaitB   = Mux(memIO.bvalid && memIO.bready, nxtStateWhenWaitOut, State.waitB)
 
   val nxtStateWhenWaitR = Mux(memIO.rvalid && memIO.rready, nxtStateWhenWaitOut, State.waitR)
 
-  val nxtStateWhenAddrAck       = Mux(isLoad, nxtStateWhenWaitR, State.waitW)
+  val nxtStateWhenAddrAck = Mux(isLoad, nxtStateWhenWaitR, State.waitW)
 
   state := Mux1H(
     Seq(
@@ -262,11 +262,16 @@ class LSU extends Module {
   outWriteBackInfo.pc            := inExuWriteBackInfo.pc
   outWriteBackInfo.nxt_pc        := inExuWriteBackInfo.nxt_pc
 
-  val CLINT_ADDR_BASE = "h02000000".U(32.W)
-  val CLINT_ADDR_END  = "h0200ffff".U(32.W)
+  def inRng(beg: UInt, end: UInt): Bool = {
+    (memAddr >= beg) && (memAddr < end)
+  }
 
-  val isClintAddr = (memAddr >= CLINT_ADDR_BASE) && (memAddr < CLINT_ADDR_END)
+  val isSerialAddr = inRng(AddrSpace.SERIAL_ADDR_BASE, AddrSpace.SERIAL_ADDR_END)
+  val isSPIAddr    = inRng(AddrSpace.SPI_ADDR_BASE, AddrSpace.SPI_ADDR_END)
+  val isClintAddr  = inRng(AddrSpace.CLINT_ADDR_BASE, AddrSpace.CLINT_ADDR_END)
 
-  outWriteBackInfo.skipDifftest  := Mux(isMemOp, isClintAddr, false.B)
+  val needSkipDifftest = isMemOp && (isSerialAddr || isSPIAddr || isClintAddr)
+
+  outWriteBackInfo.skipDifftest := needSkipDifftest
 
 }
