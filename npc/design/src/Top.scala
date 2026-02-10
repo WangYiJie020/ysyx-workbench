@@ -261,11 +261,17 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     exu.io.out.bits.exuWriteBack.gpr,
     exu.io.out.valid
   )
-  val isConflictWithLSU = conflictWithStage(
+  val isConflictWithLSUIn = conflictWithStage(
     idu.io.out.bits.info,
     lsu.io.in.bits.exuWriteBack.gpr,
     lsu.io.in.valid
   )
+  val isConflictWithLSUOut = conflictWithStage(
+    idu.io.out.bits.info,
+    lsu.io.out.bits.gpr,
+    lsu.io.out.valid
+  )
+  val isConflictWithLSU = isConflictWithLSUIn || isConflictWithLSUOut
   val isConflictWithWBU = conflictWithStage(
     idu.io.out.bits.info,
     wbu.io.in.bits.gpr,
@@ -273,6 +279,8 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   )
 
   dontTouch(isConflictWithEXU)
+  dontTouch(isConflictWithLSUIn)
+  dontTouch(isConflictWithLSUOut)
   dontTouch(isConflictWithLSU)
   dontTouch(isConflictWithWBU)
 

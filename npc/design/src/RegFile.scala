@@ -75,7 +75,7 @@ class RegisterFile(READ_PORTS: Int = 2) extends Module {
     when(io.read.addr(i) === 0.U) {
       io.read.data(i) := 0.U
     }.otherwise {
-      io.read.data(i) := Mux(io.read.addr(i) === io.write.addr && io.write.en, io.write.data, reg(io.read.addr(i)))
+      io.read.data(i) := reg(io.read.addr(i))
       //     printf("(RegFile) read reg[%d] => 0x%x\n", io.rvec.addr(i), io.rvec.data(i))
     }
   }
