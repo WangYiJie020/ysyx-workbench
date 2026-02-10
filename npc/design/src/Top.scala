@@ -58,7 +58,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
       val clearDataValid = isFlushIDU || isIDUStall
 
-      when(readyToPrev){
+      when(readyToPrev) {
         dataValid := prevOut.valid && (!clearDataValid)
       }.elsewhen(thisOut.fire) {
         dataValid := false.B
@@ -241,6 +241,9 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     inRng(SPI_ADDR_BASE, SPI_ADDR_END, io.master.awaddr)
   val rNeedSkip = inRng(SERIAL_ADDR_BASE, SERIAL_ADDR_END, io.master.araddr) ||
     inRng(SPI_ADDR_BASE, SPI_ADDR_END, io.master.araddr)
+
+  dontTouch(wNeedSkip)
+  dontTouch(rNeedSkip)
 
   when(io.master.awvalid && io.master.awready && wNeedSkip) {
     RawClockedVoidFunctionCall("skip_difftest_ref")(
