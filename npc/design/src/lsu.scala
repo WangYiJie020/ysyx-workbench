@@ -50,8 +50,8 @@ class LSU extends Module {
   val memRdRawData = Reg(Types.UWord)
   // val memRdRawData = Wire(Types.UWord)
 
-  val isLoad  = in.isLoad  // && io.in.valid
-  val isStore = in.isStore // && io.in.valid
+  val isLoad  = in.isLoad  && io.in.valid
+  val isStore = in.isStore && io.in.valid
   val isMemOp = isLoad || isStore
 
   io.out.valid := (!isMemOp) || isWaitOut
