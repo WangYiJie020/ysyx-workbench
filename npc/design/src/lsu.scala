@@ -31,7 +31,7 @@ class LSU extends Module {
   val outWriteBackInfo   = io.out.bits
 
   // val inReg = RegEnable(io.in.bits, io.in.fire)
-  val inReg = io.in.bits
+  val inReg = RegEnableReadNew(io.in.bits, io.in.fire)
 
   val in = inReg
 
