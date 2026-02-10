@@ -30,7 +30,6 @@ class EXUWriteBackGen extends Module {
 class EXU extends Module {
   val io = IO(new Bundle {
     val in        = Flipped(Decoupled(new DecodedInst))
-    val rvec      = GPRegReqIO.TX.VecRead(2)
     val csr_rvec  = CSRegReqIO.TX.SingleRead
     val jmpHappen = Output(Bool())
     val out       = Decoupled(new LSUInput)
@@ -72,11 +71,8 @@ class EXU extends Module {
 
   // reg
 
-  io.rvec.en      := true.B
-  io.rvec.addr(0) := dinst.info.rs1
-  io.rvec.addr(1) := dinst.info.rs2
-  val reg_v1 = io.rvec.data(0)
-  val reg_v2 = io.rvec.data(1)
+  val reg_v1 = dinst.info.reg1
+  val reg_v2 = dinst.info.reg2
 
   // alu_in.src1 := reg_v1
   alu_in.src1 := reg_v1

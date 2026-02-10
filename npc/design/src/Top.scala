@@ -261,21 +261,21 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     wbu.io.in.valid
   )
 
-  val isEXUConflictWithWBU = conflictWithStage(
-    exu.io.rvec.addr(0),
-    exu.io.rvec.addr(1),
-    wbu.io.in.bits.gpr,
-    wbu.io.in.valid
-  )
+  // val isEXUConflictWithWBU = conflictWithStage(
+  //   exu.io.rvec.addr(0),
+  //   exu.io.rvec.addr(1),
+  //   wbu.io.in.bits.gpr,
+  //   wbu.io.in.valid
+  // )
   dontTouch(isConflictWithEXU)
   dontTouch(isConflictWithLSU)
   dontTouch(isConflictWithWBU)
-  dontTouch(isEXUConflictWithWBU)
+  // dontTouch(isEXUConflictWithWBU)
 
-  isEXUStall := isEXUConflictWithWBU
+  // isEXUStall := isEXUConflictWithWBU
 
   val isRdAfterWr = Wire(Bool())
-  isRdAfterWr := isConflictWithEXU || isConflictWithLSU || isConflictWithWBU || isEXUConflictWithWBU
+  isRdAfterWr := isConflictWithEXU || isConflictWithLSU || isConflictWithWBU //|| isEXUConflictWithWBU
   dontTouch(isRdAfterWr)
 
   isIDUStall := isRdAfterWr
@@ -285,7 +285,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   pipelineConnect(idu.io.out, exu.io.in, exu.io.out, isIDUtoEXU = true)
   pipelineConnect(exu.io.out, lsu.io.in, lsu.io.out)
 
-  exu.io.rvec <> gprs.io.read
+  idu.io.rvec <> gprs.io.read
   exu.io.csr_rvec <> csrs.io.read
 
   // Write back
