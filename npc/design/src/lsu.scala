@@ -175,7 +175,7 @@ class LSU extends Module {
 
   // memIO.awvalid := isStore && (!memWDone) && (!memAddrSent)
   // memIO.wvalid  := isStore && (!memWDone)
-  memIO.awvalid := isStore && (isIdle || isWaitAR)
+  memIO.awvalid := isStore && (isIdle || isWaitAW)
   memIO.wvalid  := isStore && (isIdle || isWaitAW || isWaitW)
   memIO.wlast   := true.B
 
