@@ -50,18 +50,26 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
       thisIn.ready
     }
 
-
     // val thisInReady = thisIn.ready
     val dataValid   = RegInit(false.B)
     val readyToPrev = (!dataValid) || thisInReady
 
     prevOut.ready := readyToPrev
 
-    when(readyToPrev) {
-      dataValid := prevOut.valid
+    if (isIDUtoEXU) {
+      when(readyToPrev && (!isIDUStall)) {
+        dataValid := prevOut.valid
+      }.elsewhen(isIDUStall) {
+        dataValid := false.B
+      }
+    } else {
+
+      when(readyToPrev) {
+        dataValid := prevOut.valid
+      }
     }
 
-    thisIn.bits := RegEnable(prevOut.bits, prevOut.fire)
+    thisIn.bits  := RegEnable(prevOut.bits, prevOut.fire)
     thisIn.valid := dataValid
     //
     // // val isThisBusyReg   = RegInit(false.B)
