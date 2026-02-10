@@ -46,8 +46,9 @@ class LSU extends Module {
   val in                 = io.in.bits
   val inExuWriteBackInfo = in.exuWriteBack
 
-  val memRdRawData = Reg(Types.UWord)
-  // val memRdRawData = Wire(Types.UWord)
+  // val memRdRawData = Reg(Types.UWord)
+  val memRdRawData = Wire(Types.UWord)
+  memRdRawData := io.mem.rdata
 
   val isLoad  = in.isLoad  && io.in.valid
   val isStore = in.isStore && io.in.valid
