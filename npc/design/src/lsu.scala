@@ -26,33 +26,32 @@ class LSU extends Module {
   val io = IO(new LSUIO)
 
   val selfFinish = Wire(Bool())
-  val fsm = InnerBusCtrl(io.in, io.out, selfFinish)
 
-  val outWriteBackInfo   = io.out.bits
+  val outWriteBackInfo = io.out.bits
+
+  object CtrlState extends ChiselEnum {
+    val direct, waitMem, waitOut = Value
+  }
+  val ctrlState = RegInit(CtrlState.direct)
+
+  val isDirect  = (ctrlState === CtrlState.direct)
+  val isWaitMem = (ctrlState === CtrlState.waitMem)
+  val isWaitOut = (ctrlState === CtrlState.waitOut)
 
   // val inReg = RegEnable(io.in.bits, io.in.fire)
-  val inReg = RegEnableReadNew(io.in.bits, io.in.fire)
+  // val inReg = RegEnableReadNew(io.in.bits, io.in.fire)
 
-  val in = inReg
+  val in = io.in.bits
 
   val inExuWriteBackInfo = in.exuWriteBack
 
   // mem
 
-  // object MemOp {
-  //   val byte     = 0.U
-  //   val halfword = 1.U
-  //   val word     = 2.U
-  //   val lbu      = 4.U
-  //   val lhu      = 5.U
-  //
-  // }
-
   val memRdRawData = Reg(Types.UWord)
   // val memRdRawData = Wire(Types.UWord)
 
-  val isLoad  = in.isLoad //&& io.in.valid
-  val isStore = in.isStore //&& io.in.valid
+  val isLoad  = in.isLoad  // && io.in.valid
+  val isStore = in.isStore // && io.in.valid
   val isMemOp = isLoad || isStore
 
   val memWDone = Reg(Bool())
@@ -65,6 +64,28 @@ class LSU extends Module {
   val memIO = io.mem
 
   selfFinish := ((!isMemOp) || memOPDone)
+
+  io.in.ready := Mux1H(
+    Seq(
+      isDirect -> io.out.ready,
+      isWaitMem -> (selfFinish && io.out.ready),
+      isWaitOut -> io.out.ready
+    )
+  )
+  io.out.valid := Mux1H(
+    Seq(
+      isDirect -> io.in.valid,
+      isWaitMem -> (memOPDone),
+      isWaitOut -> (memOPDone)
+    )
+  )
+  ctrlState := MuxLookup(ctrlState, CtrlState.direct)(
+    Seq(
+      CtrlState.direct -> Mux(io.in.valid && isMemOp, CtrlState.waitMem, CtrlState.direct),
+      CtrlState.waitMem -> Mux(memOPDone, CtrlState.waitOut, CtrlState.waitMem),
+      CtrlState.waitOut -> Mux(io.out.ready, CtrlState.direct, CtrlState.waitOut)
+    )
+  )
 
   val memAddr            = in.destAddr
   val func3t             = in.func3t
@@ -234,7 +255,7 @@ class LSU extends Module {
   //   )
   // )
 
-  outWriteBackInfo.csr := inExuWriteBackInfo.csr
+  outWriteBackInfo.csr           := inExuWriteBackInfo.csr
   outWriteBackInfo.csr_ecallflag := inExuWriteBackInfo.csr_ecallflag
   outWriteBackInfo.gpr.addr      := inExuWriteBackInfo.gpr.addr
   outWriteBackInfo.gpr.en        := inExuWriteBackInfo.gpr.en
