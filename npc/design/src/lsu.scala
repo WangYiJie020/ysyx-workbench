@@ -64,11 +64,14 @@ class LSU extends Module {
   // val selfFinish = Wire(Bool())
   // selfFinish := ((!isMemOp) || memOPDone)
 
-  val nxtStateWhenAddrAck       = Mux(isLoad, State.waitR, State.waitW)
   val nxtStateWhenIdleMeetMemOp = Mux(isLoad, State.waitAR, State.waitAW)
 
   val nxtStateWhenWaitOut = Mux(io.out.ready, State.idle, State.waitOut)
   val nxtStateWhenWaitB = Mux(memIO.bvalid && memIO.bready, nxtStateWhenWaitOut, State.waitB)
+
+  val nxtStateWhenWaitR = Mux(memIO.rvalid && memIO.rready, nxtStateWhenWaitOut, State.waitR)
+
+  val nxtStateWhenAddrAck       = Mux(isLoad, nxtStateWhenWaitR, State.waitW)
 
   state := Mux1H(
     Seq(
@@ -79,7 +82,7 @@ class LSU extends Module {
       ),
       isWaitAR  -> Mux(addrAck, State.waitR, State.waitAR),
       isWaitAW  -> Mux(addrAck, State.waitW, State.waitAW),
-      isWaitR   -> Mux(memIO.rvalid && memIO.rready, nxtStateWhenWaitOut, State.waitR),
+      isWaitR   -> nxtStateWhenWaitR,
       isWaitW   -> Mux(memIO.wvalid && memIO.wready, nxtStateWhenWaitB, State.waitW),
       isWaitB   -> nxtStateWhenWaitB,
       isWaitOut -> nxtStateWhenWaitOut
