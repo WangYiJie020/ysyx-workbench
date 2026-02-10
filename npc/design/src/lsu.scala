@@ -54,13 +54,13 @@ class LSU extends Module {
   val isStore = in.isStore && io.in.valid
   val isMemOp = isLoad || isStore
 
-  io.out.valid := io.in.valid && ((!isMemOp) || isWaitOut)
+  val memIO = io.mem
+  io.out.valid := io.in.valid && ((!isMemOp) || isWaitOut || (isWaitB && memIO.bvalid))
 
   val addrAck = Mux(isLoad, io.mem.arready, io.mem.awready)
 
 // val memOPDone = ???
 
-  val memIO = io.mem
 
   // val selfFinish = Wire(Bool())
   // selfFinish := ((!isMemOp) || memOPDone)
