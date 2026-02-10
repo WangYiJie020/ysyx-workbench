@@ -167,7 +167,7 @@ class LSU extends Module {
   // }.elsewhen(io.dinst.valid && isMemOp){
   //   downStreamRecved := false.B
   // }
-  when(!isMemOp) {
+  when((!isMemOp) || (io.out.fire)) {
     memRDone    := false.B
     memWDone    := false.B
     memAddrSent := false.B
