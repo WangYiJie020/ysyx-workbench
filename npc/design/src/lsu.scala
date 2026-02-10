@@ -262,4 +262,11 @@ class LSU extends Module {
   outWriteBackInfo.pc            := inExuWriteBackInfo.pc
   outWriteBackInfo.nxt_pc        := inExuWriteBackInfo.nxt_pc
 
+  val CLINT_ADDR_BASE = "h02000000".U(32.W)
+  val CLINT_ADDR_END  = "h0200ffff".U(32.W)
+
+  val isClintAddr = (memAddr >= CLINT_ADDR_BASE) && (memAddr < CLINT_ADDR_END)
+
+  outWriteBackInfo.skipDifftest  := Mux(isMemOp, isClintAddr, false.B)
+
 }

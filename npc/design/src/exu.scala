@@ -181,6 +181,8 @@ class EXU extends Module {
   // TODO: handle rd != 0 case
   writeBackInfo.gpr.en := (~isNoWrBackType)
 
+  writeBackInfo.skipDifftest := DontCare // fill in LSU
+
   writeBackInfo.gpr.addr := dinst.info.rd
   val sysInstWrBackData = csr_rdata
   // val gprDataMapping    = Seq(
