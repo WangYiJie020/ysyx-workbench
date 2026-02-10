@@ -23,7 +23,7 @@ class IFU extends Module {
   })
 
   object State extends ChiselEnum {
-    val idle, waitAR, waitR = Value
+    val idle, waitAR, waitR, waitDownStreamReady = Value
   }
 
   dontTouch(io)
@@ -46,15 +46,16 @@ class IFU extends Module {
   memIO.rready := io.out.ready
   io.out.bits.code := inst
   io.out.bits.pc   := pc
-  io.out.valid := (state === State.waitR && memIO.rvalid) || (state === State.idle && io.pc.fire && memIO.rvalid)
+  io.out.valid := (state === State.waitR && memIO.rvalid) || (state === State.idle && io.pc.fire && memIO.rvalid) || (state === State.waitDownStreamReady)
 
   io.pc.ready := (state === State.idle) && !reset.asBool
 
   state := MuxLookup(state, State.idle)(
     Seq(
-      State.idle   -> Mux(io.pc.fire, Mux(memIO.arready, Mux(memIO.rvalid, State.idle, State.waitR), State.waitAR), State.idle),
+      State.idle   -> Mux(io.pc.fire, Mux(memIO.arready, Mux(memIO.rvalid, Mux(io.out.ready,State.waitDownStreamReady,State.idle), State.waitR), State.waitAR), State.idle),
       State.waitAR -> Mux(memIO.arready, Mux(memIO.rvalid, State.idle, State.waitR), State.waitAR),
-      State.waitR  -> Mux(memIO.rvalid, State.idle, State.waitR)
+      State.waitR  -> Mux(memIO.rvalid, State.idle, State.waitR),
+      State.waitDownStreamReady -> Mux(io.out.ready, State.idle, State.waitDownStreamReady)
     )
   )
 }
