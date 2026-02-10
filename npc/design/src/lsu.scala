@@ -78,7 +78,7 @@ class LSU extends Module {
     Seq(
       isIdle    -> Mux[State.Type](
         isMemOp,
-        Mux(addrAck, nxtStateWhenAddrAck, nxtStateWhenIdleMeetMemOp),
+        Mux[State.Type](addrAck, nxtStateWhenAddrAck, nxtStateWhenIdleMeetMemOp),
         State.idle
       ),
       isWaitAR  -> Mux[State.Type](addrAck, State.waitR, State.waitAR),
