@@ -74,7 +74,7 @@ class LSU extends Module {
   )
   io.out.valid := Mux1H(
     Seq(
-      isDirect -> io.in.valid && (!isMemOp),
+      isDirect -> (io.in.valid && (!isMemOp)),
       isWaitMem -> (memOPDone),
       isWaitOut -> (memOPDone)
     )
