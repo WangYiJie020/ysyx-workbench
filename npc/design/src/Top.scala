@@ -63,7 +63,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
       }.elsewhen(clearDataValid) {
         // dataValid := false.B
       }
-      prevOut.ready := readyToPrev && (!clearDataValid)
+      prevOut.ready := readyToPrev //&& (!clearDataValid)
     } else {
 
       when(readyToPrev) {
