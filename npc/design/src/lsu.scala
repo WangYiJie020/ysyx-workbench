@@ -38,7 +38,6 @@ class LSU extends Module {
   val isWaitOut = state === State.waitOut
 
   io.in.ready := isIdle
-  io.out.valid := isWaitOut
 
   val outWriteBackInfo = io.out.bits
 
@@ -54,6 +53,8 @@ class LSU extends Module {
   val isLoad  = in.isLoad  // && io.in.valid
   val isStore = in.isStore // && io.in.valid
   val isMemOp = isLoad || isStore
+
+  io.out.valid := (!isMemOp) || isWaitOut
 
   val addrAck = Mux(isLoad, io.mem.arready, io.mem.awready)
 
