@@ -69,7 +69,11 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
       when(readyToPrev) {
         dataValid := prevOut.valid
       }
-      prevOut.ready := readyToPrev
+      if (isIFUtoIDU) {
+        prevOut.ready := readyToPrev || isFlushIDU
+      } else {
+        prevOut.ready := readyToPrev
+      }
     }
 
     thisIn.bits  := RegEnable(prevOut.bits, prevOut.fire)
@@ -259,12 +263,12 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val exuWriteBackInfoGen = Module(new EXUWriteBackGen)
   exuWriteBackInfoGen.io.in := idu.io.out.bits
 
-  val isConflictWithEXU = conflictWithStage(
+  val isConflictWithEXU    = conflictWithStage(
     idu.io.out.bits.info,
     exu.io.out.bits.exuWriteBack.gpr,
     exu.io.out.valid
   )
-  val isConflictWithLSUIn = conflictWithStage(
+  val isConflictWithLSUIn  = conflictWithStage(
     idu.io.out.bits.info,
     lsu.io.in.bits.exuWriteBack.gpr,
     lsu.io.in.valid
@@ -274,8 +278,8 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     lsu.io.out.bits.gpr,
     lsu.io.out.valid
   )
-  val isConflictWithLSU = isConflictWithLSUIn || isConflictWithLSUOut
-  val isConflictWithWBU = conflictWithStage(
+  val isConflictWithLSU    = isConflictWithLSUIn || isConflictWithLSUOut
+  val isConflictWithWBU    = conflictWithStage(
     idu.io.out.bits.info,
     wbu.io.in.bits.gpr,
     wbu.io.in.valid
