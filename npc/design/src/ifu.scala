@@ -8,7 +8,7 @@ import axi4._
 
 // update reg when enable,
 // and output the new value immediately
-object RegEnableReadNew{
+object RegEnableReadNew {
   def apply[T <: Data](nxt: T, en: Bool): T = {
     val reg = RegEnable(nxt, en)
     Mux(en, nxt, reg)
@@ -23,7 +23,7 @@ class IFU extends Module {
   })
 
   object State extends ChiselEnum {
-    val idle, waitAR, waitR, waitDownStreamReady = Value
+    val idle, waitAR, waitR, waitOut = Value
   }
 
   dontTouch(io)
@@ -34,33 +34,37 @@ class IFU extends Module {
   io.mem.dontCareNonLiteAR()
 
   val pcReg = RegEnable(io.pc.bits, io.pc.fire)
-  val pc = Mux(io.pc.fire, io.pc.bits, pcReg)
+  val pc    = Mux(io.pc.fire, io.pc.bits, pcReg)
   dontTouch(pc)
   val state = RegInit(State.idle)
 
-  io.pc.ready := (state === State.idle) && !reset.asBool
+  io.pc.ready   := (state === State.idle) && !reset.asBool
   memIO.arvalid := (state === State.waitAR) || (state === State.idle && io.pc.fire)
   memIO.araddr  := pc
 
   val inst = RegEnableReadNew(memIO.rdata, memIO.rvalid)
-  memIO.rready := io.out.ready
+  memIO.rready     := io.out.ready
   io.out.bits.code := inst
   io.out.bits.pc   := pc
-  io.out.valid := (state === State.waitR && memIO.rvalid) || (state === State.idle && io.pc.fire && memIO.rvalid) || (state === State.waitDownStreamReady)
+  io.out.valid     := (state === State.waitR && memIO.rvalid) || (state === State.idle && io.pc.fire && memIO.rvalid) || (state === State.waitOut)
 
   io.pc.ready := (state === State.idle) && !reset.asBool
 
+  val nxtStateWhenWaitOut = Mux(io.out.ready, State.idle, State.waitOut)
+  val nxtStateWhenWaitR   = Mux(memIO.rvalid, nxtStateWhenWaitOut, State.waitR)
+  val nxtStateWhenWaitAR  = Mux(memIO.arready, nxtStateWhenWaitR, State.waitAR)
+
   state := MuxLookup(state, State.idle)(
     Seq(
-      State.idle   -> Mux(io.pc.fire, Mux(memIO.arready, Mux(memIO.rvalid, Mux(io.out.ready,State.idle,State.waitDownStreamReady), State.waitR), State.waitAR), State.idle),
-      State.waitAR -> Mux(memIO.arready, Mux(memIO.rvalid, State.idle, State.waitR), State.waitAR),
-      State.waitR  -> Mux(memIO.rvalid, State.idle, State.waitR),
-      State.waitDownStreamReady -> Mux(io.out.ready, State.idle, State.waitDownStreamReady)
+      State.idle    -> Mux(io.pc.fire, nxtStateWhenWaitAR, State.idle),
+      State.waitAR  -> nxtStateWhenWaitAR,
+      State.waitR   -> nxtStateWhenWaitR,
+      State.waitOut -> nxtStateWhenWaitOut
     )
   )
 }
 
-/* 
+/*
 
 
   val state = RegInit(State.idle)
@@ -85,7 +89,7 @@ class IFU extends Module {
   memIO.rready := (state === State.waitR) && io.out.ready
 
   io.out.valid := (state === State.waitR && memIO.rvalid) || (state === State.idle && io.pc.fire && memIO.rvalid)
-  io.pc.ready 
+  io.pc.ready
 
   io.out.bits.code := Mux(memIO.rvalid, memIO.rdata, instReg)
   io.out.bits.pc   := Mux(io.pc.fire, io.pc.bits, pcReg)
