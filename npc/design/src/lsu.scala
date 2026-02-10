@@ -79,7 +79,7 @@ class LSU extends Module {
       isWaitAR  -> Mux(addrAck, State.waitR, State.waitAR),
       isWaitAW  -> Mux(addrAck, State.waitW, State.waitAW),
       isWaitR   -> Mux(memIO.rvalid && memIO.rready, nxtStateWhenWaitOut, State.waitR),
-      isWaitW   -> Mux(memIO.wvalid && memIO.wready, Mux(io.out.ready, State.idle, State.waitB), State.waitW),
+      isWaitW   -> Mux(memIO.wvalid && memIO.wready, Mux(memIO.bready, nxtStateWhenWaitOut, State.waitB), State.waitW),
       isWaitB   -> Mux(memIO.bvalid && memIO.bready, nxtStateWhenWaitOut, State.waitB),
       isWaitOut -> nxtStateWhenWaitOut
     )
