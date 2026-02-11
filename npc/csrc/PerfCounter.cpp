@@ -148,6 +148,7 @@ void initPerfCounters() {
   AXI4PerfCounterManager axi4Ctr;
 
   PipePerfManager pipeCtr;
+	RAWStallPerfCounter rawStallCtr;
 
   CachePerfCounter cacheCtr;
 
@@ -182,11 +183,13 @@ void initPerfCounters() {
               "LSU");
 
   cacheCtr.bind();
+	rawStallCtr.bind();
 
   perf_counters.push_back(std::move(handshakeCtr));
   // perf_counters.push_back(std::move(exuCtr));
   perf_counters.push_back(std::move(axi4Ctr));
   perf_counters.push_back(std::move(pipeCtr));
+	perf_counters.push_back(std::move(rawStallCtr));
   perf_counters.push_back(std::move(cacheCtr));
 }
 

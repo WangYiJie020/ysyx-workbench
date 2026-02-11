@@ -428,7 +428,7 @@ struct RAWStallPerfCounter: public PerfCounterBase{
 
 using PerfCounterVariant =
     std::variant<HandShakeCounterManager, AXI4PerfCounterManager,
-                 PipePerfManager, CachePerfCounter>;
+                 PipePerfManager, CachePerfCounter, RAWStallPerfCounter>;
 
 void initPerfCounters();
 void dumpPerfCountersStatistics(std::ostream &os);
