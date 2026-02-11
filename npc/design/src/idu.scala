@@ -50,13 +50,6 @@ class IDU extends Module {
   val io = IO(new Bundle {
     val in   = Flipped(Decoupled(new Inst))
     val rvec = GPRegReqIO.TX.VecRead(2)
-
-    val r1UseBypass = Input(Bool())
-    val r2UseBypass = Input(Bool())
-
-    val r1BypassData = Input(Types.UWord)
-    val r2BypassData = Input(Types.UWord)
-
     val out  = Decoupled(new DecodedInst)
   })
 
@@ -87,11 +80,8 @@ class IDU extends Module {
   io.rvec.addr(0) := res.rs1
   io.rvec.addr(1) := res.rs2
 
-  val r1UseBypass = io.r1UseBypass
-  val r2UseBypass = io.r2UseBypass
-
-  res.reg1 := Mux(r1UseBypass, io.r1BypassData, io.rvec.data(0))
-  res.reg2 := Mux(r2UseBypass, io.r2BypassData, io.rvec.data(1))
+  res.reg1 := io.rvec.data(0)
+  res.reg2 := io.rvec.data(1)
 
   // fetch IMM
   val immI = Cat(Fill(21, inst(31)), inst(30, 20))
@@ -100,10 +90,7 @@ class IDU extends Module {
   val immU = Cat(inst(31, 12), 0.U(12.W))
   val immJ = Cat(immI(31, 20), inst(19, 12), inst(20), inst(30, 21), 0.U(1.W))
 
-  val dontcareImm = Wire(Types.UWord)
-  dontcareImm := DontCare
-
-  res.imm := MuxLookup(iinfo_dec.io.out.fmt, dontcareImm)(
+  res.imm := MuxLookup(iinfo_dec.io.out.fmt, "hBAADF00D".U)(
     Seq(
       InstFmt.imm    -> immI,
       InstFmt.jump   -> immJ,
