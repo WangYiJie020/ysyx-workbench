@@ -256,7 +256,7 @@ void dumpPerfCounterAsCSV(std::ostream &os) {
   os << "\n" << value_row;
 }
 void dumpPerfReportOnDir(const std::string &dir) {
-	std::string prefix = "pipe";
+	std::string prefix = "_test_pipe";
   std::string reportPath = dir + '/' + prefix + ".counter.rpt";
   std::ofstream reportFile(reportPath);
   if (!reportFile.is_open()) {

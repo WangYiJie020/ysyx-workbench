@@ -27,7 +27,6 @@ class TopIO extends Bundle {
 }
 
 class ysyx_25100261(word_width: Int = 32) extends Module {
-  // val isRdAfterWr = Wire(Bool())
   val isBranchGuessWrong  = Wire(Bool())
   val curCorrectJmpTarget = Reg(UInt(32.W))
 
@@ -51,7 +50,6 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
       thisIn.ready
     }
 
-    // val thisInReady = thisIn.ready
     val dataValid   = RegInit(false.B)
     val readyToPrev = (!dataValid) || thisInReady
 
@@ -79,27 +77,6 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
     thisIn.bits  := RegEnable(prevOut.bits, prevOut.fire)
     thisIn.valid := dataValid
-    //
-    // // val isThisBusyReg   = RegInit(false.B)
-    // // val normalNxtBsy = Mux(isThisBusyReg, (!thisOut.fire) || (prevOut.fire), prevOut.fire)
-    // //
-    // // if (isIDUtoEXU) {
-    // //   isThisBusyReg := normalNxtBsy && (!isFlushIDU)
-    // // } else if (isIFUtoIDU) {
-    // //   isThisBusyReg := normalNxtBsy && (!isFlushIDU)
-    // // } else {
-    // //   isThisBusyReg := normalNxtBsy
-    // // }
-    //
-    // // val isThisBusy = isThisBusyReg
-    //
-    // if (isIDUtoEXU) {
-    //   thisIn.valid := dataValid && (!isFlushIDU)
-    // } else if (isIFUtoIDU) {
-    //   thisIn.valid := dataValid && (!isFlushIDU)
-    // } else {
-    //   thisIn.valid := dataValid
-    // }
   }
   def conflict(rs: UInt, rd: UInt, en: Bool) = (rs === rd) && (rd =/= 0.U) && en
   def conflictWithStage(rs1: UInt, rs2: UInt, gprWr: GPRegReqIO._WriteRX, valid: Bool) = {
@@ -193,8 +170,6 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     Module(
       new AXI4LiteXBar(
         Seq(
-          // ("h02000000".U(32.W), "h0200ffff".U(32.W)) -> clint.io,
-          // ("h0f000000".U(32.W), "hffffffff".U(32.W)) -> otherReqSlave
           AddrSpace.CLINT  -> clint.io,
           AddrSpace.SOC    -> otherReqSlave,
         )
@@ -226,22 +201,6 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     stop()
     stop()
   }
-
-  // dontTouch(wNeedSkip)
-  // dontTouch(rNeedSkip)
-
-  // when(io.master.awvalid && io.master.awready && wNeedSkip) {
-  //   RawClockedVoidFunctionCall("skip_difftest_ref")(
-  //     clock,
-  //     true.B
-  //   )
-  // }
-  // when(io.master.arvalid && io.master.arready && rNeedSkip) {
-  //   RawClockedVoidFunctionCall("skip_difftest_ref")(
-  //     clock,
-  //     true.B
-  //   )
-  // }
 
   AXI4IO.connectMasterSlave(memArbiter.io.out, memXBar.io.in)
   memXBar.connect()
@@ -284,7 +243,10 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   isRdAfterWr := isConflictWithEXU || isConflictWithLSU || isConflictWithWBU
   dontTouch(isRdAfterWr)
 
-  isIDUStall := isRdAfterWr
+  // isIDUStall := isRdAfterWr
+  isIDUStall := isRdAfterWr && (!isConflictWithEXU)
+  idu.io.useByPass := isConflictWithEXU
+  idu.io.bypassGpr := exu.io.out.bits.exuWriteBack.gpr
   dontTouch(isIDUStall)
 
   pipelineConnect(ifu.io.out, idu.io.in, idu.io.out, isIFUtoIDU = true)

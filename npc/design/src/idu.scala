@@ -50,6 +50,8 @@ class IDU extends Module {
   val io = IO(new Bundle {
     val in   = Flipped(Decoupled(new Inst))
     val rvec = GPRegReqIO.TX.VecRead(2)
+    val useByPass = Input(Bool())
+    val bypassGpr = GPRegReqIO.RX.Write
     val out  = Decoupled(new DecodedInst)
   })
 
@@ -80,8 +82,13 @@ class IDU extends Module {
   io.rvec.addr(0) := res.rs1
   io.rvec.addr(1) := res.rs2
 
-  res.reg1 := io.rvec.data(0)
-  res.reg2 := io.rvec.data(1)
+  val r1UseBypass = io.useByPass && (io.bypassGpr.addr === res.rs1)
+  val r2UseBypass = io.useByPass && (io.bypassGpr.addr === res.rs2)
+
+  assert((!io.useByPass) || io.bypassGpr.en, "bypass data should be valid when useByPass is true")
+
+  res.reg1 := Mux(r1UseBypass, io.bypassGpr.data, io.rvec.data(0))
+  res.reg2 := Mux(r2UseBypass, io.bypassGpr.data, io.rvec.data(1))
 
   // fetch IMM
   val immI = Cat(Fill(21, inst(31)), inst(30, 20))
