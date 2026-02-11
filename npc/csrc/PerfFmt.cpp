@@ -65,7 +65,7 @@ void EXUPerfCounter::_dump(size_t *instCnts, size_t *cycCnts, size_t num,
   _PrintTable(t, os);
 }
 
-const char *IFUStateCounter::nameOfState(int s) {
+const char *PipeStagePerfCounter::nameOfState(int s) {
   const char *names[] = {
       "Backpressure",
       "Bubble",
@@ -73,25 +73,57 @@ const char *IFUStateCounter::nameOfState(int s) {
   };
   return names[s];
 }
-void IFUStateCounter::dumpStatistics(std::ostream &os) {
-  os << "IFU State Counter Statistics:\n";
-  os << "total instruction fetch count: " << totalFetchCount << "\n";
-
-  os << "state statistics:\n";
+void PipeStagePerfCounter::dumpStatistics(std::ostream &os) {
+  spdlog::error("PipeStagePerfCounter::dumpStatistics unimpled!!!");
+  // os << "IFU State Counter Statistics:\n";
+  // os << "total instruction fetch count: " << totalFetchCount << "\n";
+  //
+  // os << "state statistics:\n";
+  // Table t;
+  // t.add_row({"State", "Count", "Percent"});
+  //
+  // auto totStateCount =
+  //     std::accumulate(countOfState, countOfState + STATE_NUM, 0ull);
+  //
+  // auto totCycles = sim_get_cycle();
+  // for (size_t i = 0; i < STATE_NUM; i++) {
+  //   double perc =
+  //       totStateCount == 0
+  //           ? NAN
+  //           : ((double)countOfState[i] / (double)totStateCount) * 100.0;
+  //   t.add_row(RowStream{} << nameOfState((int)i) << countOfState[i] << perc);
+  // }
+  // _PrintTable(t, os);
+}
+void PipePerfManager::dumpStatistics(std::ostream &os) {
+  os << "Pipeline Performance Counter Statistics:\n";
   Table t;
-  t.add_row({"State", "Count", "Percent"});
+  t.add_row({"Stage", "Backpressure\nCycles", "Bubble\nCycles", "Fire\nCycles",
+             "Backpressure\n%", "Bubble\n%", "Fire\n%"});
 
-  auto totStateCount =
-      std::accumulate(countOfState, countOfState + STATE_NUM, 0ull);
-
-  auto totCycles = sim_get_cycle();
-  for (size_t i = 0; i < STATE_NUM; i++) {
-    double perc =
-        totStateCount == 0
+  for (auto &ctr : stageCtrs) {
+    size_t totCycles = ctr.totalCount();
+    double backPerc =
+        totCycles == 0
             ? NAN
-            : ((double)countOfState[i] / (double)totStateCount) * 100.0;
-    t.add_row(RowStream{} << nameOfState((int)i) << countOfState[i] << perc);
+            : ((double)ctr.countOfState[0] / (double)totCycles) * 100.0;
+    double bubPerc =
+        totCycles == 0
+            ? NAN
+            : ((double)ctr.countOfState[1] / (double)totCycles) * 100.0;
+    double firePerc =
+        totCycles == 0
+            ? NAN
+            : ((double)ctr.countOfState[2] / (double)totCycles) * 100.0;
+
+    t.add_row(
+        RowStream{} << ctr.ctrName
+                    << ctr.countOfState[PipeStagePerfCounter::Backpressure]
+                    << ctr.countOfState[PipeStagePerfCounter::Bubble]
+                    << ctr.countOfState[PipeStagePerfCounter::Fire] << backPerc
+                    << bubPerc << firePerc);
   }
+
   _PrintTable(t, os);
 }
 
