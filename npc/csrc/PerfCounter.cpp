@@ -81,7 +81,7 @@ void IFUStateCounter::update() {
   if (hOutReady.get()) {
     totalOutReadyHighCyc++;
     if (!hOutValid.get()) {
-      totalSupplyCacancyCyc++;
+      totalSupplyVacancyCyc++;
     }
   }
 }

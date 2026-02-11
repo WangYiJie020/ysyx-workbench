@@ -313,7 +313,7 @@ struct IFUStateCounter : public PerfCounterBase {
 
 	// total cycles when later stage ready high but self
 	// not able to reply valid
-	size_t totalSupplyCacancyCyc = 0;
+	size_t totalSupplyVacancyCyc = 0;
 	size_t totalOutReadyHighCyc = 0;
 
   static const char *nameOfState(int state);
