@@ -8,25 +8,6 @@ import regfile._
 import cpu.alu._
 import axi4._
 
-class EXUWriteBackGen extends Module {
-  val io = IO(new Bundle {
-    val in = Input(new DecodedInst)
-    val out = GPRegReqIO.TX.Write
-  })
-
-  val dinst  = io.in
-
-  val isTypStore      = InstType.hasSame(dinst.info.typ, InstType.store)
-  val isTypBranch     = InstType.hasSame(dinst.info.typ, InstType.branch)
-  val isTypFencei     = InstType.hasSame(dinst.info.typ, InstType.fencei)
-
-  val isNoWrBackType = isTypStore || isTypBranch || isTypFencei
-
-  io.out.en   := ~isNoWrBackType
-  io.out.addr := dinst.info.rd
-  io.out.data := DontCare
-}
-
 class EXU extends Module {
   val io = IO(new Bundle {
     val in        = Flipped(Decoupled(new DecodedInst))
@@ -62,7 +43,7 @@ class EXU extends Module {
   val isTypFencei     = InstType.hasSame(dinst.info.typ, InstType.fencei)
   val isTypLUI        = InstType.hasSame(dinst.info.typ, InstType.lui)
 
-  alu_in.is_imm := isFmtI
+alu_in.is_imm := isFmtI
   alu_in.func3t := Mux(isFmtB, func3t >> 1, func3t)
   alu_in.func7t := func7t
 
@@ -243,8 +224,19 @@ class EXU extends Module {
 
   val isJmpCsr = is_ecall || is_mret
 
+  val willJmp = (isTypBranch && takeBranch) || isTypJALR || isTypJAL || isJmpCsr
+
   // TODO: handle exception
-  io.jmpHappen := (isTypBranch && takeBranch) || isTypJALR || isTypJAL || isJmpCsr
+  io.jmpHappen := willJmp && (nxt_pc =/= snpc)
+
+  val dbgJmpCauseByBranch = WireDefault(isTypBranch && takeBranch)
+  val dbgJmpCauseByJALR   = WireDefault(isTypJALR)
+  val dbgJmpCauseByJAL    = WireDefault(isTypJAL)
+  val dbgJmpCauseByCsr    = WireDefault(isJmpCsr)
+  dontTouch(dbgJmpCauseByBranch)
+  dontTouch(dbgJmpCauseByJALR)
+  dontTouch(dbgJmpCauseByJAL)
+  dontTouch(dbgJmpCauseByCsr)
 
   // blt/bge 10x
   // bltu/bgeu 11x

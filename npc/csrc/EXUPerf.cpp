@@ -5,6 +5,8 @@
 #include <fstream>
 #include <vector>
 
+/*
+
 void EXUPerfCounter::dumpStatistics(std::ostream &os) {
   os << "instruction type counts:\n";
   os << "By type:\n";
@@ -102,3 +104,4 @@ void EXUPerfCounter::update() {
     //               nameOfFmt(fmt), instCycles);
   }
 }
+*/
