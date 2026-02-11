@@ -81,7 +81,7 @@ static int decode_exec(Decode *s) {
 
   if ((inst & MASK_BRANCH) == MATCH_BRANCH) {
     g_nbranches++;
-    if (isSoC && g_btrace_pack) {
+    if (g_btrace_pack) {
       btrace_record_t record = {.pc = s->pc, .code = inst, .nxt_pc = s->dnpc};
       btrace_pack_add(g_btrace_pack, &record);
     }
