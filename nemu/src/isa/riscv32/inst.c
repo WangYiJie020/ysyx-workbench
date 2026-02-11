@@ -27,6 +27,7 @@
 #include <limits.h>
 
 #include <itrace_pack.h>
+#include <btrace_pack.h>
 
 #include "memory/paddr.h"
 #include <encoding.out.h>
@@ -45,6 +46,7 @@ static void _csr_write(word_t csr, word_t src1) {
 
 itrace_pack_t g_itrace_pack;
 itrace_pack_t g_mtrace_pack;
+btrace_pack_t g_btrace_pack;
 
 // generate in out.cc
 int execute_instruction(word_t instruction, word_t *pc, word_t *regs);
@@ -77,6 +79,12 @@ static int decode_exec(Decode *s) {
 
 	if((inst & MASK_BRANCH) == MATCH_BRANCH) {
 		g_nbranches++;
+		btrace_record_t record = {
+			.pc = s->pc,
+			.code = inst,
+			.nxt_pc = s->dnpc
+		};
+		btrace_pack_add(g_btrace_pack, &record);
 	}
 
   if (IS_INST(CSRRW)) {

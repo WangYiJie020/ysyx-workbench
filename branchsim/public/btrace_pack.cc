@@ -39,12 +39,12 @@ btrace_pack_t btrace_pack_open(const char* path) {
 	return pack;
 }
 
-void btrace_pack_push(btrace_pack_t pack, const btrace_record_t* record) {
+void btrace_pack_add(btrace_pack_t pack, const btrace_record_t* record) {
 	AssertWr(pack->fp, record);
 	pack->count++;
 }
 
-void btrace_pack_pop(btrace_pack_t pack, btrace_record_t* record) {
+void btrace_pack_pick(btrace_pack_t pack, btrace_record_t* record) {
 	assert(pack->count > 0);
 	AssertRd(pack->fp, record);
 	pack->count--;
