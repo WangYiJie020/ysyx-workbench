@@ -139,7 +139,7 @@ void RAWStallPerfCounter::bind() {
   hIsConflictWBU = &_GetCPU()->isConflictWithWBU;
   hIsIDUStall = &_GetCPU()->isIDUStall;
 }
-void IDUFlushPerfCounter::update() {
+IDUFlushPerfCounter::IDUFlushReason IDUFlushPerfCounter::getCurReason() const {
   auto &exu = *_GetEXU();
   IDUFlushReason reason;
   if (exu.dbgJmpCauseByBranch)
@@ -153,9 +153,19 @@ void IDUFlushPerfCounter::update() {
   else
     reason = IDUFlushReason::Unknown;
 
+  return reason;
+}
+void IDUFlushPerfCounter::update() {
+  bool isFlushRaisingEdge = (!lastCycIsFlush && hIsFlushIDU.get());
+  lastCycIsFlush = hIsFlushIDU.get();
+
+  if (isFlushRaisingEdge) {
+    lastFlushReason = getCurReason();
+  }
+
   if (hIsFlushIDU.get()) {
     cycIDUFlush++;
-    cycFlushOfReason[reason]++;
+    cycFlushOfReason[lastFlushReason]++;
   }
 }
 void IDUFlushPerfCounter::bind() { hIsFlushIDU = &_GetCPU()->isFlushIDU; }
@@ -213,7 +223,7 @@ void initPerfCounters() {
   perf_counters.push_back(std::move(axi4Ctr));
   perf_counters.push_back(std::move(pipeCtr));
   perf_counters.push_back(std::move(rawStallCtr));
-	perf_counters.push_back(std::move(iduFlushCtr));
+  perf_counters.push_back(std::move(iduFlushCtr));
   perf_counters.push_back(std::move(cacheCtr));
 }
 

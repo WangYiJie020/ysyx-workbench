@@ -428,6 +428,7 @@ struct RAWStallPerfCounter: public PerfCounterBase{
 
 struct IDUFlushPerfCounter: public PerfCounterBase {
 	SignalHandle hIsFlushIDU;
+	bool lastCycIsFlush = false;
 
 	enum IDUFlushReason {
 		BranchTaken,
@@ -437,11 +438,16 @@ struct IDUFlushPerfCounter: public PerfCounterBase {
 		Unknown,
 		REASON_NUM
 	};
+	IDUFlushReason lastFlushReason = IDUFlushReason::Unknown;
+
 	size_t cycIDUFlush = 0;
 	size_t cycFlushOfReason[REASON_NUM] = {0};
 
+
 	void bind();
 	void update();
+
+	IDUFlushReason getCurReason() const;
 
 	void dumpStatistics(std::ostream &) override;
 	void fillFields() override {
