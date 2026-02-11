@@ -139,6 +139,15 @@ void RAWStallPerfCounter::bind() {
   hIsConflictWBU = &_GetCPU()->isConflictWithWBU;
   hIsIDUStall = &_GetCPU()->isIDUStall;
 }
+void IDUFlushPerfCounter::update() {
+	bool is
+	if (hIsFlushIDU.get()) {
+		cycIDUFlush++;
+	}
+}
+void IDUFlushPerfCounter::bind() {
+	hIsFlushIDU = &_GetCPU()->isFlushIDU;
+}
 
 std::vector<PerfCounterVariant> perf_counters;
 

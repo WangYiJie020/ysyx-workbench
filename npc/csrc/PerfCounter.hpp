@@ -426,6 +426,29 @@ struct RAWStallPerfCounter: public PerfCounterBase{
 	}
 };
 
+struct IDUFlushPerfCounter: public PerfCounterBase {
+	SignalHandle hIsFlushIDU;
+
+	enum IDUFlushReason {
+		BranchTaken,
+		JALR,
+		JAL,
+		Exception,
+		REASON_NUM
+	};
+	size_t cycIDUFlush = 0;
+	size_t cycFlushOfReason[REASON_NUM] = {0};
+
+	void bind();
+	void update();
+
+	void dumpStatistics(std::ostream &) override;
+	void fillFields() override {
+		ctrName = "IDUFlushPerfCounter";
+		fields.push_back(Field{"cyc_idu_flush", cycIDUFlush});
+	}
+};
+
 using PerfCounterVariant =
     std::variant<HandShakeCounterManager, AXI4PerfCounterManager,
                  PipePerfManager, CachePerfCounter, RAWStallPerfCounter>;
