@@ -227,10 +227,10 @@ alu_in.is_imm := isFmtI
   // TODO: handle exception
   io.jmpHappen := (isTypBranch && takeBranch) || isTypJALR || isTypJAL || isJmpCsr
 
-  val dbgJmpCauseByBranch = (isTypBranch && takeBranch)
-  val dbgJmpCauseByJALR   = (isTypJALR)
-  val dbgJmpCauseByJAL    = (isTypJAL)
-  val dbgJmpCauseByCsr    = (isJmpCsr)
+  val dbgJmpCauseByBranch = WireDefault(isTypBranch && takeBranch)
+  val dbgJmpCauseByJALR   = WireDefault(isTypJALR)
+  val dbgJmpCauseByJAL    = WireDefault(isTypJAL)
+  val dbgJmpCauseByCsr    = WireDefault(isJmpCsr)
   dontTouch(dbgJmpCauseByBranch)
   dontTouch(dbgJmpCauseByJALR)
   dontTouch(dbgJmpCauseByJAL)

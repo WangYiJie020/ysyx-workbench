@@ -140,7 +140,7 @@ void RAWStallPerfCounter::bind() {
   hIsIDUStall = &_GetCPU()->isIDUStall;
 }
 void IDUFlushPerfCounter::update() {
-	bool is
+	// bool is
 	if (hIsFlushIDU.get()) {
 		cycIDUFlush++;
 	}
