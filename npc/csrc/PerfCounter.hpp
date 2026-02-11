@@ -294,27 +294,21 @@ struct IFUStateCounter : public PerfCounterBase {
   // check fetch handshake happened
   SignalHandle hRValid;
   SignalHandle hRReady;
-  // ifu fsm state
-  SignalHandle hState;
+  // // ifu fsm state
+  // SignalHandle hState;
 
 	SignalHandle hOutValid;
 	SignalHandle hOutReady;
 
 	enum State{
-		Idle,
-		WaitARReady,
-		WaitRValid,
+		Backpressure,
+		Bubble,
+		Fire,
 		STATE_NUM
 	};
 
   size_t countOfState[STATE_NUM] = {0};
-  size_t countOfStateWhenNoFetch[STATE_NUM] = {0};
   size_t totalFetchCount = 0;
-
-	// total cycles when later stage ready high but self
-	// not able to reply valid
-	size_t totalSupplyVacancyCyc = 0;
-	size_t totalOutReadyHighCyc = 0;
 
   static const char *nameOfState(int state);
 

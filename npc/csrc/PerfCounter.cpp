@@ -63,27 +63,30 @@ void HandShakeCounterManager::update() {
 void IFUStateCounter::bind() {
   hRValid = &_GetIFU()->io_mem_rvalid;
   hRReady = &_GetIFU()->io_mem_rready;
-  hState = &_GetIFU()->state;
+  // hState = &_GetIFU()->state;
 
   hOutValid = &_GetIFU()->io_out_valid;
   hOutReady = &_GetIFU()->io_out_ready;
 }
 void IFUStateCounter::update() {
   bool fetchInstHappened = (hRReady.get() && hRValid.get());
-  State s = (State)hState.get();
-  countOfState[s]++;
   if (fetchInstHappened) {
     totalFetchCount++;
-  } else {
-    countOfStateWhenNoFetch[s]++;
-  }
+  } 
 
-  if (hOutReady.get()) {
-    totalOutReadyHighCyc++;
-    if (!hOutValid.get()) {
-      totalSupplyVacancyCyc++;
-    }
-  }
+  State s;
+	if(hOutReady.get()){
+		if(hOutValid.get()){
+			s = Fire;
+		}
+		else{
+			s = Bubble;
+		}
+	}
+	else{
+		s = Backpressure;
+	}
+  countOfState[s]++;
 }
 
 void CachePerfCounter::bind() {
