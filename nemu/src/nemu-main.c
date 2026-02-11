@@ -37,10 +37,14 @@ int main(int argc, char *argv[]) {
   init_monitor(argc, argv);
 #endif
 
+	bool trace_inst_and_mem_pack = false;
+
 	if(isSoC){
 		printf("exec is SoC\n");
+		if(trace_inst_and_mem_pack){
 		g_itrace_pack = itrace_pack_create("itrace_pack.bin");
 		g_mtrace_pack = itrace_pack_create("mtrace_pack.bin");
+		}
 	}
 
 
@@ -52,8 +56,10 @@ int main(int argc, char *argv[]) {
 #endif
 
 	if(isSoC){
+		if(trace_inst_and_mem_pack){
 		itrace_pack_close(g_itrace_pack);
 		itrace_pack_close(g_mtrace_pack);
+		}
 	}
 
 	printf("total branches: %lu\n", g_nbranches);
