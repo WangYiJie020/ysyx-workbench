@@ -74,8 +74,8 @@ static int decode_exec(Decode *s) {
     matched = true;
   }
 
-#define MATCH_BRANCH 0b1111111
-#define MASK_BRANCH 0b1100011
+#define MATCH_BRANCH 0b1100011
+#define MASK_BRANCH 0b1111111
 
   if ((inst & MASK_BRANCH) == MATCH_BRANCH) {
     g_nbranches++;
