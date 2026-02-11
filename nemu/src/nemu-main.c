@@ -38,6 +38,7 @@ int main(int argc, char *argv[]) {
 #endif
 
 	if(isSoC){
+		printf("exec is SoC\n");
 		g_itrace_pack = itrace_pack_create("itrace_pack.bin");
 		g_mtrace_pack = itrace_pack_create("mtrace_pack.bin");
 	}
