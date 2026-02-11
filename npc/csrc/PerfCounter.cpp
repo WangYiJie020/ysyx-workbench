@@ -118,6 +118,27 @@ void CachePerfCounter::dumpStatistics(std::ostream &os) {
   os << "AMAT : " << AMAT() << "\n";
 }
 
+void RAWStallPerfCounter::update() {
+	if(hIsIDUStall.get()){
+		cycIDUStall++;
+	}
+	if(hIsConflictEXU.get()){
+		cycConflictEXU++;
+	}
+	if(hIsConflictLSU.get()){
+		cycConflictLSU++;
+	}
+	if(hIsConflictWBU.get()){
+		cycConflictWBU++;
+	}
+}
+void RAWStallPerfCounter::bind(){
+	hIsConflictEXU = &_GetCPU()->isConflictWithEXU;
+	hIsConflictLSU = &_GetCPU()->isConflictWithLSU;
+	hIsConflictWBU = &_GetCPU()->isConflictWithWBU;
+	hIsIDUStall = &_GetCPU()->isIDUStall;
+}
+
 std::vector<PerfCounterVariant> perf_counters;
 
 void initPerfCounters() {
