@@ -44,10 +44,11 @@ void btrace_pack_add(btrace_pack_t pack, const btrace_record_t* record) {
 	pack->count++;
 }
 
-void btrace_pack_pick(btrace_pack_t pack, btrace_record_t* record) {
-	assert(pack->count > 0);
+int btrace_pack_pick(btrace_pack_t pack, btrace_record_t* record) {
+	if(pack->count == 0) return 0;
 	AssertRd(pack->fp, record);
 	pack->count--;
+	return 1;
 }
 
 void btrace_pack_close(btrace_pack_t pack) {
