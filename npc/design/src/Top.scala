@@ -170,8 +170,8 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     Module(
       new AXI4LiteXBar(
         Seq(
-          AddrSpace.CLINT  -> clint.io,
-          AddrSpace.SOC    -> otherReqSlave,
+          AddrSpace.CLINT -> clint.io,
+          AddrSpace.SOC   -> otherReqSlave
         )
       )
     )
@@ -183,9 +183,9 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     Module(
       new AXI4LiteXBar(
         Seq(
-          AddrSpace.CLINT     -> clint.io,
-          AddrSpace.NPCMEM    -> mem.io,
-          AddrSpace.SERIAL    -> uart.io
+          AddrSpace.CLINT  -> clint.io,
+          AddrSpace.NPCMEM -> mem.io,
+          AddrSpace.SERIAL -> uart.io
         )
       )
     )
@@ -208,14 +208,24 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   ifu.io.pc.bits  := pc
   ifu.io.pc.valid := true.B
 
-  val exuWriteBackInfoGen = Module(new EXUWriteBackGen)
-  exuWriteBackInfoGen.io.in := idu.io.out.bits
+  // val isConflictWithEXU    = conflictWithStage(
+  //   idu.io.out.bits.info,
+  //   exu.io.out.bits.exuWriteBack.gpr,
+  //   exu.io.out.valid
+  // )
+  val isConflictWithEXU    = Wire(Bool())
+  val isRs1ConflictWithEXU = conflict(
+    idu.io.out.bits.info.rs1,
+    exu.io.out.bits.exuWriteBack.gpr.addr,
+    exu.io.out.bits.exuWriteBack.gpr.en
+  ) && exu.io.out.valid
+  val isRs2ConflictWithEXU = conflict(
+    idu.io.out.bits.info.rs2,
+    exu.io.out.bits.exuWriteBack.gpr.addr,
+    exu.io.out.bits.exuWriteBack.gpr.en
+  ) && exu.io.out.valid
+  isConflictWithEXU := (isRs1ConflictWithEXU || isRs2ConflictWithEXU)
 
-  val isConflictWithEXU    = conflictWithStage(
-    idu.io.out.bits.info,
-    exu.io.out.bits.exuWriteBack.gpr,
-    exu.io.out.valid
-  )
   val isConflictWithLSUIn  = conflictWithStage(
     idu.io.out.bits.info,
     lsu.io.in.bits.exuWriteBack.gpr,
@@ -227,11 +237,23 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     lsu.io.out.valid
   )
   val isConflictWithLSU    = isConflictWithLSUIn || isConflictWithLSUOut
-  val isConflictWithWBU    = conflictWithStage(
-    idu.io.out.bits.info,
-    wbu.io.in.bits.gpr,
-    wbu.io.in.valid
-  )
+  val isConflictWithWBU    = Wire(Bool())
+  val isRs1ConflictWithWBU = conflict(
+    idu.io.out.bits.info.rs1,
+    wbu.io.in.bits.gpr.addr,
+    wbu.io.in.bits.gpr.en
+  ) && wbu.io.in.valid
+  val isRs2ConflictWithWBU = conflict(
+    idu.io.out.bits.info.rs2,
+    wbu.io.in.bits.gpr.addr,
+    wbu.io.in.bits.gpr.en
+  ) && wbu.io.in.valid
+  isConflictWithWBU := (isRs1ConflictWithWBU || isRs2ConflictWithWBU)
+  // val isConflictWithWBU    = conflictWithStage(
+  //   idu.io.out.bits.info,
+  //   wbu.io.in.bits.gpr,
+  //   wbu.io.in.valid
+  // )
 
   dontTouch(isConflictWithEXU)
   dontTouch(isConflictWithLSUIn)
@@ -243,13 +265,22 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   isRdAfterWr := isConflictWithEXU || isConflictWithLSU || isConflictWithWBU
   dontTouch(isRdAfterWr)
 
-  val nonValidVerifiedExuOutIsMemOP = exu.io.out.bits.isLoad || exu.io.out.bits.isStore
-  val canEXUBypass = isConflictWithEXU && (!nonValidVerifiedExuOutIsMemOP) && (!isConflictWithLSU)
+  val exuWrBackDataVaild = !(exu.io.out.bits.isLoad || exu.io.out.bits.isStore)
+
+  val canRs1Bypass =
+    Mux(isRs1ConflictWithEXU, exuWrBackDataVaild, isRs1ConflictWithWBU) && (!isConflictWithLSU)
+  val canRs2Bypass =
+    Mux(isRs2ConflictWithEXU, exuWrBackDataVaild, isRs2ConflictWithWBU) && (!isConflictWithLSU)
+
+  val needStall = isRdAfterWr && (!canRs1Bypass || !canRs2Bypass)
 
   // isIDUStall := isRdAfterWr
-  isIDUStall := isRdAfterWr && (!canEXUBypass)
-  idu.io.useByPass := canEXUBypass
-  idu.io.bypassGpr := exu.io.out.bits.exuWriteBack.gpr
+  isIDUStall          := needStall
+  idu.io.r1UseBypass  := canRs1Bypass
+  idu.io.r2UseBypass  := canRs2Bypass
+  idu.io.r1BypassData := Mux(isRs1ConflictWithEXU, exu.io.out.bits.exuWriteBack.gpr.data, wbu.io.in.bits.gpr.data)
+  idu.io.r2BypassData := Mux(isRs2ConflictWithEXU, exu.io.out.bits.exuWriteBack.gpr.data, wbu.io.in.bits.gpr.data)
+
   dontTouch(isIDUStall)
 
   pipelineConnect(ifu.io.out, idu.io.in, idu.io.out, isIFUtoIDU = true)
