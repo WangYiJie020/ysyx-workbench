@@ -244,7 +244,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   dontTouch(isRdAfterWr)
 
   val nonValidVerifiedExuOutIsMemOP = exu.io.out.bits.isLoad || exu.io.out.bits.isStore
-  val canEXUBypass = isConflictWithEXU && (!nonValidVerifiedExuOutIsMemOP)
+  val canEXUBypass = isConflictWithEXU && (!nonValidVerifiedExuOutIsMemOP) && (!isConflictWithLSU)
 
   // isIDUStall := isRdAfterWr
   isIDUStall := isRdAfterWr && (!canEXUBypass)
