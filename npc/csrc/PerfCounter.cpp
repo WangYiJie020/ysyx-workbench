@@ -60,14 +60,13 @@ void HandShakeCounterManager::update() {
   }
 }
 
-
 void IFUStateCounter::bind() {
   hRValid = &_GetIFU()->io_mem_rvalid;
   hRReady = &_GetIFU()->io_mem_rready;
   hState = &_GetIFU()->state;
 
-	hOutValid = &_GetIFU()->io_out_valid;
-	hOutReady = &_GetIFU()->io_out_ready;
+  hOutValid = &_GetIFU()->io_out_valid;
+  hOutReady = &_GetIFU()->io_out_ready;
 }
 void IFUStateCounter::update() {
   bool fetchInstHappened = (hRReady.get() && hRValid.get());
@@ -79,12 +78,12 @@ void IFUStateCounter::update() {
     countOfStateWhenNoFetch[s]++;
   }
 
-	if (hOutReady.get()){
-		totalOutReadyHighCyc++;
-		if (!hOutValid.get()) {
-			totalSupplyCacancyCyc++;
-		}
-	}
+  if (hOutReady.get()) {
+    totalOutReadyHighCyc++;
+    if (!hOutValid.get()) {
+      totalSupplyCacancyCyc++;
+    }
+  }
 }
 
 void CachePerfCounter::bind() {
@@ -101,11 +100,11 @@ void CachePerfCounter::update() {
   if (hARValid.get() && hARReady.get()) {
     totalVisitCount++;
     currentHitAccessStartCycle = sim_get_cycle();
-  }
-  auto s = (State)hState.get();
-  if (s == checkCache && hCacheHit.get()) {
-    hitCount++;
-    totalHitAccessCycles += sim_get_cycle() - currentHitAccessStartCycle;
+    auto s = (State)hState.get();
+    if (s == idle && hCacheHit.get()) {
+      hitCount++;
+      totalHitAccessCycles += sim_get_cycle() - currentHitAccessStartCycle;
+    }
   }
 }
 
@@ -134,8 +133,8 @@ void initPerfCounters() {
                    "ifu.io_mem_r", "IFU fetch inst");
   handshakeCtr.add(&_GetLSU()->io_mem_rvalid, &_GetLSU()->io_mem_rready,
                    "lsu.io_mem_r", "EXU load data");
-	// ALU now is combintional logic, no handshake
-	//
+  // ALU now is combintional logic, no handshake
+  //
   // handshakeCtr.add(&_GetALU()->io_out_valid, &_GetALU()->io_out_ready,
   //                  "exu.alu.io_out", "EXU calc");
   handshakeCtr.add(&_GetIDU()->io_out_valid, &_GetIDU()->io_out_ready,

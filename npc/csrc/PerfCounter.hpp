@@ -334,7 +334,7 @@ struct IFUStateCounter : public PerfCounterBase {
 
 class CachePerfCounter : public PerfCounterBase {
 public:
-  enum State { idle, checkCache, sendFetch, waitMem, respCPU };
+  enum State { idle, sendFetch, waitMem };
 
   SignalHandle hCacheHit;
   SignalHandle hState;
