@@ -27,6 +27,7 @@ void destroy_monitor();
 extern bool isSoC;
 extern itrace_pack_t g_itrace_pack;
 extern itrace_pack_t g_mtrace_pack;
+extern uint64_t g_nbranches;
 
 int main(int argc, char *argv[]) {
   /* Initialize the monitor. */
@@ -53,6 +54,8 @@ int main(int argc, char *argv[]) {
 		itrace_pack_close(g_itrace_pack);
 		itrace_pack_close(g_mtrace_pack);
 	}
+
+	printf("total branches: %lu\n", g_nbranches);
 
   return is_exit_status_bad();
 }

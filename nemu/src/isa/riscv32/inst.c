@@ -49,6 +49,8 @@ itrace_pack_t g_mtrace_pack;
 // generate in out.cc
 int execute_instruction(word_t instruction, word_t *pc, word_t *regs);
 
+uint64_t g_nbranches;
+
 static int decode_exec(Decode *s) {
   s->dnpc = s->snpc;
 
@@ -69,6 +71,13 @@ static int decode_exec(Decode *s) {
   if (inst == 0x100f) { // fence.i
     matched = true;
   }
+
+#define MATCH_BRANCH (MATCH_BEQ | MATCH_BNE | MATCH_BLT | MATCH_BGE | MATCH_BLTU | MATCH_BGEU)
+#define MASK_BRANCH (MASK_BEQ | MASK_BNE | MASK_BLT | MASK_BGE | MASK_BLTU | MASK_BGEU)
+
+	if((inst & MASK_BRANCH) == MATCH_BRANCH) {
+		g_nbranches++;
+	}
 
   if (IS_INST(CSRRW)) {
     if (rd != 0) {
