@@ -119,25 +119,56 @@ void CachePerfCounter::dumpStatistics(std::ostream &os) {
 }
 
 void RAWStallPerfCounter::update() {
-	if(hIsIDUStall.get()){
-		cycIDUStall++;
-	}
-	if(hIsConflictEXU.get()){
-		cycConflictEXU++;
-	}
-	if(hIsConflictLSU.get()){
-		cycConflictLSU++;
-	}
-	if(hIsConflictWBU.get()){
-		cycConflictWBU++;
-	}
+  if (hIsIDUStall.get()) {
+    cycIDUStall++;
+
+    if (hIsConflictEXU.get()) {
+      cycConflictEXU++;
+    }
+    if (hIsConflictLSU.get()) {
+      cycConflictLSU++;
+    }
+    if (hIsConflictWBU.get()) {
+      cycConflictWBU++;
+    }
+  }
 }
-void RAWStallPerfCounter::bind(){
-	hIsConflictEXU = &_GetCPU()->isConflictWithEXU;
-	hIsConflictLSU = &_GetCPU()->isConflictWithLSU;
-	hIsConflictWBU = &_GetCPU()->isConflictWithWBU;
-	hIsIDUStall = &_GetCPU()->isIDUStall;
+void RAWStallPerfCounter::bind() {
+  hIsConflictEXU = &_GetCPU()->isConflictWithEXU;
+  hIsConflictLSU = &_GetCPU()->isConflictWithLSU;
+  hIsConflictWBU = &_GetCPU()->isConflictWithWBU;
+  hIsIDUStall = &_GetCPU()->isIDUStall;
 }
+IDUFlushPerfCounter::IDUFlushReason IDUFlushPerfCounter::getCurReason() const {
+  auto &exu = *_GetEXU();
+  IDUFlushReason reason;
+  if (exu.dbgJmpCauseByBranch)
+    reason = IDUFlushReason::BranchTaken;
+  else if (exu.dbgJmpCauseByJAL)
+    reason = IDUFlushReason::JAL;
+  else if (exu.dbgJmpCauseByJALR)
+    reason = IDUFlushReason::JALR;
+  else if (exu.dbgJmpCauseByCsr)
+    reason = IDUFlushReason::Exception;
+  else
+    reason = IDUFlushReason::Unknown;
+
+  return reason;
+}
+void IDUFlushPerfCounter::update() {
+  bool isFlushRaisingEdge = (!lastCycIsFlush && hIsFlushIDU.get());
+  lastCycIsFlush = hIsFlushIDU.get();
+
+  if (isFlushRaisingEdge) {
+    lastFlushReason = getCurReason();
+  }
+
+  if (hIsFlushIDU.get()) {
+    cycIDUFlush++;
+    cycFlushOfReason[lastFlushReason]++;
+  }
+}
+void IDUFlushPerfCounter::bind() { hIsFlushIDU = &_GetCPU()->isFlushIDU; }
 
 std::vector<PerfCounterVariant> perf_counters;
 
@@ -148,7 +179,8 @@ void initPerfCounters() {
   AXI4PerfCounterManager axi4Ctr;
 
   PipePerfManager pipeCtr;
-	RAWStallPerfCounter rawStallCtr;
+  RAWStallPerfCounter rawStallCtr;
+  IDUFlushPerfCounter iduFlushCtr;
 
   CachePerfCounter cacheCtr;
 
@@ -182,14 +214,16 @@ void initPerfCounters() {
   pipeCtr.add(PipeStagePerfCounter().BIND_PIPE_STAGE_BASE(_GetLSU()->io),
               "LSU");
 
+  iduFlushCtr.bind();
   cacheCtr.bind();
-	rawStallCtr.bind();
+  rawStallCtr.bind();
 
   perf_counters.push_back(std::move(handshakeCtr));
   // perf_counters.push_back(std::move(exuCtr));
   perf_counters.push_back(std::move(axi4Ctr));
   perf_counters.push_back(std::move(pipeCtr));
-	perf_counters.push_back(std::move(rawStallCtr));
+  perf_counters.push_back(std::move(rawStallCtr));
+  perf_counters.push_back(std::move(iduFlushCtr));
   perf_counters.push_back(std::move(cacheCtr));
 }
 
@@ -256,7 +290,7 @@ void dumpPerfCounterAsCSV(std::ostream &os) {
   os << "\n" << value_row;
 }
 void dumpPerfReportOnDir(const std::string &dir) {
-	std::string prefix = "pipe";
+  std::string prefix = "pipe_with_bypass";
   std::string reportPath = dir + '/' + prefix + ".counter.rpt";
   std::ofstream reportFile(reportPath);
   if (!reportFile.is_open()) {
