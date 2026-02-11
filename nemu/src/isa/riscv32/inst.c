@@ -152,7 +152,7 @@ word_t _handle_csr_rw(word_t csr, word_t src1, bool is_write) {
 
 int isa_exec_once(Decode *s) {
   s->isa.inst = inst_fetch(&s->snpc, 4);
-  if (isSoC) {
+  if (isSoC && g_itrace_pack) {
     itrace_pack_add(g_itrace_pack, s->pc);
   }
   // printf("%08x\n", s->pc);
