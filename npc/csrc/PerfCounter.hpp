@@ -434,6 +434,7 @@ struct IDUFlushPerfCounter: public PerfCounterBase {
 		JALR,
 		JAL,
 		Exception,
+		Unknown,
 		REASON_NUM
 	};
 	size_t cycIDUFlush = 0;

@@ -140,9 +140,17 @@ void RAWStallPerfCounter::bind() {
   hIsIDUStall = &_GetCPU()->isIDUStall;
 }
 void IDUFlushPerfCounter::update() {
-	// bool is
+	auto& exu = *_GetEXU();
+	IDUFlushReason reason;
+	if(exu.dbgJmpCauseByBranch)reason = IDUFlushReason::BranchTaken;
+	else if(exu.dbgJmpCauseByJAL)reason = IDUFlushReason::JAL;
+	else if(exu.dbgJmpCauseByJALR)reason = IDUFlushReason::JALR;
+	else if(exu.dbgJmpCauseByCsr)reason = IDUFlushReason::Exception;
+	else reason = IDUFlushReason::Unknown;
+
 	if (hIsFlushIDU.get()) {
 		cycIDUFlush++;
+		cycFlushOfReason[reason]++;
 	}
 }
 void IDUFlushPerfCounter::bind() {
