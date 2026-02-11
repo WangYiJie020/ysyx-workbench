@@ -79,6 +79,10 @@ ARCHIVES += $(abspath ../sdb/build/libsdb.a)
 INC_PATH += $(abspath ../cachesim/public/include)
 CXXSRC += $(shell find ../cachesim/public/src -name "*.cpp" -or -name "*.cc")
 
+# btrace_pack
+INC_PATH += $(abspath ../btrace_pack/public)
+CXXSRC += $(shell find ../btrace_pack/public -name "*.cpp" -or -name "*.cc")
+
 # gen-inst
 INC_PATH += $(abspath ./tools/gen-inst/build)
 CXXSRC += $(shell find ./tools/gen-inst/build -name "*.cc")
