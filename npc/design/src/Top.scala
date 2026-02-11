@@ -268,11 +268,14 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val exuWrBackDataVaild = !(exu.io.out.bits.isLoad || exu.io.out.bits.isStore)
 
   val canRs1Bypass =
-    Mux(isRs1ConflictWithEXU, exuWrBackDataVaild, isRs1ConflictWithWBU) && (!isConflictWithLSU)
+    Mux(isRs1ConflictWithEXU, exuWrBackDataVaild, isRs1ConflictWithWBU)
   val canRs2Bypass =
-    Mux(isRs2ConflictWithEXU, exuWrBackDataVaild, isRs2ConflictWithWBU) && (!isConflictWithLSU)
+    Mux(isRs2ConflictWithEXU, exuWrBackDataVaild, isRs2ConflictWithWBU)
 
-  val needStall = isRdAfterWr && (!canRs1Bypass || !canRs2Bypass)
+  val needStallForRs1 = (isRs1ConflictWithEXU || isRs1ConflictWithWBU) && (!canRs1Bypass)
+  val needStallForRs2 = (isRs2ConflictWithEXU || isRs2ConflictWithWBU) && (!canRs2Bypass)
+
+  val needStall = needStallForRs1 || needStallForRs2 || isConflictWithLSU
 
   // isIDUStall := isRdAfterWr
   isIDUStall          := needStall
