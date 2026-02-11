@@ -243,9 +243,12 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   isRdAfterWr := isConflictWithEXU || isConflictWithLSU || isConflictWithWBU
   dontTouch(isRdAfterWr)
 
+  val nonValidVerifiedExuOutIsMemOP = exu.io.out.bits.isLoad || exu.io.out.bits.isStore
+  val canEXUBypass = isConflictWithEXU && (!nonValidVerifiedExuOutIsMemOP)
+
   // isIDUStall := isRdAfterWr
-  isIDUStall := isRdAfterWr && (!isConflictWithEXU)
-  idu.io.useByPass := isConflictWithEXU
+  isIDUStall := isRdAfterWr && (!canEXUBypass)
+  idu.io.useByPass := canEXUBypass
   idu.io.bypassGpr := exu.io.out.bits.exuWriteBack.gpr
   dontTouch(isIDUStall)
 
