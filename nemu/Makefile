@@ -80,8 +80,8 @@ INC_PATH += $(abspath ../cachesim/public/include)
 CXXSRC += $(shell find ../cachesim/public/src -name "*.cpp" -or -name "*.cc")
 
 # btrace_pack
-INC_PATH += $(abspath ../btrace_pack/public)
-CXXSRC += $(shell find ../btrace_pack/public -name "*.cpp" -or -name "*.cc")
+INC_PATH += $(abspath ../branchsim/public)
+CXXSRC += $(shell find ../branchsim/public -name "*.cpp" -or -name "*.cc")
 
 # gen-inst
 INC_PATH += $(abspath ./tools/gen-inst/build)
