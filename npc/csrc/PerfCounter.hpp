@@ -100,70 +100,70 @@ public:
   void dumpStatistics(std::ostream &os) override;
 };
 
-struct [[deprecated("work bad for pipelined design")]] EXUPerfCounter
-    : public PerfCounterBase {
-  // in common_def.scala
-  //   val imm, reg, store, upper, jump, branch = Value
-  //   val branch, arithmetic, load, store, jalr, jal, lui, auipc, system =
-  enum InstFmt { I_TYPE, R_TYPE, S_TYPE, U_TYPE, J_TYPE, B_TYPE, FMT_NUM };
-  enum InstType {
-    branch,
-    arithmetic,
-    load,
-    store,
-    jalr,
-    jal,
-    lui,
-    auipc,
-    system,
-    fencei,
-    TYPE_NUM
-  };
-
-  static InstFmt OneHotToFmt(uint32_t onehot);
-  static InstType OneHotToType(uint32_t onehot);
-
-  static inline bool isValidFmt(InstFmt fmt) { return fmt < FMT_NUM; }
-  static inline bool isValidType(InstType type) { return type < TYPE_NUM; }
-
-  static const char *nameOfFmt(int fmt);
-  static const char *nameOfTyp(int type);
-
-  size_t instCountOfFmt[FMT_NUM] = {0};
-  size_t instCountOfTyp[TYPE_NUM] = {0};
-
-  size_t totalCycleOfTyp[TYPE_NUM] = {0};
-  size_t totalCycleOfFmt[FMT_NUM] = {0};
-
-  bool lastCycOutValid = false;
-  sim_cycle_t instStartCycle = 0;
-
-  SignalHandle hInstType;
-  SignalHandle hInstFmt;
-  SignalHandle hOutValid;
-  SignalHandle hOutReady;
-
-  std::shared_ptr<spdlog::logger> logger;
-
-  void bind();
-  void update();
-
-  void _dump(size_t *instCnts, size_t *cycCnts, size_t num,
-             const char *(*nameFunc)(int), std::ostream &os);
-  void dumpStatistics(std::ostream &) override;
-
-  void fillFields() override {
-    ctrName = "EXUInstTypeFmtCounter";
-    for (size_t i = 0; i < TYPE_NUM; i++) {
-      fields.push_back(
-          Field{std::string("typ_") + nameOfTyp((int)i), instCountOfTyp[i]});
-    }
-    for (size_t i = 0; i < FMT_NUM; i++) {
-      fields.push_back(
-          Field{std::string("fmt_") + nameOfFmt((int)i), instCountOfFmt[i]});
-    }
-  }
-};
+// struct [[deprecated("work bad for pipelined design")]] EXUPerfCounter
+//     : public PerfCounterBase {
+//   // in common_def.scala
+//   //   val imm, reg, store, upper, jump, branch = Value
+//   //   val branch, arithmetic, load, store, jalr, jal, lui, auipc, system =
+//   enum InstFmt { I_TYPE, R_TYPE, S_TYPE, U_TYPE, J_TYPE, B_TYPE, FMT_NUM };
+//   enum InstType {
+//     branch,
+//     arithmetic,
+//     load,
+//     store,
+//     jalr,
+//     jal,
+//     lui,
+//     auipc,
+//     system,
+//     fencei,
+//     TYPE_NUM
+//   };
+//
+//   static InstFmt OneHotToFmt(uint32_t onehot);
+//   static InstType OneHotToType(uint32_t onehot);
+//
+//   static inline bool isValidFmt(InstFmt fmt) { return fmt < FMT_NUM; }
+//   static inline bool isValidType(InstType type) { return type < TYPE_NUM; }
+//
+//   static const char *nameOfFmt(int fmt);
+//   static const char *nameOfTyp(int type);
+//
+//   size_t instCountOfFmt[FMT_NUM] = {0};
+//   size_t instCountOfTyp[TYPE_NUM] = {0};
+//
+//   size_t totalCycleOfTyp[TYPE_NUM] = {0};
+//   size_t totalCycleOfFmt[FMT_NUM] = {0};
+//
+//   bool lastCycOutValid = false;
+//   sim_cycle_t instStartCycle = 0;
+//
+//   SignalHandle hInstType;
+//   SignalHandle hInstFmt;
+//   SignalHandle hOutValid;
+//   SignalHandle hOutReady;
+//
+//   std::shared_ptr<spdlog::logger> logger;
+//
+//   void bind();
+//   void update();
+//
+//   void _dump(size_t *instCnts, size_t *cycCnts, size_t num,
+//              const char *(*nameFunc)(int), std::ostream &os);
+//   void dumpStatistics(std::ostream &) override;
+//
+//   void fillFields() override {
+//     ctrName = "EXUInstTypeFmtCounter";
+//     for (size_t i = 0; i < TYPE_NUM; i++) {
+//       fields.push_back(
+//           Field{std::string("typ_") + nameOfTyp((int)i), instCountOfTyp[i]});
+//     }
+//     for (size_t i = 0; i < FMT_NUM; i++) {
+//       fields.push_back(
+//           Field{std::string("fmt_") + nameOfFmt((int)i), instCountOfFmt[i]});
+//     }
+//   }
+// };
 
 struct AXI4CounterBase : public PerfCounterBase {
   struct LatencyRecord {
@@ -452,7 +452,7 @@ struct IDUFlushPerfCounter: public PerfCounterBase {
 
 using PerfCounterVariant =
     std::variant<HandShakeCounterManager, AXI4PerfCounterManager,
-                 PipePerfManager, CachePerfCounter, RAWStallPerfCounter>;
+                 PipePerfManager, CachePerfCounter, RAWStallPerfCounter, IDUFlushPerfCounter>;
 
 void initPerfCounters();
 void dumpPerfCountersStatistics(std::ostream &os);

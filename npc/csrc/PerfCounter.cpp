@@ -140,22 +140,25 @@ void RAWStallPerfCounter::bind() {
   hIsIDUStall = &_GetCPU()->isIDUStall;
 }
 void IDUFlushPerfCounter::update() {
-	auto& exu = *_GetEXU();
-	IDUFlushReason reason;
-	if(exu.dbgJmpCauseByBranch)reason = IDUFlushReason::BranchTaken;
-	else if(exu.dbgJmpCauseByJAL)reason = IDUFlushReason::JAL;
-	else if(exu.dbgJmpCauseByJALR)reason = IDUFlushReason::JALR;
-	else if(exu.dbgJmpCauseByCsr)reason = IDUFlushReason::Exception;
-	else reason = IDUFlushReason::Unknown;
+  auto &exu = *_GetEXU();
+  IDUFlushReason reason;
+  if (exu.dbgJmpCauseByBranch)
+    reason = IDUFlushReason::BranchTaken;
+  else if (exu.dbgJmpCauseByJAL)
+    reason = IDUFlushReason::JAL;
+  else if (exu.dbgJmpCauseByJALR)
+    reason = IDUFlushReason::JALR;
+  else if (exu.dbgJmpCauseByCsr)
+    reason = IDUFlushReason::Exception;
+  else
+    reason = IDUFlushReason::Unknown;
 
-	if (hIsFlushIDU.get()) {
-		cycIDUFlush++;
-		cycFlushOfReason[reason]++;
-	}
+  if (hIsFlushIDU.get()) {
+    cycIDUFlush++;
+    cycFlushOfReason[reason]++;
+  }
 }
-void IDUFlushPerfCounter::bind() {
-	hIsFlushIDU = &_GetCPU()->isFlushIDU;
-}
+void IDUFlushPerfCounter::bind() { hIsFlushIDU = &_GetCPU()->isFlushIDU; }
 
 std::vector<PerfCounterVariant> perf_counters;
 
@@ -167,6 +170,7 @@ void initPerfCounters() {
 
   PipePerfManager pipeCtr;
   RAWStallPerfCounter rawStallCtr;
+  IDUFlushPerfCounter iduFlushCtr;
 
   CachePerfCounter cacheCtr;
 
@@ -200,6 +204,7 @@ void initPerfCounters() {
   pipeCtr.add(PipeStagePerfCounter().BIND_PIPE_STAGE_BASE(_GetLSU()->io),
               "LSU");
 
+  iduFlushCtr.bind();
   cacheCtr.bind();
   rawStallCtr.bind();
 
@@ -208,6 +213,7 @@ void initPerfCounters() {
   perf_counters.push_back(std::move(axi4Ctr));
   perf_counters.push_back(std::move(pipeCtr));
   perf_counters.push_back(std::move(rawStallCtr));
+	perf_counters.push_back(std::move(iduFlushCtr));
   perf_counters.push_back(std::move(cacheCtr));
 }
 
