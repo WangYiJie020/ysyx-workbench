@@ -486,8 +486,7 @@ bool sim_read_vmem(word_t addr, word_t *data) {
     }
   }
   if (SRAM_BASE <= addr && addr < SRAM_END) {
-    // spdlog::warn("sim_read_vmem addr={:08x} in SRAM region, direct read not
-    // allowed", addr);
+    spdlog::warn("sim_read_vmem addr={:08x} in SRAM region, direct read not allowed", addr);
     // TODO: handle sram read
     *data = 0;
   } else
