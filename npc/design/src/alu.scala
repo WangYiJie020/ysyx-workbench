@@ -49,12 +49,12 @@ class ALU extends Module {
   val shift_res = Wire(Types.UWord)
   // shift_res := Mux(isOpAlt, (s_src1 >> shamt).asUInt, src1 >> shamt)
 
-  val extedSrc1 = Wire(UInt(64.W))
+  // Optimize make L/R shift use same shifter
+  val extedSrc1    = Wire(UInt(64.W))
   val isRightShift = inbits.func3t(2)
-  val shiftedSrc1 = Mux(isRightShift, src1, Reverse(src1))
+  val shiftedSrc1  = Mux(isRightShift, src1, Reverse(src1))
   extedSrc1 := Cat(Fill(32, shiftedSrc1(31) & isOpAlt), shiftedSrc1)
   shift_res := extedSrc1 >> shamt
-
 
   val defaultRes = Wire(Types.UWord)
   defaultRes := DontCare
@@ -72,7 +72,7 @@ class ALU extends Module {
   io.out.bits := MuxLookup(inbits.func3t, defaultRes)(
     Seq(
       0.U -> add_sub_res,                    // 000: add/sub/addi
-      1.U -> Reverse(shift_res),                   // 001: sll/slli
+      1.U -> Reverse(shift_res),             // 001: sll/slli
       2.U -> Mux(s_src1 < s_src2, 1.U, 0.U), // 010: slt/slti
       3.U -> Mux(src1 < src2, 1.U, 0.U),     // 011: sltu/sltiu
       4.U -> (src1 ^ src2),                  // 100: xor/xori
