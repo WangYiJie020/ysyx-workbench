@@ -37,14 +37,21 @@ class ALU extends Module {
 
   val add_sub_res = Wire(Types.UWord)
 
+  // this optimize can make alu alone module area bigger
+  // but the whole module area smaller
+  // ??? I don't understand ???
   val op2_inv = Mux(isAdd, src2, ~src2)
   val cin     = !isAdd
   add_sub_res := src1 + op2_inv + cin
-
   // add_sub_res := Mux(isAdd, src1 + src2, src1 - src2)
 
   val shift_res = Wire(Types.UWord)
-  shift_res := Mux(isOpAlt, (s_src1 >> shamt).asUInt, src1 >> shamt)
+  // shift_res := Mux(isOpAlt, (s_src1 >> shamt).asUInt, src1 >> shamt)
+
+  val extedSrc1 = Wire(UInt(64.W))
+  extedSrc1 := Cat(Fill(32, src1(31) & isOpAlt), src1)
+  shift_res := extedSrc1 >> shamt
+
 
   val defaultRes = Wire(Types.UWord)
   defaultRes := DontCare
