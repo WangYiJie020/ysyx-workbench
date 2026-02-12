@@ -26,6 +26,8 @@ class ALU extends Module {
   val src1   = inbits.src1
   val src2   = inbits.src2
 
+  val func3t = inbits.func3t
+
   val s_src1 = src1.asSInt
   val s_src2 = src2.asSInt
 
@@ -43,10 +45,10 @@ class ALU extends Module {
   // 23866 -> 23850
   // ??? I don't understand ???
   // val op2_inv = Mux(isAdd, src2, ~src2)
-  
+
   val op2_inv = src2 ^ Fill(32, ~isAdd)
 
-  val cin     = !isAdd
+  val cin = !isAdd
   // add_sub_res := src1 + op2_inv + cin
   // add_sub_res := Mux(isAdd, src1 + src2, src1 - src2)
 
@@ -73,7 +75,7 @@ class ALU extends Module {
   //   result sign negative -> less than -> slt should be true
   val slt_res = sign_res ^ overflow
 
-  val shift_res = Wire(Types.UWord)
+  val rShiftResult = Wire(Types.UWord)
   // shift_res := Mux(isOpAlt, (s_src1 >> shamt).asUInt, src1 >> shamt)
 
   // Optimize make L/R shift use same shifter
@@ -82,8 +84,10 @@ class ALU extends Module {
   val extedSrc1    = Wire(UInt(64.W))
   val isRightShift = inbits.func3t(2)
   val shiftedSrc1  = Mux(isRightShift, src1, Reverse(src1))
-  extedSrc1 := Cat(Fill(32, shiftedSrc1(31) & isOpAlt), shiftedSrc1)
-  shift_res := extedSrc1 >> shamt
+  extedSrc1    := Cat(Fill(32, shiftedSrc1(31) & isOpAlt), shiftedSrc1)
+  rShiftResult := extedSrc1 >> shamt
+
+  // val shiftResult = Mux(isRightShift, rShiftResult, Reverse(rShiftResult))
 
   val defaultRes = Wire(Types.UWord)
   defaultRes := DontCare
@@ -104,16 +108,30 @@ class ALU extends Module {
   // 23445 -> 23282
   val logic_or  = logic_and | logic_xor
 
-  io.out.bits := MuxLookup(inbits.func3t, defaultRes)(
-    Seq(
-      0.U -> add_sub_res,        // 000: add/sub/addi
-      1.U -> Reverse(shift_res), // 001: sll/slli
-      2.U -> slt_res,            // 010: slt/slti
-      3.U -> sltu_res,           // 011: sltu/sltiu
-      4.U -> logic_xor,          // 100: xor/xori
-      5.U -> shift_res,          // 101: srl/srli/sra/srai
-      6.U -> logic_or,           // 110: or/ori
-      7.U -> logic_and           // 111: and/andi
-    )
+  val func3t2HighResult = Mux(
+    func3t(0),
+    Mux(func3t(1), rShiftResult, sltu_res),
+    Mux(func3t(1), logic_or, logic_xor)
   )
+
+  val func3t2LowResult = Mux(
+    func3t(1),
+    Mux(func3t(0), sltu_res, slt_res),
+    Mux(func3t(0), Reverse(rShiftResult), add_sub_res)
+  )
+
+  io.out.bits := Mux(func3t(2), func3t2HighResult, func3t2LowResult)
+
+  // io.out.bits := MuxLookup(inbits.func3t, defaultRes)(
+  //   Seq(
+  //     0.U -> add_sub_res,        // 000: add/sub/addi
+  //     1.U -> Reverse(rShiftResult), // 001: sll/slli
+  //     2.U -> slt_res,            // 010: slt/slti
+  //     3.U -> sltu_res,           // 011: sltu/sltiu
+  //     4.U -> logic_xor,          // 100: xor/xori
+  //     5.U -> rShiftResult,          // 101: srl/srli/sra/srai
+  //     6.U -> logic_or,           // 110: or/ori
+  //     7.U -> logic_and           // 111: and/andi
+  //   )
+  // )
 }
