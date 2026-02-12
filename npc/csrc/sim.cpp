@@ -945,6 +945,9 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   _fill_rams_uninit();
   _init_dpi_logger(); // should before dbg_init(which may preload data with func
                       // call dpis)
+	
+	_init_mem_logger();
+
   if (setting.en_wave) {
     Verilated::traceEverOn(true);
     tfp = std::shared_ptr<VerilatedFstC>(new VerilatedFstC,
