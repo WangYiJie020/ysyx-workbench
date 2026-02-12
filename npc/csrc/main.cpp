@@ -12,12 +12,13 @@
 #include "sim.hpp"
 
 #include "PerfCounter.hpp"
+#include "spdlog/common.h"
 
 int gdb_mainloop();
 
 int main(int argc, char **argv) {
 	auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-	console_sink->set_level(spdlog::level::info);
+	console_sink->set_level(spdlog::level::debug);
 	auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("sim.log", true);
 	file_sink->set_level(spdlog::level::debug);
 	auto sinks = spdlog::sinks_init_list{console_sink, file_sink};
@@ -25,7 +26,7 @@ int main(int argc, char **argv) {
 	logger->set_level(spdlog::level::debug);
 
   spdlog::set_default_logger(logger);
-  spdlog::set_level(spdlog::level::debug); // will modify all registered loggers
+  // spdlog::set_level(spdlog::level::debug); // will modify all registered loggers
   spdlog::set_pattern("[%H:%M:%S.%e][%^%-5l%$][%n] %v");
 
   if (is_soc()) {

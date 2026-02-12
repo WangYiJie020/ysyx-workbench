@@ -319,10 +319,6 @@ struct direct_mapped_mem : public mem_region_traits {
     assert(_ActualSizeInBytes % 4 == 0 && "size should be multiple of 4");
     mem_container = std::make_shared<_MemContainerType>(_ActualSizeInBytes / 4);
     data = mem_container->data();
-    spdlog::info(
-        "Initialized direct_mapped_mem {:5} range [{:08x}, {:08x}), "
-        "actual size {} bytes",
-        name, base, end, _ActualSizeInBytes);
   }
 
   void assert_in_actual_data_range(uint32_t addr) const {
