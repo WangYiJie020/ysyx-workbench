@@ -279,7 +279,7 @@ class LSU extends Module {
       isSRAMAddr,
       memWAddr,
       memWData,
-      memWMask
+      memWMask.pad(8)
     )
   }
 }
