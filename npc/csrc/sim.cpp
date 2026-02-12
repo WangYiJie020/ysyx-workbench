@@ -1,4 +1,5 @@
 #include "sim.hpp"
+#include "VysyxSoCFull__Dpi.h"
 #include "sdbWrap.hpp"
 
 #include <algorithm>
@@ -490,6 +491,10 @@ extern "C" void pc_upd(int pc, int npc) {
   pc_changed = true;
   cpu.pc = npc;
   // printf("[DPI] pc_upd called, pc=0x%08x npc=0x%08x\n", pc, npc);
+}
+
+extern "C" void sram_upd(int addr, int data, char mask){
+	g_sim_mem.sram.write_word(addr, data, mask);
 }
 
 extern "C" void skip_difftest_ref() {
