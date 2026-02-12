@@ -322,24 +322,12 @@ void dumpPerfCounterAsCSV(std::ostream &os) {
     std::visit(
         [&](auto &c) {
           j[c.ctrName] = c;
-          // c.fillFields();
-          // for (auto &f : c.fields) {
-          //   if (!first) {
-          //     os << ",";
-          //     value_row += ",";
-          //   } else {
-          //     first = false;
-          //   }
-          //   // title_row += c.ctrName + "_" + f.label;
-          //   os << c.ctrName + "_" + f.label;
-          //   value_row += std::to_string(f.value);
-          // }
-          // c.clearFields();
         },
         ctr);
   }
   // os << "\n" << value_row;
-  os << j.dump(2);
+  // os << j.dump(2);
+	os << j;
 }
 void dumpPerfReportOnDir(const std::string &dir) {
   std::string prefix = "test.pipe_with_bypass";
