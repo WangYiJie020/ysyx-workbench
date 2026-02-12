@@ -33,7 +33,8 @@ class ALU extends Module {
 
   val isOpAlt = inbits.func7t(5)
 
-  val isAdd = (~isOpAlt) || inbits.is_imm
+  // when func3[1] == 1, less than need sub result
+  val isAdd = ((~isOpAlt) || inbits.is_imm) && (~inbits.func3t(1))
 
   val add_sub_res = Wire(Types.UWord)
 
@@ -43,8 +44,28 @@ class ALU extends Module {
   // ??? I don't understand ???
   val op2_inv = Mux(isAdd, src2, ~src2)
   val cin     = !isAdd
-  add_sub_res := src1 + op2_inv + cin
+  // add_sub_res := src1 + op2_inv + cin
   // add_sub_res := Mux(isAdd, src1 + src2, src1 - src2)
+
+  val full_add_res = src1 +& op2_inv + cin
+  add_sub_res := full_add_res(31, 0)
+  val carry_out   = full_add_res(32)
+
+  // For unsigned less than a + (-b) sign bit is carry out
+  val sltu_res = !carry_out
+
+  val sign_src1 = src1(31)
+  val sign_src2 = src2(31)
+  val sign_res  = add_sub_res(31)
+
+  // only meaningful when sub mode (~isAdd)
+  val overflow = (sign_src1 =/= sign_src2) && (sign_src1 =/= sign_res)
+
+  // when overflow:
+  //   result sign positive -> (a:-...) - (b: +...) overflow -> slt should be true
+  // when no overflow:
+  //   result sign negative -> less than -> slt should be true
+  val slt_res = sign_res ^ overflow
 
   val shift_res = Wire(Types.UWord)
   // shift_res := Mux(isOpAlt, (s_src1 >> shamt).asUInt, src1 >> shamt)
@@ -75,8 +96,10 @@ class ALU extends Module {
     Seq(
       0.U -> add_sub_res,                    // 000: add/sub/addi
       1.U -> Reverse(shift_res),             // 001: sll/slli
-      2.U -> Mux(s_src1 < s_src2, 1.U, 0.U), // 010: slt/slti
-      3.U -> Mux(src1 < src2, 1.U, 0.U),     // 011: sltu/sltiu
+      // 2.U -> Mux(s_src1 < s_src2, 1.U, 0.U), // 010: slt/slti
+      // 3.U -> Mux(src1 < src2, 1.U, 0.U),     // 011: sltu/sltiu
+      2.U -> slt_res,                        // 010: slt/slti
+      3.U -> sltu_res,                       // 011: sltu/sltiu
       4.U -> (src1 ^ src2),                  // 100: xor/xori
       5.U -> shift_res,                      // 101: srl/srli/sra/srai
       6.U -> (src1 | src2),                  // 110: or/ori
