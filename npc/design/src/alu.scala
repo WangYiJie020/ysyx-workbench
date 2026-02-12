@@ -45,10 +45,13 @@ class ALU extends Module {
   val defaultRes = Wire(Types.UWord)
   defaultRes := DontCare
 
+  val leftShiftRes = Wire(Types.UWord)
+  leftShiftRes := src1 << shamt
+
   io.out.bits := MuxLookup(inbits.func3t, defaultRes)(
     Seq(
       0.U -> add_sub_res,                    // 000: add/sub/addi
-      1.U -> (src1 << shamt),                // 001: sll/slli
+      1.U -> leftShiftRes,                // 001: sll/slli
       2.U -> Mux(s_src1 < s_src2, 1.U, 0.U), // 010: slt/slti
       3.U -> Mux(src1 < src2, 1.U, 0.U),     // 011: sltu/sltiu
       4.U -> (src1 ^ src2),                  // 100: xor/xori
