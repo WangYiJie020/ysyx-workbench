@@ -4,6 +4,7 @@ import chisel3.util._
 import common_def._
 import busfsm._
 
+import chisel3.util.circt.dpi._
 import axi4._
 
 class LSUInput extends Bundle {
@@ -271,4 +272,14 @@ class LSU extends Module {
 
   outWriteBackInfo.skipDifftest := needSkipDifftest
 
+  val isSRAMAddr = AddrSpace.inRng(memAddr, AddrSpace.SRAM)
+  when(io.mem.awvalid && io.mem.awready && isSRAMAddr) {
+    RawClockedVoidFunctionCall("sram_upd", Some(Seq("addr", "data", "mask")))(
+      clock,
+      isSRAMAddr,
+      memWAddr,
+      memWData,
+      memWMask.pad(8)
+    )
+  }
 }

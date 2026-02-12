@@ -13,6 +13,8 @@ object AddrSpace {
   val SPI   = ("h10001000".U(32.W), "h10002000".U(32.W))
   val SERIAL = ("h10000000".U(32.W), "h10001000".U(32.W))
 
+  val SRAM = ("h0f000000".U(32.W), "h10000000".U(32.W))
+
   val SOC = ("h0f000000".U(32.W), "hffffffff".U(32.W))
 
   val NPCMEM = ("h80000000".U(32.W), "h8fffffff".U(32.W))
