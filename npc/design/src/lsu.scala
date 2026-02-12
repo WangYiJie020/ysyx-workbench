@@ -268,16 +268,18 @@ class LSU extends Module {
   val isSPIAddr    = AddrSpace.inRng(memAddr, AddrSpace.SPI)
   val isClintAddr  = AddrSpace.inRng(memAddr, AddrSpace.CLINT)
 
-
-
   val needSkipDifftest = isMemOp && (isSerialAddr || isSPIAddr || isClintAddr)
 
   outWriteBackInfo.skipDifftest := needSkipDifftest
 
   val isSRAMAddr = AddrSpace.inRng(memAddr, AddrSpace.SRAM)
-  when(io.mem.awvalid && io.mem.awready && isSRAMAddr){
-    RawClockedVoidFunctionCall("sram_upd", Some(Seq("addr","data", "mask")))(
-      clock, isSRAMAddr, memWData, memWMask
+  when(io.mem.awvalid && io.mem.awready && isSRAMAddr) {
+    RawClockedVoidFunctionCall("sram_upd", Some(Seq("addr", "data", "mask")))(
+      clock,
+      isSRAMAddr,
+      memWAddr,
+      memWData,
+      memWMask
     )
   }
 }
