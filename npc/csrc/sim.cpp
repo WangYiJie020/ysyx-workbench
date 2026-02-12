@@ -320,7 +320,7 @@ struct direct_mapped_mem : public mem_region_traits {
     mem_container = std::make_shared<_MemContainerType>(_ActualSizeInBytes / 4);
     data = mem_container->data();
     spdlog::info(
-        "Initialized direct_mapped_mem {} with range [{:08x}, {:08x}), "
+        "Initialized direct_mapped_mem {:5} range [{:08x}, {:08x}), "
         "actual size {} bytes",
         name, base, end, _ActualSizeInBytes);
   }
