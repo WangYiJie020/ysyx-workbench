@@ -329,6 +329,6 @@ void initPerfCounters();
 void dumpPerfCountersStatistics(std::ostream &os);
 void updatePerfCounters();
 
-void dumpPerfCounterAsCSV(std::ostream &os);
+void dumpPerfCounterTo(std::ostream &os);
 
 void dumpPerfReportOnDir(const std::string &dir);

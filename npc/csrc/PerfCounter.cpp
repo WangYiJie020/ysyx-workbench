@@ -311,7 +311,7 @@ void to_json(nlohmann::json &j, const IDUFlushPerfCounter &c) {
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(BranchPredPerfCounter, totBranchCount,
                                    totMispredictCount)
 
-void dumpPerfCounterAsCSV(std::ostream &os) {
+void dumpPerfCounterTo(std::ostream &os) {
   // std::string title_row;
   std::string value_row;
 
@@ -340,14 +340,14 @@ void dumpPerfReportOnDir(const std::string &dir) {
   dumpPerfCountersStatistics(reportFile);
   reportFile.close();
   spdlog::info("perf counter report dumped to {}", reportPath);
-  std::string csvPath = dir + '/' + prefix + "rawdata.csv";
-  std::ofstream csvFile(csvPath);
-  if (!csvFile.is_open()) {
-    spdlog::error("cannot open perf counter csv file {}", csvPath);
+  std::string dataPath = dir + '/' + prefix + ".rawdata.json";
+  std::ofstream dataFile(dataPath);
+  if (!dataFile.is_open()) {
+    spdlog::error("cannot open perf counter csv file {}", dataPath);
     return;
   }
-  dumpPerfCounterAsCSV(std::cout);
-  dumpPerfCounterAsCSV(csvFile);
-  csvFile.close();
-  spdlog::info("perf counter csv dumped to {}", csvPath);
+  dumpPerfCounterTo(std::cout);
+  dumpPerfCounterTo(dataFile);
+  dataFile.close();
+  spdlog::info("perf counter csv dumped to {}", dataPath);
 }
