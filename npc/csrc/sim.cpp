@@ -304,27 +304,26 @@ struct mem_region_traits {
 };
 
 struct direct_mapped_mem : public mem_region_traits {
-  uint32_t _ActualSizeInBytes;
+  const uint32_t _ActualSizeInBytes;
+
+	using _MemContainerType = std::vector<uint32_t>;
+	std::shared_ptr<_MemContainerType> mem_container;
   uint32_t *data;
 
   direct_mapped_mem(uint32_t base, uint32_t end, std::string_view name,
                     uint32_t actual_size = 0)
-      : mem_region_traits(base, end, name) {
-    assert(actual_size <= (end - base) &&
+      : mem_region_traits(base, end, name),
+        _ActualSizeInBytes(actual_size ? actual_size : (end - base)) {
+    assert(_ActualSizeInBytes <= (end - base) &&
            "actual size should not exceed the address range");
-    if (actual_size == 0) {
-      actual_size = end - base;
-    }
-    assert(actual_size % 4 == 0 && "size should be multiple of 4");
-    data = new uint32_t[actual_size / 4];
-    _ActualSizeInBytes = actual_size;
-
+    assert(_ActualSizeInBytes % 4 == 0 && "size should be multiple of 4");
+		mem_container = std::make_shared<_MemContainerType>(_ActualSizeInBytes / 4);
+		data = mem_container->data();
     spdlog::info(
         "Initialized direct_mapped_mem {} with range [{:08x}, {:08x}), "
         "actual size {} bytes",
-        name, base, end, actual_size);
+        name, base, end, _ActualSizeInBytes);
   }
-  ~direct_mapped_mem() { delete[] data; }
 
   void assert_in_actual_data_range(uint32_t addr) const {
     size_t offset = addr - _Base;
@@ -411,12 +410,6 @@ struct sdram_mem : public mem_region_traits {
 };
 
 struct {
-  // direct_mapped_mem<0x20000000u, 0x20010000u> mrom = {"mrom"};
-  // direct_mapped_mem<0x30000000u, 0x40000000u, sizeof(img)> flash = {"flash"};
-  // direct_mapped_mem<0x80000000u, 0xa0000000u, 128 * 1024 * 1024> psram = {
-  //     "psram"};
-  // direct_mapped_mem<0x0f000000u, 0x10000000u, 8 * 1024> sram = {"sram"};
-
   direct_mapped_mem mrom = {0x20000000u, 0x20010000u, "mrom"};
   direct_mapped_mem flash = {0x30000000u, 0x40000000u, "flash", sizeof(img)};
   direct_mapped_mem psram = {0x80000000u, 0xa0000000u, "psram",
