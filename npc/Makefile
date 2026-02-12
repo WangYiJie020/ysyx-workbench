@@ -219,7 +219,7 @@ STA_DEST ?= $(CPU_DESIGN_NAME)
 
 sta: $(STA_VSRCS)
 	@echo "Removing DPI-C void functions from verilog sources..."
-	./remove_dpi.sh $(CHISEL2V_EMIT_DIR) $(STA_NODPI_PATH)
+	./scripts/remove_dpi.sh $(CHISEL2V_EMIT_DIR) $(STA_NODPI_PATH)
 	make -C $(YOSYS_STA_PATH) sta \
 		DESIGN=$(STA_DEST) \
 		CLK_FREQ_MHZ=2000 \
