@@ -42,7 +42,10 @@ class ALU extends Module {
   // but the whole module area smaller
   // 23866 -> 23850
   // ??? I don't understand ???
-  val op2_inv = Mux(isAdd, src2, ~src2)
+  // val op2_inv = Mux(isAdd, src2, ~src2)
+  
+  val op2_inv = src2 ^ Fill(32, ~isAdd)
+
   val cin     = !isAdd
   // add_sub_res := src1 + op2_inv + cin
   // add_sub_res := Mux(isAdd, src1 + src2, src1 - src2)
@@ -97,6 +100,8 @@ class ALU extends Module {
 
   val logic_and = src1 & src2
   val logic_xor = src1 ^ src2
+  // Optimize or to use and/xor result
+  // 23445 -> 23282
   val logic_or  = logic_and | logic_xor
 
   io.out.bits := MuxLookup(inbits.func3t, defaultRes)(
