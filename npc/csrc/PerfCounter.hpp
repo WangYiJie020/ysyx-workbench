@@ -51,6 +51,8 @@ public:
   };
   std::vector<ValidReadyBus> bus_list;
 
+  HandShakeCounterManager() { ctrName = "HandshakeCounterManager"; }
+
   ValidReadyBus &add(SignalHandle hValid, SignalHandle hReady,
                      std::string description = "");
 
@@ -144,6 +146,9 @@ class AXI4PerfCounterManager : public PerfCounterBase {
 public:
   std::vector<AXI4ReadPerfCounter> rdCounters;
   std::vector<AXI4WritePerfCounter> wrCounters;
+
+  AXI4PerfCounterManager() { ctrName = "AXI4PerfCounterManager"; }
+
   void update();
   void dumpStatistics(std::ostream &) override;
 
@@ -198,6 +203,7 @@ struct PipeStagePerfCounter : public PerfCounterBase {
 class PipePerfManager : public PerfCounterBase {
 public:
   std::vector<PipeStagePerfCounter> stageCtrs;
+  PipePerfManager() { ctrName = "PipePerfManager"; }
   void add(PipeStagePerfCounter ctr, std::string name) {
     ctr.ctrName = name;
     stageCtrs.push_back(std::move(ctr));
@@ -227,6 +233,8 @@ public:
 
   sim_cycle_t currentHitAccessStartCycle = 0;
   size_t totalHitAccessCycles = 0;
+
+  CachePerfCounter() { ctrName = "CachePerfCounter"; }
 
   void bind();
   void update();
@@ -259,6 +267,8 @@ struct RAWStallPerfCounter : public PerfCounterBase {
   size_t cycConflictWBU = 0;
   size_t cycIDUStall = 0;
 
+  RAWStallPerfCounter() { ctrName = "RAWStallPerfCounter"; }
+
   void bind();
   void update();
 
@@ -282,6 +292,8 @@ struct IDUFlushPerfCounter : public PerfCounterBase {
   size_t cycIDUFlush = 0;
   size_t cycFlushOfReason[REASON_NUM] = {0};
 
+  IDUFlushPerfCounter() { ctrName = "IDUFlushPerfCounter"; }
+
   void bind();
   void update();
 
@@ -297,6 +309,8 @@ struct BranchPredPerfCounter : public PerfCounterBase {
 
   size_t totBranchCount = 0;
   size_t totMispredictCount = 0;
+
+	BranchPredPerfCounter() { ctrName = "BranchPredPerfCounter"; }
 
   void bind();
   void update();
