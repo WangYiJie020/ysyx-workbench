@@ -275,13 +275,13 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(HandShakeCounterManager, bus_list)
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(AXI4CounterBase::LatencyRecord, startTime,
                                    endTime, cycles)
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(AXI4CounterBase, transaction_count,
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(AXI4CounterBase,ctrName, transaction_count,
                                    total_latency_cycles, maxRecord)
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(AXI4PerfCounterManager, rdCounters,
                                    wrCounters)
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(PipeStagePerfCounter, countOfState)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(PipeStagePerfCounter, ctrName,countOfState)
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(PipePerfManager, stageCtrs)
 
