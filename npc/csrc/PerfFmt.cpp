@@ -4,14 +4,6 @@
 #include <ostream>
 #include <tabulate/table.hpp>
 
-#include <nlohmann/json.hpp>
-
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(AXI4CounterBase::LatencyRecord, startTime,
-                                   endTime, cycles)
-
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(AXI4CounterBase, transaction_count,
-                                   total_latency_cycles, maxRecord)
-
 using namespace tabulate;
 
 static void _SetTableFmt(Table &t) {
@@ -181,8 +173,4 @@ void AXI4PerfCounterManager::dumpStatistics(std::ostream &os) {
     _AddTableRowForAXI4Counter(t, ctr);
   }
   _PrintTable(t, os);
-
-	nlohmann::json j;
-	j = rdCounters[0];
-	std::cout << "AXI4 Read Counter JSON:\n" << j.dump(4) << std::endl;
 }
