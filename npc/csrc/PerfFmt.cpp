@@ -104,6 +104,16 @@ void RAWStallPerfCounter::dumpStatistics(std::ostream &os) {
 
   _PrintTable(t, os);
 }
+
+const char *IDUFlushPerfCounter::nameOfReason(int r){
+  static const char *name_of_reason[] = {"BranchTaken", "JALR", "JAL",
+                                         "Exception", "Unknown"};
+	if (r < sizeof(name_of_reason) / sizeof(name_of_reason[0])) {
+		return name_of_reason[r];
+	} else {
+		return "invalid reason";
+	}
+}
 void IDUFlushPerfCounter::dumpStatistics(std::ostream &os) {
   os << "IDU Flush Performance Counter Statistics:\n";
   double flushPerc =
@@ -116,8 +126,6 @@ void IDUFlushPerfCounter::dumpStatistics(std::ostream &os) {
   t.add_row({"Reason", "Flush\nCycles", "Flush %\n(in tot)",
              "Flush %\n(in all flushes)"});
 
-  static const char *name_of_reason[] = {"BranchTaken", "JALR", "JAL",
-                                         "Exception", "Unknown"};
 
   for (int i = 0; i < REASON_NUM; i++) {
     double percTot =
@@ -128,7 +136,7 @@ void IDUFlushPerfCounter::dumpStatistics(std::ostream &os) {
         cycIDUFlush == 0
             ? NAN
             : ((double)cycFlushOfReason[i] / (double)cycIDUFlush) * 100.0;
-    t.add_row(RowStream{} << name_of_reason[i] << cycFlushOfReason[i] << percTot
+    t.add_row(RowStream{} << nameOfReason(i) << cycFlushOfReason[i] << percTot
                           << percFlush);
   }
   _PrintTable(t, os);

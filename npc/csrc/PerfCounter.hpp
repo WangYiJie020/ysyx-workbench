@@ -292,6 +292,8 @@ struct IDUFlushPerfCounter : public PerfCounterBase {
   size_t cycIDUFlush = 0;
   size_t cycFlushOfReason[REASON_NUM] = {0};
 
+	static const char *nameOfReason(int reason);
+
   IDUFlushPerfCounter() { ctrName = "IDUFlushPerfCounter"; }
 
   void bind();

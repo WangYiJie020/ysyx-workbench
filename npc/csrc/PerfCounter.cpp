@@ -2,8 +2,8 @@
 #include "sim.hpp"
 #include "spdlog/fmt/bundled/format.h"
 #include <fstream>
-#include <vector>
 #include <iostream>
+#include <vector>
 
 #include <nlohmann/json.hpp>
 
@@ -275,13 +275,21 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(HandShakeCounterManager, bus_list)
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(AXI4CounterBase::LatencyRecord, startTime,
                                    endTime, cycles)
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(AXI4CounterBase,ctrName, transaction_count,
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(AXI4CounterBase, ctrName, transaction_count,
                                    total_latency_cycles, maxRecord)
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(AXI4PerfCounterManager, rdCounters,
                                    wrCounters)
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(PipeStagePerfCounter, ctrName,countOfState)
+void to_json(nlohmann::json &j, const PipeStagePerfCounter &c) {
+  j["ctrName"] = c.ctrName;
+  for (int s = 0; s < PipeStagePerfCounter::STATE_NUM; s++) {
+    j["countOfState"][s] = {
+        {"state", PipeStagePerfCounter::nameOfState(s)},
+        {"count", c.countOfState[s]},
+    };
+  }
+}
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(PipePerfManager, stageCtrs)
 
@@ -289,8 +297,19 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(CachePerfCounter, totalVisitCount, hitCount,
                                    totalHitAccessCycles, rdMemCtr)
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(RAWStallPerfCounter, cycConflictEXU,
                                    cycConflictLSU, cycConflictWBU, cycIDUStall)
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(IDUFlushPerfCounter, cycIDUFlush,
-                                   cycFlushOfReason)
+// NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(IDUFlushPerfCounter, cycIDUFlush,
+//                                    cycFlushOfReason)
+
+void to_json(nlohmann::json &j, const IDUFlushPerfCounter &c) {
+  j["ctrName"] = c.ctrName;
+  j["cycIDUFlush"] = c.cycIDUFlush;
+  for (int r = 0; r < IDUFlushPerfCounter::IDUFlushReason::REASON_NUM; r++) {
+    j["cycFlushOfReason"][r] = {
+        {"reason", IDUFlushPerfCounter::nameOfReason(r)},
+        {"count", c.cycFlushOfReason[r]},
+    };
+  }
+}
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(BranchPredPerfCounter, totBranchCount,
                                    totMispredictCount)
 
@@ -322,7 +341,7 @@ void dumpPerfCounterAsCSV(std::ostream &os) {
         ctr);
   }
   // os << "\n" << value_row;
-	os << j.dump(4);
+  os << j.dump(4);
 }
 void dumpPerfReportOnDir(const std::string &dir) {
   std::string prefix = "test.pipe_with_bypass";
@@ -341,7 +360,7 @@ void dumpPerfReportOnDir(const std::string &dir) {
     spdlog::error("cannot open perf counter csv file {}", csvPath);
     return;
   }
-	dumpPerfCounterAsCSV(std::cout);
+  dumpPerfCounterAsCSV(std::cout);
   dumpPerfCounterAsCSV(csvFile);
   csvFile.close();
   spdlog::info("perf counter csv dumped to {}", csvPath);
