@@ -4,6 +4,8 @@
 #include <ostream>
 #include <tabulate/table.hpp>
 
+#include <nlohmann/json.hpp>
+
 using namespace tabulate;
 
 static void _SetTableFmt(Table &t) {

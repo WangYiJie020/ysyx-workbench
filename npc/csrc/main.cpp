@@ -14,9 +14,16 @@
 #include "PerfCounter.hpp"
 #include "spdlog/common.h"
 
+#include <nlohmann/json.hpp>
+
 int gdb_mainloop();
 
 int main(int argc, char **argv) {
+
+	nlohmann::json j;
+	j["hello"] = "world";
+	std::cout << j.dump() << std::endl;
+
 	auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
 	console_sink->set_level(spdlog::level::info);
 	auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("sim.log", true);
