@@ -317,6 +317,12 @@ struct direct_mapped_mem : public mem_region_traits {
     }
     assert(actual_size % 4 == 0 && "size should be multiple of 4");
     data = new uint32_t[actual_size / 4];
+    _ActualSizeInBytes = actual_size;
+
+    spdlog::info(
+        "Initialized direct_mapped_mem {} with range [{:08x}, {:08x}), "
+        "actual size {} bytes",
+        name, base, end, actual_size);
   }
   ~direct_mapped_mem() { delete[] data; }
 
@@ -385,11 +391,11 @@ struct sdram_mem : public mem_region_traits {
   sdram_mem(std::string_view name)
       : mem_region_traits(SDRAM_BASE, SDRAM_END, name) {}
 
-	uint8_t* get_data_ptr_at(uint32_t addr) {
-		assert_in_range(addr);
-		spdlog::error("sdram region does not support direct data pointer access");
-		return nullptr;
-	}
+  uint8_t *get_data_ptr_at(uint32_t addr) {
+    assert_in_range(addr);
+    spdlog::error("sdram region does not support direct data pointer access");
+    return nullptr;
+  }
   uint32_t read_word(uint32_t addr) {
     assert_in_range(addr);
     word_t data;
