@@ -18,7 +18,7 @@ int gdb_mainloop();
 
 int main(int argc, char **argv) {
 	auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-	console_sink->set_level(spdlog::level::debug);
+	console_sink->set_level(spdlog::level::info);
 	auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("sim.log", true);
 	file_sink->set_level(spdlog::level::debug);
 	auto sinks = spdlog::sinks_init_list{console_sink, file_sink};
