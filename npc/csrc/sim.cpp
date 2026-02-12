@@ -306,8 +306,8 @@ struct mem_region_traits {
 struct direct_mapped_mem : public mem_region_traits {
   const uint32_t _ActualSizeInBytes;
 
-	using _MemContainerType = std::vector<uint32_t>;
-	std::shared_ptr<_MemContainerType> mem_container;
+  using _MemContainerType = std::vector<uint32_t>;
+  std::shared_ptr<_MemContainerType> mem_container;
   uint32_t *data;
 
   direct_mapped_mem(uint32_t base, uint32_t end, std::string_view name,
@@ -317,8 +317,8 @@ struct direct_mapped_mem : public mem_region_traits {
     assert(_ActualSizeInBytes <= (end - base) &&
            "actual size should not exceed the address range");
     assert(_ActualSizeInBytes % 4 == 0 && "size should be multiple of 4");
-		mem_container = std::make_shared<_MemContainerType>(_ActualSizeInBytes / 4);
-		data = mem_container->data();
+    mem_container = std::make_shared<_MemContainerType>(_ActualSizeInBytes / 4);
+    data = mem_container->data();
     spdlog::info(
         "Initialized direct_mapped_mem {} with range [{:08x}, {:08x}), "
         "actual size {} bytes",
@@ -856,6 +856,25 @@ static auto _gen_logger_formatter_with_simtime() {
 void set_logger_pattern_with_simtime(std::shared_ptr<spdlog::logger> logger) {
   auto formatter = _gen_logger_formatter_with_simtime();
   logger->set_formatter(std::move(formatter));
+}
+void _init_mem_logger() {
+  auto formatter = _gen_logger_formatter_with_simtime();
+  auto lvl = spdlog::level::info;
+
+#define _REG_MEM_REGION_LOGGER(name)                                           \
+  do {                                                                         \
+    spdlog::debug("Registering logger for mem region '{}'", #name);            \
+    auto logger =                                                              \
+        std::make_shared<spdlog::logger>(#name, spdlog::sinks_init_list{});    \
+    logger->set_level(lvl);                                                    \
+    logger->set_formatter(formatter->clone());                                 \
+    spdlog::register_logger(logger);                                           \
+  } while (0)
+  _REG_MEM_REGION_LOGGER(mrom);
+  _REG_MEM_REGION_LOGGER(flash);
+  _REG_MEM_REGION_LOGGER(psram);
+  _REG_MEM_REGION_LOGGER(sram);
+  _REG_MEM_REGION_LOGGER(sdram);
 }
 void _init_dpi_logger() {
   auto formatter = _gen_logger_formatter_with_simtime();
