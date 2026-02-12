@@ -227,7 +227,6 @@ sta: $(SIM_VSRCS)
 		O=$(STA_OUT_DIR) \
 		RTL_FILES="$(STA_VSRCS)" 
 
-unexport ARCH
 perf: 
 	./scripts/make_perf.sh
 
