@@ -6,6 +6,12 @@
 
 #include <nlohmann/json.hpp>
 
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(AXI4CounterBase::LatencyRecord, startTime,
+                                   endTime, cycles)
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(AXI4CounterBase, transaction_count,
+                                   total_latency_cycles, maxRecord)
+
 using namespace tabulate;
 
 static void _SetTableFmt(Table &t) {
@@ -37,7 +43,6 @@ void HandShakeCounterManager::dumpStatistics(std::ostream &os) {
   }
   _PrintTable(t, os);
 }
-
 
 const char *PipeStagePerfCounter::nameOfState(int s) {
   const char *names[] = {
@@ -138,16 +143,16 @@ void IDUFlushPerfCounter::dumpStatistics(std::ostream &os) {
 }
 
 void BranchPredPerfCounter::dumpStatistics(std::ostream &os) {
-	os << "Branch Prediction Performance Counter Statistics:\n";
-	size_t totAccuracy = totBranchCount - totMispredictCount;
-	os << "total branch count: " << totBranchCount << "\n";
-	os << "total mispredict count: " << totMispredictCount << "\n";
-	os << "total accuracy count: " << totAccuracy << "\n";
-	double accuracyPerc =
-	    totBranchCount == 0
-	        ? NAN
-	        : ((double)totAccuracy / (double)totBranchCount) * 100.0;
-	os << "accuracy: " << accuracyPerc << " %\n";
+  os << "Branch Prediction Performance Counter Statistics:\n";
+  size_t totAccuracy = totBranchCount - totMispredictCount;
+  os << "total branch count: " << totBranchCount << "\n";
+  os << "total mispredict count: " << totMispredictCount << "\n";
+  os << "total accuracy count: " << totAccuracy << "\n";
+  double accuracyPerc =
+      totBranchCount == 0
+          ? NAN
+          : ((double)totAccuracy / (double)totBranchCount) * 100.0;
+  os << "accuracy: " << accuracyPerc << " %\n";
 }
 
 void AXI4CounterBase::dumpStatistics(std::ostream &os) {
@@ -176,4 +181,8 @@ void AXI4PerfCounterManager::dumpStatistics(std::ostream &os) {
     _AddTableRowForAXI4Counter(t, ctr);
   }
   _PrintTable(t, os);
+
+	nlohmann::json j;
+	j = rdCounters[0];
+	std::cout << "AXI4 Read Counter JSON:\n" << j.dump(4) << std::endl;
 }
