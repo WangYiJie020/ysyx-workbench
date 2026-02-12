@@ -37,32 +37,14 @@ class ALU extends Module {
 
   val add_sub_res = Wire(Types.UWord)
 
-  // original implementation, but synthesis tool
-  // will add 140 um^2 area for unknown reason
-  //
-  // when((inbits.func7t === 0.U) || inbits.is_imm) {
-  //   add_sub_res := src1 + src2
-  // }.otherwise {
-  //   add_sub_res := src1 - src2
-  // }
+  val op2_inv = Mux(isAdd, src2, ~src2)
+  val cin = !isAdd
 
-  // ok
-  // when(inbits.is_imm || (inbits.func7t === 0.U)) {
-  //   add_sub_res := src1 + src2
-  // }.otherwise {
-  //   add_sub_res := src1 - src2
-  // }
-
-  add_sub_res := Mux(isAdd, src1 + src2, src1 - src2)
+  add_sub_res := src1 + op2_inv + cin
+  // add_sub_res := Mux(isAdd, src1 + src2, src1 - src2)
 
   val shift_res = Wire(Types.UWord)
   shift_res := Mux(isOpAlt, (s_src1 >> shamt).asUInt, src1 >> shamt)
-  // when(inbits.func7t === "b0100000".U) { // sra/srai
-  // when(isOpAlt) { // sra/srai
-  //   shift_res := (s_src1 >> shamt).asUInt
-  // }.otherwise { // srl/srli
-  //   shift_res := src1 >> shamt
-  // }
 
   val defaultRes = Wire(Types.UWord)
   defaultRes := DontCare
