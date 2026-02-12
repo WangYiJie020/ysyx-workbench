@@ -50,6 +50,8 @@ class ALU extends Module {
   // shift_res := Mux(isOpAlt, (s_src1 >> shamt).asUInt, src1 >> shamt)
 
   // Optimize make L/R shift use same shifter
+  //
+  // 23850 -> 23504
   val extedSrc1    = Wire(UInt(64.W))
   val isRightShift = inbits.func3t(2)
   val shiftedSrc1  = Mux(isRightShift, src1, Reverse(src1))
