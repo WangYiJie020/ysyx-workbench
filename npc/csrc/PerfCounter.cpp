@@ -297,8 +297,6 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(CachePerfCounter, totalVisitCount, hitCount,
                                    totalHitAccessCycles, rdMemCtr)
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(RAWStallPerfCounter, cycConflictEXU,
                                    cycConflictLSU, cycConflictWBU, cycIDUStall)
-// NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(IDUFlushPerfCounter, cycIDUFlush,
-//                                    cycFlushOfReason)
 
 void to_json(nlohmann::json &j, const IDUFlushPerfCounter &c) {
   j["ctrName"] = c.ctrName;
@@ -341,7 +339,7 @@ void dumpPerfCounterAsCSV(std::ostream &os) {
         ctr);
   }
   // os << "\n" << value_row;
-  os << j.dump(4);
+  os << j.dump(2);
 }
 void dumpPerfReportOnDir(const std::string &dir) {
   std::string prefix = "test.pipe_with_bypass";
