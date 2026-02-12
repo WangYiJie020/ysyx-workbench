@@ -39,6 +39,7 @@ class ALU extends Module {
 
   // this optimize can make alu alone module area bigger
   // but the whole module area smaller
+  // 23866 -> 23850
   // ??? I don't understand ???
   val op2_inv = Mux(isAdd, src2, ~src2)
   val cin     = !isAdd
@@ -49,7 +50,9 @@ class ALU extends Module {
   // shift_res := Mux(isOpAlt, (s_src1 >> shamt).asUInt, src1 >> shamt)
 
   val extedSrc1 = Wire(UInt(64.W))
-  extedSrc1 := Cat(Fill(32, src1(31) & isOpAlt), src1)
+  val isRightShift = inbits.func3t(2)
+  val shiftedSrc1 = Mux(isRightShift, src1, Reverse(src1))
+  extedSrc1 := Cat(Fill(32, shiftedSrc1(31) & isOpAlt), shiftedSrc1)
   shift_res := extedSrc1 >> shamt
 
 
@@ -63,13 +66,13 @@ class ALU extends Module {
   // can make alu alone module area smaller
   // but when considering whole cpu module
   // seems no difference ???
-  val leftShiftRes = Wire(Types.UWord)
-  leftShiftRes := src1 << shamt
+  // val leftShiftRes = Wire(Types.UWord)
+  // leftShiftRes := src1 << shamt
 
   io.out.bits := MuxLookup(inbits.func3t, defaultRes)(
     Seq(
       0.U -> add_sub_res,                    // 000: add/sub/addi
-      1.U -> leftShiftRes,                   // 001: sll/slli
+      1.U -> Reverse(shift_res),                   // 001: sll/slli
       2.U -> Mux(s_src1 < s_src2, 1.U, 0.U), // 010: slt/slti
       3.U -> Mux(src1 < src2, 1.U, 0.U),     // 011: sltu/sltiu
       4.U -> (src1 ^ src2),                  // 100: xor/xori
