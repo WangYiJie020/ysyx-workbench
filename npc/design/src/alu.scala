@@ -37,11 +37,7 @@ class ALU extends Module {
 
   val add_sub_res = Wire(Types.UWord)
 
-  val op2_inv = Mux(isAdd, src2, ~src2)
-  val cin = !isAdd
-
-  add_sub_res := src1 + op2_inv + cin
-  // add_sub_res := Mux(isAdd, src1 + src2, src1 - src2)
+  add_sub_res := Mux(isAdd, src1 + src2, src1 - src2)
 
   val shift_res = Wire(Types.UWord)
   shift_res := Mux(isOpAlt, (s_src1 >> shamt).asUInt, src1 >> shamt)
