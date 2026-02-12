@@ -14,7 +14,7 @@ class ALUInput extends Bundle {
 }
 
 class ALU extends Module {
-  val io               = IO(new Bundle {
+  val io = IO(new Bundle {
     val in  = Flipped(Decoupled(new ALUInput))
     val out = Decoupled(Types.UWord)
   })
@@ -37,40 +37,44 @@ class ALU extends Module {
 
   val add_sub_res = Wire(Types.UWord)
 
-  // original implementation, but synthesis tool
-  // will add 140 um^2 area for unknown reason
-  //
-  // when((inbits.func7t === 0.U) || inbits.is_imm) {
-  //   add_sub_res := src1 + src2
-  // }.otherwise {
-  //   add_sub_res := src1 - src2
-  // }
-
-  // ok
-  // when(inbits.is_imm || (inbits.func7t === 0.U)) {
-  //   add_sub_res := src1 + src2
-  // }.otherwise {
-  //   add_sub_res := src1 - src2
-  // }
-
-  add_sub_res := Mux(isAdd, src1 + src2, src1 - src2)
+  // this optimize can make alu alone module area bigger
+  // but the whole module area smaller
+  // 23866 -> 23850
+  // ??? I don't understand ???
+  val op2_inv = Mux(isAdd, src2, ~src2)
+  val cin     = !isAdd
+  add_sub_res := src1 + op2_inv + cin
+  // add_sub_res := Mux(isAdd, src1 + src2, src1 - src2)
 
   val shift_res = Wire(Types.UWord)
-  shift_res := Mux(isOpAlt, (s_src1 >> shamt).asUInt, src1 >> shamt)
-  // when(inbits.func7t === "b0100000".U) { // sra/srai
-  // when(isOpAlt) { // sra/srai
-  //   shift_res := (s_src1 >> shamt).asUInt
-  // }.otherwise { // srl/srli
-  //   shift_res := src1 >> shamt
-  // }
+  // shift_res := Mux(isOpAlt, (s_src1 >> shamt).asUInt, src1 >> shamt)
+
+  // Optimize make L/R shift use same shifter
+  //
+  // 23850 -> 23504
+  val extedSrc1    = Wire(UInt(64.W))
+  val isRightShift = inbits.func3t(2)
+  val shiftedSrc1  = Mux(isRightShift, src1, Reverse(src1))
+  extedSrc1 := Cat(Fill(32, shiftedSrc1(31) & isOpAlt), shiftedSrc1)
+  shift_res := extedSrc1 >> shamt
 
   val defaultRes = Wire(Types.UWord)
   defaultRes := DontCare
 
+  // left shift here
+  // expilcitly tell chisel that width is 32
+  // to avoid use 64-bit as result leads to big case
+  //
+  // can make alu alone module area smaller
+  // but when considering whole cpu module
+  // seems no difference ???
+  // val leftShiftRes = Wire(Types.UWord)
+  // leftShiftRes := src1 << shamt
+
   io.out.bits := MuxLookup(inbits.func3t, defaultRes)(
     Seq(
       0.U -> add_sub_res,                    // 000: add/sub/addi
-      1.U -> (src1 << shamt),                // 001: sll/slli
+      1.U -> Reverse(shift_res),             // 001: sll/slli
       2.U -> Mux(s_src1 < s_src2, 1.U, 0.U), // 010: slt/slti
       3.U -> Mux(src1 < src2, 1.U, 0.U),     // 011: sltu/sltiu
       4.U -> (src1 ^ src2),                  // 100: xor/xori
