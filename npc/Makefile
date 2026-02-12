@@ -217,7 +217,7 @@ STA_VSRCS = $(shell find $(abspath $(STA_NODPI_PATH)) -maxdepth 1 -name "*.v" -o
 
 STA_DEST ?= $(CPU_DESIGN_NAME)
 
-sta: $(STA_VSRCS)
+sta: $(CHISEL2V_DONE) $(STA_VSRCS)
 	@echo "Removing DPI-C void functions from verilog sources..."
 	./scripts/remove_dpi.sh $(CHISEL2V_EMIT_DIR) $(STA_NODPI_PATH)
 	make -C $(YOSYS_STA_PATH) sta \
@@ -226,6 +226,16 @@ sta: $(STA_VSRCS)
 		CLK_PORT_NAME=clock \
 		O=$(STA_OUT_DIR) \
 		RTL_FILES="$(STA_VSRCS)" 
+
+sta_area: $(CHISEL2V_DONE) $(STA_VSRCS)
+	@echo "Removing DPI-C void functions from verilog sources..."
+	./scripts/remove_dpi.sh $(CHISEL2V_EMIT_DIR) $(STA_NODPI_PATH)
+	make -C $(YOSYS_STA_PATH) stat_only \
+		DESIGN=$(STA_DEST) \
+		CLK_FREQ_MHZ=2000 \
+		CLK_PORT_NAME=clock \
+		O=$(STA_OUT_DIR) \
+		RTL_FILES="$(STA_VSRCS)" \
 
 sta-all: $(CHISEL2V_DONE)
 	./scripts/sta_all.sh $(CHISEL2V_EMIT_DIR)/filelist.f
