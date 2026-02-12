@@ -34,8 +34,8 @@ SIM_IMG ?=
 
 SOC_HOME ?= ../ysyxSoC
 
-SAN_FLAGS?=
-# SAN_FLAGS?= -fsanitize=address
+# SAN_FLAGS?=
+SAN_FLAGS?= -fsanitize=address
 
 VERILATOR_FLAGS ?=
 
@@ -58,6 +58,10 @@ LDFLAGS += -L$(abspath $(GDBSTUB_LIBPATH)) -lgdbstub
 # tabulate
 TABULATE_PATH ?= /home/wuser/gitclones/tabulate
 INC_PATH += $(abspath $(TABULATE_PATH)/include)
+
+# json
+JSON_PATH ?= /home/wuser/gitclones/json
+INC_PATH += $(abspath $(JSON_PATH)/include)
 
 VERILATOR_FLAGS += --trace-fst --trace-structs
 

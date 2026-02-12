@@ -36,36 +36,6 @@ void HandShakeCounterManager::dumpStatistics(std::ostream &os) {
   _PrintTable(t, os);
 }
 
-// void EXUPerfCounter::_dump(size_t *instCnts, size_t *cycCnts, size_t num,
-//                            const char *(*nameFunc)(int), std::ostream &os) {
-//   Table t;
-//   t.add_row({"Category", "Inst Count", "Inst %", "Cycle Count", "Cycle %",
-//              "Avg CPI"});
-//
-//   size_t totalInsts = std::accumulate(instCnts, instCnts + num, 0ull);
-//   size_t totalCyc = std::accumulate(cycCnts, cycCnts + num, 0ull);
-//
-//   for (size_t i = 0; i < num; i++) {
-//     auto name = nameFunc((int)i);
-//     auto instCount = instCnts[i];
-//     auto cycleCount = cycCnts[i];
-//
-//     double instPerc = totalInsts == 0
-//                           ? NAN
-//                           : ((double)instCount / (double)totalInsts) * 100.0;
-//     double cyclePerc =
-//         totalCyc == 0 ? NAN : ((double)cycleCount / (double)totalCyc) *
-//         100.0;
-//
-//     double avgCPI =
-//         instCount == 0 ? NAN : (double)cycleCount / (double)instCount;
-//
-//     t.add_row(RowStream{} << name << instCount << instPerc << cycleCount
-//                           << cyclePerc << avgCPI);
-//   }
-//   _PrintTable(t, os);
-// }
-
 const char *PipeStagePerfCounter::nameOfState(int s) {
   const char *names[] = {
       "Backpressure",
@@ -134,6 +104,16 @@ void RAWStallPerfCounter::dumpStatistics(std::ostream &os) {
 
   _PrintTable(t, os);
 }
+
+const char *IDUFlushPerfCounter::nameOfReason(int r){
+  static const char *name_of_reason[] = {"BranchTaken", "JALR", "JAL",
+                                         "Exception", "Unknown"};
+	if (r < sizeof(name_of_reason) / sizeof(name_of_reason[0])) {
+		return name_of_reason[r];
+	} else {
+		return "invalid reason";
+	}
+}
 void IDUFlushPerfCounter::dumpStatistics(std::ostream &os) {
   os << "IDU Flush Performance Counter Statistics:\n";
   double flushPerc =
@@ -146,8 +126,6 @@ void IDUFlushPerfCounter::dumpStatistics(std::ostream &os) {
   t.add_row({"Reason", "Flush\nCycles", "Flush %\n(in tot)",
              "Flush %\n(in all flushes)"});
 
-  static const char *name_of_reason[] = {"BranchTaken", "JALR", "JAL",
-                                         "Exception", "Unknown"};
 
   for (int i = 0; i < REASON_NUM; i++) {
     double percTot =
@@ -158,23 +136,23 @@ void IDUFlushPerfCounter::dumpStatistics(std::ostream &os) {
         cycIDUFlush == 0
             ? NAN
             : ((double)cycFlushOfReason[i] / (double)cycIDUFlush) * 100.0;
-    t.add_row(RowStream{} << name_of_reason[i] << cycFlushOfReason[i] << percTot
+    t.add_row(RowStream{} << nameOfReason(i) << cycFlushOfReason[i] << percTot
                           << percFlush);
   }
   _PrintTable(t, os);
 }
 
 void BranchPredPerfCounter::dumpStatistics(std::ostream &os) {
-	os << "Branch Prediction Performance Counter Statistics:\n";
-	size_t totAccuracy = totBranchCount - totMispredictCount;
-	os << "total branch count: " << totBranchCount << "\n";
-	os << "total mispredict count: " << totMispredictCount << "\n";
-	os << "total accuracy count: " << totAccuracy << "\n";
-	double accuracyPerc =
-	    totBranchCount == 0
-	        ? NAN
-	        : ((double)totAccuracy / (double)totBranchCount) * 100.0;
-	os << "accuracy: " << accuracyPerc << " %\n";
+  os << "Branch Prediction Performance Counter Statistics:\n";
+  size_t totAccuracy = totBranchCount - totMispredictCount;
+  os << "total branch count: " << totBranchCount << "\n";
+  os << "total mispredict count: " << totMispredictCount << "\n";
+  os << "total accuracy count: " << totAccuracy << "\n";
+  double accuracyPerc =
+      totBranchCount == 0
+          ? NAN
+          : ((double)totAccuracy / (double)totBranchCount) * 100.0;
+  os << "accuracy: " << accuracyPerc << " %\n";
 }
 
 void AXI4CounterBase::dumpStatistics(std::ostream &os) {

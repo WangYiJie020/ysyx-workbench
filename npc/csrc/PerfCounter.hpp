@@ -16,29 +16,6 @@
 
 #include "sim.hpp"
 
-// inline const std::string &cpu_vpi_path_prefix() {
-//   static std::string prefix;
-//   if (prefix.empty()) {
-//     prefix = std::string("TOP.") + std::string(_STR(TOP_NAME)).substr(1) + '.';
-//     if (is_soc()) {
-//       prefix += "asic.cpu.cpu.";
-//     }
-//   }
-//   return prefix;
-// }
-//
-// namespace _PerfCtrImp {
-//
-// inline auto _FullPath(const std::string &pathWithoutValidOrReady,
-//                       const std::string &suffix = "") {
-//   return cpu_vpi_path_prefix() + pathWithoutValidOrReady + suffix;
-// }
-// inline auto _DebugPath(const std::string &pathWithoutValidOrReady,
-//                        const std::string &suffix = "") {
-//   return "`cpu." + pathWithoutValidOrReady + suffix;
-// }
-// } // namespace _PerfCtrImp
-
 struct SignalHandle {
   using vDataPtr = std::variant<CData *, SData *, IData *, QData *>;
   vDataPtr ptr;
@@ -57,13 +34,6 @@ struct SignalHandle {
 class PerfCounterBase {
 public:
   std::string ctrName;
-  struct Field {
-    std::string label;
-    size_t value;
-  };
-  std::vector<Field> fields;
-  virtual void fillFields() = 0;
-  void clearFields() { fields.clear(); }
   virtual void dumpStatistics(std::ostream &) = 0;
 };
 
@@ -73,27 +43,20 @@ public:
     SignalHandle hValid;
     SignalHandle hReady;
 
-    std::string pathWithoutValidOrReady;
     std::string description;
 
     size_t shake_count = 0;
 
     bool shakeHappened();
   };
-  std::shared_ptr<spdlog::logger> logger;
   std::vector<ValidReadyBus> bus_list;
 
-  void init();
+  HandShakeCounterManager() { ctrName = "HandshakeCounterManager"; }
+
   ValidReadyBus &add(SignalHandle hValid, SignalHandle hReady,
-                     std::string barePath, std::string description = "");
+                     std::string description = "");
 
   void update();
-  void fillFields() override {
-    ctrName = "HandShakeCounter";
-    for (auto &bus : bus_list) {
-      fields.push_back(Field{bus.pathWithoutValidOrReady, bus.shake_count});
-    }
-  }
   void dumpStatistics(std::ostream &os) override;
 };
 
@@ -120,11 +83,6 @@ struct AXI4CounterBase : public PerfCounterBase {
 
   void init_logger();
   void dumpStatistics(std::ostream &) override;
-  void fillFields() override {
-    fields.push_back(Field{"txn", transaction_count});
-    fields.push_back(Field{"lat_cyc", total_latency_cycles});
-    fields.push_back(Field{"lat_max", maxRecord.cycles});
-  }
 };
 
 struct AXI4ReadPerfCounter : public AXI4CounterBase {
@@ -188,6 +146,9 @@ class AXI4PerfCounterManager : public PerfCounterBase {
 public:
   std::vector<AXI4ReadPerfCounter> rdCounters;
   std::vector<AXI4WritePerfCounter> wrCounters;
+
+  AXI4PerfCounterManager() { ctrName = "AXI4PerfCounterManager"; }
+
   void update();
   void dumpStatistics(std::ostream &) override;
 
@@ -202,22 +163,6 @@ public:
     ctr.init_logger();
     spdlog::debug("added AXI4 write perf counter '{}'", ctr.ctrName);
     wrCounters.push_back(std::move(ctr));
-  }
-
-  void fillFields() override {
-    ctrName = "AXI4PerfCounters";
-    for (auto &ctr : rdCounters) {
-      ctr.fillFields();
-      for (auto &f : ctr.fields) {
-        fields.push_back(Field{"rd_" + ctr.ctrName + "_" + f.label, f.value});
-      }
-    }
-    for (auto &ctr : wrCounters) {
-      ctr.fillFields();
-      for (auto &f : ctr.fields) {
-        fields.push_back(Field{"wr_" + ctr.ctrName + "_" + f.label, f.value});
-      }
-    }
   }
 };
 
@@ -253,18 +198,12 @@ struct PipeStagePerfCounter : public PerfCounterBase {
   size_t totalCount() const {
     return std::accumulate(countOfState, countOfState + STATE_NUM, 0ull);
   }
-
-  void fillFields() override {
-    for (size_t i = 0; i < STATE_NUM; i++) {
-      fields.push_back(
-          Field{std::string("state_") + nameOfState((int)i), countOfState[i]});
-    }
-  }
 };
 
 class PipePerfManager : public PerfCounterBase {
 public:
   std::vector<PipeStagePerfCounter> stageCtrs;
+  PipePerfManager() { ctrName = "PipePerfManager"; }
   void add(PipeStagePerfCounter ctr, std::string name) {
     ctr.ctrName = name;
     stageCtrs.push_back(std::move(ctr));
@@ -275,15 +214,6 @@ public:
     }
   }
   void dumpStatistics(std::ostream &) override;
-  void fillFields() override {
-    ctrName = "PipePerfManager";
-    for (auto &ctr : stageCtrs) {
-      ctr.fillFields();
-      for (auto &f : ctr.fields) {
-        fields.push_back(Field{ctr.ctrName + "_" + f.label, f.value});
-      }
-    }
-  }
 };
 
 class CachePerfCounter : public PerfCounterBase {
@@ -304,19 +234,11 @@ public:
   sim_cycle_t currentHitAccessStartCycle = 0;
   size_t totalHitAccessCycles = 0;
 
+  CachePerfCounter() { ctrName = "CachePerfCounter"; }
+
   void bind();
   void update();
   void dumpStatistics(std::ostream &) override;
-  void fillFields() override {
-    ctrName = "CachePerfCounter";
-    fields.push_back(Field{"total_visits", totalVisitCount});
-    fields.push_back(Field{"hit_count", hitCount});
-    fields.push_back(Field{"total_hit_cycles", totalHitAccessCycles});
-    rdMemCtr.fillFields();
-    for (auto &f : rdMemCtr.fields) {
-      fields.push_back(Field{"mem_rd_" + f.label, f.value});
-    }
-  }
 
   double hitRate() const {
     return totalVisitCount == 0 ? NAN
@@ -345,17 +267,12 @@ struct RAWStallPerfCounter : public PerfCounterBase {
   size_t cycConflictWBU = 0;
   size_t cycIDUStall = 0;
 
+  RAWStallPerfCounter() { ctrName = "RAWStallPerfCounter"; }
+
   void bind();
   void update();
 
   void dumpStatistics(std::ostream &) override;
-  void fillFields() override {
-    ctrName = "RAWStallPerfCounter";
-    fields.push_back(Field{"cyc_conflict_exu", cycConflictEXU});
-    fields.push_back(Field{"cyc_conflict_lsu", cycConflictLSU});
-    fields.push_back(Field{"cyc_conflict_wbu", cycConflictWBU});
-    fields.push_back(Field{"cyc_idu_stall", cycIDUStall});
-  }
 };
 
 struct IDUFlushPerfCounter : public PerfCounterBase {
@@ -375,16 +292,16 @@ struct IDUFlushPerfCounter : public PerfCounterBase {
   size_t cycIDUFlush = 0;
   size_t cycFlushOfReason[REASON_NUM] = {0};
 
+	static const char *nameOfReason(int reason);
+
+  IDUFlushPerfCounter() { ctrName = "IDUFlushPerfCounter"; }
+
   void bind();
   void update();
 
   IDUFlushReason getCurReason() const;
 
   void dumpStatistics(std::ostream &) override;
-  void fillFields() override {
-    ctrName = "IDUFlushPerfCounter";
-    fields.push_back(Field{"cyc_idu_flush", cycIDUFlush});
-  }
 };
 
 struct BranchPredPerfCounter : public PerfCounterBase {
@@ -395,15 +312,12 @@ struct BranchPredPerfCounter : public PerfCounterBase {
   size_t totBranchCount = 0;
   size_t totMispredictCount = 0;
 
+	BranchPredPerfCounter() { ctrName = "BranchPredPerfCounter"; }
+
   void bind();
   void update();
 
   void dumpStatistics(std::ostream &) override;
-  void fillFields() override {
-    ctrName = "BranchPredPerfCounter";
-    fields.push_back(Field{"tot_branch", totBranchCount});
-    fields.push_back(Field{"tot_mispredict", totMispredictCount});
-  }
 };
 
 using PerfCounterVariant =
@@ -415,6 +329,6 @@ void initPerfCounters();
 void dumpPerfCountersStatistics(std::ostream &os);
 void updatePerfCounters();
 
-void dumpPerfCounterAsCSV(std::ostream &os);
+void dumpPerfCounterTo(std::ostream &os);
 
 void dumpPerfReportOnDir(const std::string &dir);

@@ -2,7 +2,10 @@
 #include "sim.hpp"
 #include "spdlog/fmt/bundled/format.h"
 #include <fstream>
+#include <iostream>
 #include <vector>
+
+#include <nlohmann/json.hpp>
 
 auto _GetCPU() {
   // use vlSymsp to get inner module/signal
@@ -21,19 +24,12 @@ auto _GetIDU() { return _GetCPU()->idu; }
 
 auto _GetICache() { return _GetCPU()->icache; }
 
-void HandShakeCounterManager::init() {
-  logger = spdlog::stdout_color_mt("HandShakeDetector");
-  set_logger_pattern_with_simtime(logger);
-  logger->set_level(spdlog::level::info);
-}
-
 HandShakeCounterManager::ValidReadyBus &
 HandShakeCounterManager::add(SignalHandle hValid, SignalHandle hReady,
-                             std::string barePath, std::string description){
+                             std::string description) {
   bus_list.emplace_back(ValidReadyBus{
       .hValid = hValid,
       .hReady = hReady,
-      .pathWithoutValidOrReady = barePath,
       .description = description,
   });
   return bus_list.back();
@@ -194,19 +190,14 @@ void initPerfCounters() {
 
   CachePerfCounter cacheCtr;
 
-	BranchPredPerfCounter branchPredCtr;
+  BranchPredPerfCounter branchPredCtr;
 
-  handshakeCtr.init();
   handshakeCtr.add(&_GetIFU()->io_mem_rvalid, &_GetIFU()->io_mem_rready,
-                   "ifu.io_mem_r", "IFU fetch inst");
+                   "IFU fetch inst");
   handshakeCtr.add(&_GetLSU()->io_mem_rvalid, &_GetLSU()->io_mem_rready,
-                   "lsu.io_mem_r", "EXU load data");
-  // ALU now is combintional logic, no handshake
-  //
-  // handshakeCtr.add(&_GetALU()->io_out_valid, &_GetALU()->io_out_ready,
-  //                  "exu.alu.io_out", "EXU calc");
+                   "EXU load data");
   handshakeCtr.add(&_GetIDU()->io_out_valid, &_GetIDU()->io_out_ready,
-                   "idu.io_out", "IDU decode inst");
+                   "IDU decode inst");
 
   axi4Ctr.add(AXI4WritePerfCounter().BIND_AXI4_W_BASE(_GetLSU()->io_mem),
               "lsu_mem_write");
@@ -229,7 +220,7 @@ void initPerfCounters() {
   iduFlushCtr.bind();
   cacheCtr.bind();
   rawStallCtr.bind();
-	branchPredCtr.bind();
+  branchPredCtr.bind();
 
   perf_counters.push_back(std::move(handshakeCtr));
   // perf_counters.push_back(std::move(exuCtr));
@@ -237,7 +228,7 @@ void initPerfCounters() {
   perf_counters.push_back(std::move(pipeCtr));
   perf_counters.push_back(std::move(rawStallCtr));
   perf_counters.push_back(std::move(iduFlushCtr));
-	perf_counters.push_back(std::move(branchPredCtr));
+  perf_counters.push_back(std::move(branchPredCtr));
   perf_counters.push_back(std::move(cacheCtr));
 }
 
@@ -277,31 +268,66 @@ void dumpPerfCountersStatistics(std::ostream &os) {
   }
 }
 
-void dumpPerfCounterAsCSV(std::ostream &os) {
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(HandShakeCounterManager::ValidReadyBus,
+                                   description, shake_count)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(HandShakeCounterManager, bus_list)
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(AXI4CounterBase::LatencyRecord, startTime,
+                                   endTime, cycles)
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(AXI4CounterBase, ctrName, transaction_count,
+                                   total_latency_cycles, maxRecord)
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(AXI4PerfCounterManager, rdCounters,
+                                   wrCounters)
+
+void to_json(nlohmann::json &j, const PipeStagePerfCounter &c) {
+  j["ctrName"] = c.ctrName;
+  for (int s = 0; s < PipeStagePerfCounter::STATE_NUM; s++) {
+    j["countOfState"][s] = {
+        {"state", PipeStagePerfCounter::nameOfState(s)},
+        {"count", c.countOfState[s]},
+    };
+  }
+}
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(PipePerfManager, stageCtrs)
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(CachePerfCounter, totalVisitCount, hitCount,
+                                   totalHitAccessCycles, rdMemCtr)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(RAWStallPerfCounter, cycConflictEXU,
+                                   cycConflictLSU, cycConflictWBU, cycIDUStall)
+
+void to_json(nlohmann::json &j, const IDUFlushPerfCounter &c) {
+  j["ctrName"] = c.ctrName;
+  j["cycIDUFlush"] = c.cycIDUFlush;
+  for (int r = 0; r < IDUFlushPerfCounter::IDUFlushReason::REASON_NUM; r++) {
+    j["cycFlushOfReason"][r] = {
+        {"reason", IDUFlushPerfCounter::nameOfReason(r)},
+        {"count", c.cycFlushOfReason[r]},
+    };
+  }
+}
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(BranchPredPerfCounter, totBranchCount,
+                                   totMispredictCount)
+
+void dumpPerfCounterTo(std::ostream &os) {
   // std::string title_row;
   std::string value_row;
+
+  nlohmann::json j;
 
   bool first = true;
   for (auto &ctr : perf_counters) {
     std::visit(
         [&](auto &c) {
-          c.fillFields();
-          for (auto &f : c.fields) {
-            if (!first) {
-              os << ",";
-              value_row += ",";
-            } else {
-              first = false;
-            }
-            // title_row += c.ctrName + "_" + f.label;
-            os << c.ctrName + "_" + f.label;
-            value_row += std::to_string(f.value);
-          }
-          c.clearFields();
+          j[c.ctrName] = c;
         },
         ctr);
   }
-  os << "\n" << value_row;
+  // os << "\n" << value_row;
+  // os << j.dump(2);
+	os << j;
 }
 void dumpPerfReportOnDir(const std::string &dir) {
   std::string prefix = "test.pipe_with_bypass";
@@ -314,13 +340,14 @@ void dumpPerfReportOnDir(const std::string &dir) {
   dumpPerfCountersStatistics(reportFile);
   reportFile.close();
   spdlog::info("perf counter report dumped to {}", reportPath);
-  std::string csvPath = dir + '/' + prefix + "rawdata.csv";
-  std::ofstream csvFile(csvPath);
-  if (!csvFile.is_open()) {
-    spdlog::error("cannot open perf counter csv file {}", csvPath);
+  std::string dataPath = dir + '/' + prefix + ".rawdata.json";
+  std::ofstream dataFile(dataPath);
+  if (!dataFile.is_open()) {
+    spdlog::error("cannot open perf counter csv file {}", dataPath);
     return;
   }
-  dumpPerfCounterAsCSV(csvFile);
-  csvFile.close();
-  spdlog::info("perf counter csv dumped to {}", csvPath);
+  dumpPerfCounterTo(std::cout);
+  dumpPerfCounterTo(dataFile);
+  dataFile.close();
+  spdlog::info("perf counter csv dumped to {}", dataPath);
 }
