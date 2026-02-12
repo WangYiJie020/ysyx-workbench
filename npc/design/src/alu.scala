@@ -14,7 +14,7 @@ class ALUInput extends Bundle {
 }
 
 class ALU extends Module {
-  val io               = IO(new Bundle {
+  val io = IO(new Bundle {
     val in  = Flipped(Decoupled(new ALUInput))
     val out = Decoupled(Types.UWord)
   })
@@ -37,7 +37,11 @@ class ALU extends Module {
 
   val add_sub_res = Wire(Types.UWord)
 
-  add_sub_res := Mux(isAdd, src1 + src2, src1 - src2)
+  val op2_inv = Mux(isAdd, src2, ~src2)
+  val cin     = !isAdd
+  add_sub_res := src1 + op2_inv + cin
+
+  // add_sub_res := Mux(isAdd, src1 + src2, src1 - src2)
 
   val shift_res = Wire(Types.UWord)
   shift_res := Mux(isOpAlt, (s_src1 >> shamt).asUInt, src1 >> shamt)
@@ -45,13 +49,20 @@ class ALU extends Module {
   val defaultRes = Wire(Types.UWord)
   defaultRes := DontCare
 
+  // left shift here
+  // expilcitly tell chisel that width is 32
+  // to avoid use 64-bit as result leads to big case
+  //
+  // can make alu alone module area smaller
+  // but when considering whole cpu module
+  // seems no difference ???
   val leftShiftRes = Wire(Types.UWord)
   leftShiftRes := src1 << shamt
 
   io.out.bits := MuxLookup(inbits.func3t, defaultRes)(
     Seq(
       0.U -> add_sub_res,                    // 000: add/sub/addi
-      1.U -> leftShiftRes,                // 001: sll/slli
+      1.U -> leftShiftRes,                   // 001: sll/slli
       2.U -> Mux(s_src1 < s_src2, 1.U, 0.U), // 010: slt/slti
       3.U -> Mux(src1 < src2, 1.U, 0.U),     // 011: sltu/sltiu
       4.U -> (src1 ^ src2),                  // 100: xor/xori
