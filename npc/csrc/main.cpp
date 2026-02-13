@@ -71,11 +71,9 @@ int main(int argc, char **argv) {
   std::string perfOutRootDir = isMakePerf ? "history_perf/" : "build/perf/";
   auto now = std::chrono::system_clock::now();
   std::string perfOutDir =
-      std::format("{}/{}_{:%m_%d_%H_%M_%S}", perfOutRootDir, shortGitHash, now);
-	system(("mkdir -p " + perfOutDir).c_str());
-  if (is_soc()) {
-    dumpPerfReportOnDir(perfOutDir);
-  }
+      std::format("{}/{}_{:%m%d-%H_%M_%S}", perfOutRootDir, shortGitHash, now);
+  system(("mkdir -p " + perfOutDir).c_str());
+  dumpPerfReportOnDir(perfOutDir);
 
   get_dut()->final();
   if (!setting.gdb_mode) {
