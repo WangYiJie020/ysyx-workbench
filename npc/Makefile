@@ -238,7 +238,7 @@ sta-area: $(CHISEL2V_DONE) $(STA_VSRCS)
 		RTL_FILES="$(STA_VSRCS)" \
 
 sta-all-area: $(CHISEL2V_DONE)
-	./scripts/sta_all.sh $(CHISEL2V_EMIT_DIR)/filelist.f
+	./scripts/sta_all.sh $(CHISEL2V_EMIT_DIR)/filelist.f $(STA_OUT_DIR)
 
 perf: 
 	./scripts/make_perf.sh
