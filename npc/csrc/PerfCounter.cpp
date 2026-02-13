@@ -49,20 +49,7 @@ void HandShakeCounterManager::update() {
   }
 }
 
-// void IFUStateCounter::bind() {
-//   hInValid = &_GetIFU()->io_mem_rvalid;
-//   hInReady = &_GetIFU()->io_mem_rready;
-//   // hState = &_GetIFU()->state;
-//
-//   hOutValid = &_GetIFU()->io_out_valid;
-//   hOutReady = &_GetIFU()->io_out_ready;
-// }
 void PipeStagePerfCounter::update() {
-  // bool fetchInstHappened = (hInReady.get() && hInValid.get());
-  // if (fetchInstHappened) {
-  //   totalFetchCount++;
-  // }
-
   State s;
   if (hOutReady.get()) {
     if (hOutValid.get()) {
