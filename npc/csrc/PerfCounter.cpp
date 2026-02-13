@@ -313,8 +313,8 @@ void dumpPerfCounterTo(std::ostream &os) {
         ctr);
   }
   // os << "\n" << value_row;
-  // os << j.dump(2);
-	os << j;
+  os << j.dump(2);
+	// os << j;
 }
 void dumpPerfReportOnDir(const std::string &dir) {
   std::string prefix = "counters";
