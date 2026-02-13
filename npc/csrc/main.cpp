@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
   auto isMakePerf = getenv("MAKE_PERF") != nullptr;
   auto shortGitHash = git_commit_hash.substr(0, 8);
 
-  std::string perfOutRootDir = isMakePerf ? "history_perf/" : "build/perf/";
+  std::string perfOutRootDir = isMakePerf ? "history_perf" : "build/perf";
   auto now = std::chrono::system_clock::now();
   std::string perfOutDir =
       std::format("{}/{}_{:%m%d-%H_%M_%S}", perfOutRootDir, shortGitHash, now);
