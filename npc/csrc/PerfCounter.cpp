@@ -49,20 +49,7 @@ void HandShakeCounterManager::update() {
   }
 }
 
-// void IFUStateCounter::bind() {
-//   hInValid = &_GetIFU()->io_mem_rvalid;
-//   hInReady = &_GetIFU()->io_mem_rready;
-//   // hState = &_GetIFU()->state;
-//
-//   hOutValid = &_GetIFU()->io_out_valid;
-//   hOutReady = &_GetIFU()->io_out_ready;
-// }
 void PipeStagePerfCounter::update() {
-  // bool fetchInstHappened = (hInReady.get() && hInValid.get());
-  // if (fetchInstHappened) {
-  //   totalFetchCount++;
-  // }
-
   State s;
   if (hOutReady.get()) {
     if (hOutValid.get()) {
@@ -330,8 +317,8 @@ void dumpPerfCounterTo(std::ostream &os) {
 	os << j;
 }
 void dumpPerfReportOnDir(const std::string &dir) {
-  std::string prefix = "test.pipe_with_bypass";
-  std::string reportPath = dir + '/' + prefix + ".counter.rpt";
+  std::string prefix = "counters";
+  std::string reportPath = dir + '/' + prefix + ".report.txt";
   std::ofstream reportFile(reportPath);
   if (!reportFile.is_open()) {
     spdlog::error("cannot open perf counter report file {}", reportPath);
@@ -346,7 +333,7 @@ void dumpPerfReportOnDir(const std::string &dir) {
     spdlog::error("cannot open perf counter csv file {}", dataPath);
     return;
   }
-  dumpPerfCounterTo(std::cout);
+  // dumpPerfCounterTo(std::cout);
   dumpPerfCounterTo(dataFile);
   dataFile.close();
   spdlog::info("perf counter csv dumped to {}", dataPath);

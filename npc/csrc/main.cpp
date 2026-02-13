@@ -1,12 +1,13 @@
+#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <string_view>
 #include <verilated.h>
 #include <verilated_vpi.h>
 
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/spdlog.h>
 
 #include "sdbWrap.hpp"
 #include "sim.hpp"
@@ -17,16 +18,18 @@
 int gdb_mainloop();
 
 int main(int argc, char **argv) {
-	auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-	console_sink->set_level(spdlog::level::info);
-	auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("sim.log", true);
-	file_sink->set_level(spdlog::level::debug);
-	auto sinks = spdlog::sinks_init_list{console_sink, file_sink};
-	auto logger = std::make_shared<spdlog::logger>("sim", sinks);
-	logger->set_level(spdlog::level::debug);
+  auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+  console_sink->set_level(spdlog::level::info);
+  auto file_sink =
+      std::make_shared<spdlog::sinks::basic_file_sink_mt>("sim.log", true);
+  file_sink->set_level(spdlog::level::debug);
+  auto sinks = spdlog::sinks_init_list{console_sink, file_sink};
+  auto logger = std::make_shared<spdlog::logger>("sim", sinks);
+  logger->set_level(spdlog::level::debug);
 
   spdlog::set_default_logger(logger);
-  // spdlog::set_level(spdlog::level::debug); // will modify all registered loggers
+  // spdlog::set_level(spdlog::level::debug); // will modify all registered
+  // loggers
   spdlog::set_pattern("[%H:%M:%S.%e][%^%-5l%$][%n] %v");
 
   if (is_soc()) {
@@ -36,7 +39,8 @@ int main(int argc, char **argv) {
     spdlog::info("Simulating CPU core design");
     sim_get_config()->init_pc = 0x80000000;
   }
-	spdlog::info("Git commit hash: {}", _STR(GIT_COMMIT_HASH));
+  std::string_view git_commit_hash = _STR(GIT_COMMIT_HASH);
+  spdlog::info("Git commit hash: {}", git_commit_hash);
   spdlog::info("Sim init pc set to 0x{:08x}", sim_get_config()->init_pc);
 
   auto &setting = sim_get_config()->setting;
@@ -48,10 +52,8 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  if (true||is_soc()) {
-    initPerfCounters();
-    spdlog::info("perf counters initialized");
-  }
+  initPerfCounters();
+  spdlog::info("perf counters initialized");
 
   if (setting.gdb_mode) {
     gdb_mainloop();
@@ -61,12 +63,17 @@ int main(int argc, char **argv) {
 
   spdlog::info("sim ended");
 
-	// auto isMakePerf = getenv("
+  dumpPerfCountersStatistics(std::cout);
 
-  if (true||is_soc()) {
-    dumpPerfCountersStatistics(std::cout);
-		dumpPerfReportOnDir(".");
-  }
+  auto isMakePerf = getenv("MAKE_PERF") != nullptr;
+  auto shortGitHash = git_commit_hash.substr(0, 8);
+
+  std::string perfOutRootDir = isMakePerf ? "history_perf" : "build/perf";
+  auto now = std::chrono::system_clock::now();
+  std::string perfOutDir =
+      std::format("{}/{}/{:%m%dT%H_%M_%S}", perfOutRootDir, shortGitHash, now);
+  system(("mkdir -p " + perfOutDir).c_str());
+  dumpPerfReportOnDir(perfOutDir);
 
   get_dut()->final();
   if (!setting.gdb_mode) {
