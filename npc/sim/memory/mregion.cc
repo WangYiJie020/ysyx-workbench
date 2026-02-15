@@ -76,10 +76,10 @@ uint8_t *sdram_mem::get_data_ptr_at(uint32_t addr) {
   } while (0)
 uint16_t &sdram_mem::data_at(size_t bank, size_t row, size_t col,
                              size_t block) {
-  assert(bank < N_BANKS);
-  assert(row < N_ROWS);
-  assert(col < N_COLS);
-  assert(block < N_BLOCKS);
+	ASSERT_BELOW(bank, N_BANKS);
+	ASSERT_BELOW(row, N_ROWS);
+	ASSERT_BELOW(col, N_COLS);
+	ASSERT_BELOW(block, N_BLOCKS);
   return (*mem_container)[bank * (N_ROWS * N_COLS * N_BLOCKS) +
                           row * (N_COLS * N_BLOCKS) + col * N_BLOCKS + block];
 }
