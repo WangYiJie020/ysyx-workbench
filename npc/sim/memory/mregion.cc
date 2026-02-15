@@ -3,6 +3,15 @@
 #include <cstdint>
 #include <spdlog/spdlog.h>
 
+auto _GetLoggerForRegion(std::string_view region_name) {
+  auto logger = spdlog::get(region_name.data());
+  if (!logger) {
+    spdlog::warn("logger for mem region '{}' not found", region_name);
+    return spdlog::default_logger();
+  }
+  return logger;
+};
+
 void init_mem_logger() {
   auto lvl = spdlog::level::info;
 
@@ -25,11 +34,9 @@ void init_mem_logger() {
 void mem_region_traits::assert_in_range(uint32_t addr) const {
   bool in_range = contains(addr);
   if (!in_range) {
-    auto logger = spdlog::get(name.data());
-    if (logger) {
-      logger->error("addr {:08x} out of bound for region {} [{:08x}, {:08x})",
-                    addr, name, _Base, _End);
-    }
+    _GetLoggerForRegion(name)->error(
+        "addr {:08x} out of bound for region {} [{:08x}, {:08x})", addr, name,
+        _Base, _End);
   }
   assert(in_range);
 }
@@ -37,12 +44,10 @@ void mem_region_traits::assert_in_range(uint32_t addr) const {
 void direct_mapped_mem::assert_in_actual_data_range(uint32_t addr) const {
   size_t offset = addr - _Base;
   if (offset >= _ActualSizeInBytes) {
-    auto logger = spdlog::get(this->name.data());
-    if (logger) {
-      logger->error("addr {:08x} out of actual data bound for region {} "
-                    "[0, {:08x})",
-                    addr, this->name, _ActualSizeInBytes);
-    }
+    _GetLoggerForRegion(name)->error(
+        "addr {:08x} out of actual data bound for region {} "
+        "[0, {:08x})",
+        addr, this->name, _ActualSizeInBytes);
   }
   assert(offset < _ActualSizeInBytes);
 }
@@ -67,19 +72,18 @@ uint8_t *sdram_mem::get_data_ptr_at(uint32_t addr) {
 #define ASSERT_BELOW(val, limit)                                               \
   do {                                                                         \
     if ((val) >= (limit)) {                                                    \
-      auto logger = spdlog::get(name.data());                                  \
-      if (logger)                                                              \
-        logger->error("value {} exceeds limit {} in region {}", val, limit,    \
-                      name);                                                   \
+      _GetLoggerForRegion(name)->error(                                        \
+          "value " #val " should be below " #limit "={}, but got {}", val,     \
+          limit, (val));                                                       \
     }                                                                          \
     assert((val) < (limit));                                                   \
   } while (0)
 uint16_t &sdram_mem::data_at(size_t bank, size_t row, size_t col,
                              size_t block) {
-	ASSERT_BELOW(bank, N_BANKS);
-	ASSERT_BELOW(row, N_ROWS);
-	ASSERT_BELOW(col, N_COLS);
-	ASSERT_BELOW(block, N_BLOCKS);
+  ASSERT_BELOW(bank, N_BANKS);
+  ASSERT_BELOW(row, N_ROWS);
+  ASSERT_BELOW(col, N_COLS);
+  ASSERT_BELOW(block, N_BLOCKS);
   return (*mem_container)[bank * (N_ROWS * N_COLS * N_BLOCKS) +
                           row * (N_COLS * N_BLOCKS) + col * N_BLOCKS + block];
 }
