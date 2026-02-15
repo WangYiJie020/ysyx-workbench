@@ -135,12 +135,12 @@ struct sdram_mem : public mem_region_traits {
   u32_data_ptr get_data_at(uint32_t addr);
   uint8_t *get_data_ptr_at(uint32_t addr);
 
-  bool read_half(uint32_t block, uint32_t bank, uint32_t row, uint32_t col,
+  bool read_half(uint32_t bank, uint32_t row, uint32_t col, uint32_t block,
                  uint16_t &value) {
     value = data_at(bank, row, col, block);
     return true;
   }
-  bool write_half(uint32_t block, uint32_t bank, uint32_t row, uint32_t col,
+  bool write_half(uint32_t bank, uint32_t row, uint32_t col, uint32_t block,
                   uint16_t value) {
     data_at(bank, row, col, block) = value;
     return true;

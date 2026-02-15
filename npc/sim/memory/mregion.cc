@@ -55,6 +55,7 @@ void direct_mapped_mem::assert_in_actual_data_range(uint32_t addr) const {
 }
 
 sdram_mem::u32_data_ptr sdram_mem::get_data_at(uint32_t addr) {
+  assert_in_range(addr);
   uint32_t in_sdram_addr = addr - _Base;
   char raw_bank = (in_sdram_addr >> 10) & 0x7;
   uint16_t row = (in_sdram_addr >> 13) & 0x1fff;
@@ -75,8 +76,8 @@ uint8_t *sdram_mem::get_data_ptr_at(uint32_t addr) {
   do {                                                                         \
     if ((val) >= (limit)) {                                                    \
       _GetLoggerForRegion(name)->error(                                        \
-          "value " #val " should be below " #limit "={}, but got {}", val,     \
-          limit, (val));                                                       \
+          "value " #val " should be below " #limit "={}, but got {}", limit,   \
+          val);                                                                \
     }                                                                          \
     assert((val) < (limit));                                                   \
   } while (0)
