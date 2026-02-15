@@ -172,7 +172,7 @@ extern "C" void sdram_write(char block, char bank, short row, short col,
     new_data |= (data & 0xff00);
   }
 
-  g_sim_mem.sdram.write_half(block, bank, row, col, new_data);
+  g_sim_mem.sdram.write_half(bank, row, col, block, new_data);
 
   char human_friendly_mask[3] = {'-', '-', '\0'};
   if ((mask & 0x1) == 0)
