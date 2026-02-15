@@ -5,7 +5,6 @@
 #include <cmath>
 #include <spdlog/common.h>
 #include <spdlog/logger.h>
-#include <spdlog/mdc.h>
 #include <spdlog/pattern_formatter.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/dup_filter_sink.h>
@@ -20,7 +19,6 @@
 #include <sys/types.h>
 #include <variant>
 
-#include "spdlog/fmt/bundled/base.h"
 #include "verilated_fst_c.h"
 #include "vsrc.hpp"
 
@@ -33,6 +31,8 @@
 #include <vector>
 
 #include "PerfCounter.hpp"
+
+#include "mem.hpp"
 
 TOP_NAME dut;
 sim_config sim_cfg;
@@ -174,135 +174,13 @@ word_t img[60 * 1024 * 1024 / 4] = {
     }                                                                          \
   } while (0)
 
-struct mem_region_traits {
-  const uint32_t _Base;
-  const uint32_t _End;
-  std::string_view name;
 
-  mem_region_traits(uint32_t base, uint32_t end, std::string_view name)
-      : _Base(base), _End(end), name(name) {
-    assert(end > base && "end should be greater than base");
-  }
 
-  constexpr bool contains(uint32_t addr) const {
-    return addr >= _Base && addr < _End;
-  }
-  constexpr uint32_t base() const { return _Base; }
-
-  void assert_in_range(uint32_t addr) const {
-    bool in_range = contains(addr);
-    if (!in_range) {
-      auto logger = spdlog::get(name.data());
-      if (logger) {
-        logger->error("addr {:08x} out of bound for region {} [{:08x}, {:08x})",
-                      addr, name, _Base, _End);
-      }
-    }
-    assert(in_range);
-  }
-};
-
-struct direct_mapped_mem : public mem_region_traits {
-  const uint32_t _ActualSizeInBytes;
-
-  using _MemContainerType = std::vector<uint32_t>;
-  std::shared_ptr<_MemContainerType> mem_container;
-  uint32_t *data;
-
-  direct_mapped_mem(uint32_t base, uint32_t end, std::string_view name,
-                    uint32_t actual_size = 0)
-      : mem_region_traits(base, end, name),
-        _ActualSizeInBytes(actual_size ? actual_size : (end - base)) {
-    assert(_ActualSizeInBytes <= (end - base) &&
-           "actual size should not exceed the address range");
-    assert(_ActualSizeInBytes % 4 == 0 && "size should be multiple of 4");
-    mem_container = std::make_shared<_MemContainerType>(_ActualSizeInBytes / 4);
-    data = mem_container->data();
-  }
-
-  void assert_in_actual_data_range(uint32_t addr) const {
-    size_t offset = addr - _Base;
-    if (offset >= _ActualSizeInBytes) {
-      auto logger = spdlog::get(this->name.data());
-      if (logger) {
-        logger->error("addr {:08x} out of actual data bound for region {} "
-                      "[0, {:08x})",
-                      addr, this->name, _ActualSizeInBytes);
-      }
-    }
-    assert(offset < _ActualSizeInBytes);
-  }
-
-  void copy_from(void *src, size_t siz) { memcpy(data, src, siz); }
-  void memset_data(uint8_t val) { memset(data, val, _ActualSizeInBytes); }
-
-  uint8_t *get_data_ptr_at(uint32_t addr) {
-    assert_in_range(addr);
-    assert_in_actual_data_range(addr);
-    return (uint8_t *)&data[(addr - _Base) / 4] + (addr & 0x3);
-  }
-
-  bool read_word(uint32_t addr, uint32_t &value) {
-    assert_in_range(addr);
-    assert_in_actual_data_range(addr);
-    value = data[(addr - _Base) / 4]; // word aligned
-    return true;
-    // TODO: ret false instead of assert
-  }
-  bool write_word(uint32_t addr, uint32_t value) {
-    assert_in_range(addr);
-    assert_in_actual_data_range(addr);
-    data[(addr - _Base) / 4] = value;
-    return true;
-    // TODO: ret false instead of assert
-  }
-
-  void write_word(uint32_t addr, uint32_t value, uint8_t strb8) {
-    assert_in_range(addr);
-    assert_in_actual_data_range(addr);
-    uint8_t shift = (addr & 0x3) * 8;
-    uint32_t strb32 = 0;
-    if (strb8 & 0x1)
-      strb32 |= 0x000000ff;
-    if (strb8 & 0x2)
-      strb32 |= 0x0000ff00;
-    if (strb8 & 0x4)
-      strb32 |= 0x00ff0000;
-    if (strb8 & 0x8)
-      strb32 |= 0xff000000;
-    uint32_t shMask = strb32 << shift;
-    uint32_t shData = value << shift;
-
-    uint32_t &ref = data[(addr - _Base) / 4];
-    ref &= ~shMask;
-    ref |= (shData & shMask);
-  }
-};
-
-constexpr uint32_t SDRAM_BASE = 0xa0000000u;
-constexpr uint32_t SDRAM_END = 0xb0000000u;
+// constexpr uint32_t SDRAM_BASE = 0xa0000000u;
+// constexpr uint32_t SDRAM_END = 0xb0000000u;
 
 bool read_sdram(word_t addr, word_t *data);
 bool write_sdram(word_t addr, word_t data);
-
-struct sdram_mem : public mem_region_traits {
-  sdram_mem(std::string_view name)
-      : mem_region_traits(SDRAM_BASE, SDRAM_END, name) {}
-
-  uint8_t *get_data_ptr_at(uint32_t addr) {
-    assert_in_range(addr);
-    spdlog::error("sdram region does not support direct data pointer access");
-    return nullptr;
-  }
-  bool read_word(uint32_t addr, uint32_t &value) {
-    assert_in_range(addr);
-    return read_sdram(addr, &value);
-  }
-  bool write_word(uint32_t addr, uint32_t data) {
-    assert_in_range(addr);
-    return write_sdram(addr, data);
-  }
-};
 
 struct {
   direct_mapped_mem mrom = {0x20000000u, 0x20010000u, "mrom"};
@@ -311,7 +189,7 @@ struct {
                              128 * 1024 * 1024};
   direct_mapped_mem sram = {0x0f000000u, 0x10000000u, "sram", 8 * 1024};
 
-  sdram_mem sdram = {"sdram"};
+  sdram_mem sdram = {0xa0000000u, 0xb0000000u, "sdram"};
 } g_sim_mem;
 
 using mem_region_t = std::variant<direct_mapped_mem, sdram_mem>;
@@ -385,38 +263,45 @@ extern "C" void pmem_write(int addr, int data, int mask) {
   return psram_write(addr - g_sim_mem.psram.base(), umask, udata, nullptr);
 }
 
-uint16_t sdram_data[4][8192][512][4];
+// uint16_t sdram_data[4][8192][512][4];
 
 extern "C" void sdram_read(char block, char bank, short row, short col,
                            short *data) {
-  assert(bank >= 0 && bank < 4);
-  assert(row >= 0 && row < 8192);
-  assert(col >= 0 && col < 512);
-  assert(block >= 0 && block < 4);
-  *data = sdram_data[bank][row][col][block];
+	g_sim_mem.sdram.read_half(block, bank, row, col, (uint16_t &)(*data));
+  // assert(bank >= 0 && bank < 4);
+  // assert(row >= 0 && row < 8192);
+  // assert(col >= 0 && col < 512);
+  // assert(block >= 0 && block < 4);
+  // *data = sdram_data[bank][row][col][block];
   DPI_TRACE("R bank={:02x} row={:04x} col={:04x} block={} data={:04x}", bank,
             row, col, (uint32_t)block, (uint16_t)*data);
 }
 extern "C" void sdram_write(char block, char bank, short row, short col,
                             short data, char mask) {
-  assert(bank >= 0 && bank < 4);
-  assert(row >= 0 && row < 8192);
-  assert(col >= 0 && col < 512);
+  // assert(bank >= 0 && bank < 4);
+  // assert(row >= 0 && row < 8192);
+  // assert(col >= 0 && col < 512);
   // assert(block == 0 || block == 1);
+	
+	uint16_t new_data;
+	g_sim_mem.sdram.read_half(bank, row, col, block, new_data);
+	
   // mask [0] = 0: write low byte
   // mask [1] = 0: write high byte
   if ((mask & 0x1) == 0) {
-    sdram_data[bank][row][col][block] &= 0xff00;
-    sdram_data[bank][row][col][block] |= (data & 0x00ff);
+    new_data &= 0xff00;
+    new_data |= (data & 0x00ff);
     // _dpi_logger->trace("sdram_write low byte {:02x}", (uint8_t)(data &
     // 0x00ff));
   }
   if ((mask & 0x2) == 0) {
-    sdram_data[bank][row][col][block] &= 0x00ff;
-    sdram_data[bank][row][col][block] |= (data & 0xff00);
+    new_data &= 0x00ff;
+    new_data |= (data & 0xff00);
     // _dpi_logger->trace("sdram_write high byte {:02x}", (uint8_t)((data &
     // 0xff00) >> 8));
   }
+
+	g_sim_mem.sdram.write_half(block, bank, row, col, new_data);
 
   char human_friendly_mask[3] = {'-', '-', '\0'};
   if ((mask & 0x1) == 0)
@@ -427,39 +312,20 @@ extern "C" void sdram_write(char block, char bank, short row, short col,
   DPI_TRACE("W bank={:02x} row={:04x} col={:04x} block={} "
             "data={:04x} mask={} newdata={:04x}",
             bank, row, col, (uint32_t)block, (uint16_t)data,
-            human_friendly_mask, sdram_data[bank][row][col][block]);
+            human_friendly_mask, new_data);
 }
 
-struct sdram_u32_data_ptr {
-  uint16_t *lowpart;
-  uint16_t *highpart;
-};
-sdram_u32_data_ptr get_sdram_data_at(word_t addr) {
-  word_t in_sdram_addr = addr - SDRAM_BASE;
-  char raw_bank = (in_sdram_addr >> 10) & 0x7;
-  uint16_t row = (in_sdram_addr >> 13) & 0x1fff;
-  uint16_t col = (in_sdram_addr >> 1) & 0x1ff;
-  uint8_t bank = raw_bank % 4;
-  uint8_t block = (raw_bank & 0x4) ? 2 : 0;
-  assert(bank < 4);
-  assert(row < 8192);
-  assert(col < 512);
-  assert(block < 4);
-  return {.lowpart = &sdram_data[bank][row][col][block],
-          .highpart = &sdram_data[bank][row][col][block + 1]};
-}
-
-bool read_sdram(word_t addr, word_t *data) {
-  sdram_u32_data_ptr ptrs = get_sdram_data_at(addr);
-  *data = ((word_t)(*ptrs.highpart) << 16) | (word_t)(*ptrs.lowpart);
-  return true;
-}
-bool write_sdram(word_t addr, word_t data) {
-  sdram_u32_data_ptr ptrs = get_sdram_data_at(addr);
-  *ptrs.lowpart = (uint16_t)(data & 0xffff);
-  *ptrs.highpart = (uint16_t)((data >> 16) & 0xffff);
-  return true;
-}
+// bool read_sdram(word_t addr, word_t *data) {
+//   sdram_u32_data_ptr ptrs = get_sdram_data_at(addr);
+//   *data = ((word_t)(*ptrs.highpart) << 16) | (word_t)(*ptrs.lowpart);
+//   return true;
+// }
+// bool write_sdram(word_t addr, word_t data) {
+//   sdram_u32_data_ptr ptrs = get_sdram_data_at(addr);
+//   *ptrs.lowpart = (uint16_t)(data & 0xffff);
+//   *ptrs.highpart = (uint16_t)((data >> 16) & 0xffff);
+//   return true;
+// }
 
 uint8_t *sim_guest_to_host(uint32_t addr) {
   for (auto &r : mem_regions) {
@@ -608,15 +474,17 @@ static void _copy_img() {
 static void _fill_rams_uninit() {
   if (sim_settings.zero_uninit_ram) {
     if (is_soc()) {
-      g_sim_mem.psram.memset_data(0);
+      g_sim_mem.psram.fill(0);
     }
-    memset(sdram_data, 0, sizeof(sdram_data));
+		g_sim_mem.sdram.fill(0);
+    // memset(sdram_data, 0, sizeof(sdram_data));
   } else {
     if (is_soc()) {
-      g_sim_mem.psram.memset_data(0xcc);
+      g_sim_mem.psram.fill(0xcc);
       spdlog::debug("psram_data filled with 0xcc");
     }
-    memset(sdram_data, 0xdd, sizeof(sdram_data));
+		g_sim_mem.sdram.fill(0xdd);
+    // memset(sdram_data, 0xdd, sizeof(sdram_data));
     spdlog::debug("sdram_data filled with 0xdd");
   }
   spdlog::info("RAMs uninitialized area filled with {}",
