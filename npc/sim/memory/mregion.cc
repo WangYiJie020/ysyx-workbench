@@ -1,6 +1,8 @@
 #include "mregion.hpp"
 #include "../sim.hpp"
 #include <cstdint>
+#include <memory>
+#include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
 auto _GetLoggerForRegion(std::string_view region_name) {
@@ -18,8 +20,8 @@ void init_mem_logger() {
 #define _REG_MEM_REGION_LOGGER(name)                                           \
   do {                                                                         \
     spdlog::debug("Registering logger for mem region '{}'", #name);            \
-    auto logger =                                                              \
-        std::make_shared<spdlog::logger>(#name, spdlog::sinks_init_list{});    \
+    auto logger = std::make_shared<spdlog::logger>(                            \
+        #name, std::make_shared<spdlog::sinks::stdout_color_sink_mt>());       \
     logger->set_level(lvl);                                                    \
     set_logger_pattern_with_simtime(logger);                                   \
     spdlog::register_logger(logger);                                           \
