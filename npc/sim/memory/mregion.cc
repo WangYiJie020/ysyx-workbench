@@ -54,10 +54,6 @@ sdram_mem::u32_data_ptr sdram_mem::get_data_at(uint32_t addr) {
   uint16_t col = (in_sdram_addr >> 1) & 0x1ff;
   uint8_t bank = raw_bank % 4;
   uint8_t block = (raw_bank & 0x4) ? 2 : 0;
-  assert(bank < N_BANKS);
-  assert(row < N_ROWS);
-  assert(col < N_COLS);
-  assert(block < N_BLOCKS);
   return {.lowpart = &data_at(bank, row, col, block),
           .highpart = &data_at(bank, row, col, block + 1)};
 }
@@ -66,4 +62,24 @@ uint8_t *sdram_mem::get_data_ptr_at(uint32_t addr) {
   spdlog::error(
       "unimpled!!! sdram region does not support direct data pointer access");
   return nullptr;
+}
+
+#define ASSERT_BELOW(val, limit)                                               \
+  do {                                                                         \
+    if ((val) >= (limit)) {                                                    \
+      auto logger = spdlog::get(name.data());                                  \
+      if (logger)                                                              \
+        logger->error("value {} exceeds limit {} in region {}", val, limit,    \
+                      name);                                                   \
+    }                                                                          \
+    assert((val) < (limit));                                                   \
+  } while (0)
+uint16_t &sdram_mem::data_at(size_t bank, size_t row, size_t col,
+                             size_t block) {
+  assert(bank < N_BANKS);
+  assert(row < N_ROWS);
+  assert(col < N_COLS);
+  assert(block < N_BLOCKS);
+  return (*mem_container)[bank * (N_ROWS * N_COLS * N_BLOCKS) +
+                          row * (N_COLS * N_BLOCKS) + col * N_BLOCKS + block];
 }
