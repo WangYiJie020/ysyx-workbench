@@ -150,7 +150,7 @@ CXXFLAGS += $(INCFLAGS) -DTOP_NAME=V$(TOP_NAME) -DENABLE_VPI=$(ENABLE_VPI)# -DEN
 CXXFLAGS += $(SAN_FLAGS) -std=c++20 -g # -fno-inline
 
 # when use perf tool, frame pointer is needed
-# CXXFLAGS += -fno-omit-frame-pointer
+CXXFLAGS += -fno-omit-frame-pointer
 
 # make link faster
 LDFLAGS += -fuse-ld=mold
