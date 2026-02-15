@@ -2,7 +2,7 @@ BUILD_DIR = ./build
 # case sensitive
 CPU_DESIGN_NAME = ysyx_25100261
 
-SIM_CSRC_DIR = ./csrc
+SIM_CSRC_DIR = ./sim
 VSIM_OPT?= -O3
 SIM_BIN_DIR = $(BUILD_DIR)/bin
 
@@ -165,7 +165,7 @@ $(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) $(CHISEL2V_DONE) $(VPI_DONE) $
 		$(addprefix -CFLAGS , $(CXXFLAGS)) \
 		$(addprefix -LDFLAGS , $(LDFLAGS)) \
 		--Mdir $(V2CXX_EMIT_DIR) --exe -o $(abspath $(SIM_BIN))
-	@make -s -C $(V2CXX_EMIT_DIR) -f V$(TOP_NAME).mk -j$(shell nproc) OPT_FAST=$(VSIM_OPT) CXX=clang++ LINK=clang++
+	@make -s -C $(V2CXX_EMIT_DIR) -f V$(TOP_NAME).mk -j$(shell nproc) OPT_FAST=$(VSIM_OPT) CXX=clang++ LINK=clang++ AR="ar -T"
 
 all: default
 
