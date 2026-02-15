@@ -2,7 +2,7 @@ BUILD_DIR = ./build
 # case sensitive
 CPU_DESIGN_NAME = ysyx_25100261
 
-SIM_CSRC_DIR = ./csrc
+SIM_CSRC_DIR = ./sim
 VSIM_OPT?= -O3
 SIM_BIN_DIR = $(BUILD_DIR)/bin
 
