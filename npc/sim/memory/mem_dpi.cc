@@ -65,7 +65,7 @@ void _init_dpi_logger(sim_setting sim_settings) {
 
   _dpi_logger = std::make_shared<spdlog::logger>("DPI", dpi_sink_list);
   _dpi_logger->set_level(spdlog::level::trace);
-	set_logger_pattern_with_simtime(_dpi_logger);
+  set_logger_pattern_with_simtime(_dpi_logger);
   spdlog::register_logger(_dpi_logger);
 }
 
@@ -152,7 +152,7 @@ extern "C" void pmem_write(int addr, int data, int mask) {
 
 extern "C" void sdram_read(char block, char bank, short row, short col,
                            short *data) {
-  g_sim_mem.sdram.read_half(block, bank, row, col, (uint16_t &)(*data));
+  g_sim_mem.sdram.read_half(bank, row, col, block, (uint16_t &)(*data));
   DPI_TRACE("R bank={:02x} row={:04x} col={:04x} block={} data={:04x}", bank,
             row, col, (uint32_t)block, (uint16_t)*data);
 }
@@ -276,5 +276,5 @@ void mem_init(void *img, const sim_config &cfg) {
   _copy_img(img, cfg.img_size);
   _fill_rams_uninit(cfg.setting.zero_uninit_ram);
   init_mem_logger();
-	_init_dpi_logger(cfg.setting);
+  _init_dpi_logger(cfg.setting);
 }
