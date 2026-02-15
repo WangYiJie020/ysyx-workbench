@@ -1,12 +1,73 @@
-#include "mregion.hpp"
 #include "mem.hpp"
+#include "mregion.hpp"
 
 #include "../sim.hpp"
 
+#include "../common.hpp"
+#include <algorithm>
+#include <ranges>
+#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/dup_filter_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 #include <variant>
-#include <ranges>
-#include <algorithm>
+
+static std::shared_ptr<spdlog::logger> _dpi_logger;
+
+const char *_get_env_or_default(const char *env_name,
+                                const char *default_value) {
+  const char *env_value = std::getenv(env_name);
+  return env_value ? env_value : default_value;
+}
+void _init_dpi_logger(sim_setting sim_settings) {
+  // auto formatter = _gen_logger_formatter_with_simtime();
+
+  auto out_file_name = "dpi";
+  auto con_lvl_str = _get_env_or_default("DPI_CONSOLE_LVL", "info");
+  auto file_lvl_str = _get_env_or_default("DPI_FILE_LVL", "info");
+
+  auto console_lvl = spdlog::level::from_str(con_lvl_str);
+  auto file_lvl = spdlog::level::from_str(file_lvl_str);
+  spdlog::info("DPI logger out console lvl {}, out file '{}.log' lvl {}",
+               con_lvl_str, out_file_name, file_lvl_str);
+
+  static auto console_sink =
+      std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+  static auto file_sink = newFileLoggerSink(out_file_name);
+
+  console_sink->set_level(console_lvl);
+  auto dup_console = std::make_shared<spdlog::sinks::dup_filter_sink_mt>(
+      std::chrono::seconds(3));
+  dup_console->add_sink(console_sink);
+  dup_console->set_level(console_lvl);
+
+  file_sink->set_level(file_lvl);
+  auto dpi_sink_list = spdlog::sinks_init_list{dup_console, file_sink};
+
+#define _REG_DPI_FUNC_LOGGER(func)                                             \
+  do {                                                                         \
+    auto func_logger = std::make_shared<spdlog::logger>(#func, dpi_sink_list); \
+    auto lvl = sim_settings.TRACE_DPI_FLAG(func) ? spdlog::level::trace        \
+                                                 : spdlog::level::info;        \
+    spdlog::debug("DPI func '{}' logger lvl {}", #func,                        \
+                  spdlog::level::to_string_view(lvl));                         \
+    func_logger->set_level(lvl);                                               \
+    set_logger_pattern_with_simtime(func_logger);                              \
+    spdlog::register_logger(func_logger);                                      \
+  } while (0)
+
+  _REG_DPI_FUNC_LOGGER(mrom_read);
+  _REG_DPI_FUNC_LOGGER(flash_read);
+  _REG_DPI_FUNC_LOGGER(psram_read);
+  _REG_DPI_FUNC_LOGGER(psram_write);
+  _REG_DPI_FUNC_LOGGER(sdram_read);
+  _REG_DPI_FUNC_LOGGER(sdram_write);
+
+  _dpi_logger = std::make_shared<spdlog::logger>("DPI", dpi_sink_list);
+  _dpi_logger->set_level(spdlog::level::trace);
+	set_logger_pattern_with_simtime(_dpi_logger);
+  spdlog::register_logger(_dpi_logger);
+}
 
 #define EXTERN_C extern "C"
 
@@ -44,14 +105,13 @@ std::vector<mem_region_t> mem_regions = {g_sim_mem.mrom, g_sim_mem.flash,
                                          g_sim_mem.psram, g_sim_mem.sram,
                                          g_sim_mem.sdram};
 
-
 EXTERN_C void mrom_read(int32_t addr, int32_t *data) {
-	g_sim_mem.mrom.read_word(addr, (uint32_t &)(*data));
-	DPI_TRACE("R addr={:08x} data={:08x}", addr, *data);
+  g_sim_mem.mrom.read_word(addr, (uint32_t &)(*data));
+  DPI_TRACE("R addr={:08x} data={:08x}", addr, *data);
 }
 
 #define DEF_NOHIGH8_FORWARD_RD(region)                                         \
-  EXTERN_C void region##_read(int32_t addr, int32_t *data) {                  \
+  EXTERN_C void region##_read(int32_t addr, int32_t *data) {                   \
     DPI_ASSERT((addr & 0xff000000) == 0,                                       \
                #region "_read addr={:08x} has non-zero high 8 bits", addr);    \
     addr += g_sim_mem.region.base();                                           \
@@ -90,18 +150,17 @@ extern "C" void pmem_write(int addr, int data, int mask) {
   return psram_write(addr - g_sim_mem.psram.base(), umask, udata, nullptr);
 }
 
-
 extern "C" void sdram_read(char block, char bank, short row, short col,
                            short *data) {
-	g_sim_mem.sdram.read_half(block, bank, row, col, (uint16_t &)(*data));
+  g_sim_mem.sdram.read_half(block, bank, row, col, (uint16_t &)(*data));
   DPI_TRACE("R bank={:02x} row={:04x} col={:04x} block={} data={:04x}", bank,
             row, col, (uint32_t)block, (uint16_t)*data);
 }
 extern "C" void sdram_write(char block, char bank, short row, short col,
                             short data, char mask) {
-	uint16_t new_data;
-	g_sim_mem.sdram.read_half(bank, row, col, block, new_data);
-	
+  uint16_t new_data;
+  g_sim_mem.sdram.read_half(bank, row, col, block, new_data);
+
   // mask [0] = 0: write low byte
   // mask [1] = 0: write high byte
   if ((mask & 0x1) == 0) {
@@ -113,7 +172,7 @@ extern "C" void sdram_write(char block, char bank, short row, short col,
     new_data |= (data & 0xff00);
   }
 
-	g_sim_mem.sdram.write_half(block, bank, row, col, new_data);
+  g_sim_mem.sdram.write_half(block, bank, row, col, new_data);
 
   char human_friendly_mask[3] = {'-', '-', '\0'};
   if ((mask & 0x1) == 0)
@@ -127,8 +186,8 @@ extern "C" void sdram_write(char block, char bank, short row, short col,
             human_friendly_mask, new_data);
 }
 
-extern "C" void sram_upd(int addr, int data, char mask){
-	g_sim_mem.sram.write_word(addr, data, mask);
+extern "C" void sram_upd(int addr, int data, char mask) {
+  g_sim_mem.sram.write_word(addr, data, mask);
 }
 
 uint8_t *mem_guest_to_host(uint32_t addr) {
@@ -172,7 +231,6 @@ bool write_guest_mem(uint32_t addr, uint32_t data) {
   return ok;
 }
 
-
 static void _copy_img(void *img, size_t img_size) {
   if (is_soc()) {
     spdlog::info("copy img to flash for soc sim");
@@ -187,14 +245,14 @@ static void _fill_rams_uninit(bool zero_uninit_ram) {
     if (is_soc()) {
       g_sim_mem.psram.fill(0);
     }
-		g_sim_mem.sdram.fill(0);
+    g_sim_mem.sdram.fill(0);
     // memset(sdram_data, 0, sizeof(sdram_data));
   } else {
     if (is_soc()) {
       g_sim_mem.psram.fill(0xcc);
       spdlog::debug("psram_data filled with 0xcc");
     }
-		g_sim_mem.sdram.fill(0xdd);
+    g_sim_mem.sdram.fill(0xdd);
     // memset(sdram_data, 0xdd, sizeof(sdram_data));
     spdlog::debug("sdram_data filled with 0xdd");
   }
@@ -214,9 +272,9 @@ static void _fill_rams_uninit(bool zero_uninit_ram) {
   }
 }
 
-void mem_init(void* img, size_t img_size, bool zero_uninit_ram) {
-	_copy_img(img, img_size);
-	_fill_rams_uninit(zero_uninit_ram);
-
-	init_mem_logger();
+void mem_init(void *img, const sim_config &cfg) {
+  _copy_img(img, cfg.img_size);
+  _fill_rams_uninit(cfg.setting.zero_uninit_ram);
+  init_mem_logger();
+	_init_dpi_logger(cfg.setting);
 }

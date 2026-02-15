@@ -56,8 +56,6 @@ static uint64_t inst_count = 0;
 sim_time_t sim_get_time() { return sim_time; }
 sim_cycle_t sim_get_cycle() { return cycle_count; }
 
-static std::shared_ptr<spdlog::logger> _dpi_logger;
-
 sim_config *sim_get_config() { return &sim_cfg; }
 sim_cpu_state *sim_get_cpu_state() { return &cpu; }
 
@@ -157,8 +155,6 @@ word_t img[60 * 1024 * 1024 / 4] = {
 
 #define _EXPAND(x) x
 
-
-
 extern "C" void uart_send(char ch) {
   putchar(ch);
   fflush(stdout);
@@ -177,14 +173,12 @@ extern "C" void pc_upd(int pc, int npc) {
   // printf("[DPI] pc_upd called, pc=0x%08x npc=0x%08x\n", pc, npc);
 }
 
-
 extern "C" void skip_difftest_ref() {
   if (sim_settings.trace_difftest_skip) {
     printf("(%ld)[DPI] skip_difftest_ref called\n", sim_time);
   }
   sdb_skip_difftest_ref();
 }
-
 
 void sim_step_inst() {
   size_t cnt = 0;
@@ -254,7 +248,6 @@ static void load_img() {
   fclose(fp);
 }
 
-
 // ARG
 
 static void parse_args(int argc, char **argv) {
@@ -276,12 +269,6 @@ static void parse_args(int argc, char **argv) {
   }
 }
 
-const char *_get_env_or_default(const char *env_name,
-                                const char *default_value) {
-  const char *env_value = std::getenv(env_name);
-  return env_value ? env_value : default_value;
-}
-
 static auto _gen_logger_formatter_with_simtime() {
   auto formatter = std::make_unique<spdlog::pattern_formatter>();
   formatter->add_flag<sim_time_formatter>('&');
@@ -293,55 +280,6 @@ static auto _gen_logger_formatter_with_simtime() {
 void set_logger_pattern_with_simtime(std::shared_ptr<spdlog::logger> logger) {
   auto formatter = _gen_logger_formatter_with_simtime();
   logger->set_formatter(std::move(formatter));
-}
-void _init_dpi_logger() {
-  auto formatter = _gen_logger_formatter_with_simtime();
-
-  auto out_file_name = "dpi";
-  auto con_lvl_str = _get_env_or_default("DPI_CONSOLE_LVL", "info");
-  auto file_lvl_str = _get_env_or_default("DPI_FILE_LVL", "info");
-
-  auto console_lvl = spdlog::level::from_str(con_lvl_str);
-  auto file_lvl = spdlog::level::from_str(file_lvl_str);
-  spdlog::info("DPI logger out console lvl {}, out file '{}.log' lvl {}",
-               con_lvl_str, out_file_name, file_lvl_str);
-
-  static auto console_sink =
-      std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-  static auto file_sink = newFileLoggerSink(out_file_name);
-
-  console_sink->set_level(console_lvl);
-  auto dup_console = std::make_shared<spdlog::sinks::dup_filter_sink_mt>(
-      std::chrono::seconds(3));
-  dup_console->add_sink(console_sink);
-  dup_console->set_level(console_lvl);
-
-  file_sink->set_level(file_lvl);
-  auto dpi_sink_list = spdlog::sinks_init_list{dup_console, file_sink};
-
-#define _REG_DPI_FUNC_LOGGER(func)                                             \
-  do {                                                                         \
-    auto func_logger = std::make_shared<spdlog::logger>(#func, dpi_sink_list); \
-    auto lvl = sim_settings.TRACE_DPI_FLAG(func) ? spdlog::level::trace        \
-                                                 : spdlog::level::info;        \
-    spdlog::debug("DPI func '{}' logger lvl {}", #func,                        \
-                  spdlog::level::to_string_view(lvl));                         \
-    func_logger->set_level(lvl);                                               \
-    func_logger->set_formatter(formatter->clone());                            \
-    spdlog::register_logger(func_logger);                                      \
-  } while (0)
-
-  _REG_DPI_FUNC_LOGGER(mrom_read);
-  _REG_DPI_FUNC_LOGGER(flash_read);
-  _REG_DPI_FUNC_LOGGER(psram_read);
-  _REG_DPI_FUNC_LOGGER(psram_write);
-  _REG_DPI_FUNC_LOGGER(sdram_read);
-  _REG_DPI_FUNC_LOGGER(sdram_write);
-
-  _dpi_logger = std::make_shared<spdlog::logger>("DPI", dpi_sink_list);
-  _dpi_logger->set_level(spdlog::level::trace);
-  _dpi_logger->set_formatter(std::move(formatter));
-  spdlog::register_logger(_dpi_logger);
 }
 
 bool sim_init(int argc, char **argv, sim_setting setting) {
@@ -361,10 +299,8 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   using namespace std::ranges;
 
   load_img();
-
-	mem_init(img, sim_cfg.img_size, setting.zero_uninit_ram);
-  _init_dpi_logger(); // should before dbg_init(which may preload data with func
-                      // call dpis)
+  // should before dbg_init(which may preload data with func call dpis)
+  mem_init(img, sim_cfg);
 
   if (setting.en_wave) {
     Verilated::traceEverOn(true);
