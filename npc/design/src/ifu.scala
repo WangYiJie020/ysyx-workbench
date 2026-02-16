@@ -38,7 +38,7 @@ class IFU extends Module {
   dontTouch(pc)
   val state = RegInit(State.idle)
 
-  val instID = Reg(Types.InstID)
+  val instID = RegInit(0.U(Types.BitWidth.inst_id.W))
   when(io.pc.fire) {
     instID := instID + 1.U
   }
