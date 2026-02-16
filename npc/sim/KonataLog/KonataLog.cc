@@ -4,13 +4,6 @@
 
 using namespace DirectSignals;
 
-static auto &cpu = *GetCPU();
-static auto &ifu = *GetIFU();
-static auto &idu = *GetIDU();
-static auto &exu = *GetEXU();
-static auto &lsu = *GetLSU();
-static auto &wbu = *GetCPU()->wbu;
-
 using SignalBoolType = unsigned char;
 
 struct HandshakeBus {
@@ -48,6 +41,12 @@ struct Stage {
 };
 
 void KonataLogger::readSignalsAndLog() {
+  static auto &cpu = *GetCPU();
+  static auto &ifu = *GetIFU();
+  static auto &idu = *GetIDU();
+  static auto &exu = *GetEXU();
+  static auto &lsu = *GetLSU();
+  static auto &wbu = *GetCPU()->wbu;
   static std::vector<Stage> stages = {
       Stage({&ifu.io_pc_valid, &ifu.io_pc_ready},
             {&ifu.io_out_valid, &ifu.io_out_ready}, "IFU",
@@ -59,10 +58,10 @@ void KonataLogger::readSignalsAndLog() {
 
   for (auto &stage : stages) {
     if (stage.in.fire()) {
-			stageStart(*stage.iid, stage.name);
+      stageStart(*stage.iid, stage.name);
     }
-		if (stage.out.fire()) {
-			stageEnd(*stage.iid, stage.name);
-		}
+    if (stage.out.fire()) {
+      stageEnd(*stage.iid, stage.name);
+    }
   }
 }
