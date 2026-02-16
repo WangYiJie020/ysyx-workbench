@@ -115,6 +115,9 @@ void sim_step_cycle() {
 
   if (dut.reset == 0) {
     updatePerfCounters();
+		if(konata_logger) {
+			konata_logger->readSignalsAndLog();
+		}
   }
 }
 static void reset(int n) {

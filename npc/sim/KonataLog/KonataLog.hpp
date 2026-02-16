@@ -61,16 +61,18 @@ public:
                 bool isHover = false) {
     log("L", id, isHover ? '1' : '0', label);
   }
-  void stageStart(InstFileIDType id, LaneIDType laneID,
-                  std::string_view stageName) {
+  void stageStart(InstFileIDType id, std::string_view stageName,
+                  LaneIDType laneID = 0) {
     log("S", id, laneID, stageName);
   }
-  void stageEnd(InstFileIDType id, LaneIDType laneID,
-                std::string_view stageName) {
+  void stageEnd(InstFileIDType id, std::string_view stageName,
+                LaneIDType laneID = 0) {
     log("E", id, laneID, stageName);
   }
   void retire(InstFileIDType id, InstRetireIDType retireID,
               bool isFlushed = false) {
     log("R", id, retireID, isFlushed ? '1' : '0');
   }
+
+	void readSignalsAndLog();
 };
