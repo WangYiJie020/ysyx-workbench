@@ -49,12 +49,12 @@ void KonataLogger::readSignalsAndLog() {
   static auto &wbu = *GetCPU()->wbu;
   static std::vector<Stage> stages = {
       Stage({&ifu.io_pc_valid, &ifu.io_pc_ready},
-            {&ifu.io_out_valid, &ifu.io_out_ready}, "IFU",
+            {&ifu.io_out_valid, &ifu.io_out_ready}, "IF",
             &ifu.io_out_bits_iid),
-      Stage(idu, "DEC", &idu.io_out_bits_iid),
-      Stage(exu, "EXU", &exu.io_out_bits_exuWriteBack_iid),
-      Stage(lsu, "LSU", &lsu.io_out_bits_iid),
-      Stage({&wbu.io_in_valid, &wbu.io_in_ready}, {nullptr, nullptr}, "WBU",
+      Stage(idu, "DE", &idu.io_out_bits_iid),
+      Stage(exu, "EX", &exu.io_out_bits_exuWriteBack_iid),
+      Stage(lsu, "LS", &lsu.io_out_bits_iid),
+      Stage({&wbu.io_in_valid, &wbu.io_in_ready}, {nullptr, nullptr}, "WB",
             &wbu.io_in_bits_iid),
   };
 
@@ -75,5 +75,10 @@ void KonataLogger::readSignalsAndLog() {
 	if(wbu_stage.in.fire()) {
 		retire(*wbu_stage.iid, 0);
 		// stageEnd(*wbu_stage.iid, wbu_stage.name);
+	}
+
+	auto& idu_stage = stages[1];
+	if(cpu.isFlushIDU){
+		retire(*idu_stage.iid, 0, true);
 	}
 }
