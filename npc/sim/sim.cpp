@@ -84,11 +84,6 @@ static void _sim_eval() {
   if (tfp) {
     tfp->dump(sim_time);
   }
-  if (dut.reset == 0) {
-    if (konata_logger) {
-      konata_logger->readSignalsAndLog();
-    }
-  }
   sim_time++;
 }
 
@@ -120,6 +115,10 @@ void sim_step_cycle() {
 
   if (dut.reset == 0) {
     updatePerfCounters();
+
+    if (konata_logger) {
+      konata_logger->readSignalsAndLog();
+    }
   }
 }
 static void reset(int n) {
