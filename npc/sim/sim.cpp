@@ -128,6 +128,7 @@ static void reset(int n) {
     sim_step_cycle();
   }
   dut.reset = 0;
+	_sim_eval();
 }
 
 static bool is_running = true;
