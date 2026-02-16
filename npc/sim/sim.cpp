@@ -81,10 +81,10 @@ std::shared_ptr<KonataLogger> konata_logger;
 
 static void _sim_eval() {
   dut.eval();
-  sim_time++;
   if (tfp) {
     tfp->dump(sim_time);
   }
+  sim_time++;
 }
 
 void sim_step_cycle() {
