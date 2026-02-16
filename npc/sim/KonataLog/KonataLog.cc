@@ -54,17 +54,25 @@ void KonataLogger::readSignalsAndLog() {
       Stage(idu, "IDU", &idu.io_out_bits_iid),
       Stage(exu, "EXU", &exu.io_out_bits_exuWriteBack_iid),
       Stage(lsu, "LSU", &lsu.io_out_bits_iid),
+      Stage({&wbu.io_in_valid, &wbu.io_in_ready}, {nullptr, nullptr}, "WBU",
+            &wbu.io_in_bits_iid),
   };
 
-	auto& ifu_stage = stages[0];
-	if (ifu_stage.in.fire()) {
-		declare(*ifu_stage.iid);
-		addLabel(*ifu_stage.iid, "IFU");
-	}
+  auto &ifu_stage = stages[0];
+  if (ifu_stage.in.fire()) {
+    declare(*ifu_stage.iid);
+    addLabel(*ifu_stage.iid, "IFU");
+  }
 
   for (auto &stage : stages) {
     if (stage.in.fire()) {
       stageStart(*stage.iid, stage.name);
     }
   }
+
+	auto &wbu_stage = stages.back();
+
+	if(wbu_stage.in.fire()) {
+		stageEnd(*wbu_stage.iid, wbu_stage.name);
+	}
 }
