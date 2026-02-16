@@ -56,7 +56,7 @@ class IFU extends Module {
   io.out.bits.pc   := pc
   io.out.valid     := (state === State.waitR && memIO.rvalid) || (state === State.idle && io.pc.fire && memIO.rvalid) || (state === State.waitOut)
 
-  io.pc.ready := (state === State.idle) && !reset.asBool
+  // io.pc.ready := (state === State.idle) && !reset.asBool
 
   val nxtStateWhenWaitOut = Mux(io.out.ready, State.idle, State.waitOut)
   val nxtStateWhenWaitR   = Mux(memIO.rvalid, nxtStateWhenWaitOut, State.waitR)
