@@ -41,7 +41,7 @@ public:
       throw std::runtime_error("Cycle must be non-decreasing");
     }
     if (cyc > _LastOutputCycle) {
-      _Log("C", cyc);
+      _Log("C", cyc - _LastOutputCycle);
     }
     _LastOutputCycle = cyc;
     _Log(cmd, params...);
