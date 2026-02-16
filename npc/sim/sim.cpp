@@ -124,14 +124,10 @@ void sim_step_cycle() {
 }
 static void reset(int n) {
   dut.reset = 1;
-  while (n-- > 1) {
+  while (n-- > 0) {
     sim_step_cycle();
   }
-  dut.clock = 1;
-  _sim_eval();
-  dut.clock = 0;
   dut.reset = 0;
-  _sim_eval();
 }
 
 static bool is_running = true;
