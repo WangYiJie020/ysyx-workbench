@@ -60,8 +60,5 @@ void KonataLogger::readSignalsAndLog() {
     if (stage.in.fire()) {
       stageStart(*stage.iid, stage.name);
     }
-    if (stage.out.fire()) {
-      stageEnd(*stage.iid, stage.name);
-    }
   }
 }
