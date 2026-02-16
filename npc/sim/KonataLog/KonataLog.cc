@@ -73,6 +73,6 @@ void KonataLogger::readSignalsAndLog() {
 	auto &wbu_stage = stages.back();
 
 	if(wbu_stage.in.fire()) {
-		stageEnd(*wbu_stage.iid, wbu_stage.name);
+		// stageEnd(*wbu_stage.iid, wbu_stage.name);
 	}
 }
