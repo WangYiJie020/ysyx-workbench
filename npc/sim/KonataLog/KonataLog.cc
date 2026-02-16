@@ -56,6 +56,12 @@ void KonataLogger::readSignalsAndLog() {
       Stage(lsu, "LSU", &lsu.io_out_bits_iid),
   };
 
+	auto& ifu_stage = stages[0];
+	if (ifu_stage.in.fire()) {
+		declare(*ifu_stage.iid);
+		addLabel(*ifu_stage.iid, "IFU");
+	}
+
   for (auto &stage : stages) {
     if (stage.in.fire()) {
       stageStart(*stage.iid, stage.name);
