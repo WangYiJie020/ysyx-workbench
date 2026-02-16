@@ -92,9 +92,10 @@ void sim_step_cycle() {
     printf("[Clock Cycle Begin]\n");
   }
 
-  dut.clock = 0;
-  _sim_eval();
   dut.clock = 1;
+  _sim_eval();
+
+  dut.clock = 0;
   _sim_eval();
 
   cycle_count++;
