@@ -329,6 +329,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 
 	konata_logger = std::make_shared<KonataLogger>("konata.log");
 	konata_logger->start(sim_get_cycle());
+	konata_logger->readSignalsAndLog();
 
   return true;
 }
