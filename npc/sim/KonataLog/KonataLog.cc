@@ -12,7 +12,11 @@ struct HandshakeBus {
   HandshakeBus() = default;
   HandshakeBus(SignalBoolType *valid, SignalBoolType *ready)
       : valid(valid), ready(ready) {}
-  bool fire() const { return *valid && *ready; }
+  bool fire() const {
+    if (!valid || !ready)
+      return false;
+    return *valid && *ready;
+  }
 };
 
 template <typename T>
@@ -49,8 +53,7 @@ void KonataLogger::readSignalsAndLog() {
   static auto &wbu = *GetCPU()->wbu;
   static std::vector<Stage> stages = {
       Stage({&ifu.io_pc_valid, &ifu.io_pc_ready},
-            {&ifu.io_out_valid, &ifu.io_out_ready}, "IF",
-            &ifu.io_out_bits_iid),
+            {&ifu.io_out_valid, &ifu.io_out_ready}, "IF", &ifu.io_out_bits_iid),
       Stage(idu, "DE", &idu.io_out_bits_iid),
       Stage(exu, "EX", &exu.io_out_bits_exuWriteBack_iid),
       Stage(lsu, "LS", &lsu.io_out_bits_iid),
@@ -68,17 +71,20 @@ void KonataLogger::readSignalsAndLog() {
     if (stage.in.fire()) {
       stageStart(*stage.iid, stage.name);
     }
+    if (stage.out.fire()) {
+      stageEnd(*stage.iid, stage.name);
+    }
   }
 
-	auto &wbu_stage = stages.back();
+  auto &wbu_stage = stages.back();
 
-	if(wbu_stage.in.fire()) {
-		retire(*wbu_stage.iid, 0);
-		// stageEnd(*wbu_stage.iid, wbu_stage.name);
-	}
+  if (wbu_stage.in.fire()) {
+    retire(*wbu_stage.iid, 0);
+    // stageEnd(*wbu_stage.iid, wbu_stage.name);
+  }
 
-	auto& idu_stage = stages[1];
-	if(cpu.isFlushIDU){
-		retire(*idu_stage.iid, 0, true);
-	}
+  auto &idu_stage = stages[1];
+  if (cpu.isFlushIDU) {
+    retire(*idu_stage.iid, 0, true);
+  }
 }
