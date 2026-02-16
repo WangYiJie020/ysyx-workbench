@@ -15,10 +15,10 @@
 #include <chrono>
 #include <cstdint>
 #include <cstdio>
+#include <fstream>
 #include <string_view>
 #include <sys/types.h>
 #include <variant>
-#include <fstream>
 
 #include "verilated_fst_c.h"
 #include "vsrc.hpp"
@@ -115,9 +115,9 @@ void sim_step_cycle() {
 
   if (dut.reset == 0) {
     updatePerfCounters();
-		if(konata_logger) {
-			konata_logger->readSignalsAndLog();
-		}
+    if (konata_logger) {
+      konata_logger->readSignalsAndLog();
+    }
   }
 }
 static void reset(int n) {
@@ -326,10 +326,10 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   cpu.pc = sim_cfg.init_pc;
   spdlog::info("set initial pc to {:08x}", cpu.pc);
 
-
-	konata_logger = std::make_shared<KonataLogger>("konata.log");
-	konata_logger->start(sim_get_cycle());
-	konata_logger->readSignalsAndLog();
+  konata_logger = std::make_shared<KonataLogger>("konata.log");
+  konata_logger->start(sim_get_cycle());
+  spdlog::info("KonataLogger initialized, start at cycle {}, sim time {}ps",
+               sim_get_cycle(), sim_get_time());
 
   return true;
 }
