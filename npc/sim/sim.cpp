@@ -18,6 +18,7 @@
 #include <string_view>
 #include <sys/types.h>
 #include <variant>
+#include <fstream>
 
 #include "verilated_fst_c.h"
 #include "vsrc.hpp"
@@ -33,6 +34,8 @@
 #include "PerfCounter.hpp"
 
 #include "memory/mem.hpp"
+
+#include "KonataLog/KonataLog.hpp"
 
 TOP_NAME dut;
 sim_config sim_cfg;
@@ -73,6 +76,8 @@ public:
     return spdlog::details::make_unique<sim_time_formatter>();
   }
 };
+
+std::shared_ptr<KonataLogger> konata_logger;
 
 static void _sim_eval() {
   dut.eval();
@@ -317,6 +322,10 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 
   cpu.pc = sim_cfg.init_pc;
   spdlog::info("set initial pc to {:08x}", cpu.pc);
+
+
+	konata_logger = std::make_shared<KonataLogger>("konata.log");
+	konata_logger->start(sim_get_cycle());
 
   return true;
 }
