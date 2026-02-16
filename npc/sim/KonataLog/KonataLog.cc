@@ -52,9 +52,9 @@ void KonataLogger::readSignalsAndLog() {
             {&ifu.io_out_valid, &ifu.io_out_ready}, "IF",
             &ifu.io_out_bits_iid),
       Stage(idu, "DE", &idu.io_out_bits_iid),
-      Stage(exu, "EXU", &exu.io_out_bits_exuWriteBack_iid),
-      Stage(lsu, "LSU", &lsu.io_out_bits_iid),
-      Stage({&wbu.io_in_valid, &wbu.io_in_ready}, {nullptr, nullptr}, "WBU",
+      Stage(exu, "EX", &exu.io_out_bits_exuWriteBack_iid),
+      Stage(lsu, "LS", &lsu.io_out_bits_iid),
+      Stage({&wbu.io_in_valid, &wbu.io_in_ready}, {nullptr, nullptr}, "WB",
             &wbu.io_in_bits_iid),
   };
 
