@@ -60,9 +60,12 @@ class IFU extends Module {
   val nxtStateWhenWaitR   = Mux(memIO.rvalid, nxtStateWhenWaitOut, State.waitR)
   val nxtStateWhenWaitAR  = Mux(memIO.arready, nxtStateWhenWaitR, State.waitAR)
 
+  val nxtStateWhenIdle = Mux(io.pc.fire, nxtStateWhenWaitAR, State.idle)
+  dontTouch(nxtStateWhenIdle)
+
   state := MuxLookup(state, State.idle)(
     Seq(
-      State.idle    -> Mux(io.pc.fire, nxtStateWhenWaitAR, State.idle),
+      State.idle    -> nxtStateWhenIdle,
       State.waitAR  -> nxtStateWhenWaitAR,
       State.waitR   -> nxtStateWhenWaitR,
       State.waitOut -> nxtStateWhenWaitOut
