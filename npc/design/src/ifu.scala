@@ -38,12 +38,12 @@ class IFU extends Module {
   dontTouch(pc)
   val state = RegInit(State.idle)
 
-  val instIDReg = Reg(Types.InstID)
-  when(io.pc.fire) {
-    instIDReg := instIDReg + 1.U
-  }
-  dontTouch(instIDReg)
-  io.out.bits.iid := instIDReg
+  val instIDNext = Wire(Types.InstID)
+  val instID     = RegEnableReadNew(instIDNext, io.pc.fire)
+  instIDNext := instID + 1.U
+  dontTouch(instID)
+
+  io.out.bits.iid  := instID
 
   io.pc.ready   := (state === State.idle) && !reset.asBool
   memIO.arvalid := (state === State.waitAR) || (state === State.idle && io.pc.fire)
