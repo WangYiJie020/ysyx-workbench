@@ -263,6 +263,7 @@ class LSU extends Module {
   outWriteBackInfo.is_ebreak     := inExuWriteBackInfo.is_ebreak
   outWriteBackInfo.pc            := inExuWriteBackInfo.pc
   outWriteBackInfo.nxt_pc        := inExuWriteBackInfo.nxt_pc
+  outWriteBackInfo.iid           := inExuWriteBackInfo.iid
 
   val isSerialAddr = AddrSpace.inRng(memAddr, AddrSpace.SERIAL)
   val isSPIAddr    = AddrSpace.inRng(memAddr, AddrSpace.SPI)
