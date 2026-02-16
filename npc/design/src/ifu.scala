@@ -64,7 +64,7 @@ class IFU extends Module {
 
   state := MuxLookup(state, State.idle)(
     Seq(
-      State.idle    -> Mux(io.pc.fire, nxtStateWhenWaitAR, State.idle),
+      State.idle    -> Mux(io.pc.fire && (!reset.asBool), nxtStateWhenWaitAR, State.idle),
       State.waitAR  -> nxtStateWhenWaitAR,
       State.waitR   -> nxtStateWhenWaitR,
       State.waitOut -> nxtStateWhenWaitOut
