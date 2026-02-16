@@ -92,9 +92,9 @@ void sim_step_cycle() {
     printf("[Clock Cycle Begin]\n");
   }
 
-  dut.clock = 1;
-  _sim_eval();
   dut.clock = 0;
+  _sim_eval();
+  dut.clock = 1;
   _sim_eval();
 
   cycle_count++;
@@ -122,13 +122,10 @@ void sim_step_cycle() {
 }
 static void reset(int n) {
   dut.reset = 1;
-  dut.clock = 0;
-  _sim_eval();
   while (n-- > 0) {
     sim_step_cycle();
   }
   dut.reset = 0;
-	_sim_eval();
 }
 
 static bool is_running = true;
