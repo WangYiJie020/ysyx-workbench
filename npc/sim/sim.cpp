@@ -323,7 +323,6 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 
   constexpr int reset_cycles = 30;
   reset(reset_cycles);
-	sim_step_cycle();
   spdlog::info("sim reset done ({} cycles)", reset_cycles);
 
   cpu.pc = sim_cfg.init_pc;
