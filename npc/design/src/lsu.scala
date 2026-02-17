@@ -82,7 +82,7 @@ class LSU extends Module {
         Mux(addrAck, nxtStateWhenAddrAck, nxtStateWhenIdleMeetMemOp),
         State.idle
       ),
-      State.waitAR  -> Mux(addrAck, State.waitR, State.waitAR),
+      State.waitAR  -> Mux(addrAck, nxtStateWhenWaitR, State.waitAR),
       State.waitAW  -> Mux(addrAck, nxtStateWhenWaitW, State.waitAW),
       State.waitR   -> nxtStateWhenWaitR,
       State.waitW   -> nxtStateWhenWaitW,
