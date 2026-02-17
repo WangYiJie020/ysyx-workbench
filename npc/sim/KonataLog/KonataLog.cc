@@ -71,6 +71,7 @@ void KonataLogger::readSignalsAndLog() {
 		code.resize(4);
 		read_guest_mem(ifu.io_pc_bits, (uint32_t*)code.data());
 		auto disasm = sdb::default_inst_disasm(ifu.io_pc_bits, code);
+		disasm = sdb::_impl::expand_tabs(disasm);
     addLabel(*ifu_stage.iid, disasm);
   }
 
