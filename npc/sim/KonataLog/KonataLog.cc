@@ -82,9 +82,6 @@ void KonataLogger::readSignalsAndLog() {
     if (stage.in.fire() && (!cpu.isFlushIDU)) {
       stageStart(*stage.iid, stage.name);
     }
-    if (stage.out.fire()) {
-      stageEnd(*stage.iid, stage.name);
-    }
   }
 
   auto &wbu_stage = stages.back();
