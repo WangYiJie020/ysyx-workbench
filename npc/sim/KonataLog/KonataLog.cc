@@ -72,6 +72,8 @@ void KonataLogger::readSignalsAndLog() {
 		auto disasm = sdb::default_inst_disasm(ifu.io_pc_bits, code);
 		std::ranges::replace(disasm, '\t', ' ');
     addLabel(*ifu_stage.iid, disasm);
+		addLabel(*ifu_stage.iid, fmt::format("pc=0x{:08x}", ifu.io_pc_bits), true);
+		addLabel(*ifu_stage.iid, fmt::format("{}ps", sim_get_time()), true);
   }
 
   for (auto &stage : stages) {
@@ -91,7 +93,7 @@ void KonataLogger::readSignalsAndLog() {
   }
 
   auto &idu_stage = stages[1];
-  if (cpu.isFlushIDU && idu.io_out_valid) {
+  if (cpu.isFlushIDU && idu_stage.in.fire()) {
     retire(*idu_stage.iid, 0, true);
   }
 }
