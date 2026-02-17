@@ -73,10 +73,13 @@ void KonataLogger::readSignalsAndLog() {
 		std::ranges::replace(disasm, '\t', ' ');
     addLabel(*ifu_stage.iid, disasm);
 		addLabel(*ifu_stage.iid, fmt::format("{}ps", sim_get_time()), true);
+		// IFU always issue start stage event, even when the instruction is later
+		// flushed in IDU, to make log easier to read
+		stageStart(*ifu_stage.iid, ifu_stage.name);
   }
 
   for (auto &stage : stages) {
-    if (stage.in.fire()) {
+    if (stage.in.fire() && (!cpu.isFlushIDU)) {
       stageStart(*stage.iid, stage.name);
     }
     // if (stage.out.fire()) {
