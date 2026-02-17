@@ -2,6 +2,9 @@
 #include "../sim.hpp"
 #include <functional>
 
+#include <tracers.hpp>
+#include "../memory/mem.hpp"
+
 using namespace DirectSignals;
 
 using SignalBoolType = unsigned char;
@@ -64,7 +67,11 @@ void KonataLogger::readSignalsAndLog() {
   auto &ifu_stage = stages[0];
   if (ifu_stage.in.fire()) {
     declare(*ifu_stage.iid);
-    addLabel(*ifu_stage.iid, "IFU");
+		sdb::vlen_inst_code code;
+		code.resize(4);
+		read_guest_mem(ifu.io_pc_bits, (uint32_t*)code.data());
+		auto disasm = sdb::default_inst_disasm(ifu.io_pc_bits, code);
+    addLabel(*ifu_stage.iid, disasm);
   }
 
   for (auto &stage : stages) {
