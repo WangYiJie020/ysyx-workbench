@@ -95,7 +95,7 @@ void KonataLogger::readSignalsAndLog() {
   }
 
   auto &idu_stage = stages[1];
-  if (cpu.isFlushIDU && ifu_stage.out.fire()) {
-    retire(*ifu_stage.iid, 0, true);
+  if (cpu.isFlushIDU && idu_stage.in.fire()) {
+    retire(*idu_stage.iid, 0, true);
   }
 }
