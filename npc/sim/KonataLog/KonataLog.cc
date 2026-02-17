@@ -67,11 +67,10 @@ void KonataLogger::readSignalsAndLog() {
   auto &ifu_stage = stages[0];
   if (ifu_stage.in.fire()) {
     declare(*ifu_stage.iid);
-		sdb::vlen_inst_code code;
-		code.resize(4);
+		sdb::vlen_inst_code code(4);
 		read_guest_mem(ifu.io_pc_bits, (uint32_t*)code.data());
 		auto disasm = sdb::default_inst_disasm(ifu.io_pc_bits, code);
-		disasm = sdb::_impl::expand_tabs(disasm);
+		std::ranges::replace(disasm, '\t', ' ');
     addLabel(*ifu_stage.iid, disasm);
   }
 
