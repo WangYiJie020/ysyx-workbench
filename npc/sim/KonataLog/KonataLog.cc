@@ -92,7 +92,7 @@ void KonataLogger::readSignalsAndLog() {
   }
 
   auto &idu_stage = stages[1];
-  if (cpu.isFlushIDU && idu_stage.in.fire()) {
+  if (cpu.isFlushIDU && idu_stage.in.valid) {
     retire(*idu_stage.iid, 0, true);
   }
 }
