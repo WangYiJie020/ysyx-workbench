@@ -7,8 +7,11 @@ VENV_PATH = $(abspath $(REPO_PATH)/.venv)
 VENV_CREATED = $(VENV_PATH)/bin/activate
 VENV_DONE = ./venv.done
 
+OUT_DIR = $(abspath ./build)
+$(shell mkdir -p $(OUT_DIR))
+
 default: $(VENV_DONE)
-	$(MAKE) -C $(REPO_PATH) VENV=$(VENV_PATH)
+	$(MAKE) -C $(REPO_PATH) VENV=$(VENV_PATH) BUILD_DIR=$(OUT_DIR)
 
 $(VENV_CREATED):
 	$(shell python3 -m venv $(VENV_PATH))
