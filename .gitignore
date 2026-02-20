@@ -15,6 +15,9 @@ compile_commands.json
 !/npc/*
 !/sdb/*
 !/cachesim/*
+!/patch/*
+!*.patch
+
 !Makefile
 !README.md
 !.gitignore
