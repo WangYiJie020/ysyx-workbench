@@ -23,6 +23,8 @@ SIM_BIN = $(SIM_BIN_DIR)/$(TOP_NAME)$(SIM_ARCH_SUFFIX)$(VSIM_OPT)
 
 VERILATOR = verilator
 
+MILL ?= mill
+
 default: $(SIM_BIN)
 
 ifeq ($(ARCH), riscv32e-ysyxsoc)
@@ -122,7 +124,7 @@ $(shell mkdir -p $(CHISEL2V_EMIT_DIR))
 $(CHISEL2V_DONE): $(CHISEL_SRCS)
 	$(call git_commit, "generate verilog")
 	# @rm -rf $(CHISEL2V_EMIT_DIR)
-	mill -i $(CHISEL_DESIGN).runMain Elaborate --target-dir $(CHISEL2V_EMIT_DIR)
+	$(MILL) -i $(CHISEL_DESIGN).runMain Elaborate --target-dir $(CHISEL2V_EMIT_DIR)
 	touch $(CHISEL2V_DONE)
 
 
@@ -170,24 +172,24 @@ $(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) $(CHISEL2V_DONE) $(VPI_DONE) $
 all: default
 
 test:
-	mill -i $(CHISEL_DESIGN).test
+	$(MILL) -i $(CHISEL_DESIGN).test
 
 verilog: $(CHISEL2V_DONE)
 
 help:
-	mill -i $(CHISEL_DESIGN).runMain Elaborate --help
+	$(MILL) -i $(CHISEL_DESIGN).runMain Elaborate --help
 
 reformat:
-	mill -i __.reformat
+	$(MILL) -i __.reformat
 
 checkformat:
-	mill -i __.checkFormat
+	$(MILL) -i __.checkFormat
 
 bsp:
-	mill -i mill.bsp.BSP/install
+	$(MILL) -i mill.bsp.BSP/install
 
 idea:
-	mill -i mill.idea.GenIdea/idea
+	$(MILL) -i mill.idea.GenIdea/idea
 
 clean:
 	-rm -rf $(BUILD_DIR)
