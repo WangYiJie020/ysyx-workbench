@@ -167,12 +167,12 @@ LOCAL_MILL_EXISTS := $(shell test -f ./mill && echo y)
 ifeq ($(MILL),)
 ifneq ($(GLOBAL_MILL_EXISTS),)
   $(info "Using global Mill: $(shell which mill)")
-	MILL = mill
+  MILL = mill
 else ifeq ($(LOCAL_MILL_EXISTS), y)
-	$(info "Using local Mill: $(abspath ./mill)")
-	MILL = ./mill
+  $(info "Using local Mill: $(abspath ./mill)")
+  MILL = ./mill
 else
-	$(error "Mill build tool not found. Please install Mill or place a local copy in the project directory.")
+  $(error "Mill build tool not found. Please install Mill or place a local copy in the project directory.")
 endif
 else
   $(info "Using specified Mill: $(MILL)")
