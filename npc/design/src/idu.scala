@@ -9,6 +9,8 @@ import common_def._
 import busfsm._
 import regfile._
 
+import cpu.WriteBackInfo
+
 class InstInfoDecoder extends Module {
   val io = IO(new Bundle {
     val opcode = Input(UInt(7.W))
@@ -51,13 +53,29 @@ class IDU extends Module {
     val in   = Flipped(Decoupled(new Inst))
     val rvec = GPRegReqIO.TX.VecRead(2)
 
-    val r1UseBypass = Input(Bool())
-    val r2UseBypass = Input(Bool())
+    val flush = Input(Bool())
 
-    val r1BypassData = Input(Types.UWord)
-    val r2BypassData = Input(Types.UWord)
+    // val r1UseBypass = Input(Bool())
+    // val r2UseBypass = Input(Bool())
+    //
+    // val r1BypassData = Input(Types.UWord)
+    // val r2BypassData = Input(Types.UWord)
 
-    val out  = Decoupled(new DecodedInst)
+    // connect to EXU output
+    val exuWrBack          = GPRegReqIO.RX.Write
+    // connect to EXU output, indicate whether the data is ready for bypassing
+    //
+    // for memory operations, the data is not ready until the memory access is
+    // finished
+    val exuWrBackDataVaild = Input(Bool())
+
+    // !!! Notice
+    // connect to LSU **input**
+    val lsuWrBack = GPRegReqIO.RX.Write
+
+    val wbuWrBack = GPRegReqIO.RX.Write
+
+    val out = Decoupled(new DecodedInst)
   })
 
   dontTouch(io)
@@ -67,7 +85,7 @@ class IDU extends Module {
 
   // TODO: handle invalid instruction
 
-  val fsm = InnerBusCtrl(io.in, io.out, alwaysComb = true)
+  // val fsm = InnerBusCtrl(io.in, io.out, alwaysComb = true)
 
   io.out.bits.viewAsSupertype(new Inst) := inReg
 
@@ -87,11 +105,78 @@ class IDU extends Module {
   io.rvec.addr(0) := res.rs1
   io.rvec.addr(1) := res.rs2
 
-  val r1UseBypass = io.r1UseBypass
-  val r2UseBypass = io.r2UseBypass
+  // conflict logic
 
-  res.reg1 := Mux(r1UseBypass, io.r1BypassData, io.rvec.data(0))
-  res.reg2 := Mux(r2UseBypass, io.r2BypassData, io.rvec.data(1))
+  def conflict(rs: UInt, rd: UInt, en: Bool): Bool = (rs === rd) && (rd =/= 0.U) && en
+
+  def conflict(rs1: UInt, rs2: UInt, gprWr: GPRegReqIO._WriteRX): Bool = {
+    (conflict(rs1, gprWr.addr, gprWr.en) || conflict(rs2, gprWr.addr, gprWr.en))
+  }
+  def conflict[T <: HasRs](info: T, gprWr: GPRegReqIO._WriteRX):  Bool = {
+    conflict(info.rs1, info.rs2, gprWr)
+  }
+
+  val isConflictWithEXU    = Wire(Bool())
+  val isRs1ConflictWithEXU = conflict(
+    io.out.bits.info.rs1,
+    io.exuWrBack.addr,
+    io.exuWrBack.en
+  )
+  val isRs2ConflictWithEXU = conflict(
+    io.out.bits.info.rs2,
+    io.exuWrBack.addr,
+    io.exuWrBack.en
+  )
+  isConflictWithEXU := (isRs1ConflictWithEXU || isRs2ConflictWithEXU)
+
+  val isConflictWithLSU = Wire(Bool())
+  isConflictWithLSU := conflict(io.out.bits.info, io.lsuWrBack)
+
+  val isConflictWithWBU    = Wire(Bool())
+  val isRs1ConflictWithWBU = conflict(
+    io.out.bits.info.rs1,
+    io.wbuWrBack.addr,
+    io.wbuWrBack.en
+  )
+  val isRs2ConflictWithWBU = conflict(
+    io.out.bits.info.rs2,
+    io.wbuWrBack.addr,
+    io.wbuWrBack.en
+  )
+  isConflictWithWBU := (isRs1ConflictWithWBU || isRs2ConflictWithWBU)
+
+  dontTouch(isConflictWithEXU)
+  dontTouch(isConflictWithLSU)
+  dontTouch(isConflictWithWBU)
+
+  val isRdAfterWr = Wire(Bool())
+  isRdAfterWr := isConflictWithEXU || isConflictWithLSU || isConflictWithWBU
+  dontTouch(isRdAfterWr)
+
+  // val exuWrBackDataVaild = !(exu.io.out.bits.isLoad || exu.io.out.bits.isStore)
+  val exuWrBackDataVaild = io.exuWrBackDataVaild
+
+  val canRs1Bypass =
+    Mux(isRs1ConflictWithEXU, exuWrBackDataVaild, isRs1ConflictWithWBU)
+  val canRs2Bypass =
+    Mux(isRs2ConflictWithEXU, exuWrBackDataVaild, isRs2ConflictWithWBU)
+
+  val needStallForRs1 = (isRs1ConflictWithEXU || isRs1ConflictWithWBU) && (!canRs1Bypass)
+  val needStallForRs2 = (isRs2ConflictWithEXU || isRs2ConflictWithWBU) && (!canRs2Bypass)
+
+  val needStall = needStallForRs1 || needStallForRs2 || isConflictWithLSU
+
+  val isStall = WireDefault(needStall)
+  dontTouch(isStall)
+
+  val r1UseBypass = canRs1Bypass
+  val r2UseBypass = canRs2Bypass
+
+  val r1BypassData = Mux(isRs1ConflictWithEXU, io.exuWrBack.data, io.wbuWrBack.data)
+  val r2BypassData = Mux(isRs2ConflictWithEXU, io.exuWrBack.data, io.wbuWrBack.data)
+
+  res.reg1 := Mux(r1UseBypass, r1BypassData, io.rvec.data(0))
+  res.reg2 := Mux(r2UseBypass, r2BypassData, io.rvec.data(1))
 
   // fetch IMM
   val immI = Cat(Fill(21, inst(31)), inst(30, 20))
@@ -113,4 +198,6 @@ class IDU extends Module {
     )
   )
 
+  io.in.ready  := (io.out.ready && !needStall) || io.flush
+  io.out.valid := io.in.valid && !needStall && !io.flush
 }

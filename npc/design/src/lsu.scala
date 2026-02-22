@@ -7,6 +7,8 @@ import busfsm._
 import chisel3.util.circt.dpi._
 import axi4._
 
+import regfile.GPRegReqIO
+
 class LSUInput extends Bundle {
   val isLoad       = Bool()
   val isStore      = Bool()
@@ -14,6 +16,19 @@ class LSUInput extends Bundle {
   val storeData    = Types.UWord
   val func3t       = UInt(3.W)
   val exuWriteBack = new WriteBackInfo
+}
+
+object ExtractGPRInfoFromLSU {
+  def apply(info: DecoupledIO[LSUInput]): GPRegReqIO._WriteRX = {
+    val gprInfo = info.bits.exuWriteBack.gpr
+    val valid   = info.valid
+
+    val out = Wire(GPRegReqIO.RX.Write)
+    out.en   := gprInfo.en && valid
+    out.addr := gprInfo.addr
+    out.data := gprInfo.data
+    out
+  }
 }
 
 class LSUIO extends Bundle {

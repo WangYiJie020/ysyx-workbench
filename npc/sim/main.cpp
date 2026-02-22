@@ -67,13 +67,8 @@ int main(int argc, char **argv) {
   dumpPerfCountersStatistics(std::cout);
 
   auto isMakePerf = getenv("MAKE_PERF") != nullptr;
-  auto shortGitHash = git_commit_hash.substr(0, 8);
-
   std::string perfOutRootDir = isMakePerf ? "history_perf" : "build/perf";
-  auto now = std::chrono::system_clock::now();
-  std::string perfOutDir =
-      std::format("{}/{}/{:%m%dT%H_%M_%S}", perfOutRootDir, shortGitHash, now);
-  system(("mkdir -p " + perfOutDir).c_str());
+  std::string perfOutDir = getOutputDir(perfOutRootDir);
   dumpPerfReportOnDir(perfOutDir);
 
   get_dut()->final();

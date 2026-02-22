@@ -228,7 +228,7 @@ class EXU extends Module {
   val willJmp = (isTypBranch && takeBranch) || isTypJALR || isTypJAL || isJmpCsr
 
   // TODO: handle exception
-  io.jmpHappen := willJmp // && (nxt_pc =/= snpc)
+  io.jmpHappen := willJmp
 
   val dbgIsBranch = WireDefault(isTypBranch)
   dontTouch(dbgIsBranch)

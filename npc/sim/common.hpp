@@ -3,11 +3,18 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
-#define FILELOG_OUTPUT_DIR "build/logs"
+#include <format>
 
+#include "vsrc.hpp"
+
+std::string getOutputDir(std::string_view prefix);
+inline auto genLogFilePath(std::string_view name) {
+	return std::format("build/logs/{}.log", name);
+  // return std::format("{}/{}.log", getOutputDir("build/logs"), name);
+}
 inline auto newFileLoggerSink(const std::string &name) {
   auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(
-      fmt::format("{}/{}.log", FILELOG_OUTPUT_DIR, name), true);
+      genLogFilePath(name), true);
   file_sink->set_level(spdlog::level::debug);
   return file_sink;
 }
