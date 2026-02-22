@@ -170,7 +170,7 @@ void BranchPredPerfCounter::dumpStatistics(std::ostream &os) {
 	os << "mispredict rate: " << (100.0 - accuracyPerc) << " %\n";
 
   Table t;
-  t.add_row({"Type", "Total Count", "Mispredict Count", "Accuracy\n%",
+  t.add_row({"Type", "Total\nCount", "Mispredict\nCount", "Accuracy\n%",
              "Count %\n(in tot)", "Mispredict %\n(in tot)"});
   for (int i = 0; i < JmpTypeNum; i++) {
     double accPerc =
