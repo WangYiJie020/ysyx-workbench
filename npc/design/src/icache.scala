@@ -191,6 +191,14 @@ class ICacheWithDirectVisit extends Module {
   AXI4IO.noShakeConnectAR(io.cpu, cache.io.cpu)
   AXI4IO.noShakeConnectAR(io.cpu, io.mem)
 
+  io.cpu.dontCareAW()
+  io.cpu.dontCareW()
+  io.cpu.dontCareB()
+
+  io.mem.dontCareAW()
+  io.mem.dontCareW()
+  io.mem.dontCareB()
+
   io.cpu.arready := Mux(isDirectVisit, io.mem.arready, cache.io.cpu.arready)
   io.mem.arvalid := Mux(isDirectVisit, io.cpu.arvalid, cache.io.mem.arvalid)
 
