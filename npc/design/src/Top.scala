@@ -29,7 +29,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val isBranchGuessWrong  = Wire(Bool())
   val curCorrectJmpTarget = Reg(UInt(32.W))
 
-  val isIDUStall    = Wire(Bool())
+  // val isIDUStall    = Wire(Bool())
   val isFlushIDUReg = RegInit(false.B)
   val isFlushIDU    = Wire(Bool())
 
@@ -259,7 +259,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   // idu.io.r1BypassData := Mux(isRs1ConflictWithEXU, exu.io.out.bits.exuWriteBack.gpr.data, wbu.io.in.bits.gpr.data)
   // idu.io.r2BypassData := Mux(isRs2ConflictWithEXU, exu.io.out.bits.exuWriteBack.gpr.data, wbu.io.in.bits.gpr.data)
 
-  dontTouch(isIDUStall)
+  // dontTouch(isIDUStall)
 
   pipelineConnect(ifu.io.out, idu.io.in, idu.io.out)
   pipelineConnect(idu.io.out, exu.io.in, exu.io.out)
@@ -273,6 +273,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   idu.io.wbuWrBack := ExtractGPRInfoFromWrBack(wbu.io.in)
   val exuWrBackDataVaild = !(exu.io.out.bits.isLoad || exu.io.out.bits.isStore)
   idu.io.exuWrBackDataVaild := exuWrBackDataVaild && exu.io.out.valid
+  idu.io.flush := isFlushIDU
 
   // Write back
 
