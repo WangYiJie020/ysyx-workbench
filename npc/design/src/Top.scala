@@ -148,7 +148,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val memArbiter = Module(new EXUIFU_MemVisitArbiter)
   AXI4IO.connectMasterSlave(lsu.io.mem, memArbiter.io.exu)
 
-  val icache = Module(new ICacheWithDirectVisit)
+  val icache = Module(new ICache)
   icache.io.flush := idu.io.out.valid && idu.io.out.bits.info.typ === InstType.fencei
   AXI4IO.connectMasterSlave(ifu.io.mem, icache.io.cpu)
   AXI4IO.connectMasterSlave(icache.io.mem, memArbiter.io.ifu)
