@@ -10,15 +10,15 @@ using namespace DirectSignals;
 using SignalBoolType = unsigned char;
 
 struct HandshakeBus {
-  SignalBoolType *valid = nullptr;
-  SignalBoolType *ready = nullptr;
+  SignalBoolType *hValid = nullptr;
+  SignalBoolType *hReady = nullptr;
   HandshakeBus() = default;
   HandshakeBus(SignalBoolType *valid, SignalBoolType *ready)
-      : valid(valid), ready(ready) {}
+      : hValid(valid), hReady(ready) {}
+	bool valid() const { return hValid && *hValid; }
+	bool ready() const { return hReady && *hReady; }
   bool fire() const {
-    if (!valid || !ready)
-      return false;
-    return *valid && *ready;
+		return valid() && ready();
   }
 };
 
@@ -92,7 +92,7 @@ void KonataLogger::readSignalsAndLog() {
   }
 
   auto &idu_stage = stages[1];
-  if (cpu.isFlushIDU && idu_stage.in.valid) {
+  if (cpu.isFlushIDU && idu_stage.in.valid()) {
 		addLabel(*idu_stage.iid, std::format("FLUSHED@{}ps", sim_get_time()), true);
     retire(*idu_stage.iid, 0, true);
   }
