@@ -133,7 +133,9 @@ class ICache extends Module {
   }
 
   // io.cpu.rvalid := (state === State.waitMem && io.mem.rlast && io.mem.rvalid) || (state === State.idle && cacheHit && io.cpu.arvalid && io.cpu.arready)
-  io.cpu.rvalid := cacheHit && ((state === State.idle && io.cpu.arvalid && io.cpu.arready) || state === State.waitMem && rdCnt >= ICacheParameters.extractWordOffset(rdAddr))
+  val wordOffset = ICacheParameters.extractWordOffset(rdAddr)
+  dontTouch(wordOffset)
+  io.cpu.rvalid := cacheHit && ((state === State.idle && io.cpu.arvalid && io.cpu.arready) || state === State.waitMem && rdCnt >= wordOffset)
 
   io.cpu.rresp  := AXI4IO.RResp.OKAY
   // TODO: support burst read
@@ -141,7 +143,7 @@ class ICache extends Module {
   io.cpu.rlast  := true.B
 
   // 2^5 = 32
-  val dataShift = (ICacheParameters.extractWordOffset(rdAddr) << 5)
+  val dataShift = (wordOffset << 5)
 
   // when not hit, since rvaild at the end of waitMem, the data is from nxtCacheData
   val rdData      = Mux(io.mem.rvalid || (!cacheHit), nxtCacheData, rdCacheBlock.data)
