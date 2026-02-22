@@ -82,8 +82,8 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
   val pc = RegInit(INIT_PC)
 
-  btb.io.query.addr   := ifu.io.pc.bits
-  bp.io.pc            := ifu.io.pc.bits
+  btb.io.query.addr   := pc
+  bp.io.pc            := pc
   bp.io.historyHit    := btb.io.query.hit
   bp.io.historyTarget := btb.io.query.target
   bp.io.historyIsJAL  := btb.io.query.isJAL
