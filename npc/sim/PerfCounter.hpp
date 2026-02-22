@@ -309,8 +309,20 @@ struct BranchPredPerfCounter : public PerfCounterBase {
   SignalHandle hValid;
   SignalHandle hReady;
 
-  size_t totBranchCount = 0;
-  size_t totMispredictCount = 0;
+  // size_t totBranchCount = 0;
+  // size_t totMispredictCount = 0;
+	
+	enum JmpType {
+		Branch,
+		JAL,
+		JALR,
+		Exception,
+		JmpTypeNum
+	};
+	size_t totCountOfType[JmpTypeNum] = {0};
+	size_t totMispredictOfType[JmpTypeNum] = {0};
+
+	int getCurJmpType() const;
 
 	BranchPredPerfCounter() { ctrName = "BranchPredPerfCounter"; }
 

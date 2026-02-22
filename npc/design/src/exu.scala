@@ -236,14 +236,12 @@ class EXU extends Module {
   val dbgIsBranch = WireDefault(isTypBranch)
   dontTouch(dbgIsBranch)
 
-  val dbgJmpCauseByBranch = WireDefault(isTypBranch)
-  val dbgJmpCauseByJALR   = WireDefault(isTypJALR)
-  val dbgJmpCauseByJAL    = WireDefault(isTypJAL)
-  val dbgJmpCauseByCsr    = WireDefault(isJmpCsr)
-  dontTouch(dbgJmpCauseByBranch)
-  dontTouch(dbgJmpCauseByJALR)
-  dontTouch(dbgJmpCauseByJAL)
-  dontTouch(dbgJmpCauseByCsr)
+  val dbgIsJALR   = WireDefault(isTypJALR)
+  val dbgIsJAL    = WireDefault(isTypJAL)
+  val dbgIsCSRJmp    = WireDefault(isJmpCsr)
+  dontTouch(dbgIsJALR)
+  dontTouch(dbgIsJAL)
+  dontTouch(dbgIsCSRJmp)
 
   // blt/bge 10x
   // bltu/bgeu 11x

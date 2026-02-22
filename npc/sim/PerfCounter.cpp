@@ -140,11 +140,15 @@ void BranchPredPerfCounter::bind() {
   hReady = &GetEXU()->io_in_ready;
 }
 
+int BranchPredPerfCounter::GetJmpType() const {
+	auto &exu = *GetEXU();
+	if (exu.
+
 void BranchPredPerfCounter::update() {
   if (hValid.get() && hReady.get()) {
     if (hIsBranch.get()) {
       totBranchCount++;
-      if (GetEXU()->takeBranch) {
+      if (GetEXU()->io_predWrong) {
         totMispredictCount++;
       }
     }
