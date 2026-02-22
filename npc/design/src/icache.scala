@@ -234,5 +234,6 @@ class ICacheWithDirectVisit extends Module {
   cache.io.cpu.arvalid := io.cpu.arvalid && isCacheVisit
 
   cache.io.mem.rvalid := io.mem.rvalid && isCacheVisit
+  cache.io.mem.arready := io.mem.arready && isCacheVisit
   AXI4IO.noShakeConnectR(io.mem, cache.io.mem)
 }
