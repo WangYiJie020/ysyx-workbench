@@ -30,7 +30,6 @@ class TopIO extends Bundle {
 
 class ysyx_25100261(word_width: Int = 32) extends Module {
   val isBranchGuessWrong  = Wire(Bool())
-  val curCorrectJmpTarget = Reg(UInt(32.W))
 
   // val isIDUStall    = Wire(Bool())
   val isFlushIDUReg = RegInit(false.B)
@@ -100,9 +99,13 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   }
 
   dontTouch(isBranchGuessWrong)
-  when(exu.io.out.valid) {
-    curCorrectJmpTarget := exu.io.out.bits.exuWriteBack.nxt_pc
-  }
+  // when(exu.io.out.valid) {
+  //   curCorrectJmpTarget := exu.io.out.bits.exuWriteBack.nxt_pc
+  // }
+  val curCorrectJmpTarget = RegEnableReadNew(
+    exu.io.out.bits.exuWriteBack.nxt_pc,
+    exu.io.out.valid
+  )
 
   isIFUMeetCorrectJmpTarget := ifu.io.pc.valid && (ifu.io.pc.bits === curCorrectJmpTarget)
 
