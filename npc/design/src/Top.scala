@@ -240,8 +240,10 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     lsu.io.out.bits.gpr,
     lsu.io.out.valid
   )
-  val isConflictWithLSU    = isConflictWithLSUIn //|| isConflictWithLSUOut
+  val isConflictWithLSU    = Wire(Bool())
   val isConflictWithWBU    = Wire(Bool())
+
+  isConflictWithLSU := isConflictWithLSUIn// || isConflictWithLSUOut
   val isRs1ConflictWithWBU = conflict(
     idu.io.out.bits.info.rs1,
     wbu.io.in.bits.gpr.addr,
