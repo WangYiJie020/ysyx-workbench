@@ -42,13 +42,11 @@ private:
 
   _RetireInfo _lastRetireInfo{0, 0, false};
 
-	InstRetireIDType __NxtRetireID = 1;
-	InstRetireIDType _GenNextRetireID() {
-		return __NxtRetireID++;
-	}
-	InstRetireIDType _GetCurrentRetireID() const {
-		return __NxtRetireID;
-	}
+  InstRetireIDType __NxtRetireID = 1;
+  InstRetireIDType _GenNextRetireID() { return __NxtRetireID++; }
+  InstRetireIDType _GetCurrentRetireID() const { return __NxtRetireID; }
+
+  bool lastCycIDUStall = false;
 
 public:
   KonataLogger(std::string_view filePath) {
@@ -100,6 +98,6 @@ public:
     }
   }
 
-	// Must be called every cycle
+  // Must be called every cycle
   void update();
 };
