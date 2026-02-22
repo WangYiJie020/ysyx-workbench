@@ -54,11 +54,11 @@ void KonataLogger::readSignalsAndLog() {
   static auto &wbu = *GetCPU()->wbu;
   static std::vector<Stage> stages = {
       Stage({&ifu.io_pc_valid, &ifu.io_pc_ready},
-            {&ifu.io_out_valid, &ifu.io_out_ready}, "F", &ifu.io_out_bits_iid),
-      Stage(idu, "D", &idu.io_out_bits_iid),
-      Stage(exu, "E", &exu.io_out_bits_exuWriteBack_iid),
-      Stage(lsu, "M", &lsu.io_out_bits_iid),
-      Stage({&wbu.io_in_valid, &wbu.io_in_ready}, {nullptr, nullptr}, "W",
+            {&ifu.io_out_valid, &ifu.io_out_ready}, "IF", &ifu.io_out_bits_iid),
+      Stage(idu, "DE", &idu.io_out_bits_iid),
+      Stage(exu, "EX", &exu.io_out_bits_exuWriteBack_iid),
+      Stage(lsu, "LS", &lsu.io_out_bits_iid),
+      Stage({&wbu.io_in_valid, &wbu.io_in_ready}, {nullptr, nullptr}, "WB",
             &wbu.io_in_bits_iid),
   };
 
