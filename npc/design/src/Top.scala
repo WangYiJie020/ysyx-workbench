@@ -69,8 +69,8 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val lsu = Module(new LSU)
   val wbu = Module(new WBU)
 
-  val btb = Module(new BranchTargetBuffer)
-  val bp  = Module(new BranchPredictor)
+  // val btb = Module(new BranchTargetBuffer)
+  // val bp  = Module(new BranchPredictor)
 
   val isSoC = sys.env.getOrElse("ARCH", "") == "riscv32e-ysyxsoc"
 
