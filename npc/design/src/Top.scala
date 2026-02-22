@@ -19,6 +19,9 @@ import npcMem._
 import icache._
 import common_def._
 
+import btb._
+import branchpredictor._
+
 class TopIO extends Bundle {
   val interrupt = Input(Bool())
   val master    = AXI4IO.Master
@@ -66,6 +69,9 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val lsu = Module(new LSU)
   val wbu = Module(new WBU)
 
+  val btb = Module(new BranchTargetBuffer)
+  val bp  = Module(new BranchPredictor)
+
   val isSoC = sys.env.getOrElse("ARCH", "") == "riscv32e-ysyxsoc"
 
   if (isSoC) {
@@ -81,12 +87,14 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val nxtPredictedPC = Wire(Types.UWord)
   dontTouch(nxtPredictedPC)
   nxtPredictedPC := ifu.io.pc.bits + 4.U
+  ifu.io.predictedNextPC := nxtPredictedPC
 
   val isBranchGuessWrongReg     = RegInit(false.B)
   val isIFUMeetCorrectJmpTarget = Wire(Bool())
   isBranchGuessWrong := isBranchGuessWrongReg || (exu.io.out.valid && exu.io.jmpHappen)
   when(exu.io.out.valid) {
-    isBranchGuessWrongReg := exu.io.jmpHappen // && exu.io.out.bits.exuWriteBack.nxt_pc =/= exu.io.out.bits.exuWriteBack.pc + 4.U
+    // isBranchGuessWrongReg := exu.io.jmpHappen // && exu.io.out.bits.exuWriteBack.nxt_pc =/= exu.io.out.bits.exuWriteBack.pc + 4.U
+    isBranchGuessWrongReg := exu.io.predWrong
   }.elsewhen(isIFUMeetCorrectJmpTarget) {
     isBranchGuessWrongReg := false.B
   }
