@@ -42,7 +42,14 @@ int main(int argc, char **argv) {
   }
   std::string_view git_commit_hash = _STR(GIT_COMMIT_HASH);
   spdlog::info("Git commit hash: {}", git_commit_hash);
+
+  std::string perfOutRootDir = isMakePerf() ? "history_perf" : "build/perf";
+  std::string perfOutDir = getOutputDir(perfOutRootDir);
+
+	spdlog::info("perf report output dir: {}", perfOutDir);
+
   spdlog::info("Sim init pc set to 0x{:08x}", sim_get_config()->init_pc);
+
 
   auto &setting = sim_get_config()->setting;
   load_sim_setting_from_env(setting);
@@ -65,10 +72,6 @@ int main(int argc, char **argv) {
   spdlog::info("sim ended");
 
   dumpPerfCountersStatistics(std::cout);
-
-  auto isMakePerf = getenv("MAKE_PERF") != nullptr;
-  std::string perfOutRootDir = isMakePerf ? "history_perf" : "build/perf";
-  std::string perfOutDir = getOutputDir(perfOutRootDir);
   dumpPerfReportOnDir(perfOutDir);
 
   get_dut()->final();
