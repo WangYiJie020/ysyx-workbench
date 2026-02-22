@@ -319,6 +319,9 @@ struct BranchPredPerfCounter : public PerfCounterBase {
 		Exception,
 		JmpTypeNum
 	};
+
+	static const char *nameOf(int type);
+
 	size_t totCountOfType[JmpTypeNum] = {0};
 	size_t totMispredictOfType[JmpTypeNum] = {0};
 

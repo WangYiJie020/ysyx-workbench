@@ -104,18 +104,18 @@ void RAWStallPerfCounter::bind() {
 IDUFlushPerfCounter::IDUFlushReason IDUFlushPerfCounter::getCurReason() const {
   auto &exu = *GetEXU();
   IDUFlushReason reason;
-  if (exu.dbgJmpCauseByBranch)
+  if (exu.dbgIsBranch)
     reason = IDUFlushReason::BranchTaken;
-  else if (exu.dbgJmpCauseByJAL)
+  else if (exu.dbgIsJAL)
     reason = IDUFlushReason::JAL;
-  else if (exu.dbgJmpCauseByJALR)
+  else if (exu.dbgIsJALR)
     reason = IDUFlushReason::JALR;
-  else if (exu.dbgJmpCauseByCsr)
+  else if (exu.dbgIsCSRJmp)
     reason = IDUFlushReason::Exception;
-  else{
+  else {
     reason = IDUFlushReason::Unknown;
-		spdlog::warn("Unknown flush reason at {}ps", sim_get_time());
-	}
+    spdlog::warn("Unknown flush reason at {}ps", sim_get_time());
+  }
 
   return reason;
 }
@@ -140,16 +140,27 @@ void BranchPredPerfCounter::bind() {
   hReady = &GetEXU()->io_in_ready;
 }
 
-int BranchPredPerfCounter::GetJmpType() const {
-	auto &exu = *GetEXU();
-	if (exu.
+int BranchPredPerfCounter::getCurJmpType() const {
+  auto &exu = *GetEXU();
+  if (exu.dbgIsBranch)
+    return JmpType::Branch;
+  else if (exu.dbgIsJAL)
+    return JmpType::JAL;
+  else if (exu.dbgIsJALR)
+    return JmpType::JALR;
+  else if (exu.dbgIsCSRJmp)
+    return JmpType::Exception;
+
+  return JmpType::JmpTypeNum;
+}
 
 void BranchPredPerfCounter::update() {
   if (hValid.get() && hReady.get()) {
+		auto jmpType = getCurJmpType();
     if (hIsBranch.get()) {
-      totBranchCount++;
+			totCountOfType[jmpType]++;
       if (GetEXU()->io_predWrong) {
-        totMispredictCount++;
+				totMispredictOfType[jmpType]++;
       }
     }
   }
@@ -189,12 +200,9 @@ void initPerfCounters() {
                   &GetIFU()->io_pc_valid, &GetIFU()->io_pc_ready,
                   &GetIFU()->io_out_valid, &GetIFU()->io_out_ready),
               "IFU");
-  pipeCtr.add(PipeStagePerfCounter().BIND_PIPE_STAGE_BASE(GetIDU()->io),
-              "IDU");
-  pipeCtr.add(PipeStagePerfCounter().BIND_PIPE_STAGE_BASE(GetEXU()->io),
-              "EXU");
-  pipeCtr.add(PipeStagePerfCounter().BIND_PIPE_STAGE_BASE(GetLSU()->io),
-              "LSU");
+  pipeCtr.add(PipeStagePerfCounter().BIND_PIPE_STAGE_BASE(GetIDU()->io), "IDU");
+  pipeCtr.add(PipeStagePerfCounter().BIND_PIPE_STAGE_BASE(GetEXU()->io), "EXU");
+  pipeCtr.add(PipeStagePerfCounter().BIND_PIPE_STAGE_BASE(GetLSU()->io), "LSU");
 
   iduFlushCtr.bind();
   cacheCtr.bind();
@@ -287,8 +295,19 @@ void to_json(nlohmann::json &j, const IDUFlushPerfCounter &c) {
     };
   }
 }
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(BranchPredPerfCounter, totBranchCount,
-                                   totMispredictCount)
+void to_json(nlohmann::json &j, const BranchPredPerfCounter &c) {
+	j["ctrName"] = c.ctrName;
+	for (int t = 0; t < BranchPredPerfCounter::JmpType::JmpTypeNum; t++) {
+		j["totCountOfType"][t] = {
+				{"type", BranchPredPerfCounter::nameOf(t)},
+				{"count", c.totCountOfType[t]},
+		};
+		j["totMispredictOfType"][t] = {
+				{"type", BranchPredPerfCounter::nameOf(t)},
+				{"count", c.totMispredictOfType[t]},
+		};
+	}
+}
 
 void dumpPerfCounterTo(std::ostream &os) {
   // std::string title_row;
@@ -298,15 +317,11 @@ void dumpPerfCounterTo(std::ostream &os) {
 
   bool first = true;
   for (auto &ctr : perf_counters) {
-    std::visit(
-        [&](auto &c) {
-          j[c.ctrName] = c;
-        },
-        ctr);
+    std::visit([&](auto &c) { j[c.ctrName] = c; }, ctr);
   }
   // os << "\n" << value_row;
   // os << j.dump(2);
-	os << j;
+  os << j;
 }
 void dumpPerfReportOnDir(const std::string &dir) {
   std::string prefix = "counters";
