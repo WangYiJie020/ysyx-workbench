@@ -218,8 +218,6 @@ class ICacheWithDirectVisit extends Module {
   cache.io.cpu.awsize  := DontCare
   cache.io.cpu.awburst := DontCare
 
-  cache.io.cpu.dontCareAW()
-
 
   io.cpu.arready := Mux(isDirectVisit, io.mem.arready, cache.io.cpu.arready)
   io.mem.arvalid := Mux(isDirectVisit, io.cpu.arvalid, cache.io.mem.arvalid)
