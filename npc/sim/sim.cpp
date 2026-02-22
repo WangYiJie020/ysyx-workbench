@@ -254,8 +254,10 @@ static void load_img() {
   spdlog::info("load image {}, size = {}", sim_cfg.img_file_path,
                sim_cfg.img_size);
 
+	img.resize(sim_cfg.img_size);
+
   fseek(fp, 0, SEEK_SET);
-  int ret = fread(img, sim_cfg.img_size, 1, fp);
+  int ret = fread(img.data(), sim_cfg.img_size, 1, fp);
   assert(ret == 1);
 
   fclose(fp);
@@ -313,7 +315,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 
   load_img();
   // should before dbg_init(which may preload data with func call dpis)
-  mem_init(img, sim_cfg);
+  mem_init(img.data(), sim_cfg);
 
   if (setting.en_wave) {
     Verilated::traceEverOn(true);
