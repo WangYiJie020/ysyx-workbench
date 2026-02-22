@@ -80,7 +80,7 @@ class ICache extends Module {
   when(io.cpu.arvalid && io.cpu.arready) {
     rdAddrReg := io.cpu.araddr
   }
-  val rdAddr       = Mux(io.cpu.arvalid && io.cpu.arready, io.cpu.araddr, rdAddrReg)
+  val rdAddr = Mux(io.cpu.arvalid && io.cpu.arready, io.cpu.araddr, rdAddrReg)
 
   val rdIdx        = ICacheParameters.extractIndex(rdAddr)
   val rdCacheBlock = blocks(rdIdx)
@@ -133,14 +133,15 @@ class ICache extends Module {
   }
 
   // io.cpu.rvalid := (state === State.waitMem && io.mem.rlast && io.mem.rvalid) || (state === State.idle && cacheHit && io.cpu.arvalid && io.cpu.arready)
-  val wordOffset = ICacheParameters.extractWordOffset(rdAddr)
+  val wordOffset     = ICacheParameters.extractWordOffset(rdAddr)
   dontTouch(wordOffset)
-  io.cpu.rvalid := cacheHit && ((state === State.idle && io.cpu.arvalid && io.cpu.arready) || state === State.waitMem && rdCnt >= wordOffset)
+  val retShiftedData = cacheHit && state === State.idle && io.cpu.arvalid && io.cpu.arready
+  io.cpu.rvalid := (retShiftedData || (state === State.waitMem && rdCnt === wordOffset))
 
-  io.cpu.rresp  := AXI4IO.RResp.OKAY
+  io.cpu.rresp := AXI4IO.RResp.OKAY
   // TODO: support burst read
-  io.cpu.rid    := io.mem.rid
-  io.cpu.rlast  := true.B
+  io.cpu.rid   := io.mem.rid
+  io.cpu.rlast := true.B
 
   // 2^5 = 32
   val dataShift = (wordOffset << 5)
@@ -150,13 +151,13 @@ class ICache extends Module {
   dontTouch(rdData)
   val shiftedData = rdData >> dataShift
   dontTouch(shiftedData)
-  io.cpu.rdata := shiftedData(31, 0)
+  io.cpu.rdata := Mux(retShiftedData, shiftedData(31, 0), io.mem.rdata)
 
   state := MuxLookup(state, State.idle)(
     Seq(
-      State.idle       -> Mux(io.cpu.arvalid && io.cpu.arready && (!cacheHit), State.sendFetch, State.idle),
-      State.sendFetch  -> Mux(io.mem.arready, State.waitMem, State.sendFetch),
-      State.waitMem    -> Mux(io.mem.rvalid && io.mem.rlast, State.idle, State.waitMem)
+      State.idle      -> Mux(io.cpu.arvalid && io.cpu.arready && (!cacheHit), State.sendFetch, State.idle),
+      State.sendFetch -> Mux(io.mem.arready, State.waitMem, State.sendFetch),
+      State.waitMem   -> Mux(io.mem.rvalid && io.mem.rlast, State.idle, State.waitMem)
     )
   )
 
