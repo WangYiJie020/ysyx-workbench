@@ -157,7 +157,7 @@ void BranchPredPerfCounter::update() {
   if (hValid.get() && hReady.get()) {
     auto jmpType = getCurJmpType();
 		if(jmpType >= JmpType::JmpTypeNum) {
-			spdlog::warn("invalid jump type at {}ps", sim_get_time());
+			spdlog::warn("invalid jump type({}) at {}ps", jmpType,sim_get_time());
 			return;
 		}
     totCountOfType[jmpType]++;
