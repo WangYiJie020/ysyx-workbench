@@ -168,19 +168,23 @@ class ICache extends Module {
 }
 
 class ICacheWithDirectVisit extends Module {
-  val io                = IO(new ICacheIO)
-  
+  val io = IO(new ICacheIO)
+
   val cache = Module(new ICache)
   cache.io.flush := io.flush
 
-  val directWire = Wire(AXI4IO.Slave)
+  val directWire         = Wire(AXI4IO.Slave)
   val directWireAsMaster = Wire(AXI4IO.Master)
   AXI4IO.connectMasterSlave(directWireAsMaster, directWire)
 
-  val xbar = Module(new AXI4LiteXBar(Seq(
-    AddrSpace.SRAM -> directWire,
-    AddrSpace.SOC  -> cache.io.cpu
-  )))
+  val xbar = Module(
+    new AXI4LiteXBar(
+      Seq(
+        AddrSpace.SRAM -> directWire,
+        AddrSpace.SOC  -> cache.io.cpu
+      )
+    )
+  )
 
   val memArbiter = Module(new EXUIFU_MemVisitArbiter)
   AXI4IO.connectMasterSlave(directWireAsMaster, memArbiter.io.ifu)
