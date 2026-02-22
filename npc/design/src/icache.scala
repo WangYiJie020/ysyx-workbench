@@ -206,11 +206,18 @@ class ICacheWithDirectVisit extends Module {
   cache.io.mem.bid     := DontCare
   cache.io.mem.awready := DontCare
 
-  cache.io.cpu.awready := DontCare
-  cache.io.cpu.wready  := DontCare
-  cache.io.cpu.bvalid  := DontCare
-  cache.io.cpu.bresp   := DontCare
-  cache.io.cpu.bid     := DontCare
+  cache.io.cpu.awvalid := DontCare
+  cache.io.cpu.wvalid  := DontCare
+  cache.io.cpu.wlast   := DontCare
+  cache.io.cpu.wdata   := DontCare
+  cache.io.cpu.wstrb   := DontCare
+  cache.io.cpu.bready  := DontCare
+  cache.io.cpu.awaddr  := DontCare
+  cache.io.cpu.awid    := DontCare
+  cache.io.cpu.awlen   := DontCare
+  cache.io.cpu.awsize  := DontCare
+  cache.io.cpu.awburst := DontCare
+
 
   io.cpu.arready := Mux(isDirectVisit, io.mem.arready, cache.io.cpu.arready)
   io.mem.arvalid := Mux(isDirectVisit, io.cpu.arvalid, cache.io.mem.arvalid)
