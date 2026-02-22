@@ -183,6 +183,7 @@ class ICacheWithDirectVisit extends Module {
   )
 
   val isDirectVisit = state === State.connMem
+  val isCacheVisit  = state === State.connCache
 
   val cache = Module(new ICache)
   cache.io.flush := io.flush
@@ -201,4 +202,8 @@ class ICacheWithDirectVisit extends Module {
 
   io.mem.rready := Mux(isDirectVisit, io.cpu.rready, cache.io.mem.rready)
 
+  cache.io.cpu.arvalid := io.cpu.arvalid && isCacheVisit
+
+  cache.io.mem.rvalid := io.mem.rvalid && isCacheVisit
+  AXI4IO.noShakeConnectR(io.mem, cache.io.mem)
 }
