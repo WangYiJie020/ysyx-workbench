@@ -10,6 +10,7 @@ class BranchPredictorIO extends Bundle {
 
   val pc = Input(Types.UWord)
 
+  val historyIsJAL  = Input(Bool())
   val historyTarget = Input(Types.UWord)
   val predictTarget = Output(Types.UWord)
 }
@@ -22,6 +23,7 @@ class BranchPredictor extends Module {
   val isBackward = io.historyTarget < io.pc
 
   // io.predictTarget := Mux(io.historyHit, io.historyTarget, io.pc + 4.U)
-  io.predictTarget := Mux(io.historyHit && isBackward, io.historyTarget, io.pc + 4.U)
+  // io.predictTarget := Mux(io.historyHit && isBackward, io.historyTarget, io.pc + 4.U)
   // io.predictTarget := io.pc + 4.U
+  io.predictTarget := Mux(io.historyHit && (io.historyIsJAL || isBackward), io.historyTarget, io.pc + 4.U)
 }
