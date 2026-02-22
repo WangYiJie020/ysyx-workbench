@@ -23,6 +23,8 @@
 #include "verilated_fst_c.h"
 #include "vsrc.hpp"
 
+#include "common.hpp"
+
 #if ENABLE_NVBOARD
 #include <nvboard.h>
 #endif
@@ -327,7 +329,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   cpu.pc = sim_cfg.init_pc;
   spdlog::info("set initial pc to {:08x}", cpu.pc);
 
-  konata_logger = std::make_shared<KonataLogger>("konata.log");
+  konata_logger = std::make_shared<KonataLogger>(genLogFilePath("konata"));
   konata_logger->start(sim_get_cycle());
   spdlog::info("KonataLogger initialized, start at cycle {}, sim time {}ps",
                sim_get_cycle(), sim_get_time());
