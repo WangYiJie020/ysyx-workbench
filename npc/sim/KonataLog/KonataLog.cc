@@ -84,7 +84,7 @@ void KonataLogger::update() {
       stageStart(*stage.iid, stage.name);
   });
 
-	bool lastCycIDUStall = false;
+	static bool lastCycIDUStall = false;
 	bool iduStall = cpu.isIDUStall;
 	bool isIDUStallBegin = iduStall && !lastCycIDUStall;
 	bool isIDUStallEnd = !iduStall && lastCycIDUStall;
