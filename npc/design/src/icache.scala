@@ -174,8 +174,6 @@ class ICacheWithDirectVisit extends Module {
   cache.io.flush := io.flush
 
   val directWire         = Wire(AXI4IO.Slave)
-  val directWireAsMaster = Wire(AXI4IO.Master)
-  AXI4IO.connectMasterSlave(directWireAsMaster, directWire)
 
   val xbar = Module(
     new AXI4LiteXBar(
@@ -186,14 +184,16 @@ class ICacheWithDirectVisit extends Module {
     )
   )
 
-  val ioCPUAsMaster = Wire(AXI4IO.Master)
-  AXI4IO.transformSlaveToMasterValidIf(true.B)(ioCPUAsMaster, io.cpu)
-  AXI4IO.connectMasterSlave(ioCPUAsMaster, xbar.io.in)
+  // val ioCPUAsMaster = Wire(AXI4IO.Master)
+  
+  // AXI4IO.transformSlaveToMasterValidIf(true.B)(ioCPUAsMaster, io.cpu)
+  // AXI4IO.connectMasterSlave(ioCPUAsMaster, xbar.io.in)
+  xbar.io.in <> io.cpu
   xbar.connect()
 
   val memArbiter = Module(new EXUIFU_MemVisitArbiter)
-  AXI4IO.connectMasterSlave(directWireAsMaster, memArbiter.io.ifu)
-  AXI4IO.connectMasterSlave(cache.io.mem, memArbiter.io.exu)
+  memArbiter.io.ifu <> directWire
+  memArbiter.io.exu <> cache.io.mem
 
   io.mem <> memArbiter.io.out
 
