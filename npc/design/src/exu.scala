@@ -13,6 +13,7 @@ class EXU extends Module {
     val in        = Flipped(Decoupled(new DecodedInst))
     val csr_rvec  = CSRegReqIO.TX.SingleRead
     val jmpHappen = Output(Bool())
+    val isJAL     = Output(Bool())
     val predWrong = Output(Bool())
     val out       = Decoupled(new LSUInput)
   })
@@ -230,7 +231,7 @@ class EXU extends Module {
 
   // TODO: handle exception
   io.jmpHappen := willJmp
-
+  io.isJAL     := isTypJAL
   io.predWrong := nxt_pc =/= dinst.predictedNextPC
 
   val dbgIsBranch = WireDefault(isTypBranch)
@@ -238,7 +239,7 @@ class EXU extends Module {
 
   val dbgIsJALR   = WireDefault(isTypJALR)
   val dbgIsJAL    = WireDefault(isTypJAL)
-  val dbgIsCSRJmp    = WireDefault(isJmpCsr)
+  val dbgIsCSRJmp = WireDefault(isJmpCsr)
   dontTouch(dbgIsJALR)
   dontTouch(dbgIsJAL)
   dontTouch(dbgIsCSRJmp)
