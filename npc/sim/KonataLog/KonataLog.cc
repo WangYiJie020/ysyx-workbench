@@ -75,9 +75,6 @@ void KonataLogger::readSignalsAndLog() {
     addLabel(*ifu_stage.iid, std::format("{:08x}: {}", ifu.io_pc_bits, disasm));
     addLabel(*ifu_stage.iid, std::format("{}ps", sim_get_time()), true);
   }
-	if(ifu_stage.out.fire()) {
-		stageEnd(*ifu_stage.iid, ifu_stage.name);
-	}
 
   std::ranges::for_each(stages, [&](auto &stage) {
     bool isIDU = (&stage == &idu_stage);
@@ -86,6 +83,10 @@ void KonataLogger::readSignalsAndLog() {
     if (stage.in.fire())
       stageStart(*stage.iid, stage.name);
   });
+
+	if(ifu_stage.out.fire()) {
+		stageEnd(*ifu_stage.iid, ifu_stage.name);
+	}
 
   if (wbu_stage.in.fire()) {
     retire(*wbu_stage.iid, _GenNextRetireID());
