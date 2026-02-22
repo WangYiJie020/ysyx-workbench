@@ -333,6 +333,11 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   cpu.pc = sim_cfg.init_pc;
   spdlog::info("set initial pc to {:08x}", cpu.pc);
 
+	if(isMakePerf()) {
+		spdlog::info("Make perf mode, disable konata logger");
+		return true;
+	}
+
   konata_logger = std::make_shared<KonataLogger>(genLogFilePath("konata"));
   konata_logger->start(sim_get_cycle());
   spdlog::info("KonataLogger initialized, start at cycle {}, sim time {}ps",
