@@ -137,7 +137,7 @@ class ICache extends Module {
 
   io.cpu.rvalid := (state === State.waitMem && io.mem.rlast && io.mem.rvalid) || (state === State.idle && cacheHit && io.cpu.arvalid && io.cpu.arready)
   val wordOffset = ICacheParameters.extractWordOffset(rdAddr)
-  dontTouch(wordOffset)
+  // dontTouch(wordOffset)
   // val retShiftedData = cacheHit && state === State.idle && io.cpu.arvalid && io.cpu.arready
   // io.cpu.rvalid := (retShiftedData || (state === State.waitMem && rdCnt === wordOffset && io.mem.rvalid))
 
