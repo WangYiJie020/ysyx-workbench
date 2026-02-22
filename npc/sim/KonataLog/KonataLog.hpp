@@ -100,5 +100,6 @@ public:
     }
   }
 
-  void readSignalsAndLog();
+	// Must be called every cycle
+  void update();
 };

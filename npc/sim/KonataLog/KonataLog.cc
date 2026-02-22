@@ -45,7 +45,7 @@ struct Stage {
         out(&stage.io_out_valid, &stage.io_out_ready), name(name), iid(iid) {}
 };
 
-void KonataLogger::readSignalsAndLog() {
+void KonataLogger::update() {
   static auto &cpu = *GetCPU();
   static auto &ifu = *GetIFU();
   static auto &idu = *GetIDU();
@@ -84,9 +84,17 @@ void KonataLogger::readSignalsAndLog() {
       stageStart(*stage.iid, stage.name);
   });
 
-	// if(ifu_stage.out.fire()) {
-	// 	stageEnd(*ifu_stage.iid, ifu_stage.name);
-	// }
+	bool lastCycIDUStall = false;
+	bool iduStall = cpu.isIDUStall;
+	bool isIDUStallBegin = iduStall && !lastCycIDUStall;
+	bool isIDUStallEnd = !iduStall && lastCycIDUStall;
+	lastCycIDUStall = iduStall;
+
+	if (isIDUStallBegin) {
+		stageStart(*idu_stage.iid, "IDU_STALL");
+	} else if (isIDUStallEnd) {
+		stageEnd(*idu_stage.iid, "IDU_STALL");
+	}
 
   if (wbu_stage.in.fire()) {
     retire(*wbu_stage.iid, _GenNextRetireID());
