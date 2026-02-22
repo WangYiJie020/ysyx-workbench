@@ -71,7 +71,7 @@ class ICache extends Module {
   val blocks = RegInit(VecInit(Seq.fill(ICacheParameters.BLOCK_NUM)(0.U.asTypeOf(new ICacheBlock))))
 
   object State extends ChiselEnum {
-    val idle, sendFetch, waitMem, waitRemainMem = Value
+    val idle, sendFetch, waitMem = Value
   }
   val state = RegInit(State.idle)
 
@@ -133,10 +133,10 @@ class ICache extends Module {
   }
 
   io.cpu.rvalid := (state === State.waitMem && io.mem.rlast && io.mem.rvalid) || (state === State.idle && cacheHit && io.cpu.arvalid && io.cpu.arready)
-  val wordOffset     = ICacheParameters.extractWordOffset(rdAddr)
+  val wordOffset = ICacheParameters.extractWordOffset(rdAddr)
   dontTouch(wordOffset)
   // val retShiftedData = cacheHit && state === State.idle && io.cpu.arvalid && io.cpu.arready
-  // io.cpu.rvalid := (retShiftedData || (state === State.waitMem && rdCnt === wordOffset && io.mem.rvalid)) 
+  // io.cpu.rvalid := (retShiftedData || (state === State.waitMem && rdCnt === wordOffset && io.mem.rvalid))
 
   io.cpu.rresp := AXI4IO.RResp.OKAY
   // TODO: support burst read
@@ -161,5 +161,50 @@ class ICache extends Module {
       State.waitMem   -> Mux(io.mem.rvalid && io.mem.rlast, State.idle, State.waitMem)
     )
   )
+
+}
+
+class ICacheWithDirectVisit extends Module {
+  val io                = IO(new ICacheIO)
+  val isDirectVisitAddr = AddrSpace.inRng(io.cpu.araddr, AddrSpace.SRAM)
+
+  object State extends ChiselEnum {
+    val idle, connCache, connMem = Value
+  }
+
+  val state = RegInit(State.idle)
+
+  state := MuxLookup(state, State.idle)(
+    Seq(
+      State.idle      -> Mux(io.cpu.arvalid, Mux(isDirectVisitAddr, State.connMem, State.connCache), State.idle),
+      State.connCache -> Mux(io.cpu.rvalid && io.cpu.rlast, State.idle, State.connCache),
+      State.connMem   -> Mux(io.cpu.rvalid && io.cpu.rlast, State.idle, State.connMem)
+    )
+  )
+
+  val isDirectVisit = state === State.connMem
+
+  val cache = Module(new ICache)
+  cache.io.flush := io.flush
+
+  AXI4IO.noShakeConnectAR(io.cpu, cache.io.cpu)
+  AXI4IO.noShakeConnectAR(io.cpu, io.mem)
+  io.cpu.dontCareAW()
+  io.cpu.dontCareW()
+  io.cpu.dontCareB()
+  io.mem.dontCareAW()
+  io.mem.dontCareW()
+  io.mem.dontCareB()
+
+  io.cpu.arready := Mux(isDirectVisit, io.mem.arready, cache.io.cpu.arready)
+  io.mem.arvalid := Mux(isDirectVisit, io.cpu.arvalid, cache.io.mem.arvalid)
+
+  io.cpu.rvalid := Mux(isDirectVisit, io.mem.rvalid, cache.io.cpu.rvalid)
+  io.cpu.rresp  := Mux(isDirectVisit, io.mem.rresp, cache.io.cpu.rresp)
+  io.cpu.rid    := Mux(isDirectVisit, io.mem.rid, cache.io.cpu.rid)
+  io.cpu.rdata  := Mux(isDirectVisit, io.mem.rdata, cache.io.cpu.rdata)
+  io.cpu.rlast  := Mux(isDirectVisit, io.mem.rlast, cache.io.cpu.rlast)
+
+  io.mem.rready := Mux(isDirectVisit, io.cpu.rready, cache.io.mem.rready)
 
 }
