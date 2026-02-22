@@ -52,7 +52,7 @@ void PipeStagePerfCounter::update() {
 void CachePerfCounter::bind() {
   hARValid = &GetICache()->io_cpu_arvalid;
   hARReady = &GetICache()->io_cpu_arready;
-  hCacheHit = &GetICache()->cacheHit;
+  hCacheHit = &GetICache()->cache->cacheHit;
   hState = &GetICache()->state;
 
   rdMemCtr.BIND_AXI4_R_BASE(GetICache()->io_mem);
