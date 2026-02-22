@@ -23,6 +23,8 @@ SIM_BIN = $(SIM_BIN_DIR)/$(TOP_NAME)$(SIM_ARCH_SUFFIX)$(VSIM_OPT)
 
 VERILATOR = verilator
 
+MILL ?= 
+
 default: $(SIM_BIN)
 
 ifeq ($(ARCH), riscv32e-ysyxsoc)
@@ -122,7 +124,7 @@ $(shell mkdir -p $(CHISEL2V_EMIT_DIR))
 $(CHISEL2V_DONE): $(CHISEL_SRCS)
 	$(call git_commit, "generate verilog")
 	# @rm -rf $(CHISEL2V_EMIT_DIR)
-	mill -i $(CHISEL_DESIGN).runMain Elaborate --target-dir $(CHISEL2V_EMIT_DIR)
+	$(MILL) -i $(CHISEL_DESIGN).runMain Elaborate --target-dir $(CHISEL2V_EMIT_DIR)
 	touch $(CHISEL2V_DONE)
 
 
@@ -152,8 +154,29 @@ CXXFLAGS += $(SAN_FLAGS) -std=c++20 -g # -fno-inline
 # when use perf tool, frame pointer is needed
 # CXXFLAGS += -fno-omit-frame-pointer
 
+# LDFLAGS += -fuse-ld=mold
+
+MOLD_EXISTS := $(shell command -v mold 2> /dev/null)
+ifneq ($(MOLD_EXISTS),)
 # make link faster
-LDFLAGS += -fuse-ld=mold
+  LDFLAGS += -fuse-ld=mold
+endif
+
+GLOBAL_MILL_EXISTS := $(shell command -v mill 2> /dev/null)
+LOCAL_MILL_EXISTS := $(shell test -f ./mill && echo y)
+ifeq ($(MILL),)
+ifneq ($(GLOBAL_MILL_EXISTS),)
+  $(info "Using global Mill: $(shell which mill)")
+  MILL = mill
+else ifeq ($(LOCAL_MILL_EXISTS), y)
+  $(info "Using local Mill: $(abspath ./mill)")
+  MILL = ./mill
+else
+  $(error "Mill build tool not found. Please install Mill or place a local copy in the project directory.")
+endif
+else
+  $(info "Using specified Mill: $(MILL)")
+endif
 
 
 $(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) $(CHISEL2V_DONE) $(VPI_DONE) $(SIM_HEADERS) $(VERILATOR_CONTROL_FILE)
@@ -170,24 +193,24 @@ $(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) $(CHISEL2V_DONE) $(VPI_DONE) $
 all: default
 
 test:
-	mill -i $(CHISEL_DESIGN).test
+	$(MILL) -i $(CHISEL_DESIGN).test
 
 verilog: $(CHISEL2V_DONE)
 
 help:
-	mill -i $(CHISEL_DESIGN).runMain Elaborate --help
+	$(MILL) -i $(CHISEL_DESIGN).runMain Elaborate --help
 
 reformat:
-	mill -i __.reformat
+	$(MILL) -i __.reformat
 
 checkformat:
-	mill -i __.checkFormat
+	$(MILL) -i __.checkFormat
 
 bsp:
-	mill -i mill.bsp.BSP/install
+	$(MILL) -i mill.bsp.BSP/install
 
 idea:
-	mill -i mill.idea.GenIdea/idea
+	$(MILL) -i mill.idea.GenIdea/idea
 
 clean:
 	-rm -rf $(BUILD_DIR)
