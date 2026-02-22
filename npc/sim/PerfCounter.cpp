@@ -135,7 +135,6 @@ void IDUFlushPerfCounter::update() {
 void IDUFlushPerfCounter::bind() { hIsFlushIDU = &GetCPU()->isFlushIDU; }
 
 void BranchPredPerfCounter::bind() {
-  hIsBranch = &GetEXU()->dbgIsBranch;
   hValid = &GetEXU()->io_in_valid;
   hReady = &GetEXU()->io_in_ready;
 }
@@ -156,12 +155,10 @@ int BranchPredPerfCounter::getCurJmpType() const {
 
 void BranchPredPerfCounter::update() {
   if (hValid.get() && hReady.get()) {
-		auto jmpType = getCurJmpType();
-    if (hIsBranch.get()) {
-			totCountOfType[jmpType]++;
-      if (GetEXU()->io_predWrong) {
-				totMispredictOfType[jmpType]++;
-      }
+    auto jmpType = getCurJmpType();
+    totCountOfType[jmpType]++;
+    if (GetEXU()->io_predWrong) {
+      totMispredictOfType[jmpType]++;
     }
   }
 }
@@ -296,17 +293,17 @@ void to_json(nlohmann::json &j, const IDUFlushPerfCounter &c) {
   }
 }
 void to_json(nlohmann::json &j, const BranchPredPerfCounter &c) {
-	j["ctrName"] = c.ctrName;
-	for (int t = 0; t < BranchPredPerfCounter::JmpType::JmpTypeNum; t++) {
-		j["totCountOfType"][t] = {
-				{"type", BranchPredPerfCounter::nameOf(t)},
-				{"count", c.totCountOfType[t]},
-		};
-		j["totMispredictOfType"][t] = {
-				{"type", BranchPredPerfCounter::nameOf(t)},
-				{"count", c.totMispredictOfType[t]},
-		};
-	}
+  j["ctrName"] = c.ctrName;
+  for (int t = 0; t < BranchPredPerfCounter::JmpType::JmpTypeNum; t++) {
+    j["totCountOfType"][t] = {
+        {"type", BranchPredPerfCounter::nameOf(t)},
+        {"count", c.totCountOfType[t]},
+    };
+    j["totMispredictOfType"][t] = {
+        {"type", BranchPredPerfCounter::nameOf(t)},
+        {"count", c.totMispredictOfType[t]},
+    };
+  }
 }
 
 void dumpPerfCounterTo(std::ostream &os) {

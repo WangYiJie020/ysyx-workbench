@@ -305,7 +305,6 @@ struct IDUFlushPerfCounter : public PerfCounterBase {
 };
 
 struct BranchPredPerfCounter : public PerfCounterBase {
-  SignalHandle hIsBranch;
   SignalHandle hValid;
   SignalHandle hReady;
 
