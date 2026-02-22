@@ -71,7 +71,7 @@ class ICache extends Module {
   val blocks = RegInit(VecInit(Seq.fill(ICacheParameters.BLOCK_NUM)(0.U.asTypeOf(new ICacheBlock))))
 
   object State extends ChiselEnum {
-    val idle, sendFetch, waitMem = Value
+    val idle, sendFetch, waitMem, waitRemainMem = Value
   }
   val state = RegInit(State.idle)
 
@@ -132,11 +132,11 @@ class ICache extends Module {
     rdCnt := 0.U
   }
 
-  // io.cpu.rvalid := (state === State.waitMem && io.mem.rlast && io.mem.rvalid) || (state === State.idle && cacheHit && io.cpu.arvalid && io.cpu.arready)
+  io.cpu.rvalid := (state === State.waitMem && io.mem.rlast && io.mem.rvalid) || (state === State.idle && cacheHit && io.cpu.arvalid && io.cpu.arready)
   val wordOffset     = ICacheParameters.extractWordOffset(rdAddr)
   dontTouch(wordOffset)
-  val retShiftedData = cacheHit && state === State.idle && io.cpu.arvalid && io.cpu.arready
-  io.cpu.rvalid := (retShiftedData || (state === State.waitMem && rdCnt === wordOffset && io.mem.rvalid)) 
+  // val retShiftedData = cacheHit && state === State.idle && io.cpu.arvalid && io.cpu.arready
+  // io.cpu.rvalid := (retShiftedData || (state === State.waitMem && rdCnt === wordOffset && io.mem.rvalid)) 
 
   io.cpu.rresp := AXI4IO.RResp.OKAY
   // TODO: support burst read
@@ -151,7 +151,8 @@ class ICache extends Module {
   dontTouch(rdData)
   val shiftedData = rdData >> dataShift
   dontTouch(shiftedData)
-  io.cpu.rdata := Mux(retShiftedData, shiftedData(31, 0), io.mem.rdata)
+  // io.cpu.rdata := Mux(retShiftedData, shiftedData(31, 0), io.mem.rdata)
+  io.cpu.rdata := shiftedData(31, 0)
 
   state := MuxLookup(state, State.idle)(
     Seq(
