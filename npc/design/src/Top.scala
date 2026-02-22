@@ -29,9 +29,12 @@ class TopIO extends Bundle {
 }
 
 class ysyx_25100261(word_width: Int = 32) extends Module {
+  val io = IO(new TopIO)
+  dontTouch(io)
+  io := DontCare
+
   val isBranchGuessWrong = Wire(Bool())
 
-  // val isIDUStall    = Wire(Bool())
   val isFlushIDUReg = RegInit(false.B)
   val isFlushIDU    = Wire(Bool())
 
@@ -55,9 +58,6 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     thisIn.valid := dataValid
   }
 
-  val io = IO(new TopIO)
-  dontTouch(io)
-  io := DontCare
 
   val gprs = Module(new RegisterFile(READ_PORTS = 2))
   val csrs = Module(new ControlStatusRegisterFile())
@@ -68,8 +68,8 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val lsu = Module(new LSU)
   val wbu = Module(new WBU)
 
-  // val btb = Module(new BranchTargetBuffer)
-  // val bp  = Module(new BranchPredictor)
+  val btb = Module(new BranchTargetBuffer)
+  val bp  = Module(new BranchPredictor)
 
   val isSoC = sys.env.getOrElse("ARCH", "") == "riscv32e-ysyxsoc"
 
@@ -83,9 +83,18 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
   val pc = RegInit(INIT_PC)
 
+  btb.io.query.addr := ifu.io.pc.bits
+  bp.io.pc := ifu.io.pc.bits
+  bp.io.historyHit := btb.io.query.hit
+  bp.io.historyTarget := btb.io.query.target
+
+  btb.io.update.en := exu.io.out.valid && exu.io.jmpHappen
+  btb.io.update.addr := exu.io.out.bits.exuWriteBack.pc
+  btb.io.update.target := exu.io.out.bits.exuWriteBack.nxt_pc
+
   val nxtPredictedPC = Wire(Types.UWord)
   dontTouch(nxtPredictedPC)
-  nxtPredictedPC         := ifu.io.pc.bits
+  nxtPredictedPC         := bp.io.predictTarget
   ifu.io.predictedNextPC := nxtPredictedPC
 
   val isBranchGuessWrongReg = RegInit(false.B)
