@@ -166,6 +166,9 @@ class IDU extends Module {
 
   val needStall = needStallForRs1 || needStallForRs2 || isConflictWithLSU
 
+  val IsStall = WireDefault(needStall)
+  dontTouch(IsStall)
+
   val r1UseBypass = canRs1Bypass
   val r2UseBypass = canRs2Bypass
 
