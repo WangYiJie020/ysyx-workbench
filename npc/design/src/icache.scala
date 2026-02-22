@@ -195,6 +195,12 @@ class ICacheWithDirectVisit extends Module {
   io.mem.dontCareAW()
   io.mem.dontCareW()
   io.mem.dontCareB()
+  cache.io.cpu.dontCareAW()
+  cache.io.cpu.dontCareW()
+  cache.io.cpu.dontCareB()
+  cache.io.mem.dontCareAW()
+  cache.io.mem.dontCareW()
+  cache.io.mem.dontCareB()
 
   io.cpu.arready := Mux(isDirectVisit, io.mem.arready, cache.io.cpu.arready)
   io.mem.arvalid := Mux(isDirectVisit, io.cpu.arvalid, cache.io.mem.arvalid)
