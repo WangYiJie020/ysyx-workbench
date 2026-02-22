@@ -136,7 +136,7 @@ class ICache extends Module {
   val wordOffset     = ICacheParameters.extractWordOffset(rdAddr)
   dontTouch(wordOffset)
   val retShiftedData = cacheHit && state === State.idle && io.cpu.arvalid && io.cpu.arready
-  io.cpu.rvalid := (retShiftedData || (state === State.waitMem && rdCnt === wordOffset))
+  io.cpu.rvalid := (retShiftedData || (state === State.waitMem && rdCnt === wordOffset && io.mem.rvalid)) 
 
   io.cpu.rresp := AXI4IO.RResp.OKAY
   // TODO: support burst read
