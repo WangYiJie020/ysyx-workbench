@@ -125,8 +125,15 @@ class ICache extends Module {
     }
   }
 
+  val rdCnt = RegInit(0.U(log2Ceil(ICacheParameters.BLOCK_SIZE_INWORDS).W))
+  when(state === State.waitMem && io.mem.rvalid) {
+    rdCnt := rdCnt + 1.U
+  }.otherwise {
+    rdCnt := 0.U
+  }
+
   // io.cpu.rvalid := (state === State.waitMem && io.mem.rlast && io.mem.rvalid) || (state === State.idle && cacheHit && io.cpu.arvalid && io.cpu.arready)
-  io.cpu.rvalid := cacheHit && ((state === State.idle && io.cpu.arvalid && io.cpu.arready) || state === State.waitMem)
+  io.cpu.rvalid := cacheHit && ((state === State.idle && io.cpu.arvalid && io.cpu.arready) || state === State.waitMem && rdCnt >= ICacheParameters.extractWordOffset(rdAddr))
 
   io.cpu.rresp  := AXI4IO.RResp.OKAY
   // TODO: support burst read
