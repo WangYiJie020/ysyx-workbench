@@ -186,6 +186,11 @@ class ICacheWithDirectVisit extends Module {
     )
   )
 
+  val ioCPUAsMaster = Wire(AXI4IO.Master)
+  AXI4IO.transformSlaveToMasterValidIf(true.B)(ioCPUAsMaster, io.cpu)
+  AXI4IO.connectMasterSlave(ioCPUAsMaster, xbar.io.in)
+  xbar.connect()
+
   val memArbiter = Module(new EXUIFU_MemVisitArbiter)
   AXI4IO.connectMasterSlave(directWireAsMaster, memArbiter.io.ifu)
   AXI4IO.connectMasterSlave(cache.io.mem, memArbiter.io.exu)
