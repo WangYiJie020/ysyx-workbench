@@ -179,15 +179,11 @@ class ICacheWithDirectVisit extends Module {
     new AXI4LiteXBar(
       Seq(
         AddrSpace.SRAM -> directWire,
-        AddrSpace.SOC  -> cache.io.cpu
+        AddrSpace.SOC_ExceptSRAM  -> cache.io.cpu
       )
     )
   )
 
-  // val ioCPUAsMaster = Wire(AXI4IO.Master)
-  
-  // AXI4IO.transformSlaveToMasterValidIf(true.B)(ioCPUAsMaster, io.cpu)
-  // AXI4IO.connectMasterSlave(ioCPUAsMaster, xbar.io.in)
   xbar.io.in <> io.cpu
   xbar.connect()
 
