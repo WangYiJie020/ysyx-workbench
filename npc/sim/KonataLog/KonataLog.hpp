@@ -42,6 +42,14 @@ private:
 
   _RetireInfo _lastRetireInfo{0, 0, false};
 
+	InstRetireIDType __NxtRetireID = 1;
+	InstRetireIDType _GenNextRetireID() {
+		return __NxtRetireID++;
+	}
+	InstRetireIDType _GetCurrentRetireID() const {
+		return __NxtRetireID;
+	}
+
 public:
   KonataLogger(std::string_view filePath) {
     _fileStream.open(filePath.data(), std::ios::out);

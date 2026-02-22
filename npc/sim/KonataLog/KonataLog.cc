@@ -2,23 +2,23 @@
 #include "../sim.hpp"
 #include <functional>
 
-#include <tracers.hpp>
 #include "../memory/mem.hpp"
+#include <tracers.hpp>
 
 using namespace DirectSignals;
 
 using SignalBoolType = unsigned char;
 
 struct HandshakeBus {
-  SignalBoolType *valid = nullptr;
-  SignalBoolType *ready = nullptr;
+  SignalBoolType *hValid = nullptr;
+  SignalBoolType *hReady = nullptr;
   HandshakeBus() = default;
   HandshakeBus(SignalBoolType *valid, SignalBoolType *ready)
-      : valid(valid), ready(ready) {}
+      : hValid(valid), hReady(ready) {}
+	bool valid() const { return hValid && *hValid; }
+	bool ready() const { return hReady && *hReady; }
   bool fire() const {
-    if (!valid || !ready)
-      return false;
-    return *valid && *ready;
+		return valid() && ready();
   }
 };
 
@@ -66,16 +66,16 @@ void KonataLogger::readSignalsAndLog() {
 
   auto &ifu_stage = stages[0];
   if (ifu_stage.in.fire()) {
-    declare(*ifu_stage.iid);
-		sdb::vlen_inst_code code(4);
-		read_guest_mem(ifu.io_pc_bits, (uint32_t*)code.data());
-		auto disasm = sdb::default_inst_disasm(ifu.io_pc_bits, code);
-		std::ranges::replace(disasm, '\t', ' ');
+    declare(*ifu_stage.iid, *ifu_stage.iid);
+    sdb::vlen_inst_code code(4);
+    read_guest_mem(ifu.io_pc_bits, (uint32_t *)code.data());
+    auto disasm = sdb::default_inst_disasm(ifu.io_pc_bits, code);
+    std::ranges::replace(disasm, '\t', ' ');
     addLabel(*ifu_stage.iid, disasm);
-		addLabel(*ifu_stage.iid, fmt::format("{}ps", sim_get_time()), true);
-		// IFU always issue start stage event, even when the instruction is later
-		// flushed in IDU, to make log easier to read
-		stageStart(*ifu_stage.iid, ifu_stage.name);
+    // addLabel(*ifu_stage.iid, fmt::format("{}ps", sim_get_time()), true);
+    // IFU always issue start stage event, even when the instruction is later
+    // flushed in IDU, to make log easier to read
+    stageStart(*ifu_stage.iid, ifu_stage.name);
   }
 
   for (auto &stage : stages) {
@@ -87,12 +87,13 @@ void KonataLogger::readSignalsAndLog() {
   auto &wbu_stage = stages.back();
 
   if (wbu_stage.in.fire()) {
-    retire(*wbu_stage.iid, 0);
+    retire(*wbu_stage.iid, _GenNextRetireID());
     // stageEnd(*wbu_stage.iid, wbu_stage.name);
   }
 
   auto &idu_stage = stages[1];
-  if (cpu.isFlushIDU && idu_stage.in.valid) {
+  if (cpu.isFlushIDU && idu_stage.in.valid()) {
+		// addLabel(*idu_stage.iid, std::format("FLUSHED@{}ps", sim_get_time()), true);
     retire(*idu_stage.iid, 0, true);
   }
 }
