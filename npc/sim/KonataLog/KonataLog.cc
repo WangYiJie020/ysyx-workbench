@@ -72,7 +72,7 @@ void KonataLogger::readSignalsAndLog() {
     read_guest_mem(ifu.io_pc_bits, (uint32_t *)code.data());
     auto disasm = sdb::default_inst_disasm(ifu.io_pc_bits, code);
     std::ranges::replace(disasm, '\t', ' ');
-    addLabel(*ifu_stage.iid, std::format("{:08x}: {}", sim_get_cpu_state()->pc, disasm));
+    addLabel(*ifu_stage.iid, std::format("{:08x}: {}", ifu.io_pc_bits, disasm));
     addLabel(*ifu_stage.iid, std::format("{}ps", sim_get_time()), true);
   }
 
