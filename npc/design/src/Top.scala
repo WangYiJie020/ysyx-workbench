@@ -17,8 +17,7 @@ import xbar._
 import npcMem._
 
 import icache._
-import common_def.{HasRs, InstType}
-import common_def.AddrSpace
+import common_def._
 
 class TopIO extends Bundle {
   val interrupt = Input(Bool())
@@ -111,6 +110,10 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
   val pc = RegInit(INIT_PC)
 
+  val nxtPredictedPC = Wire(Types.UWord)
+  dontTouch(nxtPredictedPC)
+  nxtPredictedPC := ifu.io.pc.bits + 4.U
+
   val isBranchGuessWrongReg     = RegInit(false.B)
   val isIFUMeetCorrectJmpTarget = Wire(Bool())
   isBranchGuessWrong := isBranchGuessWrongReg || (exu.io.out.valid && exu.io.jmpHappen)
@@ -145,8 +148,9 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   // pc := Mux(wbu.io.done, nxt_pc, pc)
   pc := Mux(
     ifu.io.pc.ready,
-    // Sometimes although jump target is near current pc and IFU just meets it
-    Mux(isBranchGuessWrong && (!isIFUMeetCorrectJmpTarget), curCorrectJmpTarget, pc + 4.U),
+    // Sometimes although jump,
+    // target is near current pc and IFU just meets it
+    Mux(isBranchGuessWrong && (!isIFUMeetCorrectJmpTarget), curCorrectJmpTarget, nxtPredictedPC),
     pc
   )
 
