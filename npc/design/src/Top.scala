@@ -34,44 +34,20 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val isFlushIDU    = Wire(Bool())
 
   def pipelineConnect[T <: Data, T2 <: Data](
-    prevOut:    DecoupledIO[T],
-    thisIn:     DecoupledIO[T],
-    thisOut:    DecoupledIO[T2],
-    // isIDUtoEXU: Boolean = false,
-    // isIFUtoIDU: Boolean = false,
+    prevOut: DecoupledIO[T],
+    thisIn:  DecoupledIO[T],
+    thisOut: DecoupledIO[T2]
   ) = {
 
-    // prevOut <> thisIn
-    // val thisInReady = if (isIDUtoEXU) {
-    //   thisIn.ready && (!isIDUStall)
-    // } else {
     val thisInReady = thisIn.ready
-    // }
 
     val dataValid   = RegInit(false.B)
     val readyToPrev = (!dataValid) || thisInReady
 
-    if (false){//isIDUtoEXU) {
-      //
-      // val clearDataValid = isFlushIDU || isIDUStall
-      //
-      // when(readyToPrev) {
-      //   dataValid := prevOut.valid && (!clearDataValid)
-      // }.elsewhen(thisOut.fire) {
-      //   dataValid := false.B
-      // }
-      // prevOut.ready := readyToPrev && (!isIDUStall)
-    } else {
-
-      when(readyToPrev) {
-        dataValid := prevOut.valid
-      }
-      if (false){//isIFUtoIDU) {
-        // prevOut.ready := readyToPrev || isFlushIDU
-      } else {
-        prevOut.ready := readyToPrev
-      }
+    when(readyToPrev) {
+      dataValid := prevOut.valid
     }
+    prevOut.ready := readyToPrev
 
     thisIn.bits  := RegEnable(prevOut.bits, prevOut.fire)
     thisIn.valid := dataValid
@@ -204,63 +180,6 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   ifu.io.pc.bits  := pc
   ifu.io.pc.valid := true.B
 
-
-  // val isConflictWithLSUIn  = conflictWithStage(
-  //   idu.io.out.bits.info,
-  //   lsu.io.in.bits.exuWriteBack.gpr,
-  //   lsu.io.in.valid
-  // )
-  // val isConflictWithLSUOut = conflictWithStage(
-  //   idu.io.out.bits.info,
-  //   lsu.io.out.bits.gpr,
-  //   lsu.io.out.valid
-  // )
-  // val isConflictWithWBU    = Wire(Bool())
-  //
-  // isConflictWithLSU := isConflictWithLSUIn// || isConflictWithLSUOut
-  // val isRs1ConflictWithWBU = conflict(
-  //   idu.io.out.bits.info.rs1,
-  //   wbu.io.in.bits.gpr.addr,
-  //   wbu.io.in.bits.gpr.en
-  // ) && wbu.io.in.valid
-  // val isRs2ConflictWithWBU = conflict(
-  //   idu.io.out.bits.info.rs2,
-  //   wbu.io.in.bits.gpr.addr,
-  //   wbu.io.in.bits.gpr.en
-  // ) && wbu.io.in.valid
-  // isConflictWithWBU := (isRs1ConflictWithWBU || isRs2ConflictWithWBU)
-
-
-  // val isConflictWithWBU    = conflictWithStage(
-  //   idu.io.out.bits.info,
-  //   wbu.io.in.bits.gpr,
-  //   wbu.io.in.valid
-  // )
-
-
-
-  // val exuWrBackDataVaild = !(exu.io.out.bits.isLoad || exu.io.out.bits.isStore)
-  //
-  // val canRs1Bypass =
-  //   Mux(isRs1ConflictWithEXU, exuWrBackDataVaild, isRs1ConflictWithWBU)
-  // val canRs2Bypass =
-  //   Mux(isRs2ConflictWithEXU, exuWrBackDataVaild, isRs2ConflictWithWBU)
-  //
-  // val needStallForRs1 = (isRs1ConflictWithEXU || isRs1ConflictWithWBU) && (!canRs1Bypass)
-  // val needStallForRs2 = (isRs2ConflictWithEXU || isRs2ConflictWithWBU) && (!canRs2Bypass)
-  //
-  // val needStall = needStallForRs1 || needStallForRs2 || isConflictWithLSU
-
-  // isIDUStall := isRdAfterWr
-  // isIDUStall          := needStall
-  // idu.io.r1UseBypass  := canRs1Bypass
-  // idu.io.r2UseBypass  := canRs2Bypass
-
-  // idu.io.r1BypassData := Mux(isRs1ConflictWithEXU, exu.io.out.bits.exuWriteBack.gpr.data, wbu.io.in.bits.gpr.data)
-  // idu.io.r2BypassData := Mux(isRs2ConflictWithEXU, exu.io.out.bits.exuWriteBack.gpr.data, wbu.io.in.bits.gpr.data)
-
-  // dontTouch(isIDUStall)
-
   pipelineConnect(ifu.io.out, idu.io.in, idu.io.out)
   pipelineConnect(idu.io.out, exu.io.in, exu.io.out)
   pipelineConnect(exu.io.out, lsu.io.in, lsu.io.out)
@@ -273,7 +192,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   idu.io.wbuWrBack := ExtractGPRInfoFromWrBack(wbu.io.in)
   val exuWrBackDataVaild = !(exu.io.out.bits.isLoad || exu.io.out.bits.isStore)
   idu.io.exuWrBackDataVaild := exuWrBackDataVaild && exu.io.out.valid
-  idu.io.flush := isFlushIDU
+  idu.io.flush              := isFlushIDU
 
   // Write back
 
