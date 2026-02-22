@@ -1,6 +1,7 @@
 #include "PerfCounter.hpp"
 #include "sim.hpp"
 #include "spdlog/fmt/bundled/format.h"
+#include "spdlog/spdlog.h"
 #include <fstream>
 #include <iostream>
 #include <vector>
@@ -111,8 +112,10 @@ IDUFlushPerfCounter::IDUFlushReason IDUFlushPerfCounter::getCurReason() const {
     reason = IDUFlushReason::JALR;
   else if (exu.dbgJmpCauseByCsr)
     reason = IDUFlushReason::Exception;
-  else
+  else{
     reason = IDUFlushReason::Unknown;
+		spdlog::warn("Unknown flush reason at {}ps", sim_get_time());
+	}
 
   return reason;
 }
