@@ -93,7 +93,7 @@ void KonataLogger::update() {
 		stageStart(*idu_stage.iid, "IDU_STALL");
 		addLabel(*idu_stage.iid, std::format("IDU_STALL beg@{}ps", sim_get_time()), true);
 	} else if (isIDUStallEnd) {
-		stageEnd(*idu_stage.iid, "IDU_STALL");
+		// stageEnd(*idu_stage.iid, "IDU_STALL");
 	}
 
   if (wbu_stage.in.fire()) {
