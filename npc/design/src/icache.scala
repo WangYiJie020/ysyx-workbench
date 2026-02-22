@@ -195,6 +195,9 @@ class ICacheWithDirectVisit extends Module {
   AXI4IO.connectMasterSlave(directWireAsMaster, memArbiter.io.ifu)
   AXI4IO.connectMasterSlave(cache.io.mem, memArbiter.io.exu)
 
+  io.mem <> memArbiter.io.out
+
+
   // val isDirectVisitAddr = AddrSpace.inRng(io.cpu.araddr, AddrSpace.SRAM)
   //
   // object State extends ChiselEnum {
