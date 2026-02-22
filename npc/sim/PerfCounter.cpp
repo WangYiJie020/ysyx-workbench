@@ -53,7 +53,7 @@ void CachePerfCounter::bind() {
   hARValid = &GetICache()->io_cpu_arvalid;
   hARReady = &GetICache()->io_cpu_arready;
   hCacheHit = &GetICache()->cache->cacheHit;
-  hState = &GetICache()->state;
+  hState = &GetICache()->cache->state;
 
   rdMemCtr.BIND_AXI4_R_BASE(GetICache()->io_mem);
 }
@@ -156,9 +156,9 @@ int BranchPredPerfCounter::getCurJmpType() const {
 void BranchPredPerfCounter::update() {
   if (hValid.get() && hReady.get()) {
     auto jmpType = getCurJmpType();
-		if(jmpType >= JmpType::JmpTypeNum) {
-			return;
-		}
+    if (jmpType >= JmpType::JmpTypeNum) {
+      return;
+    }
     totCountOfType[jmpType]++;
     if (GetEXU()->io_predWrong) {
       totMispredictOfType[jmpType]++;
