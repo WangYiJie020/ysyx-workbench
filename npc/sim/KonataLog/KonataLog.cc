@@ -93,7 +93,7 @@ void KonataLogger::readSignalsAndLog() {
 
   auto &idu_stage = stages[1];
   if (cpu.isFlushIDU && idu_stage.in.valid()) {
-		addLabel(*idu_stage.iid, std::format("FLUSHED@{}ps", sim_get_time()), true);
+		// addLabel(*idu_stage.iid, std::format("FLUSHED@{}ps", sim_get_time()), true);
     retire(*idu_stage.iid, 0, true);
   }
 }
