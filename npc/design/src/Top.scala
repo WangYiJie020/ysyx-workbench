@@ -85,7 +85,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
   val nxtPredictedPC = Wire(Types.UWord)
   dontTouch(nxtPredictedPC)
-  nxtPredictedPC         := ifu.io.pc.bits + 12.U
+  nxtPredictedPC         := ifu.io.pc.bits
   ifu.io.predictedNextPC := nxtPredictedPC
 
   val isBranchGuessWrongReg = RegInit(false.B)
