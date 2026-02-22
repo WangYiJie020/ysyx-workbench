@@ -6,6 +6,9 @@ import chisel3.util._
 import common_def._
 import axi4._
 
+import xbar._
+import cpu.EXUIFU_MemVisitArbiter
+
 class ICacheIO extends Bundle {
   val cpu = AXI4IO.Slave
   val mem = AXI4IO.Master
@@ -166,74 +169,91 @@ class ICache extends Module {
 
 class ICacheWithDirectVisit extends Module {
   val io                = IO(new ICacheIO)
-  val isDirectVisitAddr = AddrSpace.inRng(io.cpu.araddr, AddrSpace.SRAM)
-
-  object State extends ChiselEnum {
-    val idle, connCache, connMem = Value
-  }
-
-  val state = RegInit(State.idle)
-
-  state := MuxLookup(state, State.idle)(
-    Seq(
-      State.idle      -> Mux(io.cpu.arvalid, Mux(isDirectVisitAddr, State.connMem, State.connCache), State.idle),
-      State.connCache -> Mux(io.cpu.rvalid && io.cpu.rlast, State.idle, State.connCache),
-      State.connMem   -> Mux(io.cpu.rvalid && io.cpu.rlast, State.idle, State.connMem)
-    )
-  )
-
-  val isDirectVisit = state === State.connMem
-  val isCacheVisit  = state === State.connCache
-
+  
   val cache = Module(new ICache)
   cache.io.flush := io.flush
 
-  AXI4IO.noShakeConnectAR(io.cpu, cache.io.cpu)
-  AXI4IO.noShakeConnectAR(io.cpu, io.mem)
+  val directWire = Wire(AXI4IO.Slave)
+  val directWireAsMaster = Wire(AXI4IO.Master)
+  AXI4IO.connectMasterSlave(directWireAsMaster, directWire)
 
-  io.cpu.dontCareAW()
-  io.cpu.dontCareW()
-  io.cpu.dontCareB()
+  val xbar = Module(new AXI4LiteXBar(Seq(
+    AddrSpace.SRAM -> directWire,
+    AddrSpace.SOC  -> cache.io.cpu
+  )))
 
-  io.mem.dontCareAW()
-  io.mem.dontCareW()
-  io.mem.dontCareB()
+  val memArbiter = Module(new EXUIFU_MemVisitArbiter)
+  AXI4IO.connectMasterSlave(directWireAsMaster, memArbiter.io.ifu)
+  AXI4IO.connectMasterSlave(cache.io.mem, memArbiter.io.exu)
 
-  cache.io.mem.wready  := DontCare
-  cache.io.mem.bready  := DontCare
-  cache.io.mem.bvalid  := DontCare
-  cache.io.mem.bresp   := DontCare
-  cache.io.mem.bid     := DontCare
-  cache.io.mem.awready := DontCare
-
-  cache.io.cpu.awvalid := DontCare
-  cache.io.cpu.wvalid  := DontCare
-  cache.io.cpu.wlast   := DontCare
-  cache.io.cpu.wdata   := DontCare
-  cache.io.cpu.wstrb   := DontCare
-  cache.io.cpu.bready  := DontCare
-  cache.io.cpu.awaddr  := DontCare
-  cache.io.cpu.awid    := DontCare
-  cache.io.cpu.awlen   := DontCare
-  cache.io.cpu.awsize  := DontCare
-  cache.io.cpu.awburst := DontCare
-
-
-  io.cpu.arready := Mux(isDirectVisit, io.mem.arready, cache.io.cpu.arready)
-  io.mem.arvalid := Mux(isDirectVisit, io.cpu.arvalid, cache.io.mem.arvalid)
-
-  io.cpu.rvalid := Mux(isDirectVisit, io.mem.rvalid, cache.io.cpu.rvalid)
-  io.cpu.rresp  := Mux(isDirectVisit, io.mem.rresp, cache.io.cpu.rresp)
-  io.cpu.rid    := Mux(isDirectVisit, io.mem.rid, cache.io.cpu.rid)
-  io.cpu.rdata  := Mux(isDirectVisit, io.mem.rdata, cache.io.cpu.rdata)
-  io.cpu.rlast  := Mux(isDirectVisit, io.mem.rlast, cache.io.cpu.rlast)
-
-  io.mem.rready := Mux(isDirectVisit, io.cpu.rready, cache.io.mem.rready)
-  cache.io.cpu.rready := isCacheVisit && io.cpu.rready
-
-  cache.io.cpu.arvalid := io.cpu.arvalid && isCacheVisit
-
-  cache.io.mem.rvalid := io.mem.rvalid && isCacheVisit
-  cache.io.mem.arready := io.mem.arready && isCacheVisit
-  AXI4IO.noShakeConnectR(io.mem, cache.io.mem)
+  // val isDirectVisitAddr = AddrSpace.inRng(io.cpu.araddr, AddrSpace.SRAM)
+  //
+  // object State extends ChiselEnum {
+  //   val idle, connCache, connMem = Value
+  // }
+  //
+  // val state = RegInit(State.idle)
+  //
+  // state := MuxLookup(state, State.idle)(
+  //   Seq(
+  //     State.idle      -> Mux(io.cpu.arvalid, Mux(isDirectVisitAddr, State.connMem, State.connCache), State.idle),
+  //     State.connCache -> Mux(io.cpu.rvalid && io.cpu.rlast, State.idle, State.connCache),
+  //     State.connMem   -> Mux(io.cpu.rvalid && io.cpu.rlast, State.idle, State.connMem)
+  //   )
+  // )
+  //
+  // val isDirectVisit = state === State.connMem
+  // val isCacheVisit  = state === State.connCache
+  //
+  // val cache = Module(new ICache)
+  // cache.io.flush := io.flush
+  //
+  // AXI4IO.noShakeConnectAR(io.cpu, cache.io.cpu)
+  // AXI4IO.noShakeConnectAR(io.cpu, io.mem)
+  //
+  // io.cpu.dontCareAW()
+  // io.cpu.dontCareW()
+  // io.cpu.dontCareB()
+  //
+  // io.mem.dontCareAW()
+  // io.mem.dontCareW()
+  // io.mem.dontCareB()
+  //
+  // cache.io.mem.wready  := DontCare
+  // cache.io.mem.bready  := DontCare
+  // cache.io.mem.bvalid  := DontCare
+  // cache.io.mem.bresp   := DontCare
+  // cache.io.mem.bid     := DontCare
+  // cache.io.mem.awready := DontCare
+  //
+  // cache.io.cpu.awvalid := DontCare
+  // cache.io.cpu.wvalid  := DontCare
+  // cache.io.cpu.wlast   := DontCare
+  // cache.io.cpu.wdata   := DontCare
+  // cache.io.cpu.wstrb   := DontCare
+  // cache.io.cpu.bready  := DontCare
+  // cache.io.cpu.awaddr  := DontCare
+  // cache.io.cpu.awid    := DontCare
+  // cache.io.cpu.awlen   := DontCare
+  // cache.io.cpu.awsize  := DontCare
+  // cache.io.cpu.awburst := DontCare
+  //
+  //
+  // io.cpu.arready := Mux(isDirectVisit, io.mem.arready, cache.io.cpu.arready)
+  // io.mem.arvalid := Mux(isDirectVisit, io.cpu.arvalid, cache.io.mem.arvalid)
+  //
+  // io.cpu.rvalid := Mux(isDirectVisit, io.mem.rvalid, cache.io.cpu.rvalid)
+  // io.cpu.rresp  := Mux(isDirectVisit, io.mem.rresp, cache.io.cpu.rresp)
+  // io.cpu.rid    := Mux(isDirectVisit, io.mem.rid, cache.io.cpu.rid)
+  // io.cpu.rdata  := Mux(isDirectVisit, io.mem.rdata, cache.io.cpu.rdata)
+  // io.cpu.rlast  := Mux(isDirectVisit, io.mem.rlast, cache.io.cpu.rlast)
+  //
+  // io.mem.rready := Mux(isDirectVisit, io.cpu.rready, cache.io.mem.rready)
+  // cache.io.cpu.rready := isCacheVisit && io.cpu.rready
+  //
+  // cache.io.cpu.arvalid := io.cpu.arvalid && isCacheVisit
+  //
+  // cache.io.mem.rvalid := io.mem.rvalid && isCacheVisit
+  // cache.io.mem.arready := io.mem.arready && isCacheVisit
+  // AXI4IO.noShakeConnectR(io.mem, cache.io.mem)
 }
