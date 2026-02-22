@@ -305,12 +305,26 @@ struct IDUFlushPerfCounter : public PerfCounterBase {
 };
 
 struct BranchPredPerfCounter : public PerfCounterBase {
-  SignalHandle hIsBranch;
   SignalHandle hValid;
   SignalHandle hReady;
 
-  size_t totBranchCount = 0;
-  size_t totMispredictCount = 0;
+  // size_t totBranchCount = 0;
+  // size_t totMispredictCount = 0;
+	
+	enum JmpType {
+		Branch,
+		JAL,
+		JALR,
+		Exception,
+		JmpTypeNum
+	};
+
+	static const char *nameOf(int type);
+
+	size_t totCountOfType[JmpTypeNum] = {0};
+	size_t totMispredictOfType[JmpTypeNum] = {0};
+
+	int getCurJmpType() const;
 
 	BranchPredPerfCounter() { ctrName = "BranchPredPerfCounter"; }
 

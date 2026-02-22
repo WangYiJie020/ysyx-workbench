@@ -105,14 +105,14 @@ void RAWStallPerfCounter::dumpStatistics(std::ostream &os) {
   _PrintTable(t, os);
 }
 
-const char *IDUFlushPerfCounter::nameOfReason(int r){
+const char *IDUFlushPerfCounter::nameOfReason(int r) {
   static const char *name_of_reason[] = {"BranchTaken", "JALR", "JAL",
                                          "Exception", "Unknown"};
-	if (r < sizeof(name_of_reason) / sizeof(name_of_reason[0])) {
-		return name_of_reason[r];
-	} else {
-		return "invalid reason";
-	}
+  if (r < sizeof(name_of_reason) / sizeof(name_of_reason[0])) {
+    return name_of_reason[r];
+  } else {
+    return "invalid reason";
+  }
 }
 void IDUFlushPerfCounter::dumpStatistics(std::ostream &os) {
   os << "IDU Flush Performance Counter Statistics:\n";
@@ -125,7 +125,6 @@ void IDUFlushPerfCounter::dumpStatistics(std::ostream &os) {
   Table t;
   t.add_row({"Reason", "Flush\nCycles", "Flush %\n(in tot)",
              "Flush %\n(in all flushes)"});
-
 
   for (int i = 0; i < REASON_NUM; i++) {
     double percTot =
@@ -142,8 +141,23 @@ void IDUFlushPerfCounter::dumpStatistics(std::ostream &os) {
   _PrintTable(t, os);
 }
 
+const char *BranchPredPerfCounter::nameOf(int t) {
+  static const char *name_of_type[] = {"Branch", "JAL", "JALR", "Exception"};
+  if (t < sizeof(name_of_type) / sizeof(name_of_type[0])) {
+    return name_of_type[t];
+  } else {
+    return "invalid type";
+  }
+}
+
 void BranchPredPerfCounter::dumpStatistics(std::ostream &os) {
   os << "Branch Prediction Performance Counter Statistics:\n";
+
+  size_t totBranchCount =
+      std::accumulate(totCountOfType, totCountOfType + JmpTypeNum, 0);
+  size_t totMispredictCount =
+      std::accumulate(totMispredictOfType, totMispredictOfType + JmpTypeNum, 0);
+
   size_t totAccuracy = totBranchCount - totMispredictCount;
   os << "total branch count: " << totBranchCount << "\n";
   os << "total mispredict count: " << totMispredictCount << "\n";
@@ -153,6 +167,31 @@ void BranchPredPerfCounter::dumpStatistics(std::ostream &os) {
           ? NAN
           : ((double)totAccuracy / (double)totBranchCount) * 100.0;
   os << "accuracy: " << accuracyPerc << " %\n";
+	os << "mispredict rate: " << (100.0 - accuracyPerc) << " %\n";
+
+  Table t;
+  t.add_row({"Type", "Total\nCount", "Mispredict\nCount", "Accuracy\n%",
+             "Count %\n(in tot)", "Mispredict %\n(in tot)"});
+  for (int i = 0; i < JmpTypeNum; i++) {
+    double accPerc =
+        totCountOfType[i] == 0
+            ? NAN
+            : ((double)(totCountOfType[i] - totMispredictOfType[i]) /
+               (double)totCountOfType[i]) *
+                  100.0;
+    double countPerc =
+        totBranchCount == 0
+            ? NAN
+            : ((double)totCountOfType[i] / (double)totBranchCount) * 100.0;
+    double mispredPerc =
+        totBranchCount == 0
+            ? NAN
+            : ((double)totMispredictOfType[i] / (double)totBranchCount) * 100.0;
+    t.add_row(RowStream{} << nameOf(i) << totCountOfType[i]
+                          << totMispredictOfType[i] << accPerc << countPerc
+                          << mispredPerc);
+  }
+  _PrintTable(t, os);
 }
 
 void AXI4CounterBase::dumpStatistics(std::ostream &os) {

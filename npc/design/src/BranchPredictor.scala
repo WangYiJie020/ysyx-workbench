@@ -6,7 +6,7 @@ import chisel3.util._
 import common_def._
 
 class BranchPredictorIO extends Bundle {
-  val isBranch = Input(Bool())
+  val historyHit = Input(Bool())
 
   val pc = Input(Types.UWord)
 
@@ -21,5 +21,7 @@ class BranchPredictor extends Module {
 
   val isBackward = io.historyTarget < io.pc
 
-  io.predictTarget := Mux(io.isBranch && isBackward, io.historyTarget, io.pc + 4.U)
+  // io.predictTarget := Mux(io.historyHit, io.historyTarget, io.pc + 4.U)
+  io.predictTarget := Mux(io.historyHit && isBackward, io.historyTarget, io.pc + 4.U)
+  // io.predictTarget := io.pc + 4.U
 }
