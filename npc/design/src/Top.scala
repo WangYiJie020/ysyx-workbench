@@ -87,10 +87,12 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   bp.io.pc := ifu.io.pc.bits
   bp.io.historyHit := btb.io.query.hit
   bp.io.historyTarget := btb.io.query.target
+  bp.io.historyIsJAL := btb.io.query.isJAL
 
   btb.io.update.en := exu.io.out.valid && exu.io.jmpHappen
   btb.io.update.addr := exu.io.out.bits.exuWriteBack.pc
   btb.io.update.target := exu.io.out.bits.exuWriteBack.nxt_pc
+  btb.io.update.isJAL := exu.io.isJAL
 
   val nxtPredictedPC = Wire(Types.UWord)
   dontTouch(nxtPredictedPC)
