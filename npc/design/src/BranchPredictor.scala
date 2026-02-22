@@ -22,6 +22,6 @@ class BranchPredictor extends Module {
   val isBackward = io.historyTarget < io.pc
 
   // io.predictTarget := Mux(io.historyHit, io.historyTarget, io.pc + 4.U)
-  // io.predictTarget := Mux(io.historyHit && isBackward, io.historyTarget, io.pc + 4.U)
-  io.predictTarget := io.pc + 4.U
+  io.predictTarget := Mux(io.historyHit && isBackward, io.historyTarget, io.pc + 4.U)
+  // io.predictTarget := io.pc + 4.U
 }
