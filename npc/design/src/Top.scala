@@ -107,7 +107,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     exu.io.out.valid
   )
 
-  isIFUMeetCorrectJmpTarget := ifu.io.pc.valid && (ifu.io.pc.bits === curCorrectJmpTarget)
+  isIFUMeetCorrectJmpTarget := ifu.io.pc.fire && (ifu.io.pc.bits === curCorrectJmpTarget)
 
   val isIDUMeetCorrectJmpTarget = Wire(Bool())
   isIDUMeetCorrectJmpTarget := ifu.io.out.valid && (ifu.io.out.bits.pc === curCorrectJmpTarget)
