@@ -37,38 +37,37 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     prevOut:    DecoupledIO[T],
     thisIn:     DecoupledIO[T],
     thisOut:    DecoupledIO[T2],
-    isIDUtoEXU: Boolean = false,
-    isIFUtoIDU: Boolean = false,
-    isEXUtoLSU: Boolean = false
+    // isIDUtoEXU: Boolean = false,
+    // isIFUtoIDU: Boolean = false,
   ) = {
 
     // prevOut <> thisIn
-    val thisInReady = if (isIDUtoEXU) {
-      thisIn.ready && (!isIDUStall)
-    } else {
-      thisIn.ready
-    }
+    // val thisInReady = if (isIDUtoEXU) {
+    //   thisIn.ready && (!isIDUStall)
+    // } else {
+    val thisInReady = thisIn.ready
+    // }
 
     val dataValid   = RegInit(false.B)
     val readyToPrev = (!dataValid) || thisInReady
 
-    if (isIDUtoEXU) {
-
-      val clearDataValid = isFlushIDU || isIDUStall
-
-      when(readyToPrev) {
-        dataValid := prevOut.valid && (!clearDataValid)
-      }.elsewhen(thisOut.fire) {
-        dataValid := false.B
-      }
-      prevOut.ready := readyToPrev && (!isIDUStall)
+    if (false){//isIDUtoEXU) {
+      //
+      // val clearDataValid = isFlushIDU || isIDUStall
+      //
+      // when(readyToPrev) {
+      //   dataValid := prevOut.valid && (!clearDataValid)
+      // }.elsewhen(thisOut.fire) {
+      //   dataValid := false.B
+      // }
+      // prevOut.ready := readyToPrev && (!isIDUStall)
     } else {
 
       when(readyToPrev) {
         dataValid := prevOut.valid
       }
-      if (isIFUtoIDU) {
-        prevOut.ready := readyToPrev || isFlushIDU
+      if (false){//isIFUtoIDU) {
+        // prevOut.ready := readyToPrev || isFlushIDU
       } else {
         prevOut.ready := readyToPrev
       }
@@ -76,13 +75,6 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
     thisIn.bits  := RegEnable(prevOut.bits, prevOut.fire)
     thisIn.valid := dataValid
-  }
-  def conflict(rs: UInt, rd: UInt, en: Bool) = (rs === rd) && (rd =/= 0.U) && en
-  def conflictWithStage(rs1: UInt, rs2: UInt, gprWr: GPRegReqIO._WriteRX, valid: Bool) = {
-    WireDefault(valid && (conflict(rs1, gprWr.addr, gprWr.en) || conflict(rs2, gprWr.addr, gprWr.en)))
-  }
-  def conflictWithStage[T <: HasRs](info: T, gprWr: GPRegReqIO._WriteRX, valid: Bool): Bool = {
-    conflictWithStage(info.rs1, info.rs2, gprWr, valid)
   }
 
   val io = IO(new TopIO)
@@ -212,92 +204,75 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   ifu.io.pc.bits  := pc
   ifu.io.pc.valid := true.B
 
-  // val isConflictWithEXU    = conflictWithStage(
+
+  // val isConflictWithLSUIn  = conflictWithStage(
   //   idu.io.out.bits.info,
-  //   exu.io.out.bits.exuWriteBack.gpr,
-  //   exu.io.out.valid
+  //   lsu.io.in.bits.exuWriteBack.gpr,
+  //   lsu.io.in.valid
   // )
-  val isConflictWithEXU    = Wire(Bool())
-  val isRs1ConflictWithEXU = conflict(
-    idu.io.out.bits.info.rs1,
-    exu.io.out.bits.exuWriteBack.gpr.addr,
-    exu.io.out.bits.exuWriteBack.gpr.en
-  ) && exu.io.out.valid
-  val isRs2ConflictWithEXU = conflict(
-    idu.io.out.bits.info.rs2,
-    exu.io.out.bits.exuWriteBack.gpr.addr,
-    exu.io.out.bits.exuWriteBack.gpr.en
-  ) && exu.io.out.valid
-  isConflictWithEXU := (isRs1ConflictWithEXU || isRs2ConflictWithEXU)
+  // val isConflictWithLSUOut = conflictWithStage(
+  //   idu.io.out.bits.info,
+  //   lsu.io.out.bits.gpr,
+  //   lsu.io.out.valid
+  // )
+  // val isConflictWithWBU    = Wire(Bool())
+  //
+  // isConflictWithLSU := isConflictWithLSUIn// || isConflictWithLSUOut
+  // val isRs1ConflictWithWBU = conflict(
+  //   idu.io.out.bits.info.rs1,
+  //   wbu.io.in.bits.gpr.addr,
+  //   wbu.io.in.bits.gpr.en
+  // ) && wbu.io.in.valid
+  // val isRs2ConflictWithWBU = conflict(
+  //   idu.io.out.bits.info.rs2,
+  //   wbu.io.in.bits.gpr.addr,
+  //   wbu.io.in.bits.gpr.en
+  // ) && wbu.io.in.valid
+  // isConflictWithWBU := (isRs1ConflictWithWBU || isRs2ConflictWithWBU)
 
-  val isConflictWithLSUIn  = conflictWithStage(
-    idu.io.out.bits.info,
-    lsu.io.in.bits.exuWriteBack.gpr,
-    lsu.io.in.valid
-  )
-  val isConflictWithLSUOut = conflictWithStage(
-    idu.io.out.bits.info,
-    lsu.io.out.bits.gpr,
-    lsu.io.out.valid
-  )
-  val isConflictWithLSU    = Wire(Bool())
-  val isConflictWithWBU    = Wire(Bool())
 
-  isConflictWithLSU := isConflictWithLSUIn// || isConflictWithLSUOut
-  val isRs1ConflictWithWBU = conflict(
-    idu.io.out.bits.info.rs1,
-    wbu.io.in.bits.gpr.addr,
-    wbu.io.in.bits.gpr.en
-  ) && wbu.io.in.valid
-  val isRs2ConflictWithWBU = conflict(
-    idu.io.out.bits.info.rs2,
-    wbu.io.in.bits.gpr.addr,
-    wbu.io.in.bits.gpr.en
-  ) && wbu.io.in.valid
-  isConflictWithWBU := (isRs1ConflictWithWBU || isRs2ConflictWithWBU)
   // val isConflictWithWBU    = conflictWithStage(
   //   idu.io.out.bits.info,
   //   wbu.io.in.bits.gpr,
   //   wbu.io.in.valid
   // )
 
-  dontTouch(isConflictWithEXU)
-  dontTouch(isConflictWithLSUIn)
-  dontTouch(isConflictWithLSUOut)
-  dontTouch(isConflictWithLSU)
-  dontTouch(isConflictWithWBU)
 
-  val isRdAfterWr = Wire(Bool())
-  isRdAfterWr := isConflictWithEXU || isConflictWithLSU || isConflictWithWBU
-  dontTouch(isRdAfterWr)
 
-  val exuWrBackDataVaild = !(exu.io.out.bits.isLoad || exu.io.out.bits.isStore)
-
-  val canRs1Bypass =
-    Mux(isRs1ConflictWithEXU, exuWrBackDataVaild, isRs1ConflictWithWBU)
-  val canRs2Bypass =
-    Mux(isRs2ConflictWithEXU, exuWrBackDataVaild, isRs2ConflictWithWBU)
-
-  val needStallForRs1 = (isRs1ConflictWithEXU || isRs1ConflictWithWBU) && (!canRs1Bypass)
-  val needStallForRs2 = (isRs2ConflictWithEXU || isRs2ConflictWithWBU) && (!canRs2Bypass)
-
-  val needStall = needStallForRs1 || needStallForRs2 || isConflictWithLSU
+  // val exuWrBackDataVaild = !(exu.io.out.bits.isLoad || exu.io.out.bits.isStore)
+  //
+  // val canRs1Bypass =
+  //   Mux(isRs1ConflictWithEXU, exuWrBackDataVaild, isRs1ConflictWithWBU)
+  // val canRs2Bypass =
+  //   Mux(isRs2ConflictWithEXU, exuWrBackDataVaild, isRs2ConflictWithWBU)
+  //
+  // val needStallForRs1 = (isRs1ConflictWithEXU || isRs1ConflictWithWBU) && (!canRs1Bypass)
+  // val needStallForRs2 = (isRs2ConflictWithEXU || isRs2ConflictWithWBU) && (!canRs2Bypass)
+  //
+  // val needStall = needStallForRs1 || needStallForRs2 || isConflictWithLSU
 
   // isIDUStall := isRdAfterWr
-  isIDUStall          := needStall
-  idu.io.r1UseBypass  := canRs1Bypass
-  idu.io.r2UseBypass  := canRs2Bypass
-  idu.io.r1BypassData := Mux(isRs1ConflictWithEXU, exu.io.out.bits.exuWriteBack.gpr.data, wbu.io.in.bits.gpr.data)
-  idu.io.r2BypassData := Mux(isRs2ConflictWithEXU, exu.io.out.bits.exuWriteBack.gpr.data, wbu.io.in.bits.gpr.data)
+  // isIDUStall          := needStall
+  // idu.io.r1UseBypass  := canRs1Bypass
+  // idu.io.r2UseBypass  := canRs2Bypass
+
+  // idu.io.r1BypassData := Mux(isRs1ConflictWithEXU, exu.io.out.bits.exuWriteBack.gpr.data, wbu.io.in.bits.gpr.data)
+  // idu.io.r2BypassData := Mux(isRs2ConflictWithEXU, exu.io.out.bits.exuWriteBack.gpr.data, wbu.io.in.bits.gpr.data)
 
   dontTouch(isIDUStall)
 
-  pipelineConnect(ifu.io.out, idu.io.in, idu.io.out, isIFUtoIDU = true)
-  pipelineConnect(idu.io.out, exu.io.in, exu.io.out, isIDUtoEXU = true)
+  pipelineConnect(ifu.io.out, idu.io.in, idu.io.out)
+  pipelineConnect(idu.io.out, exu.io.in, exu.io.out)
   pipelineConnect(exu.io.out, lsu.io.in, lsu.io.out)
 
   idu.io.rvec <> gprs.io.read
   exu.io.csr_rvec <> csrs.io.read
+
+  idu.io.exuWrBack := ExtractGPRInfoFromLSU(exu.io.out)
+  idu.io.lsuWrBack := ExtractGPRInfoFromLSU(lsu.io.in)
+  idu.io.wbuWrBack := ExtractGPRInfoFromWrBack(wbu.io.in)
+  val exuWrBackDataVaild = !(exu.io.out.bits.isLoad || exu.io.out.bits.isStore)
+  idu.io.exuWrBackDataVaild := exuWrBackDataVaild && exu.io.out.valid
 
   // Write back
 
