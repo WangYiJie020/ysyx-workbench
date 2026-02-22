@@ -98,7 +98,7 @@ void RAWStallPerfCounter::bind() {
   hIsConflictEXU = &GetIDU()->isConflictWithEXU;
   hIsConflictLSU = &GetIDU()->isConflictWithLSU;
   hIsConflictWBU = &GetIDU()->isConflictWithWBU;
-  hIsIDUStall = &GetIDU()->IsStall;
+  hIsIDUStall = &GetIDU()->isStall;
 }
 IDUFlushPerfCounter::IDUFlushReason IDUFlushPerfCounter::getCurReason() const {
   auto &exu = *GetEXU();
