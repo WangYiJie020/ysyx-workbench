@@ -222,6 +222,11 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   idu.io.rvec <> gprs.io.read
   exus1.io.csr_rvec <> csrs.io.read
 
+  val exus1WrBack = Wire(GPRegReqIO.RX.Write)
+  exus1WrBack.en := exus1.io.out.valid && exus1.io.out.bits.gprWeEn
+  exus1WrBack.addr := exus1.io.out.bits.dinst.info.rd
+
+  idu.io.exus1WrBack := exus1WrBack
   idu.io.exuWrBack := ExtractGPRInfoFromLSU(exus2.io.out)
   idu.io.lsuWrBack := ExtractGPRInfoFromLSU(lsu.io.in)
   idu.io.wbuWrBack := ExtractGPRInfoFromWrBack(wbu.io.in)

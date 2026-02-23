@@ -26,6 +26,8 @@ class EXUStageCalcOut extends Bundle {
   val pcAddImm = Types.UWord
 
   val takeBranch = Bool()
+
+  val gprWeEn = Bool()
 }
 
 class EXUStageCalc extends Module {
@@ -51,6 +53,15 @@ class EXUStageCalc extends Module {
   val isFmtI   = InstFmt.hasSame(dinst.info.fmt, InstFmt.imm)
   val isFmtB   = InstFmt.hasSame(dinst.info.fmt, InstFmt.branch)
   val isTypSys = InstType.hasSame(dinst.info.typ, InstType.system)
+
+  val isTypStore      = InstType.hasSame(dinst.info.typ, InstType.store)
+  val isTypBranch     = InstType.hasSame(dinst.info.typ, InstType.branch)
+  val isTypFencei     = InstType.hasSame(dinst.info.typ, InstType.fencei)
+
+  val isNoWrBackType = isTypStore || isTypBranch || isTypFencei
+  // for now, system inst, ecall and mret has rd == 0
+  // TODO: handle rd != 0 case
+  io.out.bits.gprWeEn := ~isNoWrBackType
 
   io.in.ready  := io.out.ready
   io.out.valid := io.in.valid
@@ -170,7 +181,6 @@ class EXUStageChooseNxt extends Module {
   val isTypJALR       = InstType.hasSame(dinst.info.typ, InstType.jalr)
   val isTypBranch     = InstType.hasSame(dinst.info.typ, InstType.branch)
   val isTypArithmetic = InstType.hasSame(dinst.info.typ, InstType.arithmetic)
-  val isTypFencei     = InstType.hasSame(dinst.info.typ, InstType.fencei)
   val isTypLUI        = InstType.hasSame(dinst.info.typ, InstType.lui)
 
   val isFmtB = InstFmt.hasSame(dinst.info.fmt, InstFmt.branch)
@@ -186,7 +196,6 @@ class EXUStageChooseNxt extends Module {
   writeBackInfo.is_ebreak     := io.in.bits.isEBREAK
   writeBackInfo.csr_ecallflag := io.in.bits.isECALL
 
-  val isNoWrBackType = isTypStore || isTypBranch || isTypFencei
 
   // No consider exception
   val normalNxtPC = Wire(Types.UWord)
@@ -197,9 +206,7 @@ class EXUStageChooseNxt extends Module {
   val pcAddImm = io.in.bits.pcAddImm
   val snpc     = io.in.bits.dinst.info.snpc
 
-  // for now, system inst, ecall and mret has rd == 0
-  // TODO: handle rd != 0 case
-  writeBackInfo.gpr.en := (~isNoWrBackType)
+  writeBackInfo.gpr.en := io.in.bits.gprWeEn
 
   writeBackInfo.skipDifftest := DontCare // fill in LSU
 
