@@ -26,6 +26,8 @@ class EXUStageCalcOut extends Bundle {
   val pcAddImm = Types.UWord
 
   val takeBranch = Bool()
+
+  val gprWr = GPRegReqIO.TX.Write
 }
 
 class EXUStageCalc extends Module {
@@ -55,7 +57,9 @@ class EXUStageCalc extends Module {
   io.in.ready  := io.out.ready
   io.out.valid := io.in.valid
 
-  io.out.bits.pcAddImm := dinst.pc + dinst.info.imm
+  val pcAddImm = dinst.pc + dinst.info.imm
+
+  io.out.bits.pcAddImm := pcAddImm
   io.out.bits.dinst := dinst
 
   // reg
@@ -149,6 +153,36 @@ class EXUStageCalc extends Module {
   val isLessThan  = Mux(func3t(1), isLessThanU, isLessThanS)
   val branchCalc  = Mux(func3t(2), isLessThan, (reg_v1 === reg_v2))
   io.out.bits.takeBranch := Mux(func3t(0), ~branchCalc, branchCalc)
+
+  val gprOut = io.out.bits.gprWr
+  
+  val isTypStore      = InstType.hasSame(dinst.info.typ, InstType.store)
+  val isTypBranch     = InstType.hasSame(dinst.info.typ, InstType.branch)
+  val isTypFencei     = InstType.hasSame(dinst.info.typ, InstType.fencei)
+
+  val isTypLUI        = InstType.hasSame(dinst.info.typ, InstType.lui)
+  val isTypArithmetic = InstType.hasSame(dinst.info.typ, InstType.arithmetic)
+  val isTypAUIPC      = InstType.hasSame(dinst.info.typ, InstType.auipc)
+  val isTypJAL        = InstType.hasSame(dinst.info.typ, InstType.jal)
+  val isTypJALR       = InstType.hasSame(dinst.info.typ, InstType.jalr)
+
+  val isNoWrBackType = isTypStore || isTypBranch || isTypFencei
+  // for now, system inst, ecall and mret has rd == 0
+  // TODO: handle rd != 0 case
+  gprOut.en := (~isNoWrBackType)
+
+  gprOut.addr := dinst.info.rd
+  val sysInstWrBackData = csr_rdata
+
+  gprOut.data := Mux1H(
+    Seq(
+      isTypArithmetic         -> alu.io.out,
+      isTypLUI                -> dinst.info.imm,
+      isTypAUIPC              -> pcAddImm,
+      (isTypJALR || isTypJAL) -> dinst.info.snpc,
+      isTypSys     -> sysInstWrBackData
+    )
+  )
 }
 
 class EXUStageChooseNxt extends Module {
@@ -167,13 +201,9 @@ class EXUStageChooseNxt extends Module {
 
   val isTypLoad       = InstType.hasSame(dinst.info.typ, InstType.load)
   val isTypStore      = InstType.hasSame(dinst.info.typ, InstType.store)
-  val isTypAUIPC      = InstType.hasSame(dinst.info.typ, InstType.auipc)
+  val isTypBranch     = InstType.hasSame(dinst.info.typ, InstType.branch)
   val isTypJAL        = InstType.hasSame(dinst.info.typ, InstType.jal)
   val isTypJALR       = InstType.hasSame(dinst.info.typ, InstType.jalr)
-  val isTypBranch     = InstType.hasSame(dinst.info.typ, InstType.branch)
-  val isTypArithmetic = InstType.hasSame(dinst.info.typ, InstType.arithmetic)
-  val isTypFencei     = InstType.hasSame(dinst.info.typ, InstType.fencei)
-  val isTypLUI        = InstType.hasSame(dinst.info.typ, InstType.lui)
 
   val isFmtB = InstFmt.hasSame(dinst.info.fmt, InstFmt.branch)
 
@@ -188,7 +218,6 @@ class EXUStageChooseNxt extends Module {
   writeBackInfo.is_ebreak     := io.in.bits.isEBREAK
   writeBackInfo.csr_ecallflag := io.in.bits.isECALL
 
-  val isNoWrBackType = isTypStore || isTypBranch || isTypFencei
 
   // No consider exception
   val normalNxtPC = Wire(Types.UWord)
@@ -199,24 +228,9 @@ class EXUStageChooseNxt extends Module {
   val pcAddImm = io.in.bits.pcAddImm
   val snpc     = io.in.bits.dinst.info.snpc
 
-  // for now, system inst, ecall and mret has rd == 0
-  // TODO: handle rd != 0 case
-  writeBackInfo.gpr.en := (~isNoWrBackType)
 
   writeBackInfo.skipDifftest := DontCare // fill in LSU
-
-  writeBackInfo.gpr.addr := dinst.info.rd
-  val sysInstWrBackData = io.in.bits.csrRdata
-
-  writeBackInfo.gpr.data := Mux1H(
-    Seq(
-      isTypArithmetic         -> io.in.bits.aluOut,
-      isTypLUI                -> dinst.info.imm,
-      isTypAUIPC              -> pcAddImm,
-      (isTypJALR || isTypJAL) -> snpc,
-      io.in.bits.isTypSys     -> sysInstWrBackData
-    )
-  )
+  writeBackInfo.gpr := io.in.bits.gprWr
 
   writeBackInfo.iid    := dinst.iid
   writeBackInfo.pc     := dinst.pc
