@@ -176,7 +176,7 @@ class EXUStageCalc extends Module {
 
   gprOut.data := Mux1H(
     Seq(
-      isTypArithmetic         -> alu.io.out,
+      isTypArithmetic         -> alu.io.out.bits,
       isTypLUI                -> dinst.info.imm,
       isTypAUIPC              -> pcAddImm,
       (isTypJALR || isTypJAL) -> dinst.info.snpc,
