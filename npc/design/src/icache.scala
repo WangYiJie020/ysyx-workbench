@@ -133,6 +133,7 @@ class ICache extends Module {
   cacheRAM.io.wen         := (state === State.waitMem) && memIOMeetLast
   cacheRAM.io.wdata.valid := true.B
   cacheRAM.io.wdata.tag   := destAddrTag
+  // newest (rlast) data is direct from mem
   cacheRAM.io.wdata.data  := io.mem.rdata ## memIORdDataVec.asUInt
 
   state := MuxLookup(state, State.idle)(
