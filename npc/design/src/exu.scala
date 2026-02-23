@@ -285,7 +285,11 @@ class EXU extends Module {
   stageCalc.io.in.valid := io.in.valid
   stageCalc.io.csr_rvec <> io.csr_rvec
 
-  stageChooseNxt.io.in.bits  := RegEnable(stageCalc.io.out.bits, stageCalc.io.out.valid)
+  object State extends ChiselEnum {
+    val s1, s2 = Value
+  }
+  val state = RegInit(State.s1)
+  stageChooseNxt.io.in.bits  := RegEnable(stageCalc.io.out.bits, stageCalc.io.out.valid && state === State.s1)
 
   io.out.bits := stageChooseNxt.io.out.bits
 
@@ -293,10 +297,6 @@ class EXU extends Module {
   io.isJAL     := stageChooseNxt.io.isJAL
   io.predWrong := stageChooseNxt.io.predWrong
 
-  object State extends ChiselEnum {
-    val s1, s2 = Value
-  }
-  val state = RegInit(State.s1)
   io.in.ready := state === State.s1
   stageCalc.io.out.ready := true.B
   io.out.valid := state === State.s2
