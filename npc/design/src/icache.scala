@@ -119,24 +119,26 @@ class ICache extends Module {
   )
   val destAddrAligned = destAddrTag ## destAddrIdx ## 0.U(log2Ceil(ICacheParameters.BLOCK_SIZE).W)
 
-  val memIOCurRdOffset = RegInit(0.U(log2Ceil(ICacheParameters.BLOCK_SIZE_INWORDS).W))
-  val memIORdDataVec   = Reg(Vec(ICacheParameters.BLOCK_SIZE_INWORDS - 1, Types.UWord))
+  val memIOCurRdOffset  = RegInit(0.U(log2Ceil(ICacheParameters.BLOCK_SIZE_INWORDS).W))
+  val memIORdDataVecReg = Reg(Vec(ICacheParameters.BLOCK_SIZE_INWORDS - 1, Types.UWord))
   when(io.mem.rvalid && io.mem.rready) {
     when(memIOMeetLast) {
       memIOCurRdOffset := 0.U
     }.otherwise {
-      memIORdDataVec(memIOCurRdOffset) := io.mem.rdata
-      memIOCurRdOffset                 := memIOCurRdOffset + 1.U
+      memIORdDataVecReg(memIOCurRdOffset) := io.mem.rdata
+      memIOCurRdOffset                    := memIOCurRdOffset + 1.U
     }
   }
+
+  // newest (rlast) data is direct from mem
+  val memIORdDataVec = io.mem.rdata ## memIORdDataVecReg.asUInt
 
   cacheRAM.io.flush       := io.flush
   cacheRAM.io.addr        := destAddrIdx
   cacheRAM.io.wen         := (state === State.waitMem) && memIOMeetLast
   cacheRAM.io.wdata.valid := true.B
   cacheRAM.io.wdata.tag   := destAddrTag
-  // newest (rlast) data is direct from mem
-  cacheRAM.io.wdata.data  := io.mem.rdata ## memIORdDataVec.asUInt
+  cacheRAM.io.wdata.data  := memIORdDataVec
 
   state := MuxLookup(state, State.idle)(
     Seq(
