@@ -23,6 +23,8 @@ class EXUStageCalcOut extends Bundle {
 
   val reg1AddImm = Types.UWord
 
+  val pcAddImm = Types.UWord
+
   val takeBranch = Bool()
 }
 
@@ -53,6 +55,7 @@ class EXUStageCalc extends Module {
   io.in.ready  := io.out.ready
   io.out.valid := io.in.valid
 
+  io.out.bits.pcAddImm := dinst.pc + dinst.info.imm
   io.out.bits.dinst := dinst
 
   // reg
@@ -193,7 +196,7 @@ class EXUStageChooseNxt extends Module {
 
   // need pc+imm:
   // auipc, jal(r), branch
-  val pcAddImm = io.in.bits.dinst.pc + io.in.bits.dinst.info.imm
+  val pcAddImm = io.in.bits.pcAddImm
   val snpc     = io.in.bits.dinst.info.snpc
 
   // for now, system inst, ecall and mret has rd == 0
