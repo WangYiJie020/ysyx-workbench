@@ -124,6 +124,7 @@ class ICache extends Module {
     memIOCurRdOffset                 := memIOCurRdOffset + 1.U
   }
 
+  cacheRAM.io.flush       := io.flush
   cacheRAM.io.addr        := destAddrIdx
   cacheRAM.io.wen         := (state === State.waitMem) && memIOMeetLast
   cacheRAM.io.wdata.valid := true.B
