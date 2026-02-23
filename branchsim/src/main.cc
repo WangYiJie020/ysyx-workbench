@@ -1,6 +1,7 @@
 #include "../public/btrace_pack.h"
 #include <bit>
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <functional>
@@ -78,13 +79,13 @@ uint32_t algo_BTFN(uint32_t pc, history_entry_t entry) {
   return pc + 4;
 }
 
-void test_algo(algo_t algo) {
+void test_algo(algo_t algo, size_t btb_size = 4) {
   btrace_pack_t pack = btrace_pack_open("../nemu/btrace_pack.bin");
   btrace_record_t record;
 
   size_t total = 0, wrong = 0;
 
-  BTB btb(4);
+  BTB btb(btb_size);
 
   while (true) {
     if (btrace_pack_pick(pack, &record) == 0)
@@ -120,7 +121,12 @@ void test_algo(algo_t algo) {
 int main() {
   printf("Testing always not take algorithm:\n");
   test_algo(algo_always_not_take);
-  printf("Testing BTFN algorithm:\n");
-  test_algo(algo_BTFN);
+	
+	size_t btb_sizes[] = {2, 4, 8, 16};
+	for(size_t size : btb_sizes) {
+		printf("Testing BTFN algorithm: BTB size = %zu:\n", size);
+		test_algo(algo_BTFN, size);
+	}
+
   return 0;
 }
