@@ -33,52 +33,22 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   dontTouch(io)
   io := DontCare
 
+  def dontTouchValidReady[T <: Data](x: DecoupledIO[T]): Unit = {
+    dontTouch(x.valid)
+    dontTouch(x.ready)
+  }
   val isBranchGuessWrong = Wire(Bool())
 
   val isFlushIDUReg = RegInit(false.B)
   val isFlushIDU    = Wire(Bool())
-
-  def pipelineConnect[T <: Data, T2 <: Data](
-    prevOut: DecoupledIO[T],
-    thisIn:  DecoupledIO[T],
-    thisOut: DecoupledIO[T2]
-  ) = {
-
-    val thisInReady = thisIn.ready
-
-    val dataValid   = RegInit(false.B)
-    val readyToPrev = (!dataValid) || thisInReady
-
-    when(readyToPrev) {
-      dataValid := prevOut.valid
-    }
-    prevOut.ready := readyToPrev
-
-    thisIn.bits  := RegEnable(prevOut.bits, prevOut.fire)
-    thisIn.valid := dataValid
-  }
 
   val gprs = Module(new RegisterFile(READ_PORTS = 2))
   val csrs = Module(new ControlStatusRegisterFile())
 
   val ifu = Module(new IFU)
   val idu = Module(new IDU)
-  // val exu = Module(new EXU)
-
-  val exus1 = Module(new EXUStageCalc)
-  val exus2 = Module(new EXUStageChooseNxt)
-  def dontTouchValidReady[T <: Data](x: DecoupledIO[T]): Unit = {
-    dontTouch(x.valid)
-    dontTouch(x.ready)
-  }
-  dontTouchValidReady(exus1.io.in)
-  dontTouchValidReady(exus1.io.out)
-  dontTouchValidReady(exus2.io.in)
-  dontTouchValidReady(exus2.io.out)
-
+  val exu = Module(new EXU)
   val lsu = Module(new LSU)
-  dontTouchValidReady(lsu.io.in)
-  dontTouchValidReady(lsu.io.out)
   val wbu = Module(new WBU)
 
   val btb = Module(new BranchTargetBuffer)
@@ -102,10 +72,10 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   bp.io.historyTarget := btb.io.query.target
   bp.io.historyIsJAL  := btb.io.query.isJAL
 
-  btb.io.update.en     := exus2.io.out.valid && exus2.io.jmpHappen
-  btb.io.update.addr   := exus2.io.out.bits.exuWriteBack.pc
-  btb.io.update.target := exus2.io.out.bits.exuWriteBack.nxt_pc
-  btb.io.update.isJAL  := exus2.io.isJAL
+  btb.io.update.en     := exu.io.out.valid && exu.io.jmpHappen
+  btb.io.update.addr   := exu.io.out.bits.exuWriteBack.pc
+  btb.io.update.target := exu.io.out.bits.exuWriteBack.nxt_pc
+  btb.io.update.isJAL  := exu.io.isJAL
 
   val nxtPredictedPC = Wire(Types.UWord)
   dontTouch(nxtPredictedPC)
@@ -114,17 +84,17 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
   val isBranchGuessWrongReg = RegInit(false.B)
   val isIFUAckCorrectTarget = Wire(Bool())
-  isBranchGuessWrong := isBranchGuessWrongReg || (exus2.io.out.valid && exus2.io.predWrong)
-  when(exus2.io.out.valid) {
-    isBranchGuessWrongReg := exus2.io.predWrong
+  isBranchGuessWrong := isBranchGuessWrongReg || (exu.io.out.valid && exu.io.predWrong)
+  when(exu.io.out.valid) {
+    isBranchGuessWrongReg := exu.io.predWrong
   }.elsewhen(isIFUAckCorrectTarget) {
     isBranchGuessWrongReg := false.B
   }
 
   dontTouch(isBranchGuessWrong)
   val curCorrectJmpTarget = RegEnableReadNew(
-    exus2.io.out.bits.exuWriteBack.nxt_pc,
-    exus2.io.out.valid
+    exu.io.out.bits.exuWriteBack.nxt_pc,
+    exu.io.out.valid
   )
 
   // NOTICE: for IFU
@@ -164,7 +134,6 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   icache.io.flush := idu.io.out.valid && idu.io.out.bits.info.typ === InstType.fencei
   AXI4IO.connectMasterSlave(ifu.io.mem, icache.io.cpu)
   AXI4IO.connectMasterSlave(icache.io.mem, memArbiter.io.ifu)
-
 
   // AXI4IO.connectMasterSlave(ifu.io.mem, memArbiter.io.ifu)
 
@@ -215,24 +184,17 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   ifu.io.pc.valid := true.B
 
   pipelineConnect(ifu.io.out, idu.io.in, idu.io.out)
-  pipelineConnect(idu.io.out, exus1.io.in, exus1.io.out)
-  pipelineConnect(exus1.io.out, exus2.io.in, exus2.io.out)
-  pipelineConnect(exus2.io.out, lsu.io.in, lsu.io.out)
+  pipelineConnect(idu.io.out, exu.io.in, exu.io.out)
+  pipelineConnect(exu.io.out, lsu.io.in, lsu.io.out)
 
   idu.io.rvec <> gprs.io.read
-  exus1.io.csr_rvec <> csrs.io.read
+  exu.io.csr_rvec <> csrs.io.read
 
-  val exus1WrBack = Wire(GPRegReqIO.RX.Write)
-  exus1WrBack.en := exus1.io.out.valid && exus1.io.out.bits.gprWeEn
-  exus1WrBack.addr := exus1.io.out.bits.dinst.info.rd
-  exus1WrBack.data := DontCare
-
-  idu.io.exus1WrBack := exus1WrBack
-  idu.io.exuWrBack := ExtractGPRInfoFromLSU(exus2.io.out)
-  idu.io.lsuWrBack := ExtractGPRInfoFromLSU(lsu.io.in)
-  idu.io.wbuWrBack := ExtractGPRInfoFromWrBack(wbu.io.in)
-  val exuWrBackDataVaild = !(exus2.io.out.bits.isLoad || exus2.io.out.bits.isStore)
-  idu.io.exuWrBackDataVaild := exuWrBackDataVaild && exus2.io.out.valid
+  idu.io.exuWrBack   := ExtractGPRInfoFromLSU(exu.io.out)
+  idu.io.lsuWrBack   := ExtractGPRInfoFromLSU(lsu.io.in)
+  idu.io.wbuWrBack   := ExtractGPRInfoFromWrBack(wbu.io.in)
+  val exuWrBackDataVaild = !(exu.io.out.bits.isLoad || exu.io.out.bits.isStore)
+  idu.io.exuWrBackDataVaild := exuWrBackDataVaild && exu.io.out.valid
   idu.io.flush              := isFlushIDU
 
   // Write back

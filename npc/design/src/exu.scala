@@ -259,7 +259,7 @@ class EXUStageChooseNxt extends Module {
   dontTouch(dbgIsCSRJmp)
 }
 
-class EXU_unused extends Module {
+class EXU extends Module {
   val io = IO(new Bundle {
     val in        = Flipped(Decoupled(new DecodedInst))
     val csr_rvec  = CSRegReqIO.TX.SingleRead
@@ -269,37 +269,16 @@ class EXU_unused extends Module {
     val out       = Decoupled(new LSUInput)
   })
 
-  // val MS_fsm = InnerBusCtrl(io.in, io.out, alu.io.out.valid)
-  val MS_fsm = InnerBusCtrl(io.in, io.out, alwaysComb = true)
+  val stageCalc = Module(new EXUStageCalc)
+  val stageChooseNxt = Module(new EXUStageChooseNxt)
 
-  // lsu
+  stageCalc.io.in <> io.in
+  stageCalc.io.csr_rvec <> io.csr_rvec
 
-  // wdata
+  stageChooseNxt.io.out <> io.out
+  io.jmpHappen := stageChooseNxt.io.jmpHappen
+  io.isJAL     := stageChooseNxt.io.isJAL
+  io.predWrong := stageChooseNxt.io.predWrong
 
-  // nxt_pc
-
-  // writeBackInfo.is_ebreak := (dinst.code === "h00100073".U)
-
-  // TODO: handle exception
-
-  // val branchNxtPC = Mux(takeBranch, pcAddImm, snpc)
-
-  // val r1AddImm = reg_v1 + dinst.info.imm
-
-  // when(isJmpCsr) {
-  //   nxt_pc := csr_rdata
-  // }.otherwise {
-  //   when(isTypJALR) {
-  //     nxt_pc := r1AddImm(31, 1) ## 0.U(1.W)
-  //   }.elsewhen(isTypJAL) {
-  //     nxt_pc := pcAddImm
-  //   }.elsewhen(isFmtB) {
-  //
-  //     // when(!BranchOp.isValidBranchOp(func3t)) {
-  //     //   printf("(exu) UNKNOWN BRANCH func3t %d\n", func3t)
-  //     // }
-  //   }.otherwise {
-  //     nxt_pc := snpc
-  //   }
-  // }
+  pipelineConnect(stageCalc.io.out, stageChooseNxt.io.in, stageChooseNxt.io.out)
 }

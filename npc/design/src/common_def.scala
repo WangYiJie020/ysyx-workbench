@@ -115,3 +115,25 @@ object RegEnableReadNew {
     Mux(en, nxt, reg)
   }
 }
+
+object pipelineConnect {
+  def apply[T <: Data, T2 <: Data](
+    prevOut: DecoupledIO[T],
+    thisIn:  DecoupledIO[T],
+    thisOut: DecoupledIO[T2]
+  ) = {
+
+    val thisInReady = thisIn.ready
+
+    val dataValid   = RegInit(false.B)
+    val readyToPrev = (!dataValid) || thisInReady
+
+    when(readyToPrev) {
+      dataValid := prevOut.valid
+    }
+    prevOut.ready := readyToPrev
+
+    thisIn.bits  := RegEnable(prevOut.bits, prevOut.fire)
+    thisIn.valid := dataValid
+  }
+}

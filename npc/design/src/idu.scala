@@ -55,8 +55,6 @@ class IDU extends Module {
 
     val flush = Input(Bool())
 
-    val exus1WrBack = GPRegReqIO.RX.Write
-
     // connect to EXU output
     val exuWrBack          = GPRegReqIO.RX.Write
     // connect to EXU output, indicate whether the data is ready for bypassing
@@ -157,9 +155,8 @@ class IDU extends Module {
   val needStallForRs1 = (isRs1ConflictWithEXU || isRs1ConflictWithWBU) && (!canRs1Bypass)
   val needStallForRs2 = (isRs2ConflictWithEXU || isRs2ConflictWithWBU) && (!canRs2Bypass)
 
-  val isConflictWithEXUS1 = conflict(io.out.bits.info, io.exus1WrBack)
 
-  val needStall = needStallForRs1 || needStallForRs2 || isConflictWithLSU || isConflictWithEXUS1
+  val needStall = needStallForRs1 || needStallForRs2 || isConflictWithLSU 
 
   val isStall = WireDefault(needStall)
   dontTouch(isStall)
