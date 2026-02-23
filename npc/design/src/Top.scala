@@ -67,10 +67,11 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
   val exus1 = Module(new EXUStageCalc)
   val exus2 = Module(new EXUStageChooseNxt)
-  dontTouch(exus1.io)
-  dontTouch(exus2.io)
+  dontTouch(exus1.io.out)
+  dontTouch(exus2.io.out)
 
   val lsu = Module(new LSU)
+  dontTouch(lsu.io.in)
   val wbu = Module(new WBU)
 
   val btb = Module(new BranchTargetBuffer)
