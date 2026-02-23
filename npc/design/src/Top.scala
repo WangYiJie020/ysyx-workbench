@@ -40,7 +40,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val isBranchGuessWrong = Wire(Bool())
 
   val isFlushIDUReg = RegInit(false.B)
-  val isFlushIDU    = Wire(Bool())
+  val needFlushPipeline    = Wire(Bool())
 
   val gprs = Module(new RegisterFile(READ_PORTS = 2))
   val csrs = Module(new ControlStatusRegisterFile())
@@ -116,8 +116,8 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     isFlushIDUReg := false.B
   }
 
-  isFlushIDU := (isFlushIDUReg) || isBranchGuessWrong
-  dontTouch(isFlushIDU)
+  needFlushPipeline := (isFlushIDUReg) || isBranchGuessWrong
+  dontTouch(needFlushPipeline)
 
   pc := Mux(
     ifu.io.pc.ready,
@@ -195,7 +195,8 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   idu.io.wbuWrBack   := ExtractGPRInfoFromWrBack(wbu.io.in)
   val exuWrBackDataVaild = !(exu.io.out.bits.isLoad || exu.io.out.bits.isStore)
   idu.io.exuWrBackDataVaild := exuWrBackDataVaild && exu.io.out.valid
-  idu.io.flush              := isFlushIDU
+
+  idu.io.flush := needFlushPipeline
 
   // Write back
 

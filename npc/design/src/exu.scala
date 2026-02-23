@@ -54,9 +54,9 @@ class EXUStageCalc extends Module {
   val isFmtB   = InstFmt.hasSame(dinst.info.fmt, InstFmt.branch)
   val isTypSys = InstType.hasSame(dinst.info.typ, InstType.system)
 
-  val isTypStore      = InstType.hasSame(dinst.info.typ, InstType.store)
-  val isTypBranch     = InstType.hasSame(dinst.info.typ, InstType.branch)
-  val isTypFencei     = InstType.hasSame(dinst.info.typ, InstType.fencei)
+  val isTypStore  = InstType.hasSame(dinst.info.typ, InstType.store)
+  val isTypBranch = InstType.hasSame(dinst.info.typ, InstType.branch)
+  val isTypFencei = InstType.hasSame(dinst.info.typ, InstType.fencei)
 
   val isNoWrBackType = isTypStore || isTypBranch || isTypFencei
   // for now, system inst, ecall and mret has rd == 0
@@ -67,7 +67,7 @@ class EXUStageCalc extends Module {
   io.out.valid := io.in.valid
 
   io.out.bits.pcAddImm := dinst.pc + dinst.info.imm
-  io.out.bits.dinst := dinst
+  io.out.bits.dinst    := dinst
 
   // reg
 
@@ -196,7 +196,6 @@ class EXUStageChooseNxt extends Module {
   writeBackInfo.is_ebreak     := io.in.bits.isEBREAK
   writeBackInfo.csr_ecallflag := io.in.bits.isECALL
 
-
   // No consider exception
   val normalNxtPC = Wire(Types.UWord)
   val nxtPC       = Wire(Types.UWord)
@@ -230,7 +229,7 @@ class EXUStageChooseNxt extends Module {
   val isJmpCsr   = io.in.bits.isECALL || io.in.bits.isMRET
   val takeBranch = WireDefault(false.B)
   takeBranch := io.in.bits.takeBranch
-  val willJmp    = (isTypBranch && takeBranch) || isTypJALR || isTypJAL || isJmpCsr
+  val willJmp = (isTypBranch && takeBranch) || isTypJALR || isTypJAL || isJmpCsr
 
   io.jmpHappen := willJmp
   io.isJAL     := isTypJAL
@@ -269,7 +268,7 @@ class EXU extends Module {
     val out       = Decoupled(new LSUInput)
   })
 
-  val stageCalc = Module(new EXUStageCalc)
+  val stageCalc      = Module(new EXUStageCalc)
   val stageChooseNxt = Module(new EXUStageChooseNxt)
 
   stageCalc.io.in <> io.in
@@ -280,5 +279,7 @@ class EXU extends Module {
   io.isJAL     := stageChooseNxt.io.isJAL
   io.predWrong := stageChooseNxt.io.predWrong
 
-  pipelineConnect(stageCalc.io.out, stageChooseNxt.io.in, stageChooseNxt.io.out)
+  stageCalc.io.out.ready     := RegNext(stageChooseNxt.io.in.ready)
+  stageChooseNxt.io.in.valid := RegNext(stageCalc.io.out.valid)
+  stageChooseNxt.io.in.bits  := RegNext(stageCalc.io.out.bits)
 }
