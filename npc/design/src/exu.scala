@@ -182,6 +182,8 @@ class EXUStageChooseNxt extends Module {
   lsuInfo.storeData := io.in.bits.dinst.info.reg2
   val writeBackInfo = lsuInfo.exuWriteBack
   writeBackInfo.csr <> io.in.bits.csrWr
+  writeBackInfo.is_ebreak := io.in.bits.isEBREAK
+  writeBackInfo.csr_ecallflag := io.in.bits.isECALL
 
   val isNoWrBackType = isTypStore || isTypBranch || isTypFencei
 
