@@ -131,7 +131,7 @@ class ICache extends Module {
   }
 
   // newest (rlast) data is direct from mem
-  val memIORdDataVec = io.mem.rdata ## memIORdDataVecReg.asUInt
+  val memIORdDataVec = (io.mem.rdata ## memIORdDataVecReg.asUInt).asTypeOf(ICacheParameters.cacheLineVecType)
 
   cacheRAM.io.flush       := io.flush
   cacheRAM.io.addr        := destAddrIdx
