@@ -147,15 +147,19 @@ class ICache extends Module {
   io.cpu.rlast := true.B
 
   // 2^5 = 32
-  val dataShift = (wordOffset << 5)
+  // val dataShift = (wordOffset << 5)
 
   // when not hit, since rvaild at the end of waitMem, the data is from nxtCacheData
   val rdData      = Mux(io.mem.rvalid || (!cacheHit), nxtCacheData, rdCacheBlock.data)
   dontTouch(rdData)
-  val shiftedData = rdData >> dataShift
+  val shiftedData = Wire(UInt(32.W))
+
+  val rdDataAsVec = rdData.asTypeOf(Vec(ICacheParameters.BLOCK_SIZE_INWORDS, Types.UWord))
+  shiftedData := rdDataAsVec(wordOffset)
+
   dontTouch(shiftedData)
   // io.cpu.rdata := Mux(retShiftedData, shiftedData(31, 0), io.mem.rdata)
-  io.cpu.rdata := shiftedData(31, 0)
+  io.cpu.rdata := shiftedData
 
   state := MuxLookup(state, State.idle)(
     Seq(
