@@ -288,8 +288,10 @@ class EXU extends Module {
   }
   val state = RegInit(State.s1)
   io.in.ready := state === State.s1
+  stageCalc.io.out.ready := DontCare
   io.out.valid := state === State.s2
   stageChooseNxt.io.in.valid := state === State.s2
+  stageChooseNxt.io.out.ready := DontCare
   state := Mux(state === State.s1,
     Mux(io.in.valid, State.s2, State.s1),
     Mux(io.out.ready, State.s1, State.s2)
