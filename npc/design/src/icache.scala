@@ -137,25 +137,21 @@ class ICache extends Module {
 
   io.cpu.rvalid := (state === State.waitMem && io.mem.rlast && io.mem.rvalid) || (state === State.idle && cacheHit && io.cpu.arvalid && io.cpu.arready)
   val wordOffset = ICacheParameters.extractWordOffset(rdAddr)
-  // dontTouch(wordOffset)
-  // val retShiftedData = cacheHit && state === State.idle && io.cpu.arvalid && io.cpu.arready
-  // io.cpu.rvalid := (retShiftedData || (state === State.waitMem && rdCnt === wordOffset && io.mem.rvalid))
 
   io.cpu.rresp := AXI4IO.RResp.OKAY
   // TODO: support burst read
   io.cpu.rid   := io.mem.rid
   io.cpu.rlast := true.B
 
-  // 2^5 = 32
-  val dataShift = (wordOffset << 5)
-
   // when not hit, since rvaild at the end of waitMem, the data is from nxtCacheData
   val rdData      = Mux(io.mem.rvalid || (!cacheHit), nxtCacheData, rdCacheBlock.data)
   dontTouch(rdData)
-  val shiftedData = rdData >> dataShift
-  dontTouch(shiftedData)
-  // io.cpu.rdata := Mux(retShiftedData, shiftedData(31, 0), io.mem.rdata)
-  io.cpu.rdata := shiftedData(31, 0)
+
+  val rdDataAsVec = rdData.asTypeOf(Vec(ICacheParameters.BLOCK_SIZE_INWORDS, Types.UWord))
+  val destData = Wire(UInt(32.W))
+  dontTouch(destData)
+  destData := rdDataAsVec(wordOffset)
+  io.cpu.rdata := destData
 
   state := MuxLookup(state, State.idle)(
     Seq(
@@ -193,75 +189,4 @@ class ICacheWithDirectVisit extends Module {
 
   io.mem <> memArbiter.io.out
 
-
-  // val isDirectVisitAddr = AddrSpace.inRng(io.cpu.araddr, AddrSpace.SRAM)
-  //
-  // object State extends ChiselEnum {
-  //   val idle, connCache, connMem = Value
-  // }
-  //
-  // val state = RegInit(State.idle)
-  //
-  // state := MuxLookup(state, State.idle)(
-  //   Seq(
-  //     State.idle      -> Mux(io.cpu.arvalid, Mux(isDirectVisitAddr, State.connMem, State.connCache), State.idle),
-  //     State.connCache -> Mux(io.cpu.rvalid && io.cpu.rlast, State.idle, State.connCache),
-  //     State.connMem   -> Mux(io.cpu.rvalid && io.cpu.rlast, State.idle, State.connMem)
-  //   )
-  // )
-  //
-  // val isDirectVisit = state === State.connMem
-  // val isCacheVisit  = state === State.connCache
-  //
-  // val cache = Module(new ICache)
-  // cache.io.flush := io.flush
-  //
-  // AXI4IO.noShakeConnectAR(io.cpu, cache.io.cpu)
-  // AXI4IO.noShakeConnectAR(io.cpu, io.mem)
-  //
-  // io.cpu.dontCareAW()
-  // io.cpu.dontCareW()
-  // io.cpu.dontCareB()
-  //
-  // io.mem.dontCareAW()
-  // io.mem.dontCareW()
-  // io.mem.dontCareB()
-  //
-  // cache.io.mem.wready  := DontCare
-  // cache.io.mem.bready  := DontCare
-  // cache.io.mem.bvalid  := DontCare
-  // cache.io.mem.bresp   := DontCare
-  // cache.io.mem.bid     := DontCare
-  // cache.io.mem.awready := DontCare
-  //
-  // cache.io.cpu.awvalid := DontCare
-  // cache.io.cpu.wvalid  := DontCare
-  // cache.io.cpu.wlast   := DontCare
-  // cache.io.cpu.wdata   := DontCare
-  // cache.io.cpu.wstrb   := DontCare
-  // cache.io.cpu.bready  := DontCare
-  // cache.io.cpu.awaddr  := DontCare
-  // cache.io.cpu.awid    := DontCare
-  // cache.io.cpu.awlen   := DontCare
-  // cache.io.cpu.awsize  := DontCare
-  // cache.io.cpu.awburst := DontCare
-  //
-  //
-  // io.cpu.arready := Mux(isDirectVisit, io.mem.arready, cache.io.cpu.arready)
-  // io.mem.arvalid := Mux(isDirectVisit, io.cpu.arvalid, cache.io.mem.arvalid)
-  //
-  // io.cpu.rvalid := Mux(isDirectVisit, io.mem.rvalid, cache.io.cpu.rvalid)
-  // io.cpu.rresp  := Mux(isDirectVisit, io.mem.rresp, cache.io.cpu.rresp)
-  // io.cpu.rid    := Mux(isDirectVisit, io.mem.rid, cache.io.cpu.rid)
-  // io.cpu.rdata  := Mux(isDirectVisit, io.mem.rdata, cache.io.cpu.rdata)
-  // io.cpu.rlast  := Mux(isDirectVisit, io.mem.rlast, cache.io.cpu.rlast)
-  //
-  // io.mem.rready := Mux(isDirectVisit, io.cpu.rready, cache.io.mem.rready)
-  // cache.io.cpu.rready := isCacheVisit && io.cpu.rready
-  //
-  // cache.io.cpu.arvalid := io.cpu.arvalid && isCacheVisit
-  //
-  // cache.io.mem.rvalid := io.mem.rvalid && isCacheVisit
-  // cache.io.mem.arready := io.mem.arready && isCacheVisit
-  // AXI4IO.noShakeConnectR(io.mem, cache.io.mem)
 }
