@@ -273,13 +273,22 @@ class EXU extends Module {
 
   stageCalc.io.in.bits  := io.in.bits
   stageCalc.io.in.valid := io.in.valid
-  io.in.ready          := io.out.ready && stageCalc.io.in.ready
   stageCalc.io.csr_rvec <> io.csr_rvec
 
-  stageChooseNxt.io.out <> io.out
+  stageChooseNxt.io.in.bits  := RegEnable(stageCalc.io.out.bits, stageCalc.io.out.valid)
+
   io.jmpHappen := stageChooseNxt.io.jmpHappen
   io.isJAL     := stageChooseNxt.io.isJAL
   io.predWrong := stageChooseNxt.io.predWrong
 
-  pipelineConnect(stageCalc.io.out, stageChooseNxt.io.in, stageChooseNxt.io.out)
+  object State extends ChiselEnum {
+    val s1, s2 = Value
+  }
+  val state = RegInit(State.s1)
+  io.in.ready := state === State.s1
+  io.out.valid := state === State.s2
+  state := Mux(state === State.s1,
+    Mux(io.in.valid, State.s2, State.s1),
+    Mux(io.out.ready, State.s1, State.s2)
+  )
 }
