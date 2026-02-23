@@ -105,7 +105,7 @@ class ICache extends Module {
   }
   val state = RegInit(State.idle)
 
-  val destAddrIdx      = RegEnableBypass(
+  val destAddrIdx      = RegEnableReadNew(
     ICacheParameters.extractIndex(io.cpu.araddr),
     io.cpu.arvalid && io.cpu.arready
   )

@@ -107,7 +107,7 @@ class DecodedInst extends Inst {
 
 // update reg when enable,
 // and output the new value immediately
-object RegEnableBypass {
+object RegEnableReadNew {
   def apply[T <: Data](nxt: T, en: Bool): T = {
     val reg = RegEnable(nxt, en)
     Mux(en, nxt, reg)
