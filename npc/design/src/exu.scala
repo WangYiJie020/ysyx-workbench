@@ -271,7 +271,9 @@ class EXU extends Module {
   val stageCalc      = Module(new EXUStageCalc)
   val stageChooseNxt = Module(new EXUStageChooseNxt)
 
-  stageCalc.io.in <> io.in
+  stageCalc.io.in.bits  := io.in.bits
+  stageCalc.io.in.valid := io.in.valid
+  io.in.ready          := io.out.ready && stageCalc.io.in.ready
   stageCalc.io.csr_rvec <> io.csr_rvec
 
   stageChooseNxt.io.out <> io.out
@@ -279,7 +281,5 @@ class EXU extends Module {
   io.isJAL     := stageChooseNxt.io.isJAL
   io.predWrong := stageChooseNxt.io.predWrong
 
-  stageCalc.io.out.ready     := RegNext(stageChooseNxt.io.in.ready)
-  stageChooseNxt.io.in.valid := RegNext(stageCalc.io.out.valid)
-  stageChooseNxt.io.in.bits  := RegNext(stageCalc.io.out.bits)
+  pipelineConnect(stageCalc.io.out, stageChooseNxt.io.in, stageChooseNxt.io.out)
 }
