@@ -277,6 +277,8 @@ class EXU extends Module {
 
   stageChooseNxt.io.in.bits  := RegEnable(stageCalc.io.out.bits, stageCalc.io.out.valid)
 
+  io.out.bits := stageChooseNxt.io.out.bits
+
   io.jmpHappen := stageChooseNxt.io.jmpHappen
   io.isJAL     := stageChooseNxt.io.isJAL
   io.predWrong := stageChooseNxt.io.predWrong
@@ -287,6 +289,7 @@ class EXU extends Module {
   val state = RegInit(State.s1)
   io.in.ready := state === State.s1
   io.out.valid := state === State.s2
+  stageChooseNxt.io.in.valid := state === State.s2
   state := Mux(state === State.s1,
     Mux(io.in.valid, State.s2, State.s1),
     Mux(io.out.ready, State.s1, State.s2)
