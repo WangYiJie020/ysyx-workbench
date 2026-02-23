@@ -139,6 +139,7 @@ class ICache extends Module {
     )
   )
 
+  io.cpu.arready := (state === State.idle)
   io.cpu.rvalid := (state === State.waitMem && memIOMeetLast) || (state === State.checkHit && cacheHit)
   io.cpu.rresp  := AXI4IO.RResp.OKAY
   io.cpu.rid    := io.mem.rid
