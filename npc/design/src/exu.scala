@@ -50,6 +50,11 @@ class EXUStageCalc extends Module {
   val isFmtB   = InstFmt.hasSame(dinst.info.fmt, InstFmt.branch)
   val isTypSys = InstType.hasSame(dinst.info.typ, InstType.system)
 
+  io.in.ready := io.out.ready
+  io.out.valid := io.in.valid
+
+  io.out.bits.dinst := dinst
+
   // reg
 
   val reg_v1 = dinst.info.reg1
