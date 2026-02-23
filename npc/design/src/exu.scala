@@ -297,7 +297,7 @@ class EXU extends Module {
   io.isJAL     := stageChooseNxt.io.isJAL
   io.predWrong := stageChooseNxt.io.predWrong
 
-  io.in.ready := state === State.s2
+  io.in.ready := io.out.ready
   stageCalc.io.out.ready := true.B
   io.out.valid := state === State.s2
   stageChooseNxt.io.in.valid := state === State.s2
