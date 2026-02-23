@@ -268,8 +268,18 @@ class EXU extends Module {
     val out       = Decoupled(new LSUInput)
   })
 
+  def dontTouchValidReady[T <: Data](x: DecoupledIO[T]): Unit = {
+    dontTouch(x.valid)
+    dontTouch(x.ready)
+  }
+
   val stageCalc      = Module(new EXUStageCalc)
   val stageChooseNxt = Module(new EXUStageChooseNxt)
+
+  dontTouchValidReady(stageCalc.io.in)
+  dontTouchValidReady(stageCalc.io.out)
+  dontTouchValidReady(stageChooseNxt.io.in)
+  dontTouchValidReady(stageChooseNxt.io.out)
 
   stageCalc.io.in.bits  := io.in.bits
   stageCalc.io.in.valid := io.in.valid
@@ -288,10 +298,10 @@ class EXU extends Module {
   }
   val state = RegInit(State.s1)
   io.in.ready := state === State.s1
-  stageCalc.io.out.ready := DontCare
+  stageCalc.io.out.ready := true.B
   io.out.valid := state === State.s2
   stageChooseNxt.io.in.valid := state === State.s2
-  stageChooseNxt.io.out.ready := DontCare
+  stageChooseNxt.io.out.ready := true.B
   state := Mux(state === State.s1,
     Mux(io.in.valid, State.s2, State.s1),
     Mux(io.out.ready, State.s1, State.s2)
