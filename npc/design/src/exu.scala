@@ -158,8 +158,8 @@ class EXU extends Module {
 
   // need pc+imm:
   // auipc, jal(r), branch
-  val pcAddImm = dinst.pc + dinst.info.imm
-  val snpc     = dinst.pc + 4.U
+  val pcAddImm = dinst.info.pcAddImm
+  val snpc     = dinst.info.snpc
 
   val isNoWrBackType = isTypStore || isTypBranch || isTypFencei
 

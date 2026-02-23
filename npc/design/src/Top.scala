@@ -108,7 +108,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   }
 
   dontTouch(isBranchGuessWrong)
-  val curCorrectJmpTarget = RegEnableBypass(
+  val curCorrectJmpTarget = RegEnableReadNew(
     exu.io.out.bits.exuWriteBack.nxt_pc,
     exu.io.out.valid
   )
@@ -132,7 +132,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     isFlushIDUReg := false.B
   }
 
-  isFlushIDU := (isFlushIDUReg) //|| isBranchGuessWrong
+  isFlushIDU := (isFlushIDUReg) || isBranchGuessWrong
   dontTouch(isFlushIDU)
 
   pc := Mux(

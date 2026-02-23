@@ -99,6 +99,9 @@ class DecodedInstInfo extends InstMetaInfo with HasRs {
 
   val reg1 = Types.UWord
   val reg2 = Types.UWord
+
+  val pcAddImm = Types.UWord
+  val snpc = Types.UWord
 }
 
 class DecodedInst extends Inst {
