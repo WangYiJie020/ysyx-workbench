@@ -19,8 +19,8 @@ inline auto GetCPU() {
 }
 
 inline auto GetIFU() { return GetCPU()->ifu; }
-inline auto GetEXUS1() { return GetCPU()->exus1; }
-inline auto GetEXUS2() { return GetCPU()->exus2; }
+inline auto GetEXUS1() { return GetCPU()->exu->stageCalc; }
+inline auto GetEXUS2() { return GetCPU()->exu->stageChooseNxt; }
 inline auto GetLSU() { return GetCPU()->lsu; }
 inline auto GetALU() { return GetEXUS1()->alu; }
 inline auto GetIDU() { return GetCPU()->idu; }
