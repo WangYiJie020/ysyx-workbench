@@ -195,7 +195,6 @@ class IDU extends Module {
     )
   )
 
-  res.pcAddImm := io.in.bits.pc + res.imm
   res.snpc := io.in.bits.pc + 4.U
 
   io.in.ready  := (io.out.ready && !needStall) || io.flush

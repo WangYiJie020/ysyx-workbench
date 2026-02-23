@@ -193,7 +193,7 @@ class EXUStageChooseNxt extends Module {
 
   // need pc+imm:
   // auipc, jal(r), branch
-  val pcAddImm = io.in.bits.dinst.info.pcAddImm
+  val pcAddImm = io.in.bits.dinst.pc + io.in.bits.dinst.info.imm
   val snpc     = io.in.bits.dinst.info.snpc
 
   // for now, system inst, ecall and mret has rd == 0
