@@ -50,7 +50,7 @@ class EXUStageCalc extends Module {
   val isFmtB   = InstFmt.hasSame(dinst.info.fmt, InstFmt.branch)
   val isTypSys = InstType.hasSame(dinst.info.typ, InstType.system)
 
-  io.in.ready := io.out.ready
+  io.in.ready  := io.out.ready
   io.out.valid := io.in.valid
 
   io.out.bits.dinst := dinst
@@ -69,7 +69,7 @@ class EXUStageCalc extends Module {
   alu_in.func3t := Mux(isFmtB, func3t >> 1, func3t)
   alu_in.func7t := func7t
 
-  io.out.bits.aluOut := alu.io.out.bits
+  io.out.bits.aluOut     := alu.io.out.bits
   io.out.bits.reg1AddImm := reg_v1 + dinst.info.imm
 
   // csr
@@ -157,7 +157,7 @@ class EXUStageChooseNxt extends Module {
     val out       = Decoupled(new LSUInput)
   })
 
-  io.in.ready := io.out.ready
+  io.in.ready  := io.out.ready
   io.out.valid := io.in.valid
 
   val dinst = io.in.bits.dinst
@@ -172,15 +172,6 @@ class EXUStageChooseNxt extends Module {
   val isTypFencei     = InstType.hasSame(dinst.info.typ, InstType.fencei)
   val isTypLUI        = InstType.hasSame(dinst.info.typ, InstType.lui)
 
-  val dbgIsBranch = WireDefault(isTypBranch)
-  val dbgIsJALR   = WireDefault(isTypJALR)
-  val dbgIsJAL    = WireDefault(isTypJAL)
-  val dbgIsCSRJmp = WireDefault(isJmpCsr)
-  dontTouch(dbgIsBranch)
-  dontTouch(dbgIsJALR)
-  dontTouch(dbgIsJAL)
-  dontTouch(dbgIsCSRJmp)
-
   val isFmtB = InstFmt.hasSame(dinst.info.fmt, InstFmt.branch)
 
   val lsuInfo = io.out.bits
@@ -191,7 +182,7 @@ class EXUStageChooseNxt extends Module {
   lsuInfo.storeData := io.in.bits.dinst.info.reg2
   val writeBackInfo = lsuInfo.exuWriteBack
   writeBackInfo.csr <> io.in.bits.csrWr
-  writeBackInfo.is_ebreak := io.in.bits.isEBREAK
+  writeBackInfo.is_ebreak     := io.in.bits.isEBREAK
   writeBackInfo.csr_ecallflag := io.in.bits.isECALL
 
   val isNoWrBackType = isTypStore || isTypBranch || isTypFencei
@@ -248,6 +239,15 @@ class EXUStageChooseNxt extends Module {
     )
   )
   nxtPC       := Mux(isJmpCsr, io.in.bits.csrRdata, normalNxtPC)
+
+  val dbgIsBranch = WireDefault(isTypBranch)
+  val dbgIsJALR   = WireDefault(isTypJALR)
+  val dbgIsJAL    = WireDefault(isTypJAL)
+  val dbgIsCSRJmp = WireDefault(isJmpCsr)
+  dontTouch(dbgIsBranch)
+  dontTouch(dbgIsJALR)
+  dontTouch(dbgIsJAL)
+  dontTouch(dbgIsCSRJmp)
 }
 
 class EXU_unused extends Module {
@@ -272,7 +272,6 @@ class EXU_unused extends Module {
   // writeBackInfo.is_ebreak := (dinst.code === "h00100073".U)
 
   // TODO: handle exception
-
 
   // val branchNxtPC = Mux(takeBranch, pcAddImm, snpc)
 
