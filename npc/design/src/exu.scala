@@ -229,6 +229,7 @@ class EXUStageChooseNxt extends Module {
 
   val isJmpCsr   = io.in.bits.isECALL || io.in.bits.isMRET
   val takeBranch = WireDefault(false.B)
+  takeBranch := io.in.bits.takeBranch
   val willJmp    = (isTypBranch && takeBranch) || isTypJALR || isTypJAL || isJmpCsr
 
   io.jmpHappen := willJmp
