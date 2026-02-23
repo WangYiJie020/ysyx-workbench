@@ -77,7 +77,7 @@ static int decode_exec(Decode *s) {
 #define MATCH_BRANCH 0b1100011
 #define MASK_BRANCH 0b1111111
 
-  if ((inst & MASK_BRANCH) == MATCH_BRANCH) {
+  if (IS_INST(BRANCH) || IS_INST(JALR) || IS_INST(JAL)) {
     g_nbranches++;
     if (g_btrace_pack) {
       btrace_record_t record = {.pc = s->pc, .code = inst, .nxt_pc = s->dnpc};
