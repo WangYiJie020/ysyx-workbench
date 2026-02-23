@@ -8,14 +8,29 @@ import regfile._
 import cpu.alu._
 import axi4._
 
-class EXU extends Module {
+class EXUStageCalcOut extends Bundle {
+  val aluOut = Types.UWord
+
+  val isTypSys = Bool()
+  val isECALL  = Bool()
+  val isMRET   = Bool()
+  val isEBREAK = Bool()
+
+  val csrRdata = Types.UWord
+  val csrWr    = CSRegReqIO.TX.Write
+
+  val dinst = new DecodedInst
+
+  val reg1AddImm = Types.UWord
+
+  val takeBranch = Bool()
+}
+
+class EXUStageCalc extends Module {
   val io = IO(new Bundle {
-    val in        = Flipped(Decoupled(new DecodedInst))
-    val csr_rvec  = CSRegReqIO.TX.SingleRead
-    val jmpHappen = Output(Bool())
-    val isJAL     = Output(Bool())
-    val predWrong = Output(Bool())
-    val out       = Decoupled(new LSUInput)
+    val in       = Flipped(Decoupled(new DecodedInst))
+    val csr_rvec = CSRegReqIO.TX.SingleRead
+    val out      = Decoupled(new EXUStageCalcOut)
   })
 
   val GARBAGE_UNINIT_VALUE = Wire(Types.UWord)
@@ -31,27 +46,6 @@ class EXU extends Module {
   val func3t = dinst.code(14, 12)
   val func7t = dinst.code(31, 25)
 
-  val isFmtI = InstFmt.hasSame(dinst.info.fmt, InstFmt.imm)
-  val isFmtB = InstFmt.hasSame(dinst.info.fmt, InstFmt.branch)
-
-  val isTypSys        = InstType.hasSame(dinst.info.typ, InstType.system)
-  val isTypLoad       = InstType.hasSame(dinst.info.typ, InstType.load)
-  val isTypStore      = InstType.hasSame(dinst.info.typ, InstType.store)
-  val isTypAUIPC      = InstType.hasSame(dinst.info.typ, InstType.auipc)
-  val isTypJAL        = InstType.hasSame(dinst.info.typ, InstType.jal)
-  val isTypJALR       = InstType.hasSame(dinst.info.typ, InstType.jalr)
-  val isTypBranch     = InstType.hasSame(dinst.info.typ, InstType.branch)
-  val isTypArithmetic = InstType.hasSame(dinst.info.typ, InstType.arithmetic)
-  val isTypFencei     = InstType.hasSame(dinst.info.typ, InstType.fencei)
-  val isTypLUI        = InstType.hasSame(dinst.info.typ, InstType.lui)
-
-  alu_in.is_imm := isFmtI
-  alu_in.func3t := Mux(isFmtB, func3t >> 1, func3t)
-  alu_in.func7t := func7t
-
-  // val MS_fsm = InnerBusCtrl(io.in, io.out, alu.io.out.valid)
-  val MS_fsm = InnerBusCtrl(io.in, io.out, alwaysComb = true)
-
   // reg
 
   val reg_v1 = dinst.info.reg1
@@ -62,29 +56,34 @@ class EXU extends Module {
   // when branch, src2 is reg_v2
   alu_in.src2 := Mux(isFmtI, dinst.info.imm, reg_v2)
 
-  // lsu
-  val lsuInfo = io.out.bits
-  lsuInfo.destAddr  := reg_v1 + dinst.info.imm
-  lsuInfo.isLoad    := isTypLoad
-  lsuInfo.isStore   := isTypStore
-  lsuInfo.func3t    := func3t
-  lsuInfo.storeData := reg_v2
-  val writeBackInfo = lsuInfo.exuWriteBack
+  val isFmtI   = InstFmt.hasSame(dinst.info.fmt, InstFmt.imm)
+  val isFmtB   = InstFmt.hasSame(dinst.info.fmt, InstFmt.branch)
+  val isTypSys = InstType.hasSame(dinst.info.typ, InstType.system)
+
+  alu_in.is_imm := isFmtI
+  alu_in.func3t := Mux(isFmtB, func3t >> 1, func3t)
+  alu_in.func7t := func7t
 
   // csr
 
-  val is_mret  = dinst.code === "h30200073".U
-  val is_ecall = dinst.code === "h73".U
+  val is_mret   = dinst.code === "h30200073".U
+  val is_ecall  = dinst.code === "h73".U
+  val is_ebreak = dinst.code === "h00100073".U
 
-  writeBackInfo.csr_ecallflag := is_ecall
+  val outInfo = io.out.bits
+
+  outInfo.isTypSys := isTypSys
+  outInfo.isECALL  := is_ecall
+  outInfo.isMRET   := is_mret
+  outInfo.isEBREAK := is_ebreak
 
   val csrren    = io.csr_rvec.en
   val csr_raddr = io.csr_rvec.addr
   val csr_rdata = io.csr_rvec.data
 
-  val csrwen    = writeBackInfo.csr.en
-  val csr_waddr = writeBackInfo.csr.addr
-  val csr_wdata = writeBackInfo.csr.data
+  val csrwen    = io.out.bits.csrWr.en
+  val csr_waddr = io.out.bits.csrWr.addr
+  val csr_wdata = io.out.bits.csrWr.data
 
   object CSROp {
     val csrrw = 1.U
@@ -110,24 +109,10 @@ class EXU extends Module {
       // is_ecall flag make csr to write wdata to mepc
       csr_wdata := dinst.pc
     }.elsewhen(is_mret) {
-      // csrren    := true.B
-      // csrwen    := false.B
       csr_raddr := CSRAddr.mepc
       csr_waddr := DontCare
       csr_wdata := DontCare
     }.otherwise {
-      // csrren    := MuxLookup(func3t, false.B)(
-      //   Seq(
-      //     CSROp.csrrw -> (dinst.info.rd =/= 0.U),
-      //     CSROp.csrrs -> true.B
-      //   )
-      // )
-      // csrwen    := MuxLookup(func3t, false.B)(
-      //   Seq(
-      //     CSROp.csrrw -> true.B,
-      //     CSROp.csrrs -> (reg_v1 =/= 0.U)
-      //   )
-      // )
       csr_raddr := dinst.code(31, 20)
       csr_waddr := csr_raddr
       csr_wdata := Mux(
@@ -135,117 +120,12 @@ class EXU extends Module {
         reg_v1,
         (csr_rdata | reg_v1)
       )
-      // csr_wdata := Mux1H(
-      //   Seq(
-      //     isCSRRW -> reg_v1,
-      //     isCSRRS -> (csr_rdata | reg_v1)
-      //   )
-      // )
     }
   }.otherwise {
-    // csrren    := false.B
-    // csrwen    := false.B
     csr_raddr := DontCare
     csr_waddr := DontCare
     csr_wdata := DontCare
   }
-
-  // wdata
-
-  // No consider exception
-  val normalNxtPC = Wire(Types.UWord)
-  val nxtPC       = Wire(Types.UWord)
-
-  // need pc+imm:
-  // auipc, jal(r), branch
-  val pcAddImm = dinst.info.pcAddImm
-  val snpc     = dinst.info.snpc
-
-  val isNoWrBackType = isTypStore || isTypBranch || isTypFencei
-
-  // for now, system inst, ecall and mret has rd == 0
-  // TODO: handle rd != 0 case
-  writeBackInfo.gpr.en := (~isNoWrBackType)
-
-  writeBackInfo.skipDifftest := DontCare // fill in LSU
-
-  writeBackInfo.gpr.addr := dinst.info.rd
-  val sysInstWrBackData = csr_rdata
-  // val gprDataMapping    = Seq(
-  //   InstType.arithmetic -> alu.io.out.bits,
-  //   InstType.lui        -> dinst.info.imm,
-  //   InstType.auipc      -> pcAddImm,
-  //   InstType.jalr       -> snpc,
-  //   InstType.jal        -> snpc,
-  //   InstType.load       -> GARBAGE_UNINIT_VALUE, // load data will be from lsu
-  //   InstType.system     -> sysInstWrBackData,
-  //   InstType.fencei     -> GARBAGE_UNINIT_VALUE
-  // )
-
-  // io.out.bits.gpr.data := MuxLookup(dinst.info.typ, GARBAGE_UNINIT_VALUE)(gprDataMapping)
-  // writeBackInfo.gpr.data := Mux1H(
-  //   gprDataMapping.map { case (typ, data) =>
-  //     InstType.hasSame(dinst.info.typ, typ) -> data
-  //   }
-  // )
-  // writeBackInfo.gpr.data := Mux(
-  //   isTypArithmetic,
-  //   alu.io.out.bits,
-  //   Mux(
-  //     isTypLUI,
-  //     dinst.info.imm,
-  //     Mux(
-  //       isTypAUIPC,
-  //       pcAddImm,
-  //       Mux(
-  //         isTypJALR || isTypJAL,
-  //         snpc,
-  //         Mux(
-  //           isTypSys,
-  //           sysInstWrBackData,
-  //           GARBAGE_UNINIT_VALUE
-  //         )
-  //       )
-  //     )
-  //   )
-  // )
-
-  writeBackInfo.gpr.data := Mux1H(
-    Seq(
-      isTypArithmetic         -> alu.io.out.bits,
-      isTypLUI                -> dinst.info.imm,
-      isTypAUIPC              -> pcAddImm,
-      (isTypJALR || isTypJAL) -> snpc,
-      isTypSys                -> sysInstWrBackData
-    )
-  )
-
-  // nxt_pc
-  val takeBranch = WireDefault(false.B)
-
-  writeBackInfo.iid       := dinst.iid
-  writeBackInfo.pc        := dinst.pc
-  writeBackInfo.nxt_pc    := nxtPC
-  writeBackInfo.is_ebreak := (dinst.code === "h00100073".U)
-
-  val isJmpCsr = is_ecall || is_mret
-
-  val willJmp = (isTypBranch && takeBranch) || isTypJALR || isTypJAL || isJmpCsr
-
-  // TODO: handle exception
-  io.jmpHappen := willJmp
-  io.isJAL     := isTypJAL
-  io.predWrong := (normalNxtPC =/= dinst.predictedNextPC) || isJmpCsr
-
-  val dbgIsBranch = WireDefault(isTypBranch)
-  dontTouch(dbgIsBranch)
-
-  val dbgIsJALR   = WireDefault(isTypJALR)
-  val dbgIsJAL    = WireDefault(isTypJAL)
-  val dbgIsCSRJmp = WireDefault(isJmpCsr)
-  dontTouch(dbgIsJALR)
-  dontTouch(dbgIsJAL)
-  dontTouch(dbgIsCSRJmp)
 
   // blt/bge 10x
   // bltu/bgeu 11x
@@ -255,11 +135,84 @@ class EXU extends Module {
   val isLessThanS = (reg_v1.asSInt < reg_v2.asSInt)
   val isLessThan  = Mux(func3t(1), isLessThanU, isLessThanS)
   val branchCalc  = Mux(func3t(2), isLessThan, (reg_v1 === reg_v2))
-  takeBranch := Mux(func3t(0), ~branchCalc, branchCalc)
+  io.out.bits.takeBranch := Mux(func3t(0), ~branchCalc, branchCalc)
+}
 
-  // val branchNxtPC = Mux(takeBranch, pcAddImm, snpc)
+class EXUStageChooseNxt extends Module {
+  val io = IO(new Bundle {
+    val in        = Flipped(Decoupled(new EXUStageCalcOut))
+    val jmpHappen = Output(Bool())
+    val isJAL     = Output(Bool())
+    val predWrong = Output(Bool())
+    val out       = Decoupled(new LSUInput)
+  })
 
-  val r1AddImm = reg_v1 + dinst.info.imm
+  val dinst = io.in.bits.dinst
+
+  val isTypLoad       = InstType.hasSame(dinst.info.typ, InstType.load)
+  val isTypStore      = InstType.hasSame(dinst.info.typ, InstType.store)
+  val isTypAUIPC      = InstType.hasSame(dinst.info.typ, InstType.auipc)
+  val isTypJAL        = InstType.hasSame(dinst.info.typ, InstType.jal)
+  val isTypJALR       = InstType.hasSame(dinst.info.typ, InstType.jalr)
+  val isTypBranch     = InstType.hasSame(dinst.info.typ, InstType.branch)
+  val isTypArithmetic = InstType.hasSame(dinst.info.typ, InstType.arithmetic)
+  val isTypFencei     = InstType.hasSame(dinst.info.typ, InstType.fencei)
+  val isTypLUI        = InstType.hasSame(dinst.info.typ, InstType.lui)
+
+  val isFmtB = InstFmt.hasSame(dinst.info.fmt, InstFmt.branch)
+
+  val lsuInfo = io.out.bits
+  lsuInfo.destAddr  := io.in.bits.reg1AddImm
+  lsuInfo.isLoad    := isTypLoad
+  lsuInfo.isStore   := isTypStore
+  lsuInfo.func3t    := io.in.bits.dinst.code(14, 12)
+  lsuInfo.storeData := io.in.bits.dinst.info.reg2
+  val writeBackInfo = lsuInfo.exuWriteBack
+
+  val isNoWrBackType = isTypStore || isTypBranch || isTypFencei
+
+  // No consider exception
+  val normalNxtPC = Wire(Types.UWord)
+  val nxtPC       = Wire(Types.UWord)
+
+  // need pc+imm:
+  // auipc, jal(r), branch
+  val pcAddImm = io.in.bits.dinst.info.pcAddImm
+  val snpc     = io.in.bits.dinst.info.snpc
+
+  // for now, system inst, ecall and mret has rd == 0
+  // TODO: handle rd != 0 case
+  writeBackInfo.gpr.en := (~isNoWrBackType)
+
+  writeBackInfo.skipDifftest := DontCare // fill in LSU
+
+  writeBackInfo.gpr.addr := dinst.info.rd
+  val sysInstWrBackData = io.in.bits.csrRdata
+
+  writeBackInfo.gpr.data := Mux1H(
+    Seq(
+      isTypArithmetic         -> io.in.bits.aluOut,
+      isTypLUI                -> dinst.info.imm,
+      isTypAUIPC              -> pcAddImm,
+      (isTypJALR || isTypJAL) -> snpc,
+      io.in.bits.isTypSys     -> sysInstWrBackData
+    )
+  )
+
+  writeBackInfo.iid    := dinst.iid
+  writeBackInfo.pc     := dinst.pc
+  writeBackInfo.nxt_pc := nxtPC
+
+  val isJmpCsr   = io.in.bits.isECALL || io.in.bits.isMRET
+  val takeBranch = WireDefault(false.B)
+  val willJmp    = (isTypBranch && takeBranch) || isTypJALR || isTypJAL || isJmpCsr
+
+  io.jmpHappen := willJmp
+  io.isJAL     := isTypJAL
+  io.predWrong := (normalNxtPC =/= dinst.predictedNextPC) || isJmpCsr
+
+  val r1AddImm = io.in.bits.reg1AddImm
+
   normalNxtPC := Mux(
     isTypJALR,
     (r1AddImm(31, 1) ## 0.U(1.W)),
@@ -269,7 +222,45 @@ class EXU extends Module {
       snpc
     )
   )
-  nxtPC := Mux(isJmpCsr, csr_rdata, normalNxtPC)
+  nxtPC       := Mux(isJmpCsr, io.in.bits.csrRdata, normalNxtPC)
+}
+
+class EXU extends Module {
+  val io = IO(new Bundle {
+    val in        = Flipped(Decoupled(new DecodedInst))
+    val csr_rvec  = CSRegReqIO.TX.SingleRead
+    val jmpHappen = Output(Bool())
+    val isJAL     = Output(Bool())
+    val predWrong = Output(Bool())
+    val out       = Decoupled(new LSUInput)
+  })
+
+  // val MS_fsm = InnerBusCtrl(io.in, io.out, alu.io.out.valid)
+  val MS_fsm = InnerBusCtrl(io.in, io.out, alwaysComb = true)
+
+  // lsu
+
+  // wdata
+
+  // nxt_pc
+
+  // writeBackInfo.is_ebreak := (dinst.code === "h00100073".U)
+
+  // TODO: handle exception
+
+  // val dbgIsBranch = WireDefault(isTypBranch)
+  // dontTouch(dbgIsBranch)
+  //
+  // val dbgIsJALR   = WireDefault(isTypJALR)
+  // val dbgIsJAL    = WireDefault(isTypJAL)
+  // val dbgIsCSRJmp = WireDefault(isJmpCsr)
+  // dontTouch(dbgIsJALR)
+  // dontTouch(dbgIsJAL)
+  // dontTouch(dbgIsCSRJmp)
+
+  // val branchNxtPC = Mux(takeBranch, pcAddImm, snpc)
+
+  // val r1AddImm = reg_v1 + dinst.info.imm
 
   // when(isJmpCsr) {
   //   nxt_pc := csr_rdata
