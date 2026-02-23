@@ -67,6 +67,8 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
   val exus1 = Module(new EXUStageCalc)
   val exus2 = Module(new EXUStageChooseNxt)
+  dontTouch(exus1.io)
+  dontTouch(exus2.io)
 
   val lsu = Module(new LSU)
   val wbu = Module(new WBU)
