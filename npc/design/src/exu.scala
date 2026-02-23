@@ -69,6 +69,9 @@ class EXUStageCalc extends Module {
   alu_in.func3t := Mux(isFmtB, func3t >> 1, func3t)
   alu_in.func7t := func7t
 
+  io.out.bits.aluOut := alu.io.out.bits
+  io.out.bits.reg1AddImm := reg_v1 + dinst.info.imm
+
   // csr
 
   val is_mret   = dinst.code === "h30200073".U
@@ -85,6 +88,8 @@ class EXUStageCalc extends Module {
   val csrren    = io.csr_rvec.en
   val csr_raddr = io.csr_rvec.addr
   val csr_rdata = io.csr_rvec.data
+
+  io.out.bits.csrRdata := csr_rdata
 
   val csrwen    = io.out.bits.csrWr.en
   val csr_waddr = io.out.bits.csrWr.addr
@@ -152,6 +157,9 @@ class EXUStageChooseNxt extends Module {
     val out       = Decoupled(new LSUInput)
   })
 
+  io.in.ready := io.out.ready
+  io.out.valid := io.in.valid
+
   val dinst = io.in.bits.dinst
 
   val isTypLoad       = InstType.hasSame(dinst.info.typ, InstType.load)
@@ -173,6 +181,7 @@ class EXUStageChooseNxt extends Module {
   lsuInfo.func3t    := io.in.bits.dinst.code(14, 12)
   lsuInfo.storeData := io.in.bits.dinst.info.reg2
   val writeBackInfo = lsuInfo.exuWriteBack
+  writeBackInfo.csr <> io.in.bits.csrWr
 
   val isNoWrBackType = isTypStore || isTypBranch || isTypFencei
 
@@ -230,7 +239,7 @@ class EXUStageChooseNxt extends Module {
   nxtPC       := Mux(isJmpCsr, io.in.bits.csrRdata, normalNxtPC)
 }
 
-class EXU extends Module {
+class EXU_unused extends Module {
   val io = IO(new Bundle {
     val in        = Flipped(Decoupled(new DecodedInst))
     val csr_rvec  = CSRegReqIO.TX.SingleRead
