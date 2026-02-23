@@ -105,18 +105,20 @@ class ICache extends Module {
   }
   val state = RegInit(State.idle)
 
-  val destAddrIdx      = RegEnableReadNew(
+  val destAddrIdx     = RegEnableReadNew(
     ICacheParameters.extractIndex(io.cpu.araddr),
     io.cpu.arvalid && io.cpu.arready
   )
-  val destAddrOffset   = RegEnable(
+  val destAddrOffset  = RegEnable(
     ICacheParameters.extractWordOffset(io.cpu.araddr),
     io.cpu.arvalid && io.cpu.arready
   )
-  val destAddrTag      = RegEnable(
+  val destAddrTag     = RegEnable(
     ICacheParameters.extractTag(io.cpu.araddr),
     io.cpu.arvalid && io.cpu.arready
   )
+  val destAddrAligned = destAddrTag ## destAddrIdx ## 0.U(log2Ceil(ICacheParameters.BLOCK_SIZE).W)
+
   val memIOCurRdOffset = RegInit(0.U(log2Ceil(ICacheParameters.BLOCK_SIZE_INWORDS).W))
   val memIORdDataVec   = Reg(Vec(ICacheParameters.BLOCK_SIZE_INWORDS - 1, Types.UWord))
   when(io.mem.rvalid && io.mem.rready) {
@@ -154,7 +156,7 @@ class ICache extends Module {
 
   io.mem.arvalid := (state === State.sendFetch)
   io.mem.arid    := io.cpu.arid
-  io.mem.araddr  := ICacheParameters.alignToBlock(io.cpu.araddr)
+  io.mem.araddr  := destAddrAligned
   io.mem.arlen   := ICacheParameters.ARLEN.U
   io.mem.arsize  := AXI4IO.SizeType.WORD
   io.mem.arburst := AXI4IO.BurstType.INCR
