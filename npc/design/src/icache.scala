@@ -47,6 +47,8 @@ object ICacheParameters {
   def alignToBlock(addr: UInt):      UInt = {
     addr(31, log2Ceil(BLOCK_SIZE)) ## 0.U(log2Ceil(BLOCK_SIZE).W)
   }
+
+  def cacheLineVecType = Vec(BLOCK_SIZE_INWORDS, Types.UWord)
 }
 
 class ICacheBlock extends Bundle {
@@ -60,7 +62,101 @@ class ICacheBlock extends Bundle {
   }
 }
 
+class ICacheSRAM extends Module {
+  val io  = IO(new Bundle {
+    val addr  = Input(UInt(ICacheParameters.BLOCK_INDEX_WIDTH.W))
+    val wen   = Input(Bool())
+    val wdata = Input(new ICacheBlock)
+    val rdata = Output(new ICacheBlock)
+    val flush = Input(Bool())
+  })
+  val mem = RegInit(VecInit(Seq.fill(ICacheParameters.BLOCK_NUM)(0.U.asTypeOf(new ICacheBlock))))
+
+  when(io.flush) {
+    for (i <- 0 until ICacheParameters.BLOCK_NUM) {
+      mem(i).valid := false.B
+    }
+  }.elsewhen(io.wen) {
+    mem(io.addr) := io.wdata
+  }
+  io.rdata := RegNext(mem(io.addr))
+}
+
 class ICache extends Module {
+  val io = IO(new ICacheIO)
+
+  io.cpu.dontCareAW()
+  io.cpu.dontCareW()
+  io.cpu.dontCareB()
+
+  io.mem.dontCareAW()
+  io.mem.dontCareW()
+  io.mem.dontCareB()
+
+  val memIOMeetLast = io.mem.rvalid && io.mem.rlast
+
+  val cacheRAM       = Module(new ICacheSRAM)
+  val cacheRdData    = cacheRAM.io.rdata
+  val cacheHit       = cacheRdData.matchAddr(io.cpu.araddr)
+  val cacheRdDataVec = cacheRdData.data.asTypeOf(ICacheParameters.cacheLineVecType)
+
+  object State extends ChiselEnum {
+    val idle, checkHit, sendFetch, waitMem = Value
+  }
+  val state = RegInit(State.idle)
+
+  val destAddrIdx      = RegEnableBypass(
+    ICacheParameters.extractIndex(io.cpu.araddr),
+    io.cpu.arvalid && io.cpu.arready
+  )
+  val destAddrOffset   = RegEnable(
+    ICacheParameters.extractWordOffset(io.cpu.araddr),
+    io.cpu.arvalid && io.cpu.arready
+  )
+  val destAddrTag      = RegEnable(
+    ICacheParameters.extractTag(io.cpu.araddr),
+    io.cpu.arvalid && io.cpu.arready
+  )
+  val memIOCurRdOffset = RegInit(0.U(log2Ceil(ICacheParameters.BLOCK_SIZE_INWORDS).W))
+  val memIORdDataVec   = Reg(ICacheParameters.cacheLineVecType)
+  when(io.mem.rvalid && io.mem.rready) {
+    memIORdDataVec(memIOCurRdOffset) := io.mem.rdata
+    memIOCurRdOffset                 := memIOCurRdOffset + 1.U
+  }
+
+  cacheRAM.io.addr        := destAddrIdx
+  cacheRAM.io.wen         := (state === State.waitMem) && memIOMeetLast
+  cacheRAM.io.wdata.valid := true.B
+  cacheRAM.io.wdata.tag   := destAddrTag
+  cacheRAM.io.wdata.data  := memIORdDataVec.asUInt
+
+  state := MuxLookup(state, State.idle)(
+    Seq(
+      State.idle      -> Mux(io.cpu.arvalid && io.cpu.arready, State.checkHit, State.idle),
+      State.checkHit  -> Mux(cacheHit, State.idle, State.sendFetch),
+      State.sendFetch -> Mux(io.mem.arready, State.waitMem, State.sendFetch),
+      State.waitMem   -> Mux(memIOMeetLast, State.idle, State.waitMem)
+    )
+  )
+
+  io.cpu.rvalid := (state === State.waitMem && memIOMeetLast) || (state === State.checkHit && cacheHit)
+  io.cpu.rresp  := AXI4IO.RResp.OKAY
+  io.cpu.rid    := io.mem.rid
+  io.cpu.rlast  := true.B
+  io.cpu.rdata  := Mux(state === State.waitMem, memIORdDataVec(destAddrOffset), cacheRdDataVec(destAddrOffset))
+
+  io.mem.arvalid := (state === State.sendFetch)
+  io.mem.arid    := io.cpu.arid
+  io.mem.araddr  := ICacheParameters.alignToBlock(io.cpu.araddr)
+  io.mem.arlen   := ICacheParameters.ARLEN.U
+  io.mem.arsize  := AXI4IO.SizeType.WORD
+  io.mem.arburst := AXI4IO.BurstType.INCR
+
+  io.mem.rready := (state === State.waitMem)
+
+}
+
+class ICacheRegMem extends Module {
   val io = IO(new ICacheIO)
 
   io.cpu.dontCareAW()
@@ -137,26 +233,20 @@ class ICache extends Module {
 
   io.cpu.rvalid := (state === State.waitMem && io.mem.rlast && io.mem.rvalid) || (state === State.idle && cacheHit && io.cpu.arvalid && io.cpu.arready)
   val wordOffset = ICacheParameters.extractWordOffset(rdAddr)
-  // dontTouch(wordOffset)
-  // val retShiftedData = cacheHit && state === State.idle && io.cpu.arvalid && io.cpu.arready
-  // io.cpu.rvalid := (retShiftedData || (state === State.waitMem && rdCnt === wordOffset && io.mem.rvalid))
 
   io.cpu.rresp := AXI4IO.RResp.OKAY
   // TODO: support burst read
   io.cpu.rid   := io.mem.rid
   io.cpu.rlast := true.B
 
-  // 2^5 = 32
-  // val dataShift = (wordOffset << 5)
-
   // when not hit, since rvaild at the end of waitMem, the data is from nxtCacheData
-  val rdData      = Mux(io.mem.rvalid || (!cacheHit), nxtCacheData, rdCacheBlock.data)
+  val rdData = Mux(io.mem.rvalid || (!cacheHit), nxtCacheData, rdCacheBlock.data)
   dontTouch(rdData)
 
   val rdDataAsVec = rdData.asTypeOf(Vec(ICacheParameters.BLOCK_SIZE_INWORDS, Types.UWord))
-  val destData = Wire(UInt(32.W))
+  val destData    = Wire(UInt(32.W))
   dontTouch(destData)
-  destData := rdDataAsVec(wordOffset)
+  destData     := rdDataAsVec(wordOffset)
   io.cpu.rdata := destData
 
   state := MuxLookup(state, State.idle)(
@@ -175,13 +265,13 @@ class ICacheWithDirectVisit extends Module {
   val cache = Module(new ICache)
   cache.io.flush := io.flush
 
-  val directWire         = Wire(AXI4IO.Slave)
+  val directWire = Wire(AXI4IO.Slave)
 
   val xbar = Module(
     new AXI4LiteXBar(
       Seq(
-        AddrSpace.SRAM -> directWire,
-        AddrSpace.SOC_ExceptSRAM  -> cache.io.cpu
+        AddrSpace.SRAM           -> directWire,
+        AddrSpace.SOC_ExceptSRAM -> cache.io.cpu
       )
     )
   )
@@ -195,75 +285,4 @@ class ICacheWithDirectVisit extends Module {
 
   io.mem <> memArbiter.io.out
 
-
-  // val isDirectVisitAddr = AddrSpace.inRng(io.cpu.araddr, AddrSpace.SRAM)
-  //
-  // object State extends ChiselEnum {
-  //   val idle, connCache, connMem = Value
-  // }
-  //
-  // val state = RegInit(State.idle)
-  //
-  // state := MuxLookup(state, State.idle)(
-  //   Seq(
-  //     State.idle      -> Mux(io.cpu.arvalid, Mux(isDirectVisitAddr, State.connMem, State.connCache), State.idle),
-  //     State.connCache -> Mux(io.cpu.rvalid && io.cpu.rlast, State.idle, State.connCache),
-  //     State.connMem   -> Mux(io.cpu.rvalid && io.cpu.rlast, State.idle, State.connMem)
-  //   )
-  // )
-  //
-  // val isDirectVisit = state === State.connMem
-  // val isCacheVisit  = state === State.connCache
-  //
-  // val cache = Module(new ICache)
-  // cache.io.flush := io.flush
-  //
-  // AXI4IO.noShakeConnectAR(io.cpu, cache.io.cpu)
-  // AXI4IO.noShakeConnectAR(io.cpu, io.mem)
-  //
-  // io.cpu.dontCareAW()
-  // io.cpu.dontCareW()
-  // io.cpu.dontCareB()
-  //
-  // io.mem.dontCareAW()
-  // io.mem.dontCareW()
-  // io.mem.dontCareB()
-  //
-  // cache.io.mem.wready  := DontCare
-  // cache.io.mem.bready  := DontCare
-  // cache.io.mem.bvalid  := DontCare
-  // cache.io.mem.bresp   := DontCare
-  // cache.io.mem.bid     := DontCare
-  // cache.io.mem.awready := DontCare
-  //
-  // cache.io.cpu.awvalid := DontCare
-  // cache.io.cpu.wvalid  := DontCare
-  // cache.io.cpu.wlast   := DontCare
-  // cache.io.cpu.wdata   := DontCare
-  // cache.io.cpu.wstrb   := DontCare
-  // cache.io.cpu.bready  := DontCare
-  // cache.io.cpu.awaddr  := DontCare
-  // cache.io.cpu.awid    := DontCare
-  // cache.io.cpu.awlen   := DontCare
-  // cache.io.cpu.awsize  := DontCare
-  // cache.io.cpu.awburst := DontCare
-  //
-  //
-  // io.cpu.arready := Mux(isDirectVisit, io.mem.arready, cache.io.cpu.arready)
-  // io.mem.arvalid := Mux(isDirectVisit, io.cpu.arvalid, cache.io.mem.arvalid)
-  //
-  // io.cpu.rvalid := Mux(isDirectVisit, io.mem.rvalid, cache.io.cpu.rvalid)
-  // io.cpu.rresp  := Mux(isDirectVisit, io.mem.rresp, cache.io.cpu.rresp)
-  // io.cpu.rid    := Mux(isDirectVisit, io.mem.rid, cache.io.cpu.rid)
-  // io.cpu.rdata  := Mux(isDirectVisit, io.mem.rdata, cache.io.cpu.rdata)
-  // io.cpu.rlast  := Mux(isDirectVisit, io.mem.rlast, cache.io.cpu.rlast)
-  //
-  // io.mem.rready := Mux(isDirectVisit, io.cpu.rready, cache.io.mem.rready)
-  // cache.io.cpu.rready := isCacheVisit && io.cpu.rready
-  //
-  // cache.io.cpu.arvalid := io.cpu.arvalid && isCacheVisit
-  //
-  // cache.io.mem.rvalid := io.mem.rvalid && isCacheVisit
-  // cache.io.mem.arready := io.mem.arready && isCacheVisit
-  // AXI4IO.noShakeConnectR(io.mem, cache.io.mem)
 }
