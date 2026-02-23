@@ -132,7 +132,7 @@ void IDUFlushPerfCounter::update() {
     cycFlushOfReason[lastFlushReason]++;
   }
 }
-void IDUFlushPerfCounter::bind() { hIsFlushIDU = &GetCPU()->isFlushIDU; }
+void IDUFlushPerfCounter::bind() { hIsFlushIDU = &GetCPU()->needFlushPipeline; }
 
 void BranchPredPerfCounter::bind() {
   hValid = &GetEXUS2()->io_in_valid;
