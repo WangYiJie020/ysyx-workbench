@@ -118,10 +118,14 @@ class ICache extends Module {
     io.cpu.arvalid && io.cpu.arready
   )
   val memIOCurRdOffset = RegInit(0.U(log2Ceil(ICacheParameters.BLOCK_SIZE_INWORDS).W))
-  val memIORdDataVec   = Reg(ICacheParameters.cacheLineVecType)
+  val memIORdDataVec   = Reg(Vec(ICacheParameters.BLOCK_SIZE_INWORDS - 1, Types.UWord))
   when(io.mem.rvalid && io.mem.rready) {
-    memIORdDataVec(memIOCurRdOffset) := io.mem.rdata
-    memIOCurRdOffset                 := memIOCurRdOffset + 1.U
+    when(memIOMeetLast) {
+      memIOCurRdOffset := 0.U
+    }.otherwise {
+      memIORdDataVec(memIOCurRdOffset) := io.mem.rdata
+      memIOCurRdOffset                 := memIOCurRdOffset + 1.U
+    }
   }
 
   cacheRAM.io.flush       := io.flush
@@ -129,7 +133,7 @@ class ICache extends Module {
   cacheRAM.io.wen         := (state === State.waitMem) && memIOMeetLast
   cacheRAM.io.wdata.valid := true.B
   cacheRAM.io.wdata.tag   := destAddrTag
-  cacheRAM.io.wdata.data  := memIORdDataVec.asUInt
+  cacheRAM.io.wdata.data  := io.mem.rdata ## memIORdDataVec.asUInt
 
   state := MuxLookup(state, State.idle)(
     Seq(
@@ -141,11 +145,11 @@ class ICache extends Module {
   )
 
   io.cpu.arready := (state === State.idle)
-  io.cpu.rvalid := (state === State.waitMem && memIOMeetLast) || (state === State.checkHit && cacheHit)
-  io.cpu.rresp  := AXI4IO.RResp.OKAY
-  io.cpu.rid    := io.mem.rid
-  io.cpu.rlast  := true.B
-  io.cpu.rdata  := Mux(state === State.waitMem, memIORdDataVec(destAddrOffset), cacheRdDataVec(destAddrOffset))
+  io.cpu.rvalid  := (state === State.waitMem && memIOMeetLast) || (state === State.checkHit && cacheHit)
+  io.cpu.rresp   := AXI4IO.RResp.OKAY
+  io.cpu.rid     := io.mem.rid
+  io.cpu.rlast   := true.B
+  io.cpu.rdata   := Mux(state === State.waitMem, memIORdDataVec(destAddrOffset), cacheRdDataVec(destAddrOffset))
 
   io.mem.arvalid := (state === State.sendFetch)
   io.mem.arid    := io.cpu.arid
