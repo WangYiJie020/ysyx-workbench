@@ -67,11 +67,18 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
   val exus1 = Module(new EXUStageCalc)
   val exus2 = Module(new EXUStageChooseNxt)
-  dontTouch(exus1.io.out)
-  dontTouch(exus2.io.out)
+  def dontTouchValidReady[T <: Data](x: DecoupledIO[T]): Unit = {
+    dontTouch(x.valid)
+    dontTouch(x.ready)
+  }
+  dontTouchValidReady(exus1.io.in)
+  dontTouchValidReady(exus1.io.out)
+  dontTouchValidReady(exus2.io.in)
+  dontTouchValidReady(exus2.io.out)
 
   val lsu = Module(new LSU)
-  dontTouch(lsu.io.in)
+  dontTouchValidReady(lsu.io.in)
+  dontTouchValidReady(lsu.io.out)
   val wbu = Module(new WBU)
 
   val btb = Module(new BranchTargetBuffer)
