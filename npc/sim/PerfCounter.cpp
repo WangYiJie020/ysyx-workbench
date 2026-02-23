@@ -102,7 +102,7 @@ void RAWStallPerfCounter::bind() {
   hIsIDUStall = &GetIDU()->isStall;
 }
 IDUFlushPerfCounter::IDUFlushReason IDUFlushPerfCounter::getCurReason() const {
-  auto &exu = *GetEXU();
+  auto &exu = *GetEXUS2();
   IDUFlushReason reason;
   if (exu.dbgIsBranch)
     reason = IDUFlushReason::BranchTaken;

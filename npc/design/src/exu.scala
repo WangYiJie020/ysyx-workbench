@@ -172,6 +172,15 @@ class EXUStageChooseNxt extends Module {
   val isTypFencei     = InstType.hasSame(dinst.info.typ, InstType.fencei)
   val isTypLUI        = InstType.hasSame(dinst.info.typ, InstType.lui)
 
+  val dbgIsBranch = WireDefault(isTypBranch)
+  val dbgIsJALR   = WireDefault(isTypJALR)
+  val dbgIsJAL    = WireDefault(isTypJAL)
+  val dbgIsCSRJmp = WireDefault(isJmpCsr)
+  dontTouch(dbgIsBranch)
+  dontTouch(dbgIsJALR)
+  dontTouch(dbgIsJAL)
+  dontTouch(dbgIsCSRJmp)
+
   val isFmtB = InstFmt.hasSame(dinst.info.fmt, InstFmt.branch)
 
   val lsuInfo = io.out.bits
@@ -264,15 +273,6 @@ class EXU_unused extends Module {
 
   // TODO: handle exception
 
-  // val dbgIsBranch = WireDefault(isTypBranch)
-  // dontTouch(dbgIsBranch)
-  //
-  // val dbgIsJALR   = WireDefault(isTypJALR)
-  // val dbgIsJAL    = WireDefault(isTypJAL)
-  // val dbgIsCSRJmp = WireDefault(isJmpCsr)
-  // dontTouch(dbgIsJALR)
-  // dontTouch(dbgIsJAL)
-  // dontTouch(dbgIsCSRJmp)
 
   // val branchNxtPC = Mux(takeBranch, pcAddImm, snpc)
 
