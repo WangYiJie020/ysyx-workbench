@@ -289,7 +289,7 @@ class EXU extends Module {
     val s1, s2 = Value
   }
   val state = RegInit(State.s1)
-  stageChooseNxt.io.in.bits  := RegEnable(stageCalc.io.out.bits, stageCalc.io.out.valid && state === State.s1)
+  stageChooseNxt.io.in.bits  := RegEnable(stageCalc.io.out.bits, stageCalc.io.out.fire)
 
   io.out.bits := stageChooseNxt.io.out.bits
 
