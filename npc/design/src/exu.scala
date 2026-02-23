@@ -46,6 +46,10 @@ class EXUStageCalc extends Module {
   val func3t = dinst.code(14, 12)
   val func7t = dinst.code(31, 25)
 
+  val isFmtI   = InstFmt.hasSame(dinst.info.fmt, InstFmt.imm)
+  val isFmtB   = InstFmt.hasSame(dinst.info.fmt, InstFmt.branch)
+  val isTypSys = InstType.hasSame(dinst.info.typ, InstType.system)
+
   // reg
 
   val reg_v1 = dinst.info.reg1
@@ -55,10 +59,6 @@ class EXUStageCalc extends Module {
   alu_in.src1 := reg_v1
   // when branch, src2 is reg_v2
   alu_in.src2 := Mux(isFmtI, dinst.info.imm, reg_v2)
-
-  val isFmtI   = InstFmt.hasSame(dinst.info.fmt, InstFmt.imm)
-  val isFmtB   = InstFmt.hasSame(dinst.info.fmt, InstFmt.branch)
-  val isTypSys = InstType.hasSame(dinst.info.typ, InstType.system)
 
   alu_in.is_imm := isFmtI
   alu_in.func3t := Mux(isFmtB, func3t >> 1, func3t)
