@@ -100,7 +100,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
   val isBranchGuessWrongReg = RegInit(false.B)
   val isIFUAckCorrectTarget = Wire(Bool())
-  isBranchGuessWrong := isBranchGuessWrongReg// || (exu.io.out.valid && exu.io.predWrong)
+  isBranchGuessWrong := isBranchGuessWrongReg || (exu.io.out.valid && exu.io.predWrong)
   when(exu.io.out.valid) {
     isBranchGuessWrongReg := exu.io.predWrong
   }.elsewhen(isIFUAckCorrectTarget) {
