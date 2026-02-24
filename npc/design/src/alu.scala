@@ -89,18 +89,21 @@ class ALU extends Module {
   val slt_res = sign_res ^ overflow
 
   val rShiftResult = Wire(Types.UWord)
-  rShiftResult := Mux(isOpAlt, (s_src1 >> shamt).asUInt, src1 >> shamt)
   val lShiftResult = Wire(Types.UWord)
-  lShiftResult := src1 << shamt
 
-  // // Optimize make L/R shift use same shifter
-  // //
-  // // 23850 -> 23504
-  // val extedSrc1    = Wire(UInt(64.W))
-  // val isRightShift = inbits.func3t(2)
-  // val shiftedSrc1  = Mux(isRightShift, src1, Reverse(src1))
-  // extedSrc1    := Cat(Fill(32, shiftedSrc1(31) & isOpAlt), shiftedSrc1)
-  // rShiftResult := extedSrc1 >> shamt
+  // rShiftResult := Mux(isOpAlt, (s_src1 >> shamt).asUInt, src1 >> shamt)
+  // lShiftResult := src1 << shamt
+
+  // Optimize make L/R shift use same shifter
+  //
+  // 23850 -> 23504
+  val extedSrc1    = Wire(UInt(64.W))
+  val isRightShift = inbits.func3t(2)
+  val shiftedSrc1  = Mux(isRightShift, src1, Reverse(src1))
+  extedSrc1    := Cat(Fill(32, shiftedSrc1(31) & isOpAlt), shiftedSrc1)
+  rShiftResult := extedSrc1 >> shamt
+
+  lShiftResult := Reverse(rShiftResult)
 
   // val shiftResult = Mux(isRightShift, rShiftResult, Reverse(rShiftResult))
 
