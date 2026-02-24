@@ -168,19 +168,7 @@ class IDU extends Module {
 
     val flush = Input(Bool())
 
-    // // connect to EXU output
-    // val exuWrBack          = GPRegReqIO.RX.Write
-    // // connect to EXU output, indicate whether the data is ready for bypassing
-    // //
-    // // for memory operations, the data is not ready until the memory access is
-    // // finished
-    // val exuWrBackDataVaild = Input(Bool())
-    //
-    // // !!! Notice
-    // // connect to LSU **input**
-    // val lsuWrBack = GPRegReqIO.RX.Write
-    //
-    // val wbuWrBack = GPRegReqIO.RX.Write
+    val fencei = Output(Bool())
 
     val wrBackInfo = Input(new WrBackInfoGroup)
 
@@ -214,6 +202,8 @@ class IDU extends Module {
   // TODO: handle rd != 0 case
   val isNoWrBackType = isTypStore || isTypBranch || isTypFencei
   res.rdWrEn := ~isNoWrBackType
+
+  io.fencei := isTypFencei && io.in.valid
 
   io.rvec.en      := true.B
   io.rvec.addr(0) := res.rs1

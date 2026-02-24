@@ -112,7 +112,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     isFlushIDUReg := false.B
   }
 
-  val meetFencei = idu.io.out.valid && idu.io.out.bits.info.typ === InstType.fencei
+  val meetFencei = idu.io.fencei
 
   needFlushPipeline := (isFlushIDUReg) || isBranchGuessWrong || meetFencei
   dontTouch(needFlushPipeline)
