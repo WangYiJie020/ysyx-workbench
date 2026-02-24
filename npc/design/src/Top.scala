@@ -36,27 +36,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val isBranchGuessWrong = Wire(Bool())
 
   val isFlushIDUReg = RegInit(false.B)
-  val isFlushIDU    = Wire(Bool())
-
-  def pipelineConnect[T <: Data, T2 <: Data](
-    prevOut: DecoupledIO[T],
-    thisIn:  DecoupledIO[T],
-    thisOut: DecoupledIO[T2]
-  ) = {
-
-    val thisInReady = thisIn.ready
-
-    val dataValid   = RegInit(false.B)
-    val readyToPrev = (!dataValid) || thisInReady
-
-    when(readyToPrev) {
-      dataValid := prevOut.valid
-    }
-    prevOut.ready := readyToPrev
-
-    thisIn.bits  := RegEnable(prevOut.bits, prevOut.fire)
-    thisIn.valid := dataValid
-  }
+  val needFlushPipeline    = Wire(Bool())
 
   val gprs = Module(new RegisterFile(READ_PORTS = 2))
   val csrs = Module(new ControlStatusRegisterFile())
@@ -132,8 +112,8 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     isFlushIDUReg := false.B
   }
 
-  isFlushIDU := (isFlushIDUReg) || isBranchGuessWrong
-  dontTouch(isFlushIDU)
+  needFlushPipeline := (isFlushIDUReg) || isBranchGuessWrong
+  dontTouch(needFlushPipeline)
 
   pc := Mux(
     ifu.io.pc.ready,
@@ -143,8 +123,6 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     pc
   )
 
-  dontTouch(exu.io)
-
   val memArbiter = Module(new EXUIFU_MemVisitArbiter)
   AXI4IO.connectMasterSlave(lsu.io.mem, memArbiter.io.exu)
 
@@ -152,7 +130,6 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   icache.io.flush := idu.io.out.valid && idu.io.out.bits.info.typ === InstType.fencei
   AXI4IO.connectMasterSlave(ifu.io.mem, icache.io.cpu)
   AXI4IO.connectMasterSlave(icache.io.mem, memArbiter.io.ifu)
-
 
   // AXI4IO.connectMasterSlave(ifu.io.mem, memArbiter.io.ifu)
 
@@ -209,12 +186,18 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   idu.io.rvec <> gprs.io.read
   exu.io.csr_rvec <> csrs.io.read
 
-  idu.io.exuWrBack := ExtractGPRInfoFromLSU(exu.io.out)
-  idu.io.lsuWrBack := ExtractGPRInfoFromLSU(lsu.io.in)
-  idu.io.wbuWrBack := ExtractGPRInfoFromWrBack(wbu.io.in)
+  // idu.io.exuWrBack   := ExtractGPRInfoFromLSU(exu.io.out)
+  // idu.io.lsuWrBack   := ExtractGPRInfoFromLSU(lsu.io.in)
+  // idu.io.wbuWrBack   := ExtractGPRInfoFromWrBack(wbu.io.in)
+  idu.io.wrBackInfo.exus1 := exu.io.fwd1
+  idu.io.wrBackInfo.exus2 := exu.io.fwd2
+  idu.io.wrBackInfo.lsu   := ExtractFwdInfoFromLSU(lsu.io.in)
+  idu.io.wrBackInfo.wbu   := ExtractFwdInfoFromWrBack(wbu.io.in)
+
   val exuWrBackDataVaild = !(exu.io.out.bits.isLoad || exu.io.out.bits.isStore)
-  idu.io.exuWrBackDataVaild := exuWrBackDataVaild && exu.io.out.valid
-  idu.io.flush              := isFlushIDU
+
+  idu.io.flush := needFlushPipeline
+  exu.io.flush1 := needFlushPipeline
 
   // Write back
 
