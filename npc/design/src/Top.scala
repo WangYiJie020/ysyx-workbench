@@ -112,7 +112,9 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     isFlushIDUReg := false.B
   }
 
-  needFlushPipeline := (isFlushIDUReg) || isBranchGuessWrong
+  val meetFencei = idu.io.out.valid && idu.io.out.bits.info.typ === InstType.fencei
+
+  needFlushPipeline := (isFlushIDUReg) || isBranchGuessWrong || meetFencei
   dontTouch(needFlushPipeline)
 
   pc := Mux(
@@ -127,7 +129,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   AXI4IO.connectMasterSlave(lsu.io.mem, memArbiter.io.exu)
 
   val icache = Module(new ICache)
-  icache.io.flush := idu.io.out.valid && idu.io.out.bits.info.typ === InstType.fencei
+  icache.io.flush := meetFencei
   AXI4IO.connectMasterSlave(ifu.io.mem, icache.io.cpu)
   AXI4IO.connectMasterSlave(icache.io.mem, memArbiter.io.ifu)
 
