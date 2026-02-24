@@ -78,11 +78,15 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   nxtPredictedPC         := bp.io.predictTarget
   ifu.io.predictedNextPC := nxtPredictedPC
 
+  val meetFencei = idu.io.fencei
+
   val isBranchGuessWrongReg = RegInit(false.B)
   val isIFUAckCorrectTarget = Wire(Bool())
-  isBranchGuessWrong := isBranchGuessWrongReg || (exu.io.out.valid && exu.io.predWrong)
+  isBranchGuessWrong := isBranchGuessWrongReg || (exu.io.out.valid && exu.io.predWrong) || meetFencei
   when(exu.io.out.valid) {
     isBranchGuessWrongReg := exu.io.predWrong
+  }.elsewhen(meetFencei) {
+    isBranchGuessWrongReg := true.B
   }.elsewhen(isIFUAckCorrectTarget) {
     isBranchGuessWrongReg := false.B
   }
@@ -112,13 +116,12 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     isFlushIDUReg := false.B
   }
 
-  val meetFencei = idu.io.fencei
 
-  needFlushPipeline := (isFlushIDUReg) || isBranchGuessWrong || meetFencei
+  needFlushPipeline := (isFlushIDUReg) || isBranchGuessWrong
   dontTouch(needFlushPipeline)
 
   pc := Mux(
-    ifu.io.pc.ready,
+    ifu.io.pc.ready && (!meetFencei),
     // Sometimes although jump,
     // target is near current pc and IFU just meets it
     Mux(isBranchGuessWrong && (!isIFUAckCorrectTarget), curCorrectJmpTarget, nxtPredictedPC),
