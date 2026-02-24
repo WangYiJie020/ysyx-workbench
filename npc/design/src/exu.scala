@@ -46,8 +46,8 @@ class EXUStageCalc extends Module {
 
   val alu = Module(new ALU)
 
-  alu.io.out.ready := io.out.ready || io.flush
-  alu.io.in.valid  := io.in.valid && !io.flush
+  alu.io.out.ready := io.out.ready
+  alu.io.in.valid  := io.in.valid
 
   val alu_in = alu.io.in.bits
   val dinst  = io.in.bits
@@ -60,8 +60,8 @@ class EXUStageCalc extends Module {
 
   io.out.bits.gprWeEn := dinst.info.rdWrEn
 
-  io.in.ready  := io.out.ready
-  io.out.valid := io.in.valid
+  io.in.ready  := io.out.ready || io.flush
+  io.out.valid := io.in.valid && !io.flush
 
   io.out.bits.pcAddImm := dinst.pc + dinst.info.imm
   io.out.bits.dinst    := dinst
