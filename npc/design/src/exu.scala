@@ -290,6 +290,9 @@ class EXU extends Module {
   dontTouchValidReady(stageChooseNxt.io.in)
   dontTouchValidReady(stageChooseNxt.io.out)
 
+  io.in <> stageCalc.io.in
+  io.out <> stageChooseNxt.io.out
+
   pipelineConnect(stageCalc.io.out, stageChooseNxt.io.in, stageChooseNxt.io.out)
 
 }

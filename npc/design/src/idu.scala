@@ -157,6 +157,8 @@ class ByPassMux extends Module {
 
   io.outData1 := Mux(r1UseBypass, r1BypassData, io.regData1)
   io.outData2 := Mux(r2UseBypass, r2BypassData, io.regData2)
+
+  io.needStall := needStall
 }
 
 class IDU extends Module {
