@@ -78,16 +78,14 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   nxtPredictedPC         := bp.io.predictTarget
   ifu.io.predictedNextPC := nxtPredictedPC
 
-  // val isBranchGuessWrongReg = RegInit(false.B)
+  val isBranchGuessWrongReg = RegInit(false.B)
   val isIFUAckCorrectTarget = Wire(Bool())
-  // isBranchGuessWrong := isBranchGuessWrongReg || (exu.io.out.valid && exu.io.predWrong)
-  // when(exu.io.out.valid) {
-  //   isBranchGuessWrongReg := exu.io.predWrong
-  // }.elsewhen(isIFUAckCorrectTarget) {
-  //   isBranchGuessWrongReg := false.B
-  // }
-
-  isBranchGuessWrong := RegEnableReadNew(exu.io.predWrong, exu.io.out.valid)
+  isBranchGuessWrong := isBranchGuessWrongReg || (exu.io.out.valid && exu.io.predWrong)
+  when(exu.io.out.valid) {
+    isBranchGuessWrongReg := exu.io.predWrong
+  }.elsewhen(isIFUAckCorrectTarget) {
+    isBranchGuessWrongReg := false.B
+  }
 
   dontTouch(isBranchGuessWrong)
   val curCorrectJmpTarget = RegEnableReadNew(
@@ -123,7 +121,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     ifu.io.pc.ready,
     // Sometimes although jump,
     // target is near current pc and IFU just meets it
-    Mux(isBranchGuessWrong & (!isIFUAckCorrectTarget), curCorrectJmpTarget, nxtPredictedPC),
+    Mux(isBranchGuessWrong && (!isIFUAckCorrectTarget), curCorrectJmpTarget, nxtPredictedPC),
     pc
   )
 
