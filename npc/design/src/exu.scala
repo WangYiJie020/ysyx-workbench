@@ -55,7 +55,6 @@ class EXUStageCalc extends Module {
   val func7t = dinst.code(31, 25)
 
   val isFmtI   = InstFmt.hasSame(dinst.info.fmt, InstFmt.imm)
-  val isFmtB   = InstFmt.hasSame(dinst.info.fmt, InstFmt.branch)
   val isTypSys = InstType.hasSame(dinst.info.typ, InstType.system)
 
   io.out.bits.gprWeEn := dinst.info.rdWrEn
