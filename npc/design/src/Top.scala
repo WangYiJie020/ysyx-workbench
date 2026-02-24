@@ -78,7 +78,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   nxtPredictedPC         := bp.io.predictTarget
   ifu.io.predictedNextPC := nxtPredictedPC
 
-  val isBranchGuessWrongReg = RegInit(false.B)
+  // val isBranchGuessWrongReg = RegInit(false.B)
   val isIFUAckCorrectTarget = Wire(Bool())
   // isBranchGuessWrong := isBranchGuessWrongReg || (exu.io.out.valid && exu.io.predWrong)
   // when(exu.io.out.valid) {
