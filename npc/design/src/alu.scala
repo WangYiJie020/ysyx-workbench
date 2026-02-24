@@ -13,7 +13,7 @@ class ALUInput extends Bundle {
   val src2   = Types.UWord
 }
 
-class ALU extends Module {
+class ALU_foo extends Module {
   val io = IO(new Bundle {
     val in  = Flipped(Decoupled(new ALUInput))
     val out = Decoupled(Types.UWord)
@@ -26,7 +26,7 @@ class ALU extends Module {
   io.out.bits := io.in.bits.src1 + io.in.bits.src2 + io.in.bits.func3t
 }
 
-class ALU_ extends Module {
+class ALU extends Module {
   val io = IO(new Bundle {
     val in  = Flipped(Decoupled(new ALUInput))
     val out = Decoupled(Types.UWord)
