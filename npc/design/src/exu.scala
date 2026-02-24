@@ -163,6 +163,8 @@ class EXUStageChooseNxt extends Module {
     val isJAL     = Output(Bool())
     val predWrong = Output(Bool())
 
+    val fencei = Output(Bool())
+
     val fwd = Output(new WrBackForwardInfo)
     val out = Decoupled(new LSUInput)
   })
@@ -239,6 +241,7 @@ class EXUStageChooseNxt extends Module {
   // when fence.i, also treat it as jump
   // to make flush to refetch the inst nxt fence.i
   io.predWrong := (normalNxtPC =/= dinst.predictedNextPC) || isJmpCsr || isFenceI
+  io.fencei := isFenceI && io.in.valid
 
   val r1AddImm = io.in.bits.reg1AddImm
 
@@ -273,6 +276,8 @@ class EXU extends Module {
 
     val flush1 = Input(Bool())
 
+    val fencei  = Output(Bool())
+
     val fwd1 = Output(new WrBackForwardInfo)
     val fwd2 = Output(new WrBackForwardInfo)
 
@@ -302,6 +307,7 @@ class EXU extends Module {
   io.jmpHappen := stageChooseNxt.io.jmpHappen
   io.isJAL     := stageChooseNxt.io.isJAL
   io.predWrong := stageChooseNxt.io.predWrong
+  io.fencei     := stageChooseNxt.io.fencei
 
   stageCalc.io.flush := io.flush1
 
