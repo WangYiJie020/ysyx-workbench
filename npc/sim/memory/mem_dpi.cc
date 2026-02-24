@@ -129,7 +129,7 @@ DEF_NOHIGH8_FORWARD_RD(psram)
 // compatible interface for npc core
 extern "C" void pmem_read(int addr, int *data) {
 	uint32_t psram_addr = (uint32_t)addr - g_sim_mem.psram.base();
-	spdlog::debug("pmem_read addr={:08x} translated to psram_addr={:08x}", addr, psram_addr);
+	spdlog::info("pmem_read addr={:08x} translated to psram_addr={:08x}", addr, psram_addr);
   return psram_read(psram_addr, data);
 }
 
