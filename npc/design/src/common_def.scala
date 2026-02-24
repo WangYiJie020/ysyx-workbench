@@ -104,12 +104,3 @@ class DecodedInstInfo extends InstMetaInfo with HasRs {
 class DecodedInst extends Inst {
   val info = new DecodedInstInfo
 }
-
-// update reg when enable,
-// and output the new value immediately
-object RegEnableReadNew {
-  def apply[T <: Data](nxt: T, en: Bool): T = {
-    val reg = RegEnable(nxt, en)
-    Mux(en, nxt, reg)
-  }
-}

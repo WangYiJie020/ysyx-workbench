@@ -80,15 +80,18 @@ class IDU extends Module {
 
   dontTouch(io)
 
+  // val inReg = RegEnable(io.in.bits, io.in.fire)
+  val inReg = io.in.bits
+
   // TODO: handle invalid instruction
 
   // val fsm = InnerBusCtrl(io.in, io.out, alwaysComb = true)
 
-  io.out.bits.viewAsSupertype(new Inst) := io.in.bits
+  io.out.bits.viewAsSupertype(new Inst) := inReg
 
   // alias
   val res  = io.out.bits.info
-  val inst = io.in.bits.code
+  val inst = inReg.code
 
   val iinfo_dec = Module(new InstInfoDecoder())
   iinfo_dec.io.opcode                   := inst(6, 0)

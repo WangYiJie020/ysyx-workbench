@@ -152,10 +152,7 @@ class EXU extends Module {
 
   // wdata
 
-  // No consider exception
-  val normalNxtPC = Wire(Types.UWord)
-  val nxtPC       = Wire(Types.UWord)
-
+  val nxt_pc   = Wire(Types.UWord)
   // need pc+imm:
   // auipc, jal(r), branch
   val pcAddImm = dinst.pc + dinst.info.imm
@@ -225,7 +222,7 @@ class EXU extends Module {
 
   writeBackInfo.iid       := dinst.iid
   writeBackInfo.pc        := dinst.pc
-  writeBackInfo.nxt_pc    := nxtPC
+  writeBackInfo.nxt_pc    := nxt_pc
   writeBackInfo.is_ebreak := (dinst.code === "h00100073".U)
 
   val isJmpCsr = is_ecall || is_mret
@@ -235,7 +232,7 @@ class EXU extends Module {
   // TODO: handle exception
   io.jmpHappen := willJmp
   io.isJAL     := isTypJAL
-  io.predWrong := (normalNxtPC =/= dinst.predictedNextPC) || isJmpCsr
+  io.predWrong := nxt_pc =/= dinst.predictedNextPC
 
   val dbgIsBranch = WireDefault(isTypBranch)
   dontTouch(dbgIsBranch)
@@ -260,16 +257,19 @@ class EXU extends Module {
   // val branchNxtPC = Mux(takeBranch, pcAddImm, snpc)
 
   val r1AddImm = reg_v1 + dinst.info.imm
-  normalNxtPC := Mux(
-    isTypJALR,
-    (r1AddImm(31, 1) ## 0.U(1.W)),
+  nxt_pc := Mux(
+    isJmpCsr,
+    csr_rdata,
     Mux(
-      isTypJAL || (isFmtB && takeBranch),
-      pcAddImm,
-      snpc
+      isTypJALR,
+      (r1AddImm(31, 1) ## 0.U(1.W)),
+      Mux(
+        isTypJAL || (isFmtB && takeBranch),
+        pcAddImm,
+        snpc
+      )
     )
   )
-  nxtPC := Mux(isJmpCsr, csr_rdata, normalNxtPC)
 
   // when(isJmpCsr) {
   //   nxt_pc := csr_rdata
