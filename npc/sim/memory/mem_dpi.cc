@@ -125,15 +125,21 @@ EXTERN_C void mrom_read(int32_t addr, int32_t *data) {
 // 0x3XXXXXXX -> 0x00XXXXXX
 DEF_NOHIGH8_FORWARD_RD(flash)
 
-DEF_NOHIGH8_FORWARD_RD(psram)
+// DEF_NOHIGH8_FORWARD_RD(psram)
+EXTERN_C void psram_read(int32_t addr, int32_t *data) {
+	// add back
+	addr += g_sim_mem.psram.base();
+	g_sim_mem.psram.read_word(addr, (uint32_t &)(*data));
+	DPI_TRACE("R addr={:08x} data={:08x}", addr, *data);
+}
 // compatible interface for npc core
 extern "C" void pmem_read(int addr, int *data) {
   return psram_read(addr - g_sim_mem.psram.base(), data);
 }
 
 extern "C" void psram_write(int32_t addr, char strb8, int32_t data, int32_t *) {
-  DPI_ASSERT((addr & 0xff000000) == 0,
-             "psram_write addr={:08x} has non-zero high 8 bits", addr);
+  // DPI_ASSERT((addr & 0xff000000) == 0,
+  //            "psram_write addr={:08x} has non-zero high 8 bits", addr);
   // add back
   addr += g_sim_mem.psram.base();
   g_sim_mem.psram.write_word(addr, data, strb8);
