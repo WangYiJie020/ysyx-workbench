@@ -80,12 +80,14 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
   val isBranchGuessWrongReg = RegInit(false.B)
   val isIFUAckCorrectTarget = Wire(Bool())
-  isBranchGuessWrong := isBranchGuessWrongReg || (exu.io.out.valid && exu.io.predWrong)
-  when(exu.io.out.valid) {
-    isBranchGuessWrongReg := exu.io.predWrong
-  }.elsewhen(isIFUAckCorrectTarget) {
-    isBranchGuessWrongReg := false.B
-  }
+  // isBranchGuessWrong := isBranchGuessWrongReg || (exu.io.out.valid && exu.io.predWrong)
+  // when(exu.io.out.valid) {
+  //   isBranchGuessWrongReg := exu.io.predWrong
+  // }.elsewhen(isIFUAckCorrectTarget) {
+  //   isBranchGuessWrongReg := false.B
+  // }
+
+  isBranchGuessWrong := RegEnableReadNew(exu.io.predWrong && (!isIFUAckCorrectTarget), exu.io.out.valid || isIFUAckCorrectTarget)
 
   dontTouch(isBranchGuessWrong)
   val curCorrectJmpTarget = RegEnableReadNew(
@@ -106,7 +108,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   dontTouch(isIDUMeetCorrectJmpTarget)
   dontTouch(curCorrectJmpTarget)
 
-  when(isBranchGuessWrong && (!isIFUAckCorrectTarget)) {
+  when(isBranchGuessWrong ){//&& (!isIFUAckCorrectTarget)) {
     isFlushIDUReg := true.B
   }.elsewhen(isIDUMeetCorrectJmpTarget) {
     isFlushIDUReg := false.B
@@ -121,7 +123,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     ifu.io.pc.ready,
     // Sometimes although jump,
     // target is near current pc and IFU just meets it
-    Mux(isBranchGuessWrong && (!isIFUAckCorrectTarget), curCorrectJmpTarget, nxtPredictedPC),
+    Mux(isBranchGuessWrong /*&& (!isIFUAckCorrectTarget)*/, curCorrectJmpTarget, nxtPredictedPC),
     pc
   )
 
