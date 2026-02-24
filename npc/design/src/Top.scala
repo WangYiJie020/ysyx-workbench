@@ -35,8 +35,8 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
   val isBranchGuessWrong = Wire(Bool())
 
-  val isFlushIDUReg = RegInit(false.B)
-  val needFlushPipeline    = Wire(Bool())
+  val isFlushIDUReg     = RegInit(false.B)
+  val needFlushPipeline = Wire(Bool())
 
   val gprs = Module(new RegisterFile(READ_PORTS = 2))
   val csrs = Module(new ControlStatusRegisterFile())
@@ -93,8 +93,8 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
   dontTouch(isBranchGuessWrong)
   val curCorrectJmpTarget = RegEnableReadNew(
-    exu.io.out.bits.exuWriteBack.nxt_pc,
-    exu.io.out.valid
+    Mux(meetFencei, idu.io.out.bits.predictedNextPC, exu.io.out.bits.exuWriteBack.nxt_pc),
+    exu.io.out.valid || meetFencei
   )
 
   // NOTICE: for IFU
@@ -116,12 +116,11 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
     isFlushIDUReg := false.B
   }
 
-
   needFlushPipeline := (isFlushIDUReg) || isBranchGuessWrong
   dontTouch(needFlushPipeline)
 
   pc := Mux(
-    ifu.io.pc.ready && (!meetFencei),
+    ifu.io.pc.ready,
     // Sometimes although jump,
     // target is near current pc and IFU just meets it
     Mux(isBranchGuessWrong && (!isIFUAckCorrectTarget), curCorrectJmpTarget, nxtPredictedPC),
@@ -201,7 +200,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
   val exuWrBackDataVaild = !(exu.io.out.bits.isLoad || exu.io.out.bits.isStore)
 
-  idu.io.flush := needFlushPipeline
+  idu.io.flush  := needFlushPipeline
   exu.io.flush1 := needFlushPipeline
 
   // Write back
