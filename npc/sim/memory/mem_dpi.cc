@@ -130,7 +130,8 @@ extern "C" void pmem_read(int addr, int *data) {
   return psram_read(addr - g_sim_mem.psram.base(), data);
 }
 
-extern "C" void psram_write(int32_t addr, char strb8, int32_t data, int32_t *) {
+extern "C" void psram_write(int32_t _addr, char strb8, int32_t data, int32_t *) {
+	uint32_t addr = (uint32_t)_addr;
   DPI_ASSERT((addr & 0xff000000) == 0,
              "psram_write addr={:08x} has non-zero high 8 bits", addr);
   // add back
