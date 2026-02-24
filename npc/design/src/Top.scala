@@ -121,10 +121,10 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   dontTouch(needFlushPipeline)
 
   pc := Mux(
-    ifu.io.pc.ready,
+    ifu.io.pc.ready && (!meetFencei),
     // Sometimes although jump,
     // target is near current pc and IFU just meets it
-    Mux(isBranchGuessWrong && (!isIFUAckCorrectTarget) && (!meetFencei), curCorrectJmpTarget, nxtPredictedPC),
+    Mux(isBranchGuessWrong && (!isIFUAckCorrectTarget), curCorrectJmpTarget, nxtPredictedPC),
     pc
   )
 
