@@ -97,6 +97,8 @@ class DecodedInstInfo extends InstMetaInfo with HasRs {
   val rs1 = Types.RegAddr
   val rs2 = Types.RegAddr
 
+  val rdWrEn = Bool()
+
   val reg1 = Types.UWord
   val reg2 = Types.UWord
 

@@ -34,11 +34,14 @@ class EXUStageCalc extends Module {
   val io = IO(new Bundle {
     val in       = Flipped(Decoupled(new DecodedInst))
     val csr_rvec = CSRegReqIO.TX.SingleRead
+    val fwd      = Output(new WrBackForwardInfo)
     val out      = Decoupled(new EXUStageCalcOut)
   })
 
   val GARBAGE_UNINIT_VALUE = Wire(Types.UWord)
   GARBAGE_UNINIT_VALUE := DontCare
+
+  io.fwd := WrBackForwardInfo(io.in)
 
   val alu = Module(new ALU)
 
@@ -54,14 +57,7 @@ class EXUStageCalc extends Module {
   val isFmtB   = InstFmt.hasSame(dinst.info.fmt, InstFmt.branch)
   val isTypSys = InstType.hasSame(dinst.info.typ, InstType.system)
 
-  val isTypStore  = InstType.hasSame(dinst.info.typ, InstType.store)
-  val isTypBranch = InstType.hasSame(dinst.info.typ, InstType.branch)
-  val isTypFencei = InstType.hasSame(dinst.info.typ, InstType.fencei)
-
-  val isNoWrBackType = isTypStore || isTypBranch || isTypFencei
-  // for now, system inst, ecall and mret has rd == 0
-  // TODO: handle rd != 0 case
-  io.out.bits.gprWeEn := ~isNoWrBackType
+  io.out.bits.gprWeEn := dinst.info.rdWrEn
 
   io.in.ready  := io.out.ready
   io.out.valid := io.in.valid
@@ -166,7 +162,9 @@ class EXUStageChooseNxt extends Module {
     val jmpHappen = Output(Bool())
     val isJAL     = Output(Bool())
     val predWrong = Output(Bool())
-    val out       = Decoupled(new LSUInput)
+
+    val fwd = Output(new WrBackForwardInfo)
+    val out = Decoupled(new LSUInput)
   })
 
   io.in.ready  := io.out.ready
@@ -222,6 +220,10 @@ class EXUStageChooseNxt extends Module {
     )
   )
 
+  val isMemOP = isTypLoad || isTypStore
+
+  io.fwd := WrBackForwardInfo(io.in.valid, io.in.bits.dinst, ~isMemOP, writeBackInfo.gpr.data)
+
   writeBackInfo.iid    := dinst.iid
   writeBackInfo.pc     := dinst.pc
   writeBackInfo.nxt_pc := nxtPC
@@ -265,6 +267,10 @@ class EXU extends Module {
     val jmpHappen = Output(Bool())
     val isJAL     = Output(Bool())
     val predWrong = Output(Bool())
+
+    val fwd1    = Output(new WrBackForwardInfo)
+    val fwd2    = Output(new WrBackForwardInfo)
+
     val out       = Decoupled(new LSUInput)
   })
 
@@ -276,34 +282,14 @@ class EXU extends Module {
   val stageCalc      = Module(new EXUStageCalc)
   val stageChooseNxt = Module(new EXUStageChooseNxt)
 
+  io.fwd1 := stageCalc.io.fwd
+  io.fwd2 := stageChooseNxt.io.fwd
+
   dontTouchValidReady(stageCalc.io.in)
   dontTouchValidReady(stageCalc.io.out)
   dontTouchValidReady(stageChooseNxt.io.in)
   dontTouchValidReady(stageChooseNxt.io.out)
 
-  stageCalc.io.in.bits  := io.in.bits
-  stageCalc.io.in.valid := io.in.valid
-  stageCalc.io.csr_rvec <> io.csr_rvec
+  pipelineConnect(stageCalc.io.in, stageCalc.io.out, stageChooseNxt.io.in)
 
-  object State extends ChiselEnum {
-    val s1, s2 = Value
-  }
-  val state = RegInit(State.s1)
-  stageChooseNxt.io.in.bits  := RegEnable(stageCalc.io.out.bits, stageCalc.io.out.fire)
-
-  io.out.bits := stageChooseNxt.io.out.bits
-
-  io.jmpHappen := stageChooseNxt.io.jmpHappen
-  io.isJAL     := stageChooseNxt.io.isJAL
-  io.predWrong := stageChooseNxt.io.predWrong
-
-  io.in.ready := io.out.ready
-  stageCalc.io.out.ready := true.B
-  io.out.valid := state === State.s2
-  stageChooseNxt.io.in.valid := state === State.s2
-  stageChooseNxt.io.out.ready := true.B
-  state := Mux(state === State.s1,
-    Mux(io.in.valid, State.s2, State.s1),
-    Mux(io.out.ready, State.s1, State.s2)
-  )
 }

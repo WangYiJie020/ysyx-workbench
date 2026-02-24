@@ -33,10 +33,6 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   dontTouch(io)
   io := DontCare
 
-  def dontTouchValidReady[T <: Data](x: DecoupledIO[T]): Unit = {
-    dontTouch(x.valid)
-    dontTouch(x.ready)
-  }
   val isBranchGuessWrong = Wire(Bool())
 
   val isFlushIDUReg = RegInit(false.B)
@@ -190,11 +186,15 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   idu.io.rvec <> gprs.io.read
   exu.io.csr_rvec <> csrs.io.read
 
-  idu.io.exuWrBack   := ExtractGPRInfoFromLSU(exu.io.out)
-  idu.io.lsuWrBack   := ExtractGPRInfoFromLSU(lsu.io.in)
-  idu.io.wbuWrBack   := ExtractGPRInfoFromWrBack(wbu.io.in)
+  // idu.io.exuWrBack   := ExtractGPRInfoFromLSU(exu.io.out)
+  // idu.io.lsuWrBack   := ExtractGPRInfoFromLSU(lsu.io.in)
+  // idu.io.wbuWrBack   := ExtractGPRInfoFromWrBack(wbu.io.in)
+  idu.io.wrBackInfo.exus1 := exu.io.fwd1
+  idu.io.wrBackInfo.exus2 := exu.io.fwd2
+  idu.io.wrBackInfo.lsu   := ExtractFwdInfoFromLSU(lsu.io.in)
+  idu.io.wrBackInfo.wbu   := ExtractFwdInfoFromWrBack(wbu.io.in)
+
   val exuWrBackDataVaild = !(exu.io.out.bits.isLoad || exu.io.out.bits.isStore)
-  idu.io.exuWrBackDataVaild := exuWrBackDataVaild && exu.io.out.valid
 
   idu.io.flush := needFlushPipeline
 
