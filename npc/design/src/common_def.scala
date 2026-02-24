@@ -97,10 +97,45 @@ class DecodedInstInfo extends InstMetaInfo with HasRs {
   val rs1 = Types.RegAddr
   val rs2 = Types.RegAddr
 
+  val rdWrEn = Bool()
+
   val reg1 = Types.UWord
   val reg2 = Types.UWord
+
+  val snpc = Types.UWord
 }
 
 class DecodedInst extends Inst {
   val info = new DecodedInstInfo
+}
+
+// update reg when enable,
+// and output the new value immediately
+object RegEnableReadNew {
+  def apply[T <: Data](nxt: T, en: Bool): T = {
+    val reg = RegEnable(nxt, en)
+    Mux(en, nxt, reg)
+  }
+}
+
+object pipelineConnect {
+  def apply[T <: Data, T2 <: Data](
+    prevOut: DecoupledIO[T],
+    thisIn:  DecoupledIO[T],
+    thisOut: DecoupledIO[T2]
+  ) = {
+
+    val thisInReady = thisIn.ready
+
+    val dataValid   = RegInit(false.B)
+    val readyToPrev = (!dataValid) || thisInReady
+
+    when(readyToPrev) {
+      dataValid := prevOut.valid
+    }
+    prevOut.ready := readyToPrev
+
+    thisIn.bits  := RegEnable(prevOut.bits, prevOut.fire)
+    thisIn.valid := dataValid
+  }
 }

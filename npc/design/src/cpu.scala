@@ -26,15 +26,27 @@ class WriteBackInfo extends Bundle {
 
   val iid = Types.InstID
 }
-object ExtractGPRInfoFromWrBack {
-  def apply(info: DecoupledIO[WriteBackInfo]): GPRegReqIO._WriteRX = {
-    val gprInfo = info.bits.gpr
-    val valid   = info.valid
+// object ExtractGPRInfoFromWrBack {
+//   def apply(info: DecoupledIO[WriteBackInfo]): GPRegReqIO._WriteRX = {
+//     val gprInfo = info.bits.gpr
+//     val valid   = info.valid
+//
+//     val out = Wire(GPRegReqIO.RX.Write)
+//     out.en   := gprInfo.en && valid
+//     out.addr := gprInfo.addr
+//     out.data := gprInfo.data
+//     out
+//   }
+// }
+object ExtractFwdInfoFromWrBack {
+  def apply(info: DecoupledIO[WriteBackInfo]): WrBackForwardInfo = {
+    val wrBack = info.bits
 
-    val out = Wire(GPRegReqIO.RX.Write)
-    out.en   := gprInfo.en && valid
-    out.addr := gprInfo.addr
-    out.data := gprInfo.data
+    val out = Wire(new WrBackForwardInfo)
+    out.addr      := wrBack.gpr.addr
+    out.enWr      := wrBack.gpr.en && info.valid
+    out.dataVaild := info.valid
+    out.data      := wrBack.gpr.data
     out
   }
 }
