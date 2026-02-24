@@ -293,6 +293,11 @@ class EXU extends Module {
   io.in <> stageCalc.io.in
   io.out <> stageChooseNxt.io.out
 
+  stageCalc.io.csr_rvec <> io.csr_rvec
+  io.jmpHappen := stageChooseNxt.io.jmpHappen
+  io.isJAL     := stageChooseNxt.io.isJAL
+  io.predWrong := stageChooseNxt.io.predWrong
+
   pipelineConnect(stageCalc.io.out, stageChooseNxt.io.in, stageChooseNxt.io.out)
 
 }
