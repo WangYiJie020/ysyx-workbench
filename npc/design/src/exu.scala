@@ -180,6 +180,7 @@ class EXUStageChooseNxt extends Module {
   val isTypBranch     = InstType.hasSame(dinst.info.typ, InstType.branch)
   val isTypArithmetic = InstType.hasSame(dinst.info.typ, InstType.arithmetic)
   val isTypLUI        = InstType.hasSame(dinst.info.typ, InstType.lui)
+  val isFenceI       = InstType.hasSame(dinst.info.typ, InstType.fencei)
 
   val isFmtB = InstFmt.hasSame(dinst.info.fmt, InstFmt.branch)
 
@@ -235,7 +236,9 @@ class EXUStageChooseNxt extends Module {
 
   io.jmpHappen := willJmp
   io.isJAL     := isTypJAL
-  io.predWrong := (normalNxtPC =/= dinst.predictedNextPC) || isJmpCsr
+  // when fence.i, also treat it as jump
+  // to make flush to refetch the inst nxt fence.i
+  io.predWrong := (normalNxtPC =/= dinst.predictedNextPC) || isJmpCsr || isFenceI
 
   val r1AddImm = io.in.bits.reg1AddImm
 
