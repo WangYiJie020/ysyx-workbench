@@ -96,10 +96,10 @@ void RAWStallPerfCounter::update() {
   }
 }
 void RAWStallPerfCounter::bind() {
-  hIsConflictEXU = &GetIDU()->isConflictWithEXU;
-  hIsConflictLSU = &GetIDU()->isConflictWithLSU;
-  hIsConflictWBU = &GetIDU()->isConflictWithWBU;
-  hIsIDUStall = &GetIDU()->isStall;
+  hIsConflictEXU = &GetIDU()->bypassMux->isConflictWithEXU;
+  hIsConflictLSU = &GetIDU()->bypassMux->isConflictWithLSU;
+  hIsConflictWBU = &GetIDU()->bypassMux->isConflictWithWBU;
+  hIsIDUStall = &GetIDU()->bypassMux->isStall;
 }
 IDUFlushPerfCounter::IDUFlushReason IDUFlushPerfCounter::getCurReason() const {
   auto &exu = *GetEXUS2();
