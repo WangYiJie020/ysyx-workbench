@@ -96,13 +96,13 @@ void RAWStallPerfCounter::update() {
   }
 }
 void RAWStallPerfCounter::bind() {
-  hIsConflictEXU = &GetIDU()->bypassMux->isConflictWithEXU;
-  hIsConflictLSU = &GetIDU()->bypassMux->isConflictWithLSU;
-  hIsConflictWBU = &GetIDU()->bypassMux->isConflictWithWBU;
-  hIsIDUStall = &GetIDU()->bypassMux->isStall;
+  hIsConflictEXU = &GetIDU()->isConflictWithEXU;
+  hIsConflictLSU = &GetIDU()->isConflictWithLSU;
+  hIsConflictWBU = &GetIDU()->isConflictWithWBU;
+  hIsIDUStall = &GetIDU()->isStall;
 }
 IDUFlushPerfCounter::IDUFlushReason IDUFlushPerfCounter::getCurReason() const {
-  auto &exu = *GetEXUS2();
+  auto &exu = *GetEXU();
   IDUFlushReason reason;
   if (exu.dbgIsBranch)
     reason = IDUFlushReason::BranchTaken;
@@ -132,15 +132,15 @@ void IDUFlushPerfCounter::update() {
     cycFlushOfReason[lastFlushReason]++;
   }
 }
-void IDUFlushPerfCounter::bind() { hIsFlushIDU = &GetCPU()->needFlushPipeline; }
+void IDUFlushPerfCounter::bind() { hIsFlushIDU = &GetCPU()->isFlushIDU; }
 
 void BranchPredPerfCounter::bind() {
-  hValid = &GetEXUS2()->io_in_valid;
-  hReady = &GetEXUS2()->io_in_ready;
+  hValid = &GetEXU()->io_in_valid;
+  hReady = &GetEXU()->io_in_ready;
 }
 
 int BranchPredPerfCounter::getCurJmpType() const {
-  auto &exu = *GetEXUS2();
+  auto &exu = *GetEXU();
   if (exu.dbgIsBranch)
     return JmpType::Branch;
   else if (exu.dbgIsJAL)
@@ -160,7 +160,7 @@ void BranchPredPerfCounter::update() {
       return;
     }
     totCountOfType[jmpType]++;
-    if (GetEXUS2()->io_predWrong) {
+    if (GetEXU()->io_predWrong) {
       totMispredictOfType[jmpType]++;
     }
   }
@@ -201,8 +201,7 @@ void initPerfCounters() {
                   &GetIFU()->io_out_valid, &GetIFU()->io_out_ready),
               "IFU");
   pipeCtr.add(PipeStagePerfCounter().BIND_PIPE_STAGE_BASE(GetIDU()->io), "IDU");
-  pipeCtr.add(PipeStagePerfCounter().BIND_PIPE_STAGE_BASE(GetEXUS1()->io), "EXUS1");
-  pipeCtr.add(PipeStagePerfCounter().BIND_PIPE_STAGE_BASE(GetEXUS2()->io), "EXUS2");
+  pipeCtr.add(PipeStagePerfCounter().BIND_PIPE_STAGE_BASE(GetEXU()->io), "EXU");
   pipeCtr.add(PipeStagePerfCounter().BIND_PIPE_STAGE_BASE(GetLSU()->io), "LSU");
 
   iduFlushCtr.bind();

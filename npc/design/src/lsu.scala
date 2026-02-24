@@ -18,31 +18,18 @@ class LSUInput extends Bundle {
   val exuWriteBack = new WriteBackInfo
 }
 
-object ExtractFwdInfoFromLSU {
-  def apply(info: DecoupledIO[LSUInput]): WrBackForwardInfo = {
-    val wrBack = info.bits.exuWriteBack
+object ExtractGPRInfoFromLSU {
+  def apply(info: DecoupledIO[LSUInput]): GPRegReqIO._WriteRX = {
+    val gprInfo = info.bits.exuWriteBack.gpr
+    val valid   = info.valid
 
-    val out = Wire(new WrBackForwardInfo)
-    out.addr      := wrBack.gpr.addr
-    out.enWr      := wrBack.gpr.en && info.valid
-    out.dataVaild := false.B
-    out.data      := DontCare
+    val out = Wire(GPRegReqIO.RX.Write)
+    out.en   := gprInfo.en && valid
+    out.addr := gprInfo.addr
+    out.data := gprInfo.data
     out
   }
 }
-
-// object ExtractGPRInfoFromLSU {
-//   def apply(info: DecoupledIO[LSUInput]): GPRegReqIO._WriteRX = {
-//     val gprInfo = info.bits.exuWriteBack.gpr
-//     val valid   = info.valid
-//
-//     val out = Wire(GPRegReqIO.RX.Write)
-//     out.en   := gprInfo.en && valid
-//     out.addr := gprInfo.addr
-//     out.data := gprInfo.data
-//     out
-//   }
-// }
 
 class LSUIO extends Bundle {
   val mem = AXI4IO.Master

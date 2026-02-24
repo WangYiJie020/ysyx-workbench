@@ -13,19 +13,6 @@ class ALUInput extends Bundle {
   val src2   = Types.UWord
 }
 
-class ALU_foo extends Module {
-  val io = IO(new Bundle {
-    val in  = Flipped(Decoupled(new ALUInput))
-    val out = Decoupled(Types.UWord)
-  })
-
-  io.out.valid := io.in.valid
-  io.in.ready := io.out.ready
-
-  // do some foo op for test
-  io.out.bits := io.in.bits.src1 + io.in.bits.src2 + io.in.bits.func3t
-}
-
 class ALU extends Module {
   val io = IO(new Bundle {
     val in  = Flipped(Decoupled(new ALUInput))
@@ -89,28 +76,18 @@ class ALU extends Module {
   val slt_res = sign_res ^ overflow
 
   val rShiftResult = Wire(Types.UWord)
-  val lShiftResult = Wire(Types.UWord)
+  // shift_res := Mux(isOpAlt, (s_src1 >> shamt).asUInt, src1 >> shamt)
 
-  rShiftResult := Mux(isOpAlt, (s_src1 >> shamt).asUInt, src1 >> shamt)
-  lShiftResult := src1 << shamt
-
-  // Useless optimize area -200
-  // but freq low
-
-  // // Optimize make L/R shift use same shifter
-  // //
-  // // 23850 -> 23504
-  // val extedSrc1    = Wire(UInt(64.W))
-  // val isRightShift = inbits.func3t(2)
-  // val shiftedSrc1  = Mux(isRightShift, src1, Reverse(src1))
-  // extedSrc1    := Cat(Fill(32, shiftedSrc1(31) & isOpAlt), shiftedSrc1)
-  // rShiftResult := extedSrc1 >> shamt
+  // Optimize make L/R shift use same shifter
   //
-  // lShiftResult := Reverse(rShiftResult)
+  // 23850 -> 23504
+  val extedSrc1    = Wire(UInt(64.W))
+  val isRightShift = inbits.func3t(2)
+  val shiftedSrc1  = Mux(isRightShift, src1, Reverse(src1))
+  extedSrc1    := Cat(Fill(32, shiftedSrc1(31) & isOpAlt), shiftedSrc1)
+  rShiftResult := extedSrc1 >> shamt
 
   // val shiftResult = Mux(isRightShift, rShiftResult, Reverse(rShiftResult))
-
-
 
   val defaultRes = Wire(Types.UWord)
   defaultRes := DontCare
@@ -148,7 +125,7 @@ class ALU extends Module {
   io.out.bits := MuxLookup(inbits.func3t, defaultRes)(
     Seq(
       0.U -> add_sub_res,        // 000: add/sub/addi
-      1.U -> lShiftResult, // 001: sll/slli
+      1.U -> Reverse(rShiftResult), // 001: sll/slli
       2.U -> slt_res,            // 010: slt/slti
       3.U -> sltu_res,           // 011: sltu/sltiu
       4.U -> logic_xor,          // 100: xor/xori

@@ -49,15 +49,14 @@ void KonataLogger::update() {
   static auto &cpu = *GetCPU();
   static auto &ifu = *GetIFU();
   static auto &idu = *GetIDU();
-  static auto &exus1 = *GetEXUS1();
-	static auto &exus2 = *GetEXUS2();
+  static auto &exu = *GetEXU();
   static auto &lsu = *GetLSU();
   static auto &wbu = *GetCPU()->wbu;
   static std::vector<Stage> stages = {
       Stage({&ifu.io_pc_valid, &ifu.io_pc_ready},
             {&ifu.io_out_valid, &ifu.io_out_ready}, "IF", &ifu.io_out_bits_iid),
       Stage(idu, "DE", &idu.io_out_bits_iid),
-      Stage(exus2, "EX2", &exus2.io_out_bits_exuWriteBack_iid),
+      Stage(exu, "EX", &exu.io_out_bits_exuWriteBack_iid),
       Stage(lsu, "LS", &lsu.io_out_bits_iid),
       Stage({&wbu.io_in_valid, &wbu.io_in_ready}, {nullptr, nullptr}, "WB",
             &wbu.io_in_bits_iid),
@@ -79,7 +78,7 @@ void KonataLogger::update() {
 
   std::ranges::for_each(stages, [&](auto &stage) {
     bool isIDU = (&stage == &idu_stage);
-    if (isIDU && cpu.needFlushPipeline)
+    if (isIDU && cpu.isFlushIDU)
       return;
     if (stage.in.fire())
       stageStart(*stage.iid, stage.name);
@@ -102,7 +101,7 @@ void KonataLogger::update() {
     // stageEnd(*wbu_stage.iid, wbu_stage.name);
   }
 
-  if (cpu.needFlushPipeline && idu_stage.in.valid()) {
+  if (cpu.isFlushIDU && idu_stage.in.valid()) {
     // addLabel(*idu_stage.iid, std::format("FLUSHED@{}ps", sim_get_time()),
     // true);
     retire(*idu_stage.iid, 0, true);
