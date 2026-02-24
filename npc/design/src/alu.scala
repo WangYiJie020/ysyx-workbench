@@ -19,6 +19,19 @@ class ALU extends Module {
     val out = Decoupled(Types.UWord)
   })
 
+  io.out.valid := io.in.valid
+  io.in.ready := io.out.ready
+
+  // do some foo op for test
+  io.out.bits := io.in.bits.src1 + io.in.bits.src2 + io.in.bits.func3t
+}
+
+class ALU_ extends Module {
+  val io = IO(new Bundle {
+    val in  = Flipped(Decoupled(new ALUInput))
+    val out = Decoupled(Types.UWord)
+  })
+
   val fsm = InnerBusCtrl(io.in, io.out, alwaysComb = true)
 
   // alias
