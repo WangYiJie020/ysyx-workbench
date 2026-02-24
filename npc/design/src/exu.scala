@@ -35,6 +35,7 @@ class EXUStageCalc extends Module {
     val in       = Flipped(Decoupled(new DecodedInst))
     val csr_rvec = CSRegReqIO.TX.SingleRead
     val fwd      = Output(new WrBackForwardInfo)
+    val flush    = Input(Bool())
     val out      = Decoupled(new EXUStageCalcOut)
   })
 
@@ -45,8 +46,8 @@ class EXUStageCalc extends Module {
 
   val alu = Module(new ALU)
 
-  alu.io.out.ready := io.out.ready
-  alu.io.in.valid  := io.in.valid
+  alu.io.out.ready := io.out.ready || io.flush
+  alu.io.in.valid  := io.in.valid && !io.flush
 
   val alu_in = alu.io.in.bits
   val dinst  = io.in.bits
@@ -268,10 +269,12 @@ class EXU extends Module {
     val isJAL     = Output(Bool())
     val predWrong = Output(Bool())
 
-    val fwd1    = Output(new WrBackForwardInfo)
-    val fwd2    = Output(new WrBackForwardInfo)
+    val flush1 = Input(Bool())
 
-    val out       = Decoupled(new LSUInput)
+    val fwd1 = Output(new WrBackForwardInfo)
+    val fwd2 = Output(new WrBackForwardInfo)
+
+    val out = Decoupled(new LSUInput)
   })
 
   def dontTouchValidReady[T <: Data](x: DecoupledIO[T]): Unit = {
@@ -297,6 +300,8 @@ class EXU extends Module {
   io.jmpHappen := stageChooseNxt.io.jmpHappen
   io.isJAL     := stageChooseNxt.io.isJAL
   io.predWrong := stageChooseNxt.io.predWrong
+
+  stageCalc.io.flush := io.flush1
 
   pipelineConnect(stageCalc.io.out, stageChooseNxt.io.in, stageChooseNxt.io.out)
 

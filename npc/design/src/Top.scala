@@ -197,6 +197,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val exuWrBackDataVaild = !(exu.io.out.bits.isLoad || exu.io.out.bits.isStore)
 
   idu.io.flush := needFlushPipeline
+  exu.io.flush1 := needFlushPipeline
 
   // Write back
 
