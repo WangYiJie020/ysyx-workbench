@@ -78,21 +78,20 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   nxtPredictedPC         := bp.io.predictTarget
   ifu.io.predictedNextPC := nxtPredictedPC
 
-  val meetFencei = idu.io.fencei
 
   val isBranchGuessWrongReg = RegInit(false.B)
   val isIFUAckCorrectTarget = Wire(Bool())
-  isBranchGuessWrong := isBranchGuessWrongReg || (exu.io.out.valid && exu.io.predWrong) || meetFencei
-  when(exu.io.out.valid || meetFencei) {
-    isBranchGuessWrongReg := exu.io.predWrong || meetFencei
+  isBranchGuessWrong := isBranchGuessWrongReg || (exu.io.out.valid && exu.io.predWrong)
+  when(exu.io.out.valid) {
+    isBranchGuessWrongReg := exu.io.predWrong
   }.elsewhen(isIFUAckCorrectTarget) {
     isBranchGuessWrongReg := false.B
   }
 
   dontTouch(isBranchGuessWrong)
   val curCorrectJmpTarget = RegEnableReadNew(
-    Mux(meetFencei, idu.io.out.bits.predictedNextPC, exu.io.out.bits.exuWriteBack.nxt_pc),
-    exu.io.out.valid || meetFencei
+    exu.io.out.bits.exuWriteBack.nxt_pc,
+    exu.io.out.valid
   )
 
   // NOTICE: for IFU
@@ -128,6 +127,7 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val memArbiter = Module(new EXUIFU_MemVisitArbiter)
   AXI4IO.connectMasterSlave(lsu.io.mem, memArbiter.io.exu)
 
+  val meetFencei = idu.io.fencei
   val icache = Module(new ICache)
   icache.io.flush := meetFencei
   AXI4IO.connectMasterSlave(ifu.io.mem, icache.io.cpu)
