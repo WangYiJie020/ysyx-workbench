@@ -5,6 +5,7 @@
 
 #include "../common.hpp"
 #include <algorithm>
+#include <cstdint>
 #include <ranges>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/dup_filter_sink.h>
@@ -127,11 +128,11 @@ DEF_NOHIGH8_FORWARD_RD(flash)
 DEF_NOHIGH8_FORWARD_RD(psram)
 // compatible interface for npc core
 extern "C" void pmem_read(int addr, int *data) {
-  return psram_read(addr - g_sim_mem.psram.base(), data);
+	uint32_t psram_addr = (uint32_t)addr - g_sim_mem.psram.base();
+  return psram_read(psram_addr, data);
 }
 
-extern "C" void psram_write(int32_t _addr, char strb8, int32_t data, int32_t *) {
-	uint32_t addr = (uint32_t)_addr;
+extern "C" void psram_write(int32_t addr, char strb8, int32_t data, int32_t *) {
   DPI_ASSERT((addr & 0xff000000) == 0,
              "psram_write addr={:08x} has non-zero high 8 bits", addr);
   // add back
