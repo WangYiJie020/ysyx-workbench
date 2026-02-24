@@ -214,9 +214,18 @@ FSBL_TEXT void boot_memcpy(void *dst, const void *src, size_t n) {
   BOOT_ASSERT(IS_4BYTE_ALIGNED(src));
   BOOT_ASSERT(IS_4BYTE_ALIGNED(n));
   size_t wn = n / 4;
-  for (size_t i = 0; i < wn; i++) {
-    ((uint32_t *)dst)[i] = ((const uint32_t *)src)[i];
+	size_t i;
+  for (i = 0; i < wn; i+=4) {
+		uint32_t* d = &((uint32_t *)dst)[i];
+		const uint32_t* s = &((const uint32_t *)src)[i];
+		d[0] = s[0];
+		d[1] = s[1];
+		d[2] = s[2];
+		d[3] = s[3];
   }
+	for (; i < wn; i++) {
+		((uint32_t *)dst)[i] = ((const uint32_t *)src)[i];
+	}
 }
 
 SSBL_TEXT void _second_boot();
