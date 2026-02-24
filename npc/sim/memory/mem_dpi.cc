@@ -156,7 +156,7 @@ extern "C" void pmem_write(int addr, int data, int mask) {
   uint8_t umask = (mask >> unaligned_part) & 0xf;
 
 	uint32_t psram_addr = addr - g_sim_mem.psram.base();
-	spdlog::info("pmem_write addr={:08x} translated to psram_addr={:08x}", (uint32_t)addr, psram_addr);
+	// spdlog::info("pmem_write addr={:08x} translated to psram_addr={:08x}", (uint32_t)addr, psram_addr);
   return psram_write(psram_addr, umask, udata, nullptr);
 }
 
