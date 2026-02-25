@@ -22,8 +22,8 @@ trait HasRs {
 }
 
 object AddrSpace {
-  val CLINT = ("h02000000".U(32.W), "h0200ffff".U(32.W))
-  val SPI   = ("h10001000".U(32.W), "h10002000".U(32.W))
+  val CLINT  = ("h02000000".U(32.W), "h0200ffff".U(32.W))
+  val SPI    = ("h10001000".U(32.W), "h10002000".U(32.W))
   val SERIAL = ("h10000000".U(32.W), "h10001000".U(32.W))
 
   val SRAM = ("h0f000000".U(32.W), "h10000000".U(32.W))
@@ -89,9 +89,9 @@ object InstType extends ChiselEnum {
 }
 
 class Inst extends Bundle {
-  val code = Output(Types.UWord)
-  val pc   = Output(Types.UWord)
-  val iid = Output(Types.InstID)
+  val code            = Output(Types.UWord)
+  val pc              = Output(Types.UWord)
+  val iid             = Output(Types.InstID)
   val predictedNextPC = Output(Types.UWord)
 }
 

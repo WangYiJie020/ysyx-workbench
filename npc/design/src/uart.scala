@@ -7,9 +7,7 @@ import axi4._
 
 import chisel3.util.circt.dpi._
 
-import chisel3.layer._
-
-object DPICLayer extends Layer(LayerConfig.Inline)
+import dpiwrap._
 
 class UARTUnit extends Module {
   val io = IO(AXI4IO.Slave)
@@ -30,11 +28,6 @@ class UARTUnit extends Module {
   when(sio.wvalid) {
     val chData = sio.wdata(7, 0)
     InlinePrintf(cf"$chData%c")
-    block(DPICLayer) {
-      RawClockedVoidFunctionCall("skip_difftest_ref")(
-        clock,
-        sio.wvalid
-      )
-    }
+    SkipDifftestRef(clock, sio.wvalid)
   }
 }
