@@ -81,8 +81,7 @@ CHISEL2V_EMIT_DIR = $(BUILD_DIR)/gened/verilog$(SIM_ARCH_SUFFIX)
 CHISEL2V_DONE = $(BUILD_DIR)/verilog$(SIM_ARCH_SUFFIX).done
 
 V2CXX_EMIT_DIR = $(BUILD_DIR)/gened/cxx
-# -maxdepth 1
-MY_VSRCS = $(addprefix $(CHISEL2V_EMIT_DIR)/,$(shell cat $(CHISEL2V_EMIT_DIR)/filelist.f))
+MY_VSRCS = $(addprefix $(CHISEL2V_EMIT_DIR)/,$(shell cat $(CHISEL2V_EMIT_DIR)/filelist.f | grep -v "verification"))
 SIM_VSRCS += $(MY_VSRCS)
 SIM_CSRCS += $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 
@@ -91,21 +90,30 @@ SIM_HEADERS = $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.h" -or -name "*.h
 # Insert verilog public modifier for VPI
 #   see https://verilator.org/guide/latest/extensions.html#cmdoption-verilator-public_-flat-flat_rd-flat_rw-_on
 # to enable VPI work (make signal accessible from C++ side)
-
-VPI_DONE := $(BUILD_DIR)/vpi.done
-
+#
 # use VPI_DONE as a dependency to avoid repeated insertion
 # since the sed command modifies the source files
 # the real modification only needs when CHISEL2V_DONE is updated
+VPI_DONE := $(BUILD_DIR)/vpi.done
 $(VPI_DONE): $(CHISEL2V_DONE)
 ifeq ($(ENABLE_VPI), 1)
-	@echo "# inserting verilator public modifier"
+	$(info # Inserting verilator public modifier)
 	@$(foreach src,$(MY_VSRCS),\
 	sed -i '1i /*verilator public_on*/' $(src); \
 	sed -i -e '$$a /*verilator public_off*/' $(src);)
-	touch $(VPI_DONE)
-	@echo "VPI insertion done"
+	touch $@
 endif
+
+
+# Chisel generates macro like `layer$xxx` to control inline layer
+# renaming them to `$(CPU_DESIGN_NAME)_xxx` to avoid conflict and
+# make them more standard as macro names (convinient to pass to verilator)
+
+RENAME_LAYER_MACRO := $(BUILD_DIR)/rename_layer_macro.done
+$(RENAME_LAYER_MACRO): $(CHISEL2V_DONE)
+	$(info # Removing unstandard layer$$ style macro)
+	@$(foreach src,$(MY_VSRCS), sed -i 's/layer\$$\(\w\+\)/$(CPU_DESIGN_NAME)_\1/g' $(src);)
+	touch $@
 
 # sdb
 INC_PATH += $(abspath ../sdb/include)
@@ -129,8 +137,6 @@ $(CHISEL2V_DONE): $(CHISEL_SRCS)
 	$(MILL) -i $(CHISEL_DESIGN).runMain Elaborate --target-dir $(CHISEL2V_EMIT_DIR)
 	touch $(CHISEL2V_DONE)
 
-
-
 # rules for verilator
 
 VERILATOR_FLAGS += -MMD -cc \
@@ -143,6 +149,8 @@ VERILATOR_FLAGS += --hierarchical
 										# --output-split 20000 
 
 # VERILATOR_FLAGS += -threads 2
+VERILATOR_FLAGS += +define+layer\$$ysyx_25100261_InlineLayer
+
 
 VERILATOR_CONTROL_FILE = verilator.vlt
 
@@ -150,7 +158,7 @@ VERILATOR_CONTROL_FILE = verilator.vlt
 
 
 INCFLAGS = $(addprefix -I, $(INC_PATH))
-CXXFLAGS += $(INCFLAGS) -DTOP_NAME=V$(TOP_NAME) -DENABLE_VPI=$(ENABLE_VPI)# -DENABLE_WAVE=$(ENABLE_WAVE)
+CXXFLAGS += $(INCFLAGS) -DTOP_NAME=V$(TOP_NAME) -DENABLE_VPI=$(ENABLE_VPI)
 CXXFLAGS += $(SAN_FLAGS) -std=c++20 -g # -fno-inline
 
 # when use perf tool, frame pointer is needed
@@ -181,7 +189,7 @@ else
 endif
 
 
-$(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) $(CHISEL2V_DONE) $(VPI_DONE) $(SIM_HEADERS) $(VERILATOR_CONTROL_FILE)
+$(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) $(CHISEL2V_DONE) $(VPI_DONE) $(SIM_HEADERS) $(VERILATOR_CONTROL_FILE) $(RENAME_LAYER_MACRO)
 	@rm -rf $(V2CXX_EMIT_DIR)
 	@echo "# Building simulation binary: $@"
 	@$(VERILATOR) $(VERILATOR_FLAGS) \
@@ -192,12 +200,12 @@ $(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) $(CHISEL2V_DONE) $(VPI_DONE) $
 		--Mdir $(V2CXX_EMIT_DIR) --exe -o $(abspath $(SIM_BIN))
 	@make -s -C $(V2CXX_EMIT_DIR) -f V$(TOP_NAME).mk -j$(shell nproc) OPT_FAST=$(VSIM_OPT) CXX=clang++ LINK=clang++ AR="ar -T"
 
-iverilog: $(CHISEL2V_DONE)
+iverilog: $(CHISEL2V_DONE) $(RENAME_LAYER_MACRO)
 	$(info process verilog files with iverilog)
 	iverilog -g2012 -o $(BUILD_DIR)/iverilog_sim $(SIM_VSRCS)
 	@$(BUILD_DIR)/iverilog_sim
 
-verilog-lint: $(MY_VSRCS)
+verilog-lint: $(MY_VSRCS) 
 	$(info Lint verilog files with verilator)
 	@$(VERILATOR) --lint-only $(VERILATOR_FLAGS) -Wall $(MY_VSRCS)
 
@@ -206,7 +214,7 @@ all: default
 test:
 	$(MILL) -i $(CHISEL_DESIGN).test
 
-verilog: $(CHISEL2V_DONE)
+verilog: $(CHISEL2V_DONE) $(VPI_DONE) $(RENAME_LAYER_MACRO)
 	$(info Merge verilog files into one file $(ALL_IN_ONE_VFILE))
 	@cat $(MY_VSRCS) > $(ALL_IN_ONE_VFILE)
 
