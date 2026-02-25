@@ -201,7 +201,7 @@ class IDU extends Module {
   val isNoWrBackType = isTypStore || isTypBranch || isTypFencei
   res.rdWrEn := ~isNoWrBackType
 
-  io.rvec.en      := true.B
+  // io.rvec.en      := true.B
   io.rvec.addr(0) := res.rs1
   io.rvec.addr(1) := res.rs2
 
