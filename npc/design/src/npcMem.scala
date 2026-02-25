@@ -33,14 +33,14 @@ class AXI4MemUnit extends Module {
   val arState                   = RegInit(sARIdle)
   sio.arready := (arState === sARIdle) && (!reset.asBool)
 
-  arState   := MuxLookup(arState, sARIdle)(
+  arState      := MuxLookup(arState, sARIdle)(
     Seq(
       sARIdle -> Mux(sio.arvalid, sARWait, sARIdle),
       sARWait -> Mux(sio.rvalid && sio.rlast, sARIdle, sARWait)
     )
   )
   rdAddrBegReg := Mux(sio.arvalid && sio.arready, sio.araddr, rdAddrBegReg)
-  rdAddrBeg := Mux(arState === sARIdle, sio.araddr, rdAddrBegReg)
+  rdAddrBeg    := Mux(arState === sARIdle, sio.araddr, rdAddrBegReg)
 
   val arLen        = Reg(UInt(8.W))
   val curReadCount = Wire(UInt(8.W))
@@ -77,17 +77,18 @@ class AXI4MemUnit extends Module {
     Seq(
       RState.idle     -> Mux(sio.arvalid, RState.waitMem, RState.idle),
       RState.waitMem  -> Mux(curReadCount === arLen, RState.sendData, RState.waitMem),
-      RState.sendData -> Mux(curReadCount === 0.U, Mux(sio.arvalid,RState.waitMem,RState.idle), RState.sendData)
+      RState.sendData -> Mux(curReadCount === 0.U, Mux(sio.arvalid, RState.waitMem, RState.idle), RState.sendData)
     )
   )
 
   val enRdDataCall = WireDefault((rState === RState.waitMem) || (rState === RState.idle && sio.arvalid))
   dontTouch(enRdDataCall)
   when(rState === RState.waitMem) {
-    val rdData = UnclockedCallNonVoidDPIC("pmem_read", UInt(32.W))(
+    val rdData = Wire(Types.UWord)
+    UnclockedCallNonVoidDPIC("pmem_read")(
       (!reset.asBool) && enRdDataCall,
       rdAddr
-    )
+    )(rdData)
     rdFIFO.io.enq.bits  := rdData
     rdFIFO.io.enq.valid := true.B
   }.otherwise {
