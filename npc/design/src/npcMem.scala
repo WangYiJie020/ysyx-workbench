@@ -10,6 +10,7 @@ import chisel3.util.circt.dpi._
 import common_def._
 
 import axi4._
+import dpiwrap._
 
 class AXI4MemUnit extends Module {
   val io = IO(AXI4IO.Slave)
@@ -83,7 +84,7 @@ class AXI4MemUnit extends Module {
   val enRdDataCall = WireDefault((rState === RState.waitMem) || (rState === RState.idle && sio.arvalid))
   dontTouch(enRdDataCall)
   when(rState === RState.waitMem) {
-    val rdData = RawUnclockedNonVoidFunctionCall("pmem_read", UInt(32.W))(
+    val rdData = UnclockedCallNonVoidDPIC("pmem_read", UInt(32.W))(
       (!reset.asBool) && enRdDataCall,
       rdAddr
     )
@@ -155,7 +156,7 @@ class AXI4MemUnit extends Module {
   )
 
   when(bState === sBWaitMem) {
-    RawClockedVoidFunctionCall("pmem_write")(
+    ClockedCallVoidDPIC("pmem_write")(
       clock,
       (!reset.asBool),
       wrAddr,

@@ -37,6 +37,22 @@ object ClockedCallVoidDPIC {
     }
   }
 }
+object UnclockedCallNonVoidDPIC {
+  def apply[T <: Data](
+    name:       String,
+    ret:        => T,
+    inputNames: Option[Seq[String]] = None,
+    outputName: Option[String] = None
+  )(enable:     Bool, args: Data*): T = {
+    block(DPICLayer) {
+      DPICUseSummary.add(name)
+      RawUnclockedNonVoidFunctionCall(name, ret, inputNames, outputName)(
+        enable,
+        args: _*
+      )
+    }
+  }
+}
 
 object SkipDifftestRef {
   def apply(clock: Clock, enable: Bool): Unit = {

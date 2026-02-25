@@ -68,12 +68,6 @@ class RegisterFile(READ_PORTS: Int = 2) extends Module {
       io.write.addr.pad(8),
       io.write.data
     )
-    // RawClockedVoidFunctionCall("gpr_upd")(
-    //   clock,
-    //   io.write.en,
-    //   io.write.addr.pad(8),
-    //   io.write.data
-    // )
   }
   for (i <- 0 until READ_PORTS) {
     when(io.read.addr(i) === 0.U) {
