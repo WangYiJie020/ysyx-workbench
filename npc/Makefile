@@ -144,7 +144,7 @@ VERILATOR_FLAGS += --hierarchical
 										# --output-split 20000 
 
 # VERILATOR_FLAGS += -threads 2
-VERILATOR_FLAGS += -Dysyx_25100261_InlineLayer
+VERILATOR_FLAGS += +define+layer\$$ysyx_25100261_InlineLayer
 
 
 VERILATOR_CONTROL_FILE = verilator.vlt
