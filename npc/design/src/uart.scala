@@ -8,15 +8,8 @@ import axi4._
 import chisel3.util.circt.dpi._
 
 import chisel3.layer._
-object InlinePrintfLayer extends Layer(LayerConfig.Inline)
 
-object InlinePrintf {
-  def apply(pable: Printable) = {
-    layer.block(InlinePrintfLayer) {
-      printf(pable)
-    }
-  }
-}
+object DPICLayer extends Layer(LayerConfig.Inline)
 
 class UARTUnit extends Module {
   val io = IO(AXI4IO.Slave)
@@ -37,9 +30,11 @@ class UARTUnit extends Module {
   when(sio.wvalid) {
     val chData = sio.wdata(7, 0)
     InlinePrintf(cf"$chData%c")
-    RawClockedVoidFunctionCall("skip_difftest_ref")(
-      clock,
-      sio.wvalid
-    )
+    block(DPICLayer) {
+      RawClockedVoidFunctionCall("skip_difftest_ref")(
+        clock,
+        sio.wvalid
+      )
+    }
   }
 }

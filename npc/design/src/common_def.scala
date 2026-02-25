@@ -5,6 +5,17 @@ import chisel3.util._
 
 import config._
 
+import chisel3.layer._
+object InlinePrintfLayer extends Layer(LayerConfig.Inline)
+
+object InlinePrintf {
+  def apply(pable: Printable) = {
+    layer.block(InlinePrintfLayer) {
+      printf(pable)
+    }
+  }
+}
+
 trait HasRs {
   val rs1: UInt
   val rs2: UInt

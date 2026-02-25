@@ -205,7 +205,7 @@ iverilog: $(CHISEL2V_DONE) $(RENAME_LAYER_MACRO)
 	iverilog -g2012 -o $(BUILD_DIR)/iverilog_sim $(SIM_VSRCS)
 	@$(BUILD_DIR)/iverilog_sim
 
-verilog-lint: $(MY_VSRCS) $(RENAME_LAYER_MACRO)
+verilog-lint: $(MY_VSRCS) 
 	$(info Lint verilog files with verilator)
 	@$(VERILATOR) --lint-only $(VERILATOR_FLAGS) -Wall $(MY_VSRCS)
 
@@ -214,7 +214,7 @@ all: default
 test:
 	$(MILL) -i $(CHISEL_DESIGN).test
 
-verilog: $(CHISEL2V_DONE)
+verilog: $(CHISEL2V_DONE) $(VPI_DONE) $(RENAME_LAYER_MACRO)
 	$(info Merge verilog files into one file $(ALL_IN_ONE_VFILE))
 	@cat $(MY_VSRCS) > $(ALL_IN_ONE_VFILE)
 
