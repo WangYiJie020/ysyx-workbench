@@ -57,8 +57,9 @@ class RegisterFile(READ_PORTS: Int = 2) extends Module {
   val reg = Reg(Vec(N_REG, Types.UWord))
 
   when(io.write.en) {
-    reg(io.write.addr) := io.write.data
-    reg(0)             := 0.UWord
+    when(io.write.addr =/= 0.U) {
+      reg(io.write.addr) := io.write.data
+    }
 
     RawClockedVoidFunctionCall("gpr_upd")(
       clock,
