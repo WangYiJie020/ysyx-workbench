@@ -94,18 +94,26 @@ class CSRIO                     extends Bundle {
   val read     = CSRegReqIO.RX.SingleRead
   val write    = CSRegReqIO.RX.Write
 }
+
 class ControlStatusRegisterFile extends Module {
   val io = IO(new CSRIO)
 
-  val mcycle64 = RegInit(0.U(64.W))
+  // val mcycle64 = RegInit(0.U(64.W))
   // mcycle64 := mcycle64 + 1.U
-  // val mcycleHi = RegInit(0.U(32.W))
-  // val mcycleLo = RegInit(0.U(32.W))
+  val mcycleHi = RegInit(0.U(32.W))
+  val mcycleLo = RegInit(0.U(32.W))
   // mcycleLo := mcycleLo + 1.U
   // when(mcycleLo === "hffffffff".U) {
   //   mcycleHi := mcycleHi + 1.U
   // }
-  // val mcycle64 = Cat(mcycleHi, mcycleLo)
+
+  val nxtMCycLoWithCarry = mcycleLo +% 1.U
+  mcycleLo := nxtMCycLoWithCarry(31, 0)
+  when(nxtMCycLoWithCarry(32)) {
+    mcycleHi := mcycleHi + 1.U
+  }
+
+  val mcycle64 = Cat(mcycleHi, mcycleLo)
 
   val mvendor_id = "h79737978".U(32.W) // ysyx
   val march_id   = "d25100261".U(32.W)
