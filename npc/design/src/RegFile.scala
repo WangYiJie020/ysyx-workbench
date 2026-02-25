@@ -1,7 +1,7 @@
 package regfile
 
 import chisel3._
-import chisel3.util.{Cat,Counter, MuxLookup}
+import chisel3.util.{Cat, Counter, MuxLookup}
 
 import chisel3.util.circt.dpi._
 
@@ -44,7 +44,7 @@ class MetaRegReqIO(addr_width: Int = Types.BitWidth.reg_addr, data_width: Int = 
 object GPRegReqIO extends MetaRegReqIO()
 object CSRegReqIO extends MetaRegReqIO(addr_width = Types.BitWidth.csr_addr)
 
-class GPRIO(N_RD:Int=2) extends Bundle {
+class GPRIO(N_RD: Int = 2) extends Bundle {
   val read  = GPRegReqIO.RX.VecRead(N_RD)
   val write = GPRegReqIO.RX.Write
 }
@@ -52,13 +52,13 @@ class GPRIO(N_RD:Int=2) extends Bundle {
 class RegisterFile(READ_PORTS: Int = 2) extends Module {
   val N_REG = 1 << Types.BitWidth.reg_addr
 
-  val io  = IO(new GPRIO(READ_PORTS))
+  val io = IO(new GPRIO(READ_PORTS))
 
   val reg = Reg(Vec(N_REG, Types.UWord))
-  reg(0) := 0.UWord
 
   when(io.write.en) {
     reg(io.write.addr) := io.write.data
+    reg(0)             := 0.UWord
 
     RawClockedVoidFunctionCall("gpr_upd")(
       clock,
@@ -67,11 +67,11 @@ class RegisterFile(READ_PORTS: Int = 2) extends Module {
       io.write.data
     )
 
-    //printf("(RegFile) write reg[%d] <= 0x%x\n", io.write.addr, io.write.data)
+    // printf("(RegFile) write reg[%d] <= 0x%x\n", io.write.addr, io.write.data)
   }
   for (i <- 0 until READ_PORTS) {
     when(io.read.addr(i) === 0.U) {
-      // io.read.data(i) := 0.U
+      io.read.data(i) := 0.U
     }.otherwise {
       io.read.data(i) := reg(io.read.addr(i))
       //     printf("(RegFile) read reg[%d] => 0x%x\n", io.rvec.addr(i), io.rvec.data(i))
@@ -90,7 +90,7 @@ object CSRAddr {
   val marchid   = "hF12".U(12.W)
 }
 
-class CSRIO extends Bundle {
+class CSRIO                     extends Bundle {
   val is_ecall = Input(Bool())
   val read     = CSRegReqIO.RX.SingleRead
   val write    = CSRegReqIO.RX.Write
@@ -132,12 +132,12 @@ class ControlStatusRegisterFile extends Module {
         CSRAddr.marchid   -> march_id
       )
     )
- //   printf("(CSR) read CSR[0x%x] => 0x%x\n", io.read.addr, io.read.data)
+    //   printf("(CSR) read CSR[0x%x] => 0x%x\n", io.read.addr, io.read.data)
   }.otherwise {
     io.read.data := 0.U
   }
 
-  val en_wrtie= (io.write.en)||(io.is_ecall && (io.write.addr === CSRAddr.mepc))
+  val en_wrtie = (io.write.en) || (io.is_ecall && (io.write.addr === CSRAddr.mepc))
 
   when(en_wrtie) {
     waregs(widx) := io.write.data
