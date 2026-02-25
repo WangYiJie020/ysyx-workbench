@@ -3,9 +3,7 @@ package common_def
 import chisel3._
 import chisel3.util._
 
-object Config {
-  val genStageLog : Boolean = true
-}
+import config._
 
 trait HasRs {
   val rs1: UInt
