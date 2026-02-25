@@ -29,7 +29,8 @@ class UARTUnit extends Module {
     //   sio.wvalid,
     //   sio.wdata(7, 0)
     // )
-    printf("%c", sio.wdata(7, 0))
+    val chData = sio.wdata(7,0)
+    printf(cf"$chData%c")
     RawClockedVoidFunctionCall("skip_difftest_ref")(
       clock,
       sio.wvalid
