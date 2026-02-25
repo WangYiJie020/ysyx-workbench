@@ -192,9 +192,9 @@ $(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) $(CHISEL2V_DONE) $(VPI_DONE) $
 		--Mdir $(V2CXX_EMIT_DIR) --exe -o $(abspath $(SIM_BIN))
 	@make -s -C $(V2CXX_EMIT_DIR) -f V$(TOP_NAME).mk -j$(shell nproc) OPT_FAST=$(VSIM_OPT) CXX=clang++ LINK=clang++ AR="ar -T"
 
-iverilog: $(SIM_VSRCS)
+iverilog: $(CHISEL2V_DONE)
 	$(info process verilog files with iverilog)
-	iverilog -o $(BUILD_DIR)/iverilog_sim $(SIM_VSRCS)
+	iverilog -g2012 -o $(BUILD_DIR)/iverilog_sim $(SIM_VSRCS)
 	@$(BUILD_DIR)/iverilog_sim
 
 verilog-lint: $(MY_VSRCS)

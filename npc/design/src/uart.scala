@@ -24,11 +24,12 @@ class UARTUnit extends Module {
   sio.bresp  := AXI4IO.BResp.OKAY
 
   when(sio.wvalid) {
-    RawClockedVoidFunctionCall("uart_send")(
-      clock,
-      sio.wvalid,
-      sio.wdata(7, 0)
-    )
+    // RawClockedVoidFunctionCall("uart_send")(
+    //   clock,
+    //   sio.wvalid,
+    //   sio.wdata(7, 0)
+    // )
+    printf("%c", sio.wdata(7, 0))
     RawClockedVoidFunctionCall("skip_difftest_ref")(
       clock,
       sio.wvalid
