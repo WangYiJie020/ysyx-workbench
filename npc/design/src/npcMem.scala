@@ -86,7 +86,7 @@ class AXI4MemUnit extends Module {
   val enRdDataCall = WireDefault((rState === RState.waitMem) || (rState === RState.idle && sio.arvalid))
   dontTouch(enRdDataCall)
 
-  val vprobe = Probe(UInt(32.W))
+  val vprobe = IO(Output(Probe(Types.UWord)))
 
   when(rState === RState.waitMem) {
     chisel3.layer.block(DPICLayer) {
@@ -94,7 +94,7 @@ class AXI4MemUnit extends Module {
         (!reset.asBool) && enRdDataCall,
         rdAddr
       )
-      define(vprobe, rdData)
+      define(vprobe, ProbeValue(rdData))
     }
 
     rdFIFO.io.enq.bits  := vprobe
