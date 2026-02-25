@@ -205,7 +205,7 @@ iverilog: $(CHISEL2V_DONE) $(RENAME_LAYER_MACRO)
 	iverilog -g2012 -o $(BUILD_DIR)/iverilog_sim $(SIM_VSRCS)
 	@$(BUILD_DIR)/iverilog_sim
 
-verilog-lint: $(MY_VSRCS)
+verilog-lint: $(MY_VSRCS) $(RENAME_LAYER_MACRO)
 	$(info Lint verilog files with verilator)
 	@$(VERILATOR) --lint-only $(VERILATOR_FLAGS) -Wall $(MY_VSRCS)
 
