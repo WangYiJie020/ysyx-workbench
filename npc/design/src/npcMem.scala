@@ -13,6 +13,31 @@ import axi4._
 import dpiwrap._
 
 import chisel3.probe._
+import chisel3._
+import chisel3.layer.{Layer, LayerConfig}
+import chisel3.probe.{Probe, ProbeValue, define}
+
+object A extends Layer(LayerConfig.Extract())
+object B extends Layer(LayerConfig.Extract())
+
+class Foo extends RawModule {
+  val a = IO(Output(Probe(Bool(), A)))
+  val b = IO(Output(Probe(Bool(), B)))
+
+  layer.block(A) {
+    val a_wire = WireInit(false.B)
+    define(a, ProbeValue(a_wire))
+  }
+
+  val b_wire_probe = Wire(Probe(Bool(), B))
+  define(b, b_wire_probe)
+
+  layer.block(B) {
+    val b_wire = WireInit(false.B)
+    define(b_wire_probe, ProbeValue(b_wire))
+  }
+
+}
 
 class AXI4MemUnit extends Module {
   val io = IO(AXI4IO.Slave)
@@ -86,21 +111,19 @@ class AXI4MemUnit extends Module {
   val enRdDataCall = WireDefault((rState === RState.waitMem) || (rState === RState.idle && sio.arvalid))
   dontTouch(enRdDataCall)
 
-  chisel3.layer.enable(DPICLayer)
-  val vprobe = Wire(Probe(Types.UWord, DPICLayer))
-  val b = IO(Output(Probe(Types.UWord, DPICLayer)))
-  define(b, vprobe)
+  chisel3.layer.enable(A)
+  chisel3.layer.enable(B)
 
   when(rState === RState.waitMem) {
-    chisel3.layer.block(DPICLayer) {
-      val rdData = UnclockedCallNonVoidDPIC("pmem_read", UInt(32.W))(
-        (!reset.asBool) && enRdDataCall,
-        rdAddr
-      )
-      define(vprobe, ProbeValue(rdData))
-    }
-
-    rdFIFO.io.enq.bits  := vprobe
+    // chisel3.layer.block(DPICLayer) {
+    //   val rdData = UnclockedCallNonVoidDPIC("pmem_read", UInt(32.W))(
+    //     (!reset.asBool) && enRdDataCall,
+    //     rdAddr
+    //   )
+    //   define(vprobe, ProbeValue(rdData))
+    // }
+val foo = Module(new Foo)
+    rdFIFO.io.enq.bits  := chisel3.probe.read(foo.a)
     rdFIFO.io.enq.valid := true.B
   }.otherwise {
     rdFIFO.io.enq.bits  := 0.U
