@@ -18,6 +18,7 @@ object ClockedCallVoidDPIC {
     args:       Data*
   ): Unit = {
     block(DPICLayer) {
+      println(s"use ${name.toUpperCase}")
       RawClockedVoidFunctionCall(name)(
         clock,
         enable,
