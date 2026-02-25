@@ -57,6 +57,7 @@ class RegisterFile(READ_PORTS: Int = 2) extends Module {
   val reg = Reg(Vec(N_REG, Types.UWord))
 
   when(io.write.en) {
+    // Chisel will optimize to remove reg[0] instance
     when(io.write.addr =/= 0.U) {
       reg(io.write.addr) := io.write.data
     }
@@ -67,15 +68,12 @@ class RegisterFile(READ_PORTS: Int = 2) extends Module {
       io.write.addr.pad(8),
       io.write.data
     )
-
-    // printf("(RegFile) write reg[%d] <= 0x%x\n", io.write.addr, io.write.data)
   }
   for (i <- 0 until READ_PORTS) {
     when(io.read.addr(i) === 0.U) {
       io.read.data(i) := 0.U
     }.otherwise {
       io.read.data(i) := reg(io.read.addr(i))
-      //     printf("(RegFile) read reg[%d] => 0x%x\n", io.rvec.addr(i), io.rvec.data(i))
     }
   }
 }
@@ -99,15 +97,15 @@ class CSRIO                     extends Bundle {
 class ControlStatusRegisterFile extends Module {
   val io = IO(new CSRIO)
 
-  val mcycle64 = RegInit(0.U(64.W))
-  mcycle64 := mcycle64 + 1.U
-  // val mcycleHi = RegInit(0.U(32.W))
-  // val mcycleLo = RegInit(0.U(32.W))
-  // mcycleLo := mcycleLo + 1.U
-  // when(mcycleLo === "hffffffff".U) {
-  //   mcycleHi := mcycleHi + 1.U
-  // }
-  // val mcycle64 = Cat(mcycleHi, mcycleLo)
+  // val mcycle64 = RegInit(0.U(64.W))
+  // mcycle64 := mcycle64 + 1.U
+  val mcycleHi = RegInit(0.U(32.W))
+  val mcycleLo = RegInit(0.U(32.W))
+  mcycleLo := mcycleLo + 1.U
+  when(mcycleLo === "hffffffff".U) {
+    mcycleHi := mcycleHi + 1.U
+  }
+  val mcycle64 = Cat(mcycleHi, mcycleLo)
 
   val mvendor_id = "h79737978".U(32.W) // ysyx
   val march_id   = "d25100261".U(32.W)
