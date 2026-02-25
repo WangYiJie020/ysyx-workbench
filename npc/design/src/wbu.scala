@@ -7,6 +7,7 @@ import chisel3.experimental.dataview._
 
 import regfile._
 import common_def._
+import dpiwrap._
 import busfsm._
 
 import chisel3.util.circt.dpi._
@@ -85,9 +86,10 @@ class WBU extends Module {
     )
   }
 
-  when(valid && wbinfo.skipDifftest) {
-    RawClockedVoidFunctionCall("skip_difftest_ref")(clock, valid && wbinfo.skipDifftest)
-  }
+  // when(valid && wbinfo.skipDifftest) {
+  //   RawClockedVoidFunctionCall("skip_difftest_ref")(clock, valid && wbinfo.skipDifftest)
+  // }
+  SkipDifftestRef(clock, valid && wbinfo.skipDifftest)
 
   io.gpr.en   := wbinfo.gpr.en && valid
   io.gpr.addr := wbinfo.gpr.addr
