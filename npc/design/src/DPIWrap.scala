@@ -58,12 +58,12 @@ class DPICModuleWrapper[T <: Data](
   val wire_p = Wire(Probe(retType, DPICLayer))
   layer.block(DPICLayer) {
     DPICUseSummary.add(name)
-    val dpicRetVal = WireDefault(RawUnclockedNonVoidFunctionCall(
+    val dpicRetVal = RawUnclockedNonVoidFunctionCall(
       funcName,
       retType,
       inputNames,
       outputName
-    )(io.en, io.args: _*))
+    )(io.en, io.args: _*)
     probe.define(wire_p, probe.ProbeValue(dpicRetVal))
   }
   probe.define(retData, wire_p)
