@@ -196,6 +196,7 @@ test:
 	$(MILL) -i $(CHISEL_DESIGN).test
 
 verilog: $(CHISEL2V_DONE)
+	echo "gened files: $(MY_VSRCS)"
 
 help:
 	$(MILL) -i $(CHISEL_DESIGN).runMain Elaborate --help
