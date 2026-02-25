@@ -57,13 +57,13 @@ class DPICModuleWrapper[T <: Data](
 
   layer.block(DPICLayer) {
     DPICUseSummary.add(name)
-    val data = RawUnclockedNonVoidFunctionCall(
+    val dpicRetVal = WireDefault(RawUnclockedNonVoidFunctionCall(
       funcName,
       retType,
       inputNames,
       outputName
-    )(io.en, io.args: _*)
-    probe.define(retData, ProbeValue(data))
+    )(io.en, io.args: _*))
+    probe.define(retData, ProbeValue(dpicRetVal))
   }
 }
 
@@ -80,9 +80,7 @@ object UnclockedCallNonVoidDPIC {
     val wrapper = Module(new DPICModuleWrapper(name, ret, args, inputNames, outputName))
     wrapper.io.en := enable
     wrapper.io.args := VecInit(args)
-    val dpiRetVal = WireDefault(probe.read(wrapper.retData))
-    dontTouch(dpiRetVal)
-    dpiRetVal
+    probe.read(wrapper.retData)
   }
 }
 
