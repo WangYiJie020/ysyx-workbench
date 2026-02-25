@@ -1,7 +1,7 @@
 package config
 
 object Config {
-  val genStageLog : Boolean = true
+  val genStageLog : Boolean = false
 
   val useBTBAndBP : Boolean = false
 }
