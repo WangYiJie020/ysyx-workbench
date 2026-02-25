@@ -54,7 +54,7 @@ class RegisterFile(READ_PORTS: Int = 2) extends Module {
 
   val io  = IO(new GPRIO(READ_PORTS))
 
-  val reg = RegInit(VecInit(Seq.fill(N_REG)(0.UWord)))
+  val reg = Reg(VecInit(Seq.fill(N_REG)(0.UWord)))
   reg(0) := 0.UWord
 
   // io.a0 := reg(10.U)
