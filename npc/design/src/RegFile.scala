@@ -121,9 +121,10 @@ class ControlStatusRegisterFile extends Module {
   // 0: mstatus
   // val waregs = RegInit(VecInit("h00001800".U(32.W) +: Seq.fill(3)(0.U(32.W))))
 
-  val mstatus = RegInit("h00001800".U(32.W))
-  val otherCSRs = Reg(Vec(3, UInt(32.W)))
-  val waregs = VecInit(mstatus +: otherCSRs.toSeq)
+  val waregs = Reg(Vec(4, UInt(32.W)))
+  when(reset.asBool) {
+    waregs(0) := "h00001800".U // mstatus
+  }
 
   val walut  = Seq(
     CSRAddr.mstatus -> 0.U,
