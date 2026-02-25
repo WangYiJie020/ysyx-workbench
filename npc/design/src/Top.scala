@@ -31,12 +31,43 @@ class TopIO extends Bundle {
   val slave     = AXI4IO.Slave
 }
 
+import chisel3.layer.{Layer, LayerConfig}
+import chisel3.probe.{Probe, ProbeValue, define}
+object A extends Layer(LayerConfig.Extract())
+object B extends Layer(LayerConfig.Extract())
+
+class Foo extends RawModule {
+  val a = IO(Output(Probe(Bool(), A)))
+  val b = IO(Output(Probe(Bool(), B)))
+
+  layer.block(A) {
+    val a_wire = WireInit(false.B)
+    define(a, ProbeValue(a_wire))
+  }
+
+  val b_wire_probe = Wire(Probe(Bool(), B))
+  define(b, b_wire_probe)
+
+  layer.block(B) {
+    val b_wire = WireInit(false.B)
+    define(b_wire_probe, ProbeValue(b_wire))
+  }
+
+}
 class ysyx_25100261 extends Module {
   val io = IO(new TopIO)
   dontTouch(io)
   io := DontCare
 
   withModulePrefix("ysyx_25100261") {
+
+  chisel3.layer.enable(A)
+  chisel3.layer.enable(B)
+val fooooo = Module(new Foo)
+val a_probe = probe.read(fooooo.a)
+val b_probe = probe.read(fooooo.b)
+dontTouch(a_probe)
+dontTouch(b_probe)
 
   val isBranchGuessWrong = Wire(Bool())
 
