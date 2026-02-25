@@ -79,20 +79,21 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
     nxtPredictedPC := bp.io.predictTarget
   } else {
-    val isBranch = ifu.io.out.bits.code(6, 0) === "b1100011".U
-    val immSign  = ifu.io.out.bits.code(31)
-    val imm      = Cat(
-      Fill(20, immSign),
-      ifu.io.out.bits.code(7),
-      ifu.io.out.bits.code(30, 25),
-      ifu.io.out.bits.code(11, 8),
-      0.U(1.W)
-    )
-    nxtPredictedPC := pc + Mux(
-      isBranch,// && immSign,
-      imm,
-      4.U
-    )
+    nxtPredictedPC := pc + 4.U
+    // val isBranch = ifu.io.out.bits.code(6, 0) === "b1100011".U
+    // val immSign  = ifu.io.out.bits.code(31)
+    // val imm      = Cat(
+    //   Fill(20, immSign),
+    //   ifu.io.out.bits.code(7),
+    //   ifu.io.out.bits.code(30, 25),
+    //   ifu.io.out.bits.code(11, 8),
+    //   0.U(1.W)
+    // )
+    // nxtPredictedPC := ifu.io.out. + Mux(
+    //   isBranch && immSign,
+    //   imm,
+    //   4.U
+    // )
   }
 
   ifu.io.predictedNextPC := nxtPredictedPC
