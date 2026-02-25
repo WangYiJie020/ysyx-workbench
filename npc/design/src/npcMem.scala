@@ -85,10 +85,11 @@ class AXI4MemUnit extends Module {
   dontTouch(enRdDataCall)
   when(rState === RState.waitMem) {
     val rdData = Wire(Types.UWord)
-    UnclockedCallNonVoidDPIC("pmem_read")(
+    UnclockedCallNonVoidDPIC("pmem_read", UInt(32.W))(
       (!reset.asBool) && enRdDataCall,
       rdAddr
     )(rdData)
+
     rdFIFO.io.enq.bits  := rdData
     rdFIFO.io.enq.valid := true.B
   }.otherwise {
