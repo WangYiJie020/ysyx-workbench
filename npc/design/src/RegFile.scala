@@ -3,9 +3,9 @@ package regfile
 import chisel3._
 import chisel3.util.{Cat, Counter, MuxLookup}
 
-import chisel3.util.circt.dpi._
-
 import common_def._
+import dpiwrap._
+
 import Types.Ops._
 
 class MetaRegReqIO(addr_width: Int = Types.BitWidth.reg_addr, data_width: Int = Types.BitWidth.word) {
@@ -62,12 +62,18 @@ class RegisterFile(READ_PORTS: Int = 2) extends Module {
       reg(io.write.addr) := io.write.data
     }
 
-    RawClockedVoidFunctionCall("gpr_upd")(
+    ClockedCallVoidDPIC("gpr_upd")(
       clock,
       io.write.en,
       io.write.addr.pad(8),
       io.write.data
     )
+    // RawClockedVoidFunctionCall("gpr_upd")(
+    //   clock,
+    //   io.write.en,
+    //   io.write.addr.pad(8),
+    //   io.write.data
+    // )
   }
   for (i <- 0 until READ_PORTS) {
     when(io.read.addr(i) === 0.U) {
