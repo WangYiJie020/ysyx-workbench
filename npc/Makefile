@@ -126,7 +126,8 @@ $(shell mkdir -p $(CHISEL2V_EMIT_DIR))
 $(CHISEL2V_DONE): $(CHISEL_SRCS)
 	$(call git_commit, "generate verilog")
 	#@rm -rf $(CHISEL2V_EMIT_DIR)
-	$(MILL) -i $(CHISEL_DESIGN).runMain Elaborate --target-dir $(CHISEL2V_EMIT_DIR)/foo.v
+	# $(MILL) -i $(CHISEL_DESIGN).runMain Elaborate --target-dir $(CHISEL2V_EMIT_DIR)
+	$(MILL) -i $(CHISEL_DESIGN).runMain Elaborate --target-file $(BUILD_DIR)/foo.v
 	touch $(CHISEL2V_DONE)
 
 
