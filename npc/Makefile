@@ -81,8 +81,8 @@ CHISEL2V_EMIT_DIR = $(BUILD_DIR)/gened/verilog$(SIM_ARCH_SUFFIX)
 CHISEL2V_DONE = $(BUILD_DIR)/verilog$(SIM_ARCH_SUFFIX).done
 
 V2CXX_EMIT_DIR = $(BUILD_DIR)/gened/cxx
-
-MY_VSRCS = $(shell find $(abspath $(CHISEL2V_EMIT_DIR)) -maxdepth 1 -name "*.v" -or -name "*.sv")
+# -maxdepth 1
+MY_VSRCS = $(addprefix $(CHISEL2V_EMIT_DIR)/,$(shell cat $(CHISEL2V_EMIT_DIR)/filelist.f))
 SIM_VSRCS += $(MY_VSRCS)
 SIM_CSRCS += $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 
@@ -125,7 +125,7 @@ $(shell mkdir -p $(CHISEL2V_EMIT_DIR))
 # Chisel
 $(CHISEL2V_DONE): $(CHISEL_SRCS)
 	$(call git_commit, "generate verilog")
-	@rm -rf $(CHISEL2V_EMIT_DIR)
+	#@rm -rf $(CHISEL2V_EMIT_DIR)
 	$(MILL) -i $(CHISEL_DESIGN).runMain Elaborate --target-dir $(CHISEL2V_EMIT_DIR)
 	touch $(CHISEL2V_DONE)
 
@@ -192,6 +192,11 @@ $(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) $(CHISEL2V_DONE) $(VPI_DONE) $
 		--Mdir $(V2CXX_EMIT_DIR) --exe -o $(abspath $(SIM_BIN))
 	@make -s -C $(V2CXX_EMIT_DIR) -f V$(TOP_NAME).mk -j$(shell nproc) OPT_FAST=$(VSIM_OPT) CXX=clang++ LINK=clang++ AR="ar -T"
 
+iverilog: $(CHISEL2V_DONE)
+	$(info process verilog files with iverilog)
+	iverilog -g2012 -o $(BUILD_DIR)/iverilog_sim $(SIM_VSRCS)
+	@$(BUILD_DIR)/iverilog_sim
+
 verilog-lint: $(MY_VSRCS)
 	$(info Lint verilog files with verilator)
 	@$(VERILATOR) --lint-only $(VERILATOR_FLAGS) -Wall $(MY_VSRCS)
@@ -246,13 +251,18 @@ $(shell mkdir -p $(STA_NODPI_PATH))
 STA_VSRCS = $(shell find $(abspath $(STA_NODPI_PATH)) -maxdepth 1 -name "*.v" -or -name "*.sv")
 
 
-STA_DEST ?= $(CPU_DESIGN_NAME)
+STA_DEST ?= 
+ifeq ($(STA_DEST),)
+  STA_DEST_FULL_NAME = $(CPU_DESIGN_NAME)
+else
+  STA_DEST_FULL_NAME = $(CPU_DESIGN_NAME)_$(STA_DEST)
+endif
 
 sta: $(CHISEL2V_DONE) $(STA_VSRCS)
 	@echo "Removing DPI-C void functions from verilog sources..."
 	./scripts/remove_dpi.sh $(CHISEL2V_EMIT_DIR) $(STA_NODPI_PATH)
 	make -C $(YOSYS_STA_PATH) sta \
-		DESIGN=$(STA_DEST) \
+		DESIGN=$(STA_DEST_FULL_NAME) \
 		CLK_FREQ_MHZ=2000 \
 		CLK_PORT_NAME=clock \
 		O=$(STA_OUT_DIR) \
@@ -262,7 +272,7 @@ sta-area: $(CHISEL2V_DONE) $(STA_VSRCS)
 	@echo "Removing DPI-C void functions from verilog sources..."
 	./scripts/remove_dpi.sh $(CHISEL2V_EMIT_DIR) $(STA_NODPI_PATH)
 	make -C $(YOSYS_STA_PATH) stat_only \
-		DESIGN=$(STA_DEST) \
+		DESIGN=$(STA_DEST_FULL_NAME) \
 		CLK_FREQ_MHZ=2000 \
 		CLK_PORT_NAME=clock \
 		O=$(STA_OUT_DIR) \
