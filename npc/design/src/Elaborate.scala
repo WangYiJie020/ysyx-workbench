@@ -9,6 +9,7 @@ object Elaborate extends App {
     ).reduce(_ + "," + _),
     "-disable-all-randomization",
     // "-strip-debug-info"
+    "--inline-layers", "all",
   )
   println("Emitting Verilog...")
   circt.stage.ChiselStage.emitSystemVerilogFile(new top.ysyx_25100261(), args, firtoolOptions)
