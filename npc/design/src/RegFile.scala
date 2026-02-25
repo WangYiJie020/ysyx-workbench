@@ -15,7 +15,7 @@ class MetaRegReqIO(addr_width: Int = Types.BitWidth.reg_addr, data_width: Int = 
 
   class _VecReadRX(N: Int) extends Bundle {
     require((1 << addr_width) >= N)
-    val en   = Input(Bool())
+    // val en   = Input(Bool())
     val addr = Input(Vec(N, _AddrT))
     val data = Output(Vec(N, _DataT))
   }
