@@ -19,6 +19,8 @@ SIM_ARCH_SUFFIX = _npc
 SIM_VSRCS =
 endif
 
+ALL_IN_ONE_VFILE = $(BUILD_DIR)/$(CPU_DESIGN_NAME).v
+
 SIM_BIN = $(SIM_BIN_DIR)/$(TOP_NAME)$(SIM_ARCH_SUFFIX)$(VSIM_OPT)
 
 VERILATOR = verilator
@@ -196,6 +198,8 @@ test:
 	$(MILL) -i $(CHISEL_DESIGN).test
 
 verilog: $(CHISEL2V_DONE)
+	$(info Merge verilog files into one file $(ALL_IN_ONE_VFILE))
+	@cat $(MY_VSRCS) > $(ALL_IN_ONE_VFILE)
 
 help:
 	$(MILL) -i $(CHISEL_DESIGN).runMain Elaborate --help
