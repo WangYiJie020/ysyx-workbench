@@ -100,19 +100,17 @@ class ControlStatusRegisterFile extends Module {
 
   // val mcycle64 = RegInit(0.U(64.W))
   // mcycle64 := mcycle64 + 1.U
-  val mcycleHi = RegInit(0.U(32.W))
+  // val mcycleHi = RegInit(0.U(8.W))
+  val mcycleHi = Wire(UInt(32.W))
   val mcycleLo = RegInit(0.U(32.W))
+  // Discard mcycleHi for smaller area
+  // NOTICE:
+  // 32 bit mcycle support about 50 days at 1GHz
+  mcycleHi := 0.U
   // mcycleLo := mcycleLo + 1.U
   // when(mcycleLo === "hffffffff".U) {
   //   mcycleHi := mcycleHi + 1.U
   // }
-
-  val nxtMCycLoWithCarry = Wire(UInt(33.W))
-  nxtMCycLoWithCarry := mcycleLo +% 1.U
-  mcycleLo := nxtMCycLoWithCarry(31, 0)
-  when(nxtMCycLoWithCarry(32)) {
-    mcycleHi := mcycleHi + 1.U
-  }
 
   val mcycle64 = Cat(mcycleHi, mcycleLo)
 
@@ -142,7 +140,8 @@ class ControlStatusRegisterFile extends Module {
     )
     //   printf("(CSR) read CSR[0x%x] => 0x%x\n", io.read.addr, io.read.data)
   }.otherwise {
-    io.read.data := DontCare//0.U
+    // Chisel will optimize DontCare to remove check read_en logic
+    io.read.data := DontCare
   }
 
   val en_wrtie = (io.write.en) || (io.is_ecall && (io.write.addr === CSRAddr.mepc))
@@ -150,7 +149,6 @@ class ControlStatusRegisterFile extends Module {
   when(en_wrtie) {
     waregs(widx) := io.write.data
     when(io.is_ecall && (io.write.addr === CSRAddr.mepc)) {
-//      printf("(CSR) ecall detected")
       waregs(2) := 11.U // mcause = 11 for ecall from M-mode
     }
   }
