@@ -73,17 +73,19 @@ class WBU extends Module {
   val is_ebreak = wbinfo.is_ebreak && valid
 
   when(is_ebreak && !halted) {
-    RawClockedVoidFunctionCall("raise_ebreak")(clock, is_ebreak)
+    // RawClockedVoidFunctionCall("raise_ebreak")(clock, is_ebreak)
+    ClockedCallVoidDPIC("raise_ebreak")(clock, is_ebreak)
     halted := true.B
   }
 
   when(valid && (!is_ebreak)){
-    RawClockedVoidFunctionCall("pc_upd")(
-      clock,
-      valid && !is_ebreak,
-      wbinfo.pc,
-      wbinfo.nxt_pc
-    )
+    ClockedCallVoidDPIC("pc_upd")(clock, valid && !is_ebreak, wbinfo.pc, wbinfo.nxt_pc)
+    // RawClockedVoidFunctionCall("pc_upd")(
+    //   clock,
+    //   valid && !is_ebreak,
+    //   wbinfo.pc,
+    //   wbinfo.nxt_pc
+    // )
   }
 
   // when(valid && wbinfo.skipDifftest) {

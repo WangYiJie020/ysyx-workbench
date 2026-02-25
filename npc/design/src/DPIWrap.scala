@@ -7,7 +7,17 @@ import chisel3.layer._
 
 import chisel3.util.circt.dpi._
 
+import scala.collection.mutable
+
 object DPICLayer extends Layer(LayerConfig.Inline)
+
+object DPICUseSummary {
+  val usedDPICs: mutable.Set[String] = mutable.Set.empty
+  def add(name: String): Unit = {
+    usedDPICs += name
+  }
+
+}
 
 object ClockedCallVoidDPIC {
   def apply(
@@ -18,7 +28,7 @@ object ClockedCallVoidDPIC {
     args:       Data*
   ): Unit = {
     block(DPICLayer) {
-      println(s"use ${name.toUpperCase}")
+      DPICUseSummary.add(name)
       RawClockedVoidFunctionCall(name)(
         clock,
         enable,
