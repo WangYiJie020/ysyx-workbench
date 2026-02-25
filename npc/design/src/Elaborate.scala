@@ -10,7 +10,7 @@ object Elaborate extends App {
     "-disable-all-randomization",
     // "-strip-debug-info"
     "--disable-layers",
-    "-split-verilog",
+    "--split-verilog",
   )
   println("Emitting Verilog...")
   circt.stage.ChiselStage.emitSystemVerilogFile(new top.ysyx_25100261(), args, firtoolOptions)
