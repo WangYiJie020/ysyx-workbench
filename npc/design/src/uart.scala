@@ -32,7 +32,7 @@ class UARTUnit extends Module {
   when(sio.wvalid) {
     val chData = sio.wdata(7, 0)
     layer.block(InlineLayer) {
-      printf(cf"UART: $chData\n")
+      printf(cf"$chData%c")
     }
     RawClockedVoidFunctionCall("skip_difftest_ref")(
       clock,
