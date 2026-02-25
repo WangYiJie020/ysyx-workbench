@@ -7,6 +7,8 @@ import axi4._
 
 import chisel3.util.circt.dpi._
 
+import chisel3.layers._
+
 class UARTUnit extends Module {
   val io = IO(AXI4IO.Slave)
 
@@ -24,8 +26,10 @@ class UARTUnit extends Module {
   sio.bresp  := AXI4IO.BResp.OKAY
 
   when(sio.wvalid) {
-    val chData = sio.wdata(7,0)
-    printf(cf"UART: $chData\n")
+    val chData = sio.wdata(7, 0)
+    layer.block(Verification) {
+      printf(cf"UART: $chData\n")
+    }
     RawClockedVoidFunctionCall("skip_difftest_ref")(
       clock,
       sio.wvalid
