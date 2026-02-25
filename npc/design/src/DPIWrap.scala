@@ -80,7 +80,9 @@ object UnclockedCallNonVoidDPIC {
     val wrapper = Module(new DPICModuleWrapper(name, ret, args, inputNames, outputName))
     wrapper.io.en := enable
     wrapper.io.args := VecInit(args)
-    probe.read(wrapper.retData)
+    val dpiRetVal = WireDefault(probe.read(wrapper.retData))
+    dontTouch(dpiRetVal)
+    dpiRetVal
   }
 }
 
