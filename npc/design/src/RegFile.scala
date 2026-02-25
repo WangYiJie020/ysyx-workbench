@@ -107,7 +107,8 @@ class ControlStatusRegisterFile extends Module {
   //   mcycleHi := mcycleHi + 1.U
   // }
 
-  val nxtMCycLoWithCarry = mcycleLo +% 1.U
+  val nxtMCycLoWithCarry = Wire(UInt(33.W))
+  nxtMCycLoWithCarry := mcycleLo +% 1.U
   mcycleLo := nxtMCycLoWithCarry(31, 0)
   when(nxtMCycLoWithCarry(32)) {
     mcycleHi := mcycleHi + 1.U
