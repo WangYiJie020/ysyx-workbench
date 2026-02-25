@@ -131,7 +131,7 @@ class ControlStatusRegisterFile extends Module {
   val widx   = MuxLookup(io.write.addr, 0.U)(walut)
   val ridx   = MuxLookup(io.read.addr, 0.U)(walut)
 
-  // when(io.read.en) {
+  when(io.read.en) {
     io.read.data := MuxLookup(io.read.addr, waregs(ridx))(
       Seq(
         CSRAddr.mcycle    -> mcycle64(31, 0),
@@ -141,9 +141,9 @@ class ControlStatusRegisterFile extends Module {
       )
     )
     //   printf("(CSR) read CSR[0x%x] => 0x%x\n", io.read.addr, io.read.data)
-  // }.otherwise {
-  //   io.read.data := 0.U
-  // }
+  }.otherwise {
+    io.read.data := DontCare//0.U
+  }
 
   val en_wrtie = (io.write.en) || (io.is_ecall && (io.write.addr === CSRAddr.mepc))
 
