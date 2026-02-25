@@ -33,8 +33,8 @@ class TopIO extends Bundle {
 
 import chisel3.layer.{Layer, LayerConfig}
 import chisel3.probe.{Probe, ProbeValue, define}
-object A extends Layer(LayerConfig.Extract())
-object B extends Layer(LayerConfig.Extract())
+object A extends Layer(LayerConfig.Inline)
+object B extends Layer(LayerConfig.Inline)
 
 class Foo extends RawModule {
   val a = IO(Output(Probe(Bool(), A)))
