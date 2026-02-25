@@ -141,7 +141,7 @@ class ControlStatusRegisterFile extends Module {
     //   printf("(CSR) read CSR[0x%x] => 0x%x\n", io.read.addr, io.read.data)
   }.otherwise {
     // Chisel will optimize DontCare to remove check read_en logic
-    io.read.data := 0.U//DontCare
+    io.read.data := DontCare
   }
 
   val en_wrtie = (io.write.en) || (io.is_ecall && (io.write.addr === CSRAddr.mepc))
