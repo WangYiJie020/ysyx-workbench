@@ -37,13 +37,14 @@ class CLINTUnit extends Module {
   // val mtime = RegInit(0.U(64.W))
   // mtime := mtime + 1.U
 
+  // val mtimeHi = RegInit(0.U(32.W))
+  val mtimeHi = WireDefault(0.U(32.W))
   val mtimeLo = RegInit(0.U(32.W))
-  val mtimeHi = RegInit(0.U(32.W))
   val mtime = Cat(mtimeHi, mtimeLo)
-  mtimeLo := mtimeLo + 1.U
-  when(mtimeLo === "hffffffff".U) {
-    mtimeHi := mtimeHi + 1.U
-  }
+  // mtimeLo := mtimeLo + 1.U
+  // when(mtimeLo === "hffffffff".U) {
+  //   mtimeHi := mtimeHi + 1.U
+  // }
 
   sio.rresp := AXI4IO.RResp.OKAY
   // h02000000-h0200ffff
