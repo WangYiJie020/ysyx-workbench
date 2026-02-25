@@ -9,7 +9,7 @@ object Elaborate extends App {
     ).reduce(_ + "," + _),
     "-disable-all-randomization",
     // "-strip-debug-info"
-    "--disable-layers=all",
+    "--disable-layers=verification",
     "--split-verilog",
   )
   println("Emitting Verilog...")
