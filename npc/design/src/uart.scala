@@ -10,7 +10,8 @@ import chisel3.util.circt.dpi._
 import chisel3.layers._
 import chisel3.layer._
 
-object B extends Layer(LayerConfig.Inline)
+object InlineLayer extends Layer(LayerConfig.Inline)
+import chisel3.layers.defaultLayers
 
 class UARTUnit extends Module {
   val io = IO(AXI4IO.Slave)
@@ -30,7 +31,7 @@ class UARTUnit extends Module {
 
   when(sio.wvalid) {
     val chData = sio.wdata(7, 0)
-    layer.block(B){
+    layer.block(InlineLayer) {
       printf(cf"UART: $chData\n")
     }
     RawClockedVoidFunctionCall("skip_difftest_ref")(
