@@ -57,8 +57,6 @@ class RegisterFile(READ_PORTS: Int = 2) extends Module {
   val reg = Reg(Vec(N_REG, Types.UWord))
   reg(0) := 0.UWord
 
-  // io.a0 := reg(10.U)
-
   when(io.write.en) {
     reg(io.write.addr) := io.write.data
 
@@ -73,7 +71,7 @@ class RegisterFile(READ_PORTS: Int = 2) extends Module {
   }
   for (i <- 0 until READ_PORTS) {
     when(io.read.addr(i) === 0.U) {
-      io.read.data(i) := 0.U
+      // io.read.data(i) := 0.U
     }.otherwise {
       io.read.data(i) := reg(io.read.addr(i))
       //     printf("(RegFile) read reg[%d] => 0x%x\n", io.rvec.addr(i), io.rvec.data(i))
