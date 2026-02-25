@@ -12,6 +12,8 @@ import common_def._
 import axi4._
 import dpiwrap._
 
+import chisel3.probe._
+
 class AXI4MemUnit extends Module {
   val io = IO(AXI4IO.Slave)
 
@@ -83,14 +85,19 @@ class AXI4MemUnit extends Module {
 
   val enRdDataCall = WireDefault((rState === RState.waitMem) || (rState === RState.idle && sio.arvalid))
   dontTouch(enRdDataCall)
+
+  val vprobe = Probe(UInt(32.W))
+
   when(rState === RState.waitMem) {
     chisel3.layer.block(DPICLayer) {
       val rdData = UnclockedCallNonVoidDPIC("pmem_read", UInt(32.W))(
         (!reset.asBool) && enRdDataCall,
         rdAddr
       )
-      rdFIFO.io.enq.bits := rdData
+      define(vprobe, rdData)
     }
+
+    rdFIFO.io.enq.bits  := vprobe
     rdFIFO.io.enq.valid := true.B
   }.otherwise {
     rdFIFO.io.enq.bits  := 0.U
