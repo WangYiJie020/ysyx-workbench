@@ -64,6 +64,7 @@ class DPICModuleWrapper[T <: Data](
       inputNames,
       outputName
     )(io.en, io.args: _*)
+    dontTouch(dpicRetVal)
     probe.define(wire_p, probe.ProbeValue(dpicRetVal))
   }
   dontTouch(wire_p)
