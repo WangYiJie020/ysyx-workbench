@@ -82,7 +82,7 @@ CHISEL2V_DONE = $(BUILD_DIR)/verilog$(SIM_ARCH_SUFFIX).done
 
 V2CXX_EMIT_DIR = $(BUILD_DIR)/gened/cxx
 # -maxdepth 1
-MY_VSRCS = $(addprefix $(CHISEL2V_EMIT_DIR)/,$(shell cat $(CHISEL2V_EMIT_DIR)/filelist.f))
+MY_VSRCS = $(addprefix $(CHISEL2V_EMIT_DIR)/,$(shell cat $(CHISEL2V_EMIT_DIR)/filelist.f | grep -v "verification"))
 SIM_VSRCS += $(MY_VSRCS)
 SIM_CSRCS += $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 
