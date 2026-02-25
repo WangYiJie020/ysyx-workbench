@@ -36,7 +36,7 @@ class ysyx_25100261 extends Module {
   dontTouch(io)
   io := DontCare
 
-  withModulePrefix("Foo") {
+  withModulePrefix("ysyx_25100261") {
 
   val isBranchGuessWrong = Wire(Bool())
 
