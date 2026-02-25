@@ -67,6 +67,10 @@ val fooooo = Module(new Foo)
 val a_probe = probe.read(fooooo.a)
 val b_probe = probe.read(fooooo.b)
 
+val c = WireDefault(a_probe && b_probe)
+dontTouch(c)
+
+
   val isBranchGuessWrong = Wire(Bool())
 
   val isFlushIDUReg     = RegInit(false.B)
