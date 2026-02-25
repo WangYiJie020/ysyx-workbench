@@ -66,8 +66,6 @@ class ysyx_25100261 extends Module {
 val fooooo = Module(new Foo)
 val a_probe = probe.read(fooooo.a)
 val b_probe = probe.read(fooooo.b)
-dontTouch(a_probe)
-dontTouch(b_probe)
 
   val isBranchGuessWrong = Wire(Bool())
 
