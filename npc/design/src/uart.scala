@@ -7,11 +7,10 @@ import axi4._
 
 import chisel3.util.circt.dpi._
 
-import chisel3.layers._
 import chisel3.layer._
-
-object InlineLayer extends Layer(LayerConfig.Inline)
-import chisel3.layers.defaultLayers
+object InlineLayer extends Layer(LayerConfig.Inline) {
+  override def name: String = "InlineLayer"
+}
 
 class UARTUnit extends Module {
   val io = IO(AXI4IO.Slave)
