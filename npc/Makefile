@@ -143,6 +143,7 @@ VERILATOR_FLAGS += --hierarchical
 										# --output-split 20000 
 
 # VERILATOR_FLAGS += -threads 2
+VERILATOR_FLAGS += --sv --assert
 
 VERILATOR_CONTROL_FILE = verilator.vlt
 
