@@ -9,7 +9,7 @@ import chisel3.util.circt.dpi._
 
 import chisel3.layer._
 object InlineLayer extends Layer(LayerConfig.Inline) {
-  override def name: String = "InlineLayer"
+  override def name: String = "ss"
 }
 
 class UARTUnit extends Module {
