@@ -24,13 +24,8 @@ class UARTUnit extends Module {
   sio.bresp  := AXI4IO.BResp.OKAY
 
   when(sio.wvalid) {
-    // RawClockedVoidFunctionCall("uart_send")(
-    //   clock,
-    //   sio.wvalid,
-    //   sio.wdata(7, 0)
-    // )
     val chData = sio.wdata(7,0)
-    printf(cf"$chData%c")
+    printf(s"UART: %c\n", chData)
     RawClockedVoidFunctionCall("skip_difftest_ref")(
       clock,
       sio.wvalid
