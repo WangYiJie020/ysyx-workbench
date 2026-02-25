@@ -7,7 +7,7 @@ object Elaborate extends App {
       "disallowPackedArrays",
       "locationInfoStyle=wrapInAtSquareBracket"
     ).reduce(_ + "," + _),
-    // "-disable-all-randomization",
+    "-disable-all-randomization",
     // "-strip-debug-info"
   )
   println("Emitting Verilog...")
