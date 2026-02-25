@@ -41,7 +41,7 @@ class CLINTUnit extends Module {
   val mtimeHi = WireDefault(0.U(32.W))
   val mtimeLo = RegInit(0.U(32.W))
   val mtime = Cat(mtimeHi, mtimeLo)
-  // mtimeLo := mtimeLo + 1.U
+  mtimeLo := mtimeLo + 1.U
   // when(mtimeLo === "hffffffff".U) {
   //   mtimeHi := mtimeHi + 1.U
   // }
