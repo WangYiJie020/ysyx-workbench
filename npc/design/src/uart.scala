@@ -8,9 +8,7 @@ import axi4._
 import chisel3.util.circt.dpi._
 
 import chisel3.layer._
-object InlineLayer extends Layer(LayerConfig.Inline) {
-  override def name: String = "ysyx_25100261_InlineLayer"
-}
+object InlineLayer extends Layer(LayerConfig.Inline)
 
 class UARTUnit extends Module {
   val io = IO(AXI4IO.Slave)
