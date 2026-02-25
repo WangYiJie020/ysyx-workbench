@@ -22,6 +22,8 @@ import common_def._
 import btb._
 import branchpredictor._
 
+import config._
+
 class TopIO extends Bundle {
   val interrupt = Input(Bool())
   val master    = AXI4IO.Master
@@ -47,9 +49,6 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   val lsu = Module(new LSU)
   val wbu = Module(new WBU)
 
-  val btb = Module(new BranchTargetBuffer)
-  val bp  = Module(new BranchPredictor)
-
   val isSoC = sys.env.getOrElse("ARCH", "") == "riscv32e-ysyxsoc"
 
   if (isSoC) {
@@ -60,24 +59,30 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
 
   val INIT_PC = if (isSoC) "h30000000".U(32.W) else "h80000000".U(32.W)
 
-  val pc = RegInit(INIT_PC)
-
-  btb.io.query.addr   := pc
-  bp.io.pc            := pc
-  bp.io.historyHit    := btb.io.query.hit
-  bp.io.historyTarget := btb.io.query.target
-  bp.io.historyIsJAL  := btb.io.query.isJAL
-
-  btb.io.update.en     := exu.io.out.valid && exu.io.jmpHappen
-  btb.io.update.addr   := exu.io.out.bits.exuWriteBack.pc
-  btb.io.update.target := exu.io.out.bits.exuWriteBack.nxt_pc
-  btb.io.update.isJAL  := exu.io.isJAL
-
+  val pc             = RegInit(INIT_PC)
   val nxtPredictedPC = Wire(Types.UWord)
   dontTouch(nxtPredictedPC)
-  nxtPredictedPC         := bp.io.predictTarget
-  ifu.io.predictedNextPC := nxtPredictedPC
 
+  if (Config.useBTBAndBP) {
+    val btb = Module(new BranchTargetBuffer)
+    val bp  = Module(new BranchPredictor)
+    btb.io.query.addr   := pc
+    bp.io.pc            := pc
+    bp.io.historyHit    := btb.io.query.hit
+    bp.io.historyTarget := btb.io.query.target
+    bp.io.historyIsJAL  := btb.io.query.isJAL
+
+    btb.io.update.en     := exu.io.out.valid && exu.io.jmpHappen
+    btb.io.update.addr   := exu.io.out.bits.exuWriteBack.pc
+    btb.io.update.target := exu.io.out.bits.exuWriteBack.nxt_pc
+    btb.io.update.isJAL  := exu.io.isJAL
+
+    nxtPredictedPC := bp.io.predictTarget
+  } else {
+    nxtPredictedPC := pc + 4.U
+  }
+
+  ifu.io.predictedNextPC := nxtPredictedPC
 
   val isBranchGuessWrongReg = RegInit(false.B)
   val isIFUAckCorrectTarget = Wire(Bool())
