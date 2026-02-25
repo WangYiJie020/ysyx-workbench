@@ -86,6 +86,7 @@ class AXI4MemUnit extends Module {
   val enRdDataCall = WireDefault((rState === RState.waitMem) || (rState === RState.idle && sio.arvalid))
   dontTouch(enRdDataCall)
 
+  chisel3.layer.enable(DPICLayer)
   val vprobe = Wire(Probe(Types.UWord, DPICLayer))
   val b = IO(Output(Probe(Types.UWord, DPICLayer)))
   define(b, vprobe)
