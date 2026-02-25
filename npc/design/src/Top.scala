@@ -23,6 +23,7 @@ import btb._
 import branchpredictor._
 
 import config._
+import chisel3.stage.ChiselGeneratorAnnotation
 
 class TopIO extends Bundle {
   val interrupt = Input(Bool())
@@ -30,10 +31,12 @@ class TopIO extends Bundle {
   val slave     = AXI4IO.Slave
 }
 
-class ysyx_25100261(word_width: Int = 32) extends Module {
+class ysyx_25100261 extends Module {
   val io = IO(new TopIO)
   dontTouch(io)
   io := DontCare
+
+  withModulePrefix("Foo") {
 
   val isBranchGuessWrong = Wire(Bool())
 
@@ -232,4 +235,5 @@ class ysyx_25100261(word_width: Int = 32) extends Module {
   csrs.io.write <> wbu.io.csr
   csrs.io.is_ecall := wbu.io.is_ecall
 
+  }
 }
