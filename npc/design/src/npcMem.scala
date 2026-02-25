@@ -84,13 +84,13 @@ class AXI4MemUnit extends Module {
   val enRdDataCall = WireDefault((rState === RState.waitMem) || (rState === RState.idle && sio.arvalid))
   dontTouch(enRdDataCall)
   when(rState === RState.waitMem) {
-    val rdData = Wire(Types.UWord)
-    UnclockedCallNonVoidDPIC("pmem_read", UInt(32.W))(
-      (!reset.asBool) && enRdDataCall,
-      rdAddr
-    )(rdData)
-
-    rdFIFO.io.enq.bits  := rdData
+    chisel3.layer.block(DPICLayer) {
+      val rdData = UnclockedCallNonVoidDPIC("pmem_read", UInt(32.W))(
+        (!reset.asBool) && enRdDataCall,
+        rdAddr
+      )
+      rdFIFO.io.enq.bits := rdData
+    }
     rdFIFO.io.enq.valid := true.B
   }.otherwise {
     rdFIFO.io.enq.bits  := 0.U

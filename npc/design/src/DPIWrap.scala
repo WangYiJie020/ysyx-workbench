@@ -43,10 +43,10 @@ object UnclockedCallNonVoidDPIC {
     ret:        => T,
     inputNames: Option[Seq[String]] = None,
     outputName: Option[String] = None
-  )(enable:     Bool, args: Data*)(v:T): Unit = {
+  )(enable:     Bool, args: Data*): T = {
     block(DPICLayer) {
       DPICUseSummary.add(name)
-      v := RawUnclockedNonVoidFunctionCall(name, ret, inputNames, outputName)(
+      RawUnclockedNonVoidFunctionCall(name, ret, inputNames, outputName)(
         enable,
         args: _*
       )
