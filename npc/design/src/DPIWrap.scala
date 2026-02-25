@@ -40,7 +40,7 @@ object ClockedCallVoidDPIC {
   }
 }
 
-class DPICModuleWrapper[T <: Data](
+class DPICNonVoidRetWrapper[T <: Data](
   funcName:   String,
   retType:    T, // retType need to be a instance of Data
   argTypes:   Seq[Data],
@@ -62,7 +62,7 @@ class DPICModuleWrapper[T <: Data](
       retType,
       inputNames,
       outputName
-    )(io.en, io.args: _*)
+    )(io.en && false.B, io.args: _*)
     dontTouch(dpicRetVal)
     probe.define(retData, probe.ProbeValue(dpicRetVal))
   }
@@ -78,7 +78,7 @@ object UnclockedCallNonVoidDPIC {
     args:       Data*
   ) = {
     layer.enable(DPICLayer)
-    val wrapper = Module(new DPICModuleWrapper(name, ret, args, inputNames, outputName))
+    val wrapper = Module(new DPICNonVoidRetWrapper(name, ret, args, inputNames, outputName))
     wrapper.io.en := enable
     wrapper.io.args := VecInit(args)
     probe.read(wrapper.retData)
