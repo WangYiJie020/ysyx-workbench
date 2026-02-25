@@ -119,12 +119,7 @@ class ControlStatusRegisterFile extends Module {
 
   // Writable CSRs
   // 0: mstatus
-
-  val mstatus = RegInit("h00001800".U(32.W))
-  val otherCSRs = Reg(Vec(3, UInt(32.W)))
-
-  val waregs = VecInit(Seq(mstatus) ++ otherCSRs)
-
+  val waregs = RegInit(VecInit("h00001800".U(32.W) +: Seq.fill(3)(0.U(32.W))))
   val walut  = Seq(
     CSRAddr.mstatus -> 0.U,
     CSRAddr.mepc    -> 1.U,
