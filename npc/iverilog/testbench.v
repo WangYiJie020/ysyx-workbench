@@ -16,4 +16,10 @@ ysyx_25100261 dut (
 		.reset(rst)
 );
 
+initial begin
+    $dumpfile("wave.fst");
+    $dumpvars(0, testbench);
+		#3000000000 $finish;
+end
+
 endmodule

@@ -39,7 +39,7 @@ class IFU extends Module {
 
   io.out.bits.iid := Mux(io.pc.fire, instID + 1.U, instID)
 
-  io.pc.ready   := (state === State.idle) && !RegNext(reset.asBool)
+  io.pc.ready   := (state === State.idle)// && !RegNext(reset.asBool)
   memIO.arvalid := (state === State.waitAR) || (state === State.idle && io.pc.fire)
   memIO.araddr  := pc
 
