@@ -246,8 +246,9 @@ static void _copy_img(void *img, size_t img_size) {
     spdlog::info("copy img to flash for soc sim");
     g_sim_mem.flash.copy_from(img, img_size);
   } else {
-    spdlog::info("copy img to psram for cpu core sim");
+    spdlog::info("copy img to psram for cpu core sim sdb read");
     g_sim_mem.psram.copy_from(img, img_size);
+		DirectSignals::GetCPU()->mem->mem->
   }
 }
 static void _fill_rams_uninit(bool zero_uninit_ram) {
