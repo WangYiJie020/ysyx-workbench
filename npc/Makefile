@@ -81,9 +81,12 @@ CHISEL2V_EMIT_DIR = $(BUILD_DIR)/gened/verilog$(SIM_ARCH_SUFFIX)
 CHISEL2V_DONE = $(BUILD_DIR)/verilog$(SIM_ARCH_SUFFIX).done
 
 V2CXX_EMIT_DIR = $(BUILD_DIR)/gened/cxx
-MY_VSRCS = $(addprefix $(CHISEL2V_EMIT_DIR)/,$(shell cat $(CHISEL2V_EMIT_DIR)/filelist.f))
+EMITED_VSRCS = $(addprefix $(CHISEL2V_EMIT_DIR)/,$(shell cat $(CHISEL2V_EMIT_DIR)/filelist.f))
 
-SYNTH_VSRCS = $(filter-out %DPICLayer% %verification%, $(MY_VSRCS))
+UNSYNTH_FILE_KEYWORDS = DPICLayer|verification
+SYNTH_VSRCS = $(addprefix $(CHISEL2V_EMIT_DIR)/,$(shell grep -vE "$(UNSYNTH_FILE_KEYWORDS)" $(CHISEL2V_EMIT_DIR)/filelist.f))
+
+MY_VSRCS = $(EMITED_VSRCS)
 
 # un synithesizable sources
 #
@@ -215,10 +218,16 @@ $(SIM_BIN): $(CHISEL2V_DONE) $(VPI_DONE) $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES)  
 		--Mdir $(V2CXX_EMIT_DIR) --exe -o $(abspath $(SIM_BIN))
 	@make -s -C $(V2CXX_EMIT_DIR) -f V$(TOP_NAME).mk -j$(shell nproc) OPT_FAST=$(VSIM_OPT) CXX=clang++ LINK=clang++ AR="ar -T"
 
-iverilog: $(CHISEL2V_DONE) #$(RENAME_LAYER_MACRO)
+IVERILOG_SIM_FILE = $(BUILD_DIR)/iverilog_sim
+IVERILOG_TESTBENCH = ./iverilog/testbench.v
+
+$(IVERILOG_SIM_FILE): $(CHISEL2V_DONE) $(SYNTH_VSRCS) $(IVERILOG_TESTBENCH)
 	$(info process verilog files with iverilog)
-	iverilog -g2012 -o $(BUILD_DIR)/iverilog_sim $(SIM_VSRCS)
-	@$(BUILD_DIR)/iverilog_sim
+	iverilog -g2012 -o $(IVERILOG_SIM_FILE) $(SYNTH_VSRCS) $(IVERILOG_TESTBENCH)
+
+iverilog: $(IVERILOG_SIM_FILE)
+	$(info Run iverilog simulation)
+	vvp $(IVERILOG_SIM_FILE)
 
 verilog-lint: $(MY_VSRCS) 
 	$(info Lint verilog files with verilator)
@@ -231,7 +240,7 @@ test:
 
 verilog: $(CHISEL2V_DONE) $(VPI_DONE)# $(RENAME_LAYER_MACRO)
 	$(info Merge verilog files into one file $(ALL_IN_ONE_VFILE))
-	@cat $(MY_VSRCS) > $(ALL_IN_ONE_VFILE)
+	@cat $(SYNTH_VSRCS) > $(ALL_IN_ONE_VFILE)
 
 help:
 	$(MILL) -i $(CHISEL_DESIGN).runMain Elaborate --help
