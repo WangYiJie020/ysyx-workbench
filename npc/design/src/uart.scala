@@ -27,7 +27,7 @@ class UARTUnit extends Module {
 
   when(sio.wvalid) {
     val chData = sio.wdata(7, 0)
-    printf(cf"$chData%c")
+    InlinePrintf(cf"$chData%c")
     SkipDifftestRef(clock, sio.wvalid)
   }
 }

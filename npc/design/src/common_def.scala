@@ -8,6 +8,8 @@ import config._
 import chisel3.layer._
 object InlinePrintfLayer extends Layer(LayerConfig.Inline)
 
+// generate printf inside module, unlike normal printf which will be
+// generated at verification layer
 object InlinePrintf {
   def apply(pable: Printable) = {
     layer.block(InlinePrintfLayer) {
