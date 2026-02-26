@@ -124,6 +124,7 @@ class AXI4MemUnit extends Module {
   dontTouch(enRdDataCall)
 
   val mem = Module(new MaskedRdWrMem(1024*1024*128, None)) 
+  mem.io:=DontCare
   dontTouch(mem.io)
 
   when(rState === RState.waitMem) {
