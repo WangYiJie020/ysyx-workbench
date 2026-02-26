@@ -41,7 +41,7 @@ class ysyx_25100261 extends Module {
   } else {
     println("ARCH is normal npc : INIT_PC = 0x80000000\n")
   }
-  val resetPC = if (isSoC) 0x30000000 else 0x80000000
+  val resetPC = if (isSoC) "h30000000".U else "h80000000".U
   println(s"Add module prefix ${getClass.getSimpleName}")
   withModulePrefix(getClass.getSimpleName) {
     val core = Module(new CPUCore(resetPC))
@@ -56,7 +56,7 @@ class ysyx_25100261 extends Module {
   }
 }
 
-class CPUCore(resetPC: Int) extends Module {
+class CPUCore(resetPC: UInt) extends Module {
   val io = IO(new TopIO)
   io := DontCare
 
@@ -74,7 +74,7 @@ class CPUCore(resetPC: Int) extends Module {
   val lsu = Module(new LSU)
   val wbu = Module(new WBU)
 
-  val INIT_PC = resetPC.U(32.W)
+  val INIT_PC = resetPC
 
   val pc             = RegInit(INIT_PC)
   val nxtPredictedPC = Wire(Types.UWord)
