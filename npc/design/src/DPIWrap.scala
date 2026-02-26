@@ -29,14 +29,14 @@ object ClockedCallVoidDPIC {
     enable:     Bool,
     args:       Data*
   ): Unit = {
-    block(DPICLayer) {
+    // block(DPICLayer) {
       DPICUseSummary.add(name)
       RawClockedVoidFunctionCall(name)(
         clock,
         enable,
         args: _*
       )
-    }
+    // }
   }
 }
 
