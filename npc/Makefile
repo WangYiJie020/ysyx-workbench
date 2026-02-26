@@ -227,7 +227,7 @@ $(IVERILOG_SIM_FILE): $(CHISEL2V_DONE) $(SYNTH_VSRCS) $(IVERILOG_TESTBENCH)
 
 iverilog: $(IVERILOG_SIM_FILE)
 	$(info Run iverilog simulation)
-	vvp $(IVERILOG_SIM_FILE)
+	vvp $(IVERILOG_SIM_FILE) -fst
 
 verilog-lint: $(MY_VSRCS) 
 	$(info Lint verilog files with verilator)
