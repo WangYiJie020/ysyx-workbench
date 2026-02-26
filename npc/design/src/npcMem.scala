@@ -123,7 +123,7 @@ class AXI4MemUnit extends Module {
   val enRdDataCall = WireDefault((rState === RState.waitMem) || (rState === RState.idle && sio.arvalid))
   dontTouch(enRdDataCall)
 
-  val mem = Module(new MaskedRdWrMem(1024*1024*128, Some("mem_init.hex")))
+  val mem = Module(new MaskedRdWrMem(1024*1024*128, None)) 
 
   when(rState === RState.waitMem) {
     // rdFIFO.io.enq.bits  := UnclockedCallNonVoidDPIC("pmem_read", UInt(32.W))(
