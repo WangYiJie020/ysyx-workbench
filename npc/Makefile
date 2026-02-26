@@ -223,7 +223,7 @@ IVERILOG_TESTBENCH = ./iverilog/testbench.v
 
 $(IVERILOG_SIM_FILE): $(CHISEL2V_DONE) $(SYNTH_VSRCS) $(IVERILOG_TESTBENCH)
 	$(info process verilog files with iverilog)
-	iverilog -g2012 -o $(IVERILOG_SIM_FILE) $(SYNTH_VSRCS) $(IVERILOG_TESTBENCH)
+	iverilog -g2012 -DENABLE_INITIAL_MEM_ -o $(IVERILOG_SIM_FILE) $(SYNTH_VSRCS) $(IVERILOG_TESTBENCH)
 
 iverilog: $(IVERILOG_SIM_FILE)
 	$(info Run iverilog simulation)
