@@ -27,11 +27,16 @@ image: image-dep
 	@echo + OBJCOPY "->" $(IMAGE_REL).bin
 	@$(OBJCOPY) -S --set-section-flags .bss=alloc,contents -O binary $(IMAGE).elf $(IMAGE).bin
 
-run: insert-arg
 ifeq ($(VSIM_iverilog),1)
-	@$(MAKE) -C $(NPC_HOME) sim-iverilog IMG=$(IMAGE).bin
+  SIM_TARGET = sim-iverilog
+  ifeq ($(VSIM_netlist),1)
+    SIM_TARGET = sim-iverilog-netlist
+  endif
 else
-	@$(MAKE) -C $(NPC_HOME) sim IMG=$(IMAGE).bin ARGS='-b'
+  SIM_TARGET = sim ARGS='-b'
 endif
+
+run: insert-arg
+	@$(MAKE) -C $(NPC_HOME) $(SIM_TARGET) IMG=$(IMAGE).bin
 
 .PHONY: insert-arg
