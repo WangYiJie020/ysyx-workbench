@@ -15,7 +15,7 @@ import dpiwrap._
 import chisel3.probe._
 import chisel3._
 import chisel3.layer.{Layer, LayerConfig}
-import chisel3.probe.{Probe, ProbeValue, define}
+import chisel3.probe.{define, Probe, ProbeValue}
 
 class AXI4MemUnit extends Module {
   val io = IO(AXI4IO.Slave)
@@ -53,10 +53,11 @@ class AXI4MemUnit extends Module {
 
   when(sio.arvalid && sio.arready) {
     arLen := sio.arlen
-  }
-  when(arLen =/= 0.U) {
-    assert(sio.arsize === AXI4IO.SizeType.WORD, "Only support word size read now")
-    assert(sio.arburst === AXI4IO.BurstType.INCR, "Only support INCR burst type now")
+
+    when(sio.arlen =/= 0.U) {
+      assert(sio.arsize === AXI4IO.SizeType.WORD, "Only support word size read now")
+      assert(sio.arburst === AXI4IO.BurstType.INCR, "Only support INCR burst type now")
+    }
   }
   rdAddr := rdAddrBeg + (curReadCount << 2)
 
@@ -88,7 +89,6 @@ class AXI4MemUnit extends Module {
 
   val enRdDataCall = WireDefault((rState === RState.waitMem) || (rState === RState.idle && sio.arvalid))
   dontTouch(enRdDataCall)
-
 
   when(rState === RState.waitMem) {
     // chisel3.layer.block(DPICLayer) {
