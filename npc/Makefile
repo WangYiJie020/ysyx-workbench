@@ -147,10 +147,10 @@ VERILATOR_FLAGS += -MMD -cc \
 
 VERILATOR_FLAGS += --hierarchical
 										# --output-split 20000 
+VERILATOR_FLAGS += --sv
 
 # VERILATOR_FLAGS += -threads 2
 VERILATOR_FLAGS += +define+ysyx_25100261_InlinePrintfLayer
-VERILATOR_FLAGS += --timing
 
 
 VERILATOR_CONTROL_FILE = verilator.vlt
