@@ -34,7 +34,6 @@ include ./soc.mk
 endif
 
 IMG ?= 
-IMG_ELF ?= $(IMG:.bin=.elf)
 
 SOC_HOME ?= ../ysyxSoC
 
@@ -228,11 +227,8 @@ $(IVERILOG_SIM_FILE): $(CHISEL2V_DONE) $(SYNTH_VSRCS) $(IVERILOG_TESTBENCH) $(RE
 	iverilog -g2012 -DENABLE_INITIAL_MEM_ $(COMMON_VERILOG_DEFINES_FLAGS) -o $(IVERILOG_SIM_FILE) $(SYNTH_VSRCS) $(IVERILOG_TESTBENCH)
 
 sim-iverilog: $(IVERILOG_SIM_FILE)
-ifeq ($(shell test -f $(SIM_ELF) && echo 'y'),)
-	$(error Simulation img's elf file $(IMG_ELF) not found, cannot generate verilog hex file for iverilog sim))
-endif
 	$(info Generate verilog hex file for iverilog sim)
-	@objcopy -O verilog --verilog-data-width 4 --change-address -0x80000000 $(IMG_ELF) $(BUILD_DIR)/npcmem_init.hex
+	@objcopy -O verilog --verilog-data-width=4 -I binary --reverse-bytes=4 $(IMG) $(BUILD_DIR)/npcmem_init.hex
 	$(info Run iverilog simulation)
 	vvp $(IVERILOG_SIM_FILE) -fst
 
