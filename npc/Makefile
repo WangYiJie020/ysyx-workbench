@@ -33,8 +33,7 @@ ifeq ($(ARCH), riscv32e-ysyxsoc)
 include ./soc.mk
 endif
 
-
-SIM_IMG ?=
+IMG ?= 
 
 SOC_HOME ?= ../ysyxSoC
 
@@ -225,7 +224,7 @@ $(IVERILOG_SIM_FILE): $(CHISEL2V_DONE) $(SYNTH_VSRCS) $(IVERILOG_TESTBENCH)
 	$(info process verilog files with iverilog)
 	iverilog -g2012 -DENABLE_INITIAL_MEM_ -o $(IVERILOG_SIM_FILE) $(SYNTH_VSRCS) $(IVERILOG_TESTBENCH)
 
-iverilog: $(IVERILOG_SIM_FILE)
+sim-iverilog: $(IVERILOG_SIM_FILE)
 	$(info Run iverilog simulation)
 	vvp $(IVERILOG_SIM_FILE) -fst
 
@@ -272,7 +271,7 @@ sim: $(SIM_BIN)
 	@echo "VSIM_OPT=$(VSIM_OPT)"
 	@echo "ENABLE_VPI=$(ENABLE_VPI)"
 	@echo "=== SIM BEGIN ==="
-	@LSAN_OPTIONS=suppressions=asan_suppress.txt $^ $(ARGS) $(SIM_IMG)
+	@LSAN_OPTIONS=suppressions=asan_suppress.txt $^ $(ARGS) $(IMG)
 
 YOSYS_STA_PATH ?= /home/wuser/gitclones/yosys-sta
 

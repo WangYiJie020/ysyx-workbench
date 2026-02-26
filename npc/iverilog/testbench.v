@@ -22,6 +22,11 @@ ysyx_25100261 dut (
 always @(posedge clk) begin
 	if (dut.core.wbu.isEBreak) begin
 		$display("EBREAK instruction executed. Ending simulation.");
+		if(dut.core.gprs.a0 != 0) begin
+			$display("HIT BAD TRAP a0 = %d", dut.core.gprs.a0);
+		end else begin
+			$display("HIT GOOD TRAP");
+		end
 		$finish;
 	end
 end
