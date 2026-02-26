@@ -147,16 +147,10 @@ extern "C" void psram_write(int32_t addr, char strb8, int32_t data, int32_t *) {
 }
 // compatible interface for npc core
 extern "C" void pmem_upd(int addr, int data, int mask) {
-  // uint8_t unaligned_part = addr & 0x3;
-  // uint32_t udata = ((uint32_t)data) >> (unaligned_part * 8);
-  // uint8_t umask = (mask >> unaligned_part) & 0xf;
-	
 	uint32_t udata = data;
 	uint8_t umask = mask & 0xf;
 
   uint32_t psram_addr = addr - g_sim_mem.psram.base();
-  // spdlog::info("pmem_write addr={:08x} translated to psram_addr={:08x}",
-  // (uint32_t)addr, psram_addr);
   return psram_write(psram_addr, umask, udata, nullptr);
 }
 

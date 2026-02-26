@@ -80,14 +80,15 @@ struct direct_mapped_mem : public mem_region_traits {
 	//
 	// write startes from addr, end below aligned(addr) + 4
 	//
-	// example: addr=0x1001 value=0x12345678 strb8=0b1101
+	// example: `addr=0x1001 value=0x12345678 strb8=0b1101`
 	//
 	// write
-	// -  0x78 to 0x1001
-	// -  0x34 to 0x1003
+	// - 0x78 to 0x1001
+	// - 0x34 to 0x1003
+	//
 	// not write
-	// -  0x12 to 0x1004 since out of the 4-byte word boundary
-	// -  0x56 to 0x1002 since strb8 bit 2 is 0
+	// - 0x12 to 0x1004 since out of the 4-byte word boundary
+	// - 0x56 to 0x1002 since strb8 bit 2 is 0
 	//
   void write_word(uint32_t addr, uint32_t value, uint8_t strb8) {
     assert_in_range(addr);

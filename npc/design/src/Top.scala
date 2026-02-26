@@ -60,9 +60,6 @@ class ysyx_25100261 extends Module {
   io := DontCare
 
   withModulePrefix("ysyx_25100261") {
-
-    layer.enable(dpiwrap.DPICLayer)
-
     val isBranchGuessWrong = Wire(Bool())
 
     val isFlushIDUReg     = RegInit(false.B)
