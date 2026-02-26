@@ -32,7 +32,7 @@ class MaskedRdWrMem(size: Int, filePath: Option[String] = None) extends Module {
     val dataOut = Output(dataType)
   })
 
-  val mem = Mem(size, Vec(numBytes, UInt(width.W)))
+  val mem = Mem(size, dataType)
 
   if (filePath.isDefined) {
     chisel3.util.experimental.loadMemoryFromFile(mem, filePath.get)
