@@ -204,6 +204,7 @@ class AXI4MemUnit extends Module {
   when(bState === sBWaitMem) {
     mem.io.write  := true.B
     mem.io.addr   := wrAddr
+    mem.io.mask   := wrMask.asBools
     mem.io.dataIn := wrData.asTypeOf(mem.dataType)
     ClockedCallVoidDPIC("pmem_write")(
       clock,
