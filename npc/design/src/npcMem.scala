@@ -129,6 +129,8 @@ class AXI4MemUnit extends Module {
   defalutMemIO := DontCare
   val memIO = WireDefault(defalutMemIO)
 
+  mem.io <> memIO
+
 
   when(rState === RState.waitMem) {
     // rdFIFO.io.enq.bits  := UnclockedCallNonVoidDPIC("pmem_read", UInt(32.W))(
