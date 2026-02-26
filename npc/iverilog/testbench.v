@@ -19,6 +19,13 @@ ysyx_25100261 dut (
 		.reset(rst)
 );
 
+always @(posedge clk) begin
+	if (dut.core.wbu.isEBreak) begin
+		$display("EBREAK instruction executed. Ending simulation.");
+		$finish;
+	end
+end
+
 initial begin
     $dumpfile("wave.fst");
     $dumpvars(0, testbench);

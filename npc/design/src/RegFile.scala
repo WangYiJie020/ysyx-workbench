@@ -56,6 +56,9 @@ class RegisterFile(READ_PORTS: Int = 2) extends Module {
 
   val reg = Reg(Vec(N_REG, Types.UWord))
 
+  val a0 = WireDefault(reg(10))
+  dontTouch(a0)
+
   when(io.write.en) {
     // Chisel will optimize to remove reg[0] instance
     when(io.write.addr =/= 0.U) {
