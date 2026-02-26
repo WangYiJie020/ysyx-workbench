@@ -55,17 +55,17 @@ class WBU extends Module {
 
   io.in.ready := true.B
 
-  val halted    = RegInit(false.B)
-  val is_ebreak = wbinfo.is_ebreak && valid
-
-  when(is_ebreak && !halted) {
-    ClockedCallVoidDPIC("raise_ebreak")(clock, is_ebreak)
-    halted := true.B
+  // val halted    = RegInit(false.B)
+  val isEBreak = WireDefault(wbinfo.is_ebreak && valid)
+  dontTouch(isEBreak)
+  when(isEBreak) {
+    ClockedCallVoidDPIC("raise_ebreak")(clock, isEBreak)
+    // halted := true.B
     stop()
   }
 
-  when(valid && (!is_ebreak)) {
-    ClockedCallVoidDPIC("pc_upd")(clock, valid && !is_ebreak, wbinfo.pc, wbinfo.nxt_pc)
+  when(valid && (!isEBreak)) {
+    ClockedCallVoidDPIC("pc_upd")(clock, valid && !isEBreak, wbinfo.pc, wbinfo.nxt_pc)
   }
 
   SkipDifftestRef(clock, valid && wbinfo.skipDifftest)
