@@ -326,8 +326,10 @@ NETLIST ?= $(STA_OUT_DIR)/$(STA_DEST_FULL_NAME)-$(STA_FREQ_MHZ)MHz/$(STA_DEST_FU
 # in CI passed from outside
 CELLS ?= $(YOSYS_STA_PATH)/pdk/nangate45/sim/cells.v
 
-NETLIST_SIM_OTHER_MODULES = NPCDevices.sv AXI4MemUnit AXI4LiteXBar
-NETLIST_SIM_OTHER_VSRCS = $(addprefix $(abspath $(CHISEL2V_EMIT_DIR))/$(CPU_DESIGN_NAME)_, $(NETLIST_SIM_OTHER_MODULES))
+# NETLIST_SIM_OTHER_MODULES = NPCDevices AXI4MemUnit AXI4LiteXBar AXI4LiteXBar_1
+# NETLIST_SIM_OTHER_VSRCS = $(addsuffix .sv, $(addprefix $(abspath $(CHISEL2V_EMIT_DIR))/$(CPU_DESIGN_NAME)_, $(NETLIST_SIM_OTHER_MODULES)))
+
+NETLIST_SIM_OTHER_VSRCS = $(filter-out %$(STA_DEST_FULL_NAME).sv, $(STA_VSRCS))
 
 sim-iverilog-netlist: sta $(NETLIST)
 	$(info Run iverilog simulation with netlist)
