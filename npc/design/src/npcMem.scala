@@ -24,7 +24,7 @@ class MaskedRdWrMem(size: Int, filePath: Option[String] = None) extends Module {
   val numBytes: Int = 4
 
   val dataType = Vec(numBytes, UInt(width.W))
-  val io = IO(new Bundle {
+  val io       = IO(new Bundle {
     val write   = Input(Bool())
     val addr    = Input(UInt(10.W))
     val mask    = Input(Vec(numBytes, Bool()))
@@ -38,14 +38,14 @@ class MaskedRdWrMem(size: Int, filePath: Option[String] = None) extends Module {
     chisel3.util.experimental.loadMemoryFromFile(mem, filePath.get)
   }
 
-  io.dataOut := DontCare
   val rdwrPort = mem(io.addr)
   when(io.write) {
-    for(i <- 0 until numBytes) {
+    for (i <- 0 until numBytes) {
       when(io.mask(i)) {
         rdwrPort(i) := io.dataIn(i)
       }
     }
+    io.dataOut := DontCare
   }.otherwise { io.dataOut := rdwrPort }
 }
 
@@ -125,13 +125,17 @@ class AXI4MemUnit extends Module {
   val mem = Module(new MaskedRdWrMem(1024, Some("foo.mem")))
   mem.io := DontCare
 
+  def alignAddr(addr: UInt): UInt = {
+    addr(addr.getWidth - 1, 2) ## 0.U(2.W)
+  }
+
   when(rState === RState.waitMem) {
     // rdFIFO.io.enq.bits  := UnclockedCallNonVoidDPIC("pmem_read", UInt(32.W))(
     //   (!reset.asBool) && enRdDataCall,
     //   rdAddr
     // )
     mem.io.write        := false.B
-    mem.io.addr         := rdAddr >> 2
+    mem.io.addr         := alignAddr(rdAddr)
     rdFIFO.io.enq.bits  := mem.io.dataOut.asUInt
     rdFIFO.io.enq.valid := true.B
   }.otherwise {
@@ -201,8 +205,8 @@ class AXI4MemUnit extends Module {
 
   when(bState === sBWaitMem) {
     mem.io.write  := true.B
-    mem.io.addr   := wrAddr >> 2
-    mem.io.dataIn := wrData.asTypeOf(mem.io.dataIn)
+    mem.io.addr   := alignAddr(wrAddr)
+    mem.io.dataIn := wrData.asTypeOf(mem.dataType)
     ClockedCallVoidDPIC("pmem_write")(
       clock,
       (!reset.asBool),
