@@ -124,7 +124,11 @@ class AXI4MemUnit extends Module {
   dontTouch(enRdDataCall)
 
   val mem = Module(new MaskedRdWrMem(1024*1024*128, None)) 
-  val memIO = WireDefault(DontCare.asTypeOf(mem.io))
+
+  val defalutMemIO = Wire(mem.io.cloneType)
+  defalutMemIO := DontCare
+  val memIO = WireDefault(defalutMemIO)
+
 
   when(rState === RState.waitMem) {
     // rdFIFO.io.enq.bits  := UnclockedCallNonVoidDPIC("pmem_read", UInt(32.W))(
