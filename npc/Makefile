@@ -82,6 +82,9 @@ CHISEL2V_DONE = $(BUILD_DIR)/verilog$(SIM_ARCH_SUFFIX).done
 
 V2CXX_EMIT_DIR = $(BUILD_DIR)/gened/cxx
 MY_VSRCS = $(addprefix $(CHISEL2V_EMIT_DIR)/,$(shell cat $(CHISEL2V_EMIT_DIR)/filelist.f)) # | grep -v "verification"))
+
+MY_VSRCS += $(abspath $(CHISEL2V_EMIT_DIR))/verification/layers-$(CPU_DESIGN_NAME)-Verification.sv
+
 SIM_VSRCS += $(MY_VSRCS)
 SIM_CSRCS += $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 
@@ -190,7 +193,7 @@ else
 endif
 
 
-$(SIM_BIN): $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) $(CHISEL2V_DONE) $(VPI_DONE) $(SIM_HEADERS) $(VERILATOR_CONTROL_FILE) $(RENAME_LAYER_MACRO)
+$(SIM_BIN): $(CHISEL2V_DONE) $(VPI_DONE) $(RENAME_LAYER_MACRO) $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES)  $(SIM_HEADERS) $(VERILATOR_CONTROL_FILE) 
 	@rm -rf $(V2CXX_EMIT_DIR)
 	@echo "# Building simulation binary: $@"
 	@$(VERILATOR) $(VERILATOR_FLAGS) \
