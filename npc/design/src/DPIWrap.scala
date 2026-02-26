@@ -11,7 +11,7 @@ import scala.collection.mutable
 
 import chisel3.probe.{Probe, ProbeValue}
 
-object DPICLayer extends Layer(LayerConfig.Extract())
+object DPICLayer extends Layer(LayerConfig.Inline)
 
 object DPICUseSummary {
   val usedDPICs:         mutable.Set[String] = mutable.Set.empty
@@ -62,7 +62,7 @@ class DPICNonVoidRetWrapper[T <: Data](
       retType,
       inputNames,
       outputName
-    )(io.en && false.B, io.args: _*)
+    )(io.en, io.args: _*)
     dontTouch(dpicRetVal)
     probe.define(retData, probe.ProbeValue(dpicRetVal))
   }
@@ -77,11 +77,12 @@ object UnclockedCallNonVoidDPIC {
   )(enable:     Bool,
     args:       Data*
   ) = {
-    layer.enable(DPICLayer)
-    val wrapper = Module(new DPICNonVoidRetWrapper(name, ret, args, inputNames, outputName))
-    wrapper.io.en := enable
-    wrapper.io.args := VecInit(args)
-    probe.read(wrapper.retData)
+    RawUnclockedNonVoidFunctionCall(name, ret, inputNames, outputName)(enable, args: _*)
+    // layer.enable(DPICLayer)
+    // val wrapper = Module(new DPICNonVoidRetWrapper(name, ret, args, inputNames, outputName))
+    // wrapper.io.en := enable
+    // wrapper.io.args := VecInit(args)
+    // probe.read(wrapper.retData)
   }
 }
 
