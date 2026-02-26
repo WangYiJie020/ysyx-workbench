@@ -11,7 +11,7 @@ import scala.collection.mutable
 
 import chisel3.probe.{Probe, ProbeValue}
 
-object DPICLayer extends Layer(LayerConfig.Inline)
+object DPICLayer extends Layer(LayerConfig.Extract())
 
 object DPICUseSummary {
   val usedDPICs:         mutable.Set[String] = mutable.Set.empty
