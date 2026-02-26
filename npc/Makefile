@@ -81,7 +81,7 @@ CHISEL2V_EMIT_DIR = $(BUILD_DIR)/gened/verilog$(SIM_ARCH_SUFFIX)
 CHISEL2V_DONE = $(BUILD_DIR)/verilog$(SIM_ARCH_SUFFIX).done
 
 V2CXX_EMIT_DIR = $(BUILD_DIR)/gened/cxx
-MY_VSRCS = $(addprefix $(CHISEL2V_EMIT_DIR)/,$(shell cat $(CHISEL2V_EMIT_DIR)/filelist.f | grep -v "verification"))
+MY_VSRCS = $(addprefix $(CHISEL2V_EMIT_DIR)/,$(shell cat $(CHISEL2V_EMIT_DIR)/filelist.f)) # | grep -v "verification"))
 SIM_VSRCS += $(MY_VSRCS)
 SIM_CSRCS += $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 
@@ -150,6 +150,7 @@ VERILATOR_FLAGS += --hierarchical
 
 # VERILATOR_FLAGS += -threads 2
 VERILATOR_FLAGS += +define+ysyx_25100261_InlinePrintfLayer
+VERILATOR_FLAGS += --timing
 
 
 VERILATOR_CONTROL_FILE = verilator.vlt
