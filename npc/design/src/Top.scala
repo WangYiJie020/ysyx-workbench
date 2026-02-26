@@ -58,6 +58,7 @@ class Foo extends RawModule {
 class ysyx_25100261 extends Module {
   val io = IO(new TopIO)
   dontTouch(io)
+  println(s"${getClass.getSimpleName} is generated")
   withModulePrefix("ysyx_25100261") {
     val core = Module(new CPUCore)
     core.io <> io
