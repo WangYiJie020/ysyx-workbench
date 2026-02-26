@@ -122,16 +122,16 @@ ifeq ($(ENABLE_VPI), 1)
 	touch $@
 endif
 
-#
-# # Chisel generates macro like `layer$xxx` to control inline layer
-# # renaming them to `$(CPU_DESIGN_NAME)_xxx` to avoid conflict and
-# # make them more standard as macro names (convinient to pass to verilator)
-#
-# RENAME_LAYER_MACRO := $(BUILD_DIR)/rename_layer_macro.done
-# $(RENAME_LAYER_MACRO): $(CHISEL2V_DONE)
-# 	$(info # Removing unstandard layer$$ style macro)
-# 	@$(foreach src,$(MY_VSRCS), sed -i 's/layer\$$\(\w\+\)/$(CPU_DESIGN_NAME)_\1/g' $(src);)
-# 	touch $@
+
+# Chisel generates macro like `layer$xxx` to control inline layer
+# renaming them to `$(CPU_DESIGN_NAME)_xxx` to avoid conflict and
+# make them more standard as macro names (convinient to pass to verilator)
+
+RENAME_LAYER_MACRO := $(BUILD_DIR)/rename_layer_macro.done
+$(RENAME_LAYER_MACRO): $(CHISEL2V_DONE)
+	$(info # Removing unstandard layer$$ style macro)
+	@$(foreach src,$(MY_VSRCS), sed -i 's/layer\$$\(\w\+\)/$(CPU_DESIGN_NAME)_\1/g' $(src);)
+	touch $@
 
 # sdb
 INC_PATH += $(abspath ../sdb/include)
@@ -166,8 +166,10 @@ VERILATOR_FLAGS += -MMD -cc \
 VERILATOR_FLAGS += --hierarchical
 										# --output-split 20000 
 
-# VERILATOR_FLAGS += -threads 2
-# VERILATOR_FLAGS += +define+ysyx_25100261_InlinePrintfLayer
+COMMON_VERILOG_DEFINES = ysyx_25100261_InlinePrintfLayer
+COMMON_VERILOG_DEFINES_FLAGS = $(addprefix -D,$(COMMON_VERILOG_DEFINES))
+
+VERILATOR_FLAGS += $(COMMON_VERILOG_DEFINES_FLAGS)
 
 
 VERILATOR_CONTROL_FILE = verilator.vlt
@@ -221,9 +223,9 @@ $(SIM_BIN): $(CHISEL2V_DONE) $(VPI_DONE) $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES)  
 IVERILOG_SIM_FILE = $(BUILD_DIR)/iverilog_sim
 IVERILOG_TESTBENCH = ./iverilog/testbench.v
 
-$(IVERILOG_SIM_FILE): $(CHISEL2V_DONE) $(SYNTH_VSRCS) $(IVERILOG_TESTBENCH)
+$(IVERILOG_SIM_FILE): $(CHISEL2V_DONE) $(SYNTH_VSRCS) $(IVERILOG_TESTBENCH) $(RENAME_LAYER_MACRO)
 	$(info process verilog files with iverilog)
-	iverilog -g2012 -DENABLE_INITIAL_MEM_ -o $(IVERILOG_SIM_FILE) $(SYNTH_VSRCS) $(IVERILOG_TESTBENCH)
+	iverilog -g2012 -DENABLE_INITIAL_MEM_ $(COMMON_VERILOG_DEFINES_FLAGS) -o $(IVERILOG_SIM_FILE) $(SYNTH_VSRCS) $(IVERILOG_TESTBENCH)
 
 sim-iverilog: $(IVERILOG_SIM_FILE)
 ifeq ($(shell test -f $(SIM_ELF) && echo 'y'),)
@@ -243,7 +245,7 @@ all: default
 test:
 	$(MILL) -i $(CHISEL_DESIGN).test
 
-verilog: $(CHISEL2V_DONE) $(VPI_DONE)# $(RENAME_LAYER_MACRO)
+verilog: $(CHISEL2V_DONE) $(VPI_DONE) $(RENAME_LAYER_MACRO)
 	$(info Merge verilog files into one file $(ALL_IN_ONE_VFILE))
 	@cat $(SYNTH_VSRCS) > $(ALL_IN_ONE_VFILE)
 
