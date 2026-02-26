@@ -123,7 +123,7 @@ class AXI4MemUnit extends Module {
   val enRdDataCall = WireDefault((rState === RState.waitMem) || (rState === RState.idle && sio.arvalid))
   dontTouch(enRdDataCall)
 
-  val mem = Module(new MaskedRdWrMem(1024*1024*128, Some("foo.mem")))
+  val mem = Module(new MaskedRdWrMem(1024*1024*128, None))
   mem.io := DontCare
 
   def alignAddr(addr: UInt): UInt = {
