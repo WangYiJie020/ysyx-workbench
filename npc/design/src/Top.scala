@@ -58,8 +58,6 @@ class ysyx_25100261 extends Module {
 }
 
 class CPUCore(resetPC: UInt) extends Module {
-  val isEBreak = IO(Output(Bool()))
-  val a0 = IO(Output(UInt(32.W)))
   val io = IO(new TopIO)
   io := DontCare
 
@@ -76,11 +74,6 @@ class CPUCore(resetPC: UInt) extends Module {
   val exu = Module(new EXU)
   val lsu = Module(new LSU)
   val wbu = Module(new WBU)
-
-  isEBreak := wbu.io.in.bits.is_ebreak && wbu.io.in.valid
-  dontTouch(isEBreak)
-  a0 := gprs.a0
-  dontTouch(a0)
 
   val INIT_PC = resetPC
 
