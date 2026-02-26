@@ -20,16 +20,19 @@ import chisel3.probe.{define, Probe, ProbeValue}
 // https://www.chisel-lang.org/docs/explanations/memories#masks
 // Create a 32-bit wide memory that is byte-masked
 class MaskedRdWrMem(size: Int, filePath: Option[String] = None) extends Module {
-  val width: Int = 8
+  val width:    Int = 8
+  val numBytes: Int = 4
+
+  val dataType = Vec(numBytes, UInt(width.W))
   val io = IO(new Bundle {
     val write   = Input(Bool())
     val addr    = Input(UInt(10.W))
-    val mask    = Input(Vec(4, Bool()))
-    val dataIn  = Input(Vec(4, UInt(width.W)))
-    val dataOut = Output(Vec(4, UInt(width.W)))
+    val mask    = Input(Vec(numBytes, Bool()))
+    val dataIn  = Input(dataType)
+    val dataOut = Output(dataType)
   })
 
-  val mem = Mem(size, Vec(4, UInt(width.W)))
+  val mem = Mem(size, Vec(numBytes, UInt(width.W)))
 
   if (filePath.isDefined) {
     chisel3.util.experimental.loadMemoryFromFile(mem, filePath.get)
@@ -198,8 +201,8 @@ class AXI4MemUnit extends Module {
   )
 
   when(bState === sBWaitMem) {
-    mem.io.write := true.B
-    mem.io.addr  := wrAddr >> 2
+    mem.io.write  := true.B
+    mem.io.addr   := wrAddr >> 2
     mem.io.dataIn := wrData.asTypeOf(mem.io.dataIn)
     ClockedCallVoidDPIC("pmem_write")(
       clock,
