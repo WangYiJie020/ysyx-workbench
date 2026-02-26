@@ -40,6 +40,11 @@ object ClockedCallVoidDPIC {
   }
 }
 
+// DISCARD!!!
+// NOTICE: For non-void function calls, ret value is not synthesizable,
+// like `a:=pmem_read(addr)`, we must find a synthesizable source for `a`
+
+/*
 class DPICNonVoidRetWrapper[T <: Data](
   funcName:   String,
   retType:    T, // retType need to be a instance of Data
@@ -67,27 +72,27 @@ class DPICNonVoidRetWrapper[T <: Data](
     probe.define(retData, probe.ProbeValue(dpicRetVal))
   }
 }
-
-object UnclockedCallNonVoidDPIC {
-  def apply[T <: Data](
-    name:       String,
-    ret:        => T,
-    inputNames: Option[Seq[String]] = None,
-    outputName: Option[String] = None
-  )(enable:     Bool,
-    args:       Data*
-  ) = {
-    layer.block(DPICLayer) {
-      DPICUseSummary.add(name)
-      RawUnclockedNonVoidFunctionCall(name, ret, inputNames, outputName)(enable, args: _*)
-    }
-    // layer.enable(DPICLayer)
-    // val wrapper = Module(new DPICNonVoidRetWrapper(name, ret, args, inputNames, outputName))
-    // wrapper.io.en := enable
-    // wrapper.io.args := VecInit(args)
-    // probe.read(wrapper.retData)
-  }
-}
+ */
+// object UnclockedCallNonVoidDPIC {
+//   def apply[T <: Data](
+//     name:       String,
+//     ret:        => T,
+//     inputNames: Option[Seq[String]] = None,
+//     outputName: Option[String] = None
+//   )(enable:     Bool,
+//     args:       Data*
+//   ) = {
+//     layer.block(DPICLayer) {
+//       DPICUseSummary.add(name)
+//       RawUnclockedNonVoidFunctionCall(name, ret, inputNames, outputName)(enable, args: _*)
+//     }
+//     // layer.enable(DPICLayer)
+//     // val wrapper = Module(new DPICNonVoidRetWrapper(name, ret, args, inputNames, outputName))
+//     // wrapper.io.en := enable
+//     // wrapper.io.args := VecInit(args)
+//     // probe.read(wrapper.retData)
+//   }
+// }
 
 object SkipDifftestRef {
   def apply(clock: Clock, enable: Bool): Unit = {

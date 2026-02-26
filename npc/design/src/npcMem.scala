@@ -90,18 +90,16 @@ class AXI4MemUnit extends Module {
   val enRdDataCall = WireDefault((rState === RState.waitMem) || (rState === RState.idle && sio.arvalid))
   dontTouch(enRdDataCall)
 
+  val mem = Mem(1024, UInt(32.W))
+  chisel3.util.experimental.loadMemoryFromFile(mem, "foo.mem")
+
   when(rState === RState.waitMem) {
-    // chisel3.layer.block(DPICLayer) {
-    //   val rdData = UnclockedCallNonVoidDPIC("pmem_read", UInt(32.W))(
-    //     (!reset.asBool) && enRdDataCall,
-    //     rdAddr
-    //   )
-    //   define(vprobe, ProbeValue(rdData))
-    // }
-    rdFIFO.io.enq.bits  := UnclockedCallNonVoidDPIC("pmem_read", UInt(32.W))(
-      (!reset.asBool) && enRdDataCall,
-      rdAddr
-    )
+
+    // rdFIFO.io.enq.bits  := UnclockedCallNonVoidDPIC("pmem_read", UInt(32.W))(
+    //   (!reset.asBool) && enRdDataCall,
+    //   rdAddr
+    // )
+    rdFIFO.io.enq.bits  := mem(rdAddr >> 2)
     rdFIFO.io.enq.valid := true.B
   }.otherwise {
     rdFIFO.io.enq.bits  := 0.U
