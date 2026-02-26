@@ -41,11 +41,10 @@ class MaskedRdWrMem(size: Int, filePath: Option[String] = None) extends Module {
   io.dataOut := DontCare
   val rdwrPort = mem(io.addr)
   when(io.write) {
-    when(io.mask(0)) {
-      rdwrPort(0) := io.dataIn(0)
-    }
-    when(io.mask(1)) {
-      rdwrPort(1) := io.dataIn(1)
+    for(i <- 0 until numBytes) {
+      when(io.mask(i)) {
+        rdwrPort(i) := io.dataIn(i)
+      }
     }
   }.otherwise { io.dataOut := rdwrPort }
 }
