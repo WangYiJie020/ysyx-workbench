@@ -1,0 +1,31 @@
+package npc_devices
+
+import chisel3._
+import chisel3.util._
+
+import axi4._
+import xbar._
+import uart._
+import npcMem._
+
+import common_def._
+
+class NPCDevices extends Module {
+  val io = IO(AXI4IO.Slave)
+  io := DontCare
+
+  val uart = Module(new UARTUnit)
+  val mem  = Module(new AXI4MemUnit)
+
+  val xbar =  Module(
+    new AXI4LiteXBar(
+      Seq(
+        AddrSpace.NPCMEM -> mem.io,
+        AddrSpace.SERIAL -> uart.io
+      )
+    )
+  )
+
+  xbar.connect()
+  io <> xbar.io.in
+}

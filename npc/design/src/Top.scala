@@ -14,8 +14,6 @@ import uart._
 import clint._
 import xbar._
 
-import npcMem._
-
 import icache._
 import common_def._
 
@@ -23,7 +21,8 @@ import btb._
 import branchpredictor._
 
 import config._
-import chisel3.stage.ChiselGeneratorAnnotation
+
+import npc_devices._
 
 class TopIO extends Bundle {
   val interrupt = Input(Bool())
@@ -31,41 +30,34 @@ class TopIO extends Bundle {
   val slave     = AXI4IO.Slave
 }
 
-import chisel3.layer.{Layer, LayerConfig}
-import chisel3.probe.{define, Probe, ProbeValue}
-object A extends Layer(LayerConfig.Inline)
-object B extends Layer(LayerConfig.Inline)
-
-class Foo extends RawModule {
-  val a = IO(Output(Probe(Bool(), A)))
-  val b = IO(Output(Probe(Bool(), B)))
-
-  layer.block(A) {
-    val a_wire = WireInit(false.B)
-    define(a, ProbeValue(a_wire))
-  }
-
-  val b_wire_probe = Wire(Probe(Bool(), B))
-  define(b, b_wire_probe)
-
-  layer.block(B) {
-    val b_wire = WireInit(false.B)
-    define(b_wire_probe, ProbeValue(b_wire))
-  }
-
-}
-
 class ysyx_25100261 extends Module {
   val io = IO(new TopIO)
   dontTouch(io)
+
+  val isSoC = sys.env.getOrElse("ARCH", "") == "riscv32e-ysyxsoc"
+
+  if (isSoC) {
+    println("ARCH is SoC npc : INIT_PC = 0x30000000\n")
+  } else {
+    println("ARCH is normal npc : INIT_PC = 0x80000000\n")
+  }
+  val resetPC = if (isSoC) "h30000000".U else "h80000000".U
   println(s"Add module prefix ${getClass.getSimpleName}")
   withModulePrefix(getClass.getSimpleName) {
-    val core = Module(new CPUCore)
-    core.io <> io
+    val core = Module(new CPUCore(resetPC))
+    if (isSoC) {
+      core.io <> io
+    } else {
+      val npcDevices = Module(new NPCDevices)
+      npcDevices.io <> core.io.master
+      io.master := DontCare
+      core.io.slave <> io.slave
+      core.io.interrupt := io.interrupt
+    }
   }
 }
 
-class CPUCore extends Module {
+class CPUCore(resetPC: UInt) extends Module {
   val io = IO(new TopIO)
   io := DontCare
 
@@ -83,15 +75,7 @@ class CPUCore extends Module {
   val lsu = Module(new LSU)
   val wbu = Module(new WBU)
 
-  val isSoC = sys.env.getOrElse("ARCH", "") == "riscv32e-ysyxsoc"
-
-  if (isSoC) {
-    println("ARCH is SoC npc : INIT_PC = 0x30000000\n")
-  } else {
-    println("ARCH is normal npc : INIT_PC = 0x80000000\n")
-  }
-
-  val INIT_PC = if (isSoC) "h30000000".U(32.W) else "h80000000".U(32.W)
+  val INIT_PC = resetPC
 
   val pc             = RegInit(INIT_PC)
   val nxtPredictedPC = Wire(Types.UWord)
@@ -190,31 +174,15 @@ class CPUCore extends Module {
   val clint = Module(new CLINTUnit)
 
   val otherReqSlave = Wire(AXI4IO.Slave)
-  val memXBar       = if (isSoC) {
-    AXI4IO.transformSlaveToMasterValidIf(!reset.asBool)(io.master, otherReqSlave)
-    Module(
-      new AXI4LiteXBar(
-        Seq(
-          AddrSpace.CLINT -> clint.io,
-          AddrSpace.SOC   -> otherReqSlave
-        )
+  AXI4IO.transformSlaveToMasterValidIf(!reset.asBool)(io.master, otherReqSlave)
+  val memXBar       = Module(
+    new AXI4LiteXBar(
+      Seq(
+        AddrSpace.CLINT -> clint.io,
+        AddrSpace.SOC   -> otherReqSlave
       )
     )
-  } else {
-    val uart = Module(new UARTUnit)
-    val mem  = Module(new AXI4MemUnit)
-
-    otherReqSlave := DontCare
-    Module(
-      new AXI4LiteXBar(
-        Seq(
-          AddrSpace.CLINT  -> clint.io,
-          AddrSpace.NPCMEM -> mem.io,
-          AddrSpace.SERIAL -> uart.io
-        )
-      )
-    )
-  }
+  )
 
   when(io.master.bvalid && io.master.bresp === AXI4IO.BResp.DECERR) {
     printf("AXI4 DECERR on write address 0x%x\n", io.master.awaddr)
