@@ -77,7 +77,10 @@ object UnclockedCallNonVoidDPIC {
   )(enable:     Bool,
     args:       Data*
   ) = {
-    RawUnclockedNonVoidFunctionCall(name, ret, inputNames, outputName)(enable, args: _*)
+    layer.block(DPICLayer) {
+      DPICUseSummary.add(name)
+      RawUnclockedNonVoidFunctionCall(name, ret, inputNames, outputName)(enable, args: _*)
+    }
     // layer.enable(DPICLayer)
     // val wrapper = Module(new DPICNonVoidRetWrapper(name, ret, args, inputNames, outputName))
     // wrapper.io.en := enable
