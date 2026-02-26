@@ -279,12 +279,13 @@ sim: $(SIM_BIN)
 
 YOSYS_STA_PATH ?= /home/wuser/gitclones/yosys-sta
 
-STA_NODPI_PATH = $(BUILD_DIR)/sta_nodpi
+# STA_NODPI_PATH = $(BUILD_DIR)/sta_nodpi
 
-$(shell mkdir -p $(STA_NODPI_PATH))
+# $(shell mkdir -p $(STA_NODPI_PATH))
 
-STA_VSRCS = $(shell find $(abspath $(STA_NODPI_PATH)) -maxdepth 1 -name "*.v" -or -name "*.sv")
+# STA_VSRCS = $(shell find $(abspath $(STA_NODPI_PATH)) -maxdepth 1 -name "*.v" -or -name "*.sv")
 
+STA_VSRCS = $(abspath $(SYNTH_VSRCS))
 
 STA_DEST ?= 
 ifeq ($(STA_DEST),)
@@ -294,8 +295,8 @@ else
 endif
 
 sta: $(CHISEL2V_DONE) $(STA_VSRCS)
-	@echo "Removing DPI-C void functions from verilog sources..."
-	./scripts/remove_dpi.sh $(CHISEL2V_EMIT_DIR) $(STA_NODPI_PATH)
+	# @echo "Removing DPI-C void functions from verilog sources..."
+	# ./scripts/remove_dpi.sh $(CHISEL2V_EMIT_DIR) $(STA_NODPI_PATH)
 	make -C $(YOSYS_STA_PATH) sta \
 		DESIGN=$(STA_DEST_FULL_NAME) \
 		CLK_FREQ_MHZ=2000 \
