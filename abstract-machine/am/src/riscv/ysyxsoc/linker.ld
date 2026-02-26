@@ -69,6 +69,7 @@ SECTIONS {
   PROVIDE(__data_extra_size__ = 0);
 	_data_extra_end = . + __data_extra_size__;
 
+	ALIGN(4)
   .data : {
 		_data_start = .;
     *(.sdata*)
@@ -79,7 +80,7 @@ SECTIONS {
 	__data_load_start__ = LOADADDR(.data); /* MA */
 	__data_size__       = SIZEOF(.data);   /* LEN */
 
-
+	ALIGN(4)
   .bss : {
 		_bss_start = .;
     *(.bss*)
