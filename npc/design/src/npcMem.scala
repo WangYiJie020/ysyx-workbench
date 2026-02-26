@@ -36,7 +36,8 @@ class MaskedRdWrMem(sizeInByte: Int, filePath: Option[String] = None) extends Mo
   val mem = Mem(sizeInByte / numBytes, dataType)
 
   if (filePath.isDefined) {
-    chisel3.util.experimental.loadMemoryFromFile(mem, filePath.get)
+    // chisel3.util.experimental.loadMemoryFromFile(mem, filePath.get)
+    chisel3.util.experimental.loadMemoryFromFileInline(mem, filePath.get)
   }
 
   val rdwrPort = mem(io.addr)
