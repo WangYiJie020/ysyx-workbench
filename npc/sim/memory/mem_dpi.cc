@@ -127,10 +127,10 @@ DEF_NOHIGH8_FORWARD_RD(flash)
 
 // DEF_NOHIGH8_FORWARD_RD(psram)
 EXTERN_C void psram_read(int32_t addr, int32_t *data) {
-	// add back
-	addr += g_sim_mem.psram.base();
-	g_sim_mem.psram.read_word(addr, (uint32_t &)(*data));
-	DPI_TRACE("R addr={:08x} data={:08x}", addr, *data);
+  // add back
+  addr += g_sim_mem.psram.base();
+  g_sim_mem.psram.read_word(addr, (uint32_t &)(*data));
+  DPI_TRACE("R addr={:08x} data={:08x}", addr, *data);
 }
 // compatible interface for npc core
 extern "C" void pmem_read(int addr, int *data) {
@@ -155,8 +155,9 @@ extern "C" void pmem_write(int addr, int data, int mask) {
   uint32_t udata = ((uint32_t)data) >> (unaligned_part * 8);
   uint8_t umask = (mask >> unaligned_part) & 0xf;
 
-	uint32_t psram_addr = addr - g_sim_mem.psram.base();
-	// spdlog::info("pmem_write addr={:08x} translated to psram_addr={:08x}", (uint32_t)addr, psram_addr);
+  uint32_t psram_addr = addr - g_sim_mem.psram.base();
+  // spdlog::info("pmem_write addr={:08x} translated to psram_addr={:08x}",
+  // (uint32_t)addr, psram_addr);
   return psram_write(psram_addr, umask, udata, nullptr);
 }
 
@@ -246,8 +247,11 @@ static void _copy_img(void *img, size_t img_size) {
     spdlog::info("copy img to flash for soc sim");
     g_sim_mem.flash.copy_from(img, img_size);
   } else {
-    spdlog::info("copy img to psram for cpu core sim");
+    spdlog::info("copy img to psram for sdb read");
     g_sim_mem.psram.copy_from(img, img_size);
+		spdlog::info("copy img to pmem for cpu core sim read");
+    auto pmemDataPtr = DirectSignals::GetCPU()->mem->mem->mem_ext->Memory.data();
+		memcpy(pmemDataPtr, img, img_size);
   }
 }
 static void _fill_rams_uninit(bool zero_uninit_ram) {

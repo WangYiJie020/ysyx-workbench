@@ -10,6 +10,47 @@ import chisel3.util.circt.dpi._
 import common_def._
 
 import axi4._
+import dpiwrap._
+
+import chisel3.probe._
+import chisel3._
+import chisel3.layer.{Layer, LayerConfig}
+import chisel3.probe.{define, Probe, ProbeValue}
+
+// https://www.chisel-lang.org/docs/explanations/memories#masks
+// Create a 32-bit wide memory that is byte-masked
+class MaskedRdWrMem(sizeInByte: Int, filePath: Option[String] = None) extends Module {
+  val width:    Int = 8
+  val numBytes: Int = 4
+
+  val dataType = Vec(numBytes, UInt(width.W))
+  val io       = IO(new Bundle {
+    val write   = Input(Bool())
+    val rdAddr    = Input(UInt(log2Ceil(sizeInByte).W))
+    val wrAddr    = Input(UInt(log2Ceil(sizeInByte).W))
+    val mask    = Input(Vec(numBytes, Bool()))
+    val dataIn  = Input(dataType)
+    val dataOut = Output(dataType)
+  })
+
+  require(sizeInByte % numBytes == 0, "sizeInByte must be a multiple of numBytes of word")
+  val mem = Mem(sizeInByte / numBytes, dataType)
+
+  if (filePath.isDefined) {
+    chisel3.util.experimental.loadMemoryFromFileInline(mem, filePath.get)
+  }
+
+  val rdPort = mem(io.rdAddr >> log2Ceil(numBytes))
+  val wrPort = mem(io.wrAddr >> log2Ceil(numBytes))
+  when(io.write) {
+    for (i <- 0 until numBytes) {
+      when(io.mask(i)) {
+        wrPort(i) := io.dataIn(i)
+      }
+    }
+    io.dataOut := DontCare
+  }.otherwise { io.dataOut := rdPort }
+}
 
 class AXI4MemUnit extends Module {
   val io = IO(AXI4IO.Slave)
@@ -32,14 +73,14 @@ class AXI4MemUnit extends Module {
   val arState                   = RegInit(sARIdle)
   sio.arready := (arState === sARIdle) && (!reset.asBool)
 
-  arState   := MuxLookup(arState, sARIdle)(
+  arState      := MuxLookup(arState, sARIdle)(
     Seq(
       sARIdle -> Mux(sio.arvalid, sARWait, sARIdle),
       sARWait -> Mux(sio.rvalid && sio.rlast, sARIdle, sARWait)
     )
   )
   rdAddrBegReg := Mux(sio.arvalid && sio.arready, sio.araddr, rdAddrBegReg)
-  rdAddrBeg := Mux(arState === sARIdle, sio.araddr, rdAddrBegReg)
+  rdAddrBeg    := Mux(arState === sARIdle, sio.araddr, rdAddrBegReg)
 
   val arLen        = Reg(UInt(8.W))
   val curReadCount = Wire(UInt(8.W))
@@ -47,10 +88,11 @@ class AXI4MemUnit extends Module {
 
   when(sio.arvalid && sio.arready) {
     arLen := sio.arlen
-  }
-  when(arLen =/= 0.U) {
-    assert(sio.arsize === AXI4IO.SizeType.WORD, "Only support word size read now")
-    assert(sio.arburst === AXI4IO.BurstType.INCR, "Only support INCR burst type now")
+
+    when(sio.arlen =/= 0.U) {
+      assert(sio.arsize === AXI4IO.SizeType.WORD, "Only support word size read now")
+      assert(sio.arburst === AXI4IO.BurstType.INCR, "Only support INCR burst type now")
+    }
   }
   rdAddr := rdAddrBeg + (curReadCount << 2)
 
@@ -76,18 +118,24 @@ class AXI4MemUnit extends Module {
     Seq(
       RState.idle     -> Mux(sio.arvalid, RState.waitMem, RState.idle),
       RState.waitMem  -> Mux(curReadCount === arLen, RState.sendData, RState.waitMem),
-      RState.sendData -> Mux(curReadCount === 0.U, Mux(sio.arvalid,RState.waitMem,RState.idle), RState.sendData)
+      RState.sendData -> Mux(curReadCount === 0.U, Mux(sio.arvalid, RState.waitMem, RState.idle), RState.sendData)
     )
   )
 
   val enRdDataCall = WireDefault((rState === RState.waitMem) || (rState === RState.idle && sio.arvalid))
   dontTouch(enRdDataCall)
+
+  val mem = Module(new MaskedRdWrMem(1024 * 1024 * 128, None))
+  mem.io := DontCare
+
   when(rState === RState.waitMem) {
-    val rdData = RawUnclockedNonVoidFunctionCall("pmem_read", UInt(32.W))(
-      (!reset.asBool) && enRdDataCall,
-      rdAddr
-    )
-    rdFIFO.io.enq.bits  := rdData
+    // rdFIFO.io.enq.bits  := UnclockedCallNonVoidDPIC("pmem_read", UInt(32.W))(
+    //   (!reset.asBool) && enRdDataCall,
+    //   rdAddr
+    // )
+    mem.io.write        := false.B
+    mem.io.rdAddr         := rdAddr
+    rdFIFO.io.enq.bits  := mem.io.dataOut.asUInt
     rdFIFO.io.enq.valid := true.B
   }.otherwise {
     rdFIFO.io.enq.bits  := 0.U
@@ -155,7 +203,11 @@ class AXI4MemUnit extends Module {
   )
 
   when(bState === sBWaitMem) {
-    RawClockedVoidFunctionCall("pmem_write")(
+    mem.io.write  := true.B
+    mem.io.wrAddr   := wrAddr
+    mem.io.mask   := wrMask.asBools
+    mem.io.dataIn := wrData.asTypeOf(mem.dataType)
+    ClockedCallVoidDPIC("pmem_write")(
       clock,
       (!reset.asBool),
       wrAddr,

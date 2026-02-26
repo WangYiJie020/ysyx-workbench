@@ -7,6 +7,7 @@ import chisel3.experimental.dataview._
 
 import regfile._
 import common_def._
+import dpiwrap._
 import busfsm._
 
 import chisel3.util.circt.dpi._
@@ -21,23 +22,12 @@ class WriteBackInfo extends Bundle {
 
   val skipDifftest = Bool()
 
-  val pc = Types.UWord
+  val pc     = Types.UWord
   val nxt_pc = Types.UWord
 
   val iid = Types.InstID
 }
-// object ExtractGPRInfoFromWrBack {
-//   def apply(info: DecoupledIO[WriteBackInfo]): GPRegReqIO._WriteRX = {
-//     val gprInfo = info.bits.gpr
-//     val valid   = info.valid
-//
-//     val out = Wire(GPRegReqIO.RX.Write)
-//     out.en   := gprInfo.en && valid
-//     out.addr := gprInfo.addr
-//     out.data := gprInfo.data
-//     out
-//   }
-// }
+
 object ExtractFwdInfoFromWrBack {
   def apply(info: DecoupledIO[WriteBackInfo]): WrBackForwardInfo = {
     val wrBack = info.bits
@@ -65,29 +55,19 @@ class WBU extends Module {
 
   io.in.ready := true.B
 
-  // printf("(wbu) write back gpr en %b addr %d data 0x%x\n", wbinfo.gpr.en, wbinfo.gpr.addr, wbinfo.gpr.data)
-  // printf("(wbu) valid %b\n", valid)
-
-  val halted = RegInit(false.B)
+  val halted    = RegInit(false.B)
   val is_ebreak = wbinfo.is_ebreak && valid
 
   when(is_ebreak && !halted) {
-    RawClockedVoidFunctionCall("raise_ebreak")(clock, is_ebreak)
+    ClockedCallVoidDPIC("raise_ebreak")(clock, is_ebreak)
     halted := true.B
   }
 
-  when(valid && (!is_ebreak)){
-    RawClockedVoidFunctionCall("pc_upd")(
-      clock,
-      valid && !is_ebreak,
-      wbinfo.pc,
-      wbinfo.nxt_pc
-    )
+  when(valid && (!is_ebreak)) {
+    ClockedCallVoidDPIC("pc_upd")(clock, valid && !is_ebreak, wbinfo.pc, wbinfo.nxt_pc)
   }
 
-  when(valid && wbinfo.skipDifftest) {
-    RawClockedVoidFunctionCall("skip_difftest_ref")(clock, valid && wbinfo.skipDifftest)
-  }
+  SkipDifftestRef(clock, valid && wbinfo.skipDifftest)
 
   io.gpr.en   := wbinfo.gpr.en && valid
   io.gpr.addr := wbinfo.gpr.addr

@@ -8,6 +8,7 @@ import chisel3.util.circt.dpi._
 import axi4._
 
 import regfile.GPRegReqIO
+import dpiwrap.ClockedCallVoidDPIC
 
 class LSUInput extends Bundle {
   val isLoad       = Bool()
@@ -303,7 +304,7 @@ class LSU extends Module {
 
   val isSRAMAddr = AddrSpace.inRng(memAddr, AddrSpace.SRAM)
   when(io.mem.awvalid && io.mem.awready && isSRAMAddr) {
-    RawClockedVoidFunctionCall("sram_upd", Some(Seq("addr", "data", "mask")))(
+    ClockedCallVoidDPIC("sram_upd", Some(Seq("addr", "data", "mask")))(
       clock,
       isSRAMAddr,
       memWAddr,

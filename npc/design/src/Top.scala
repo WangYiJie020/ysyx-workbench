@@ -31,6 +31,29 @@ class TopIO extends Bundle {
   val slave     = AXI4IO.Slave
 }
 
+import chisel3.layer.{Layer, LayerConfig}
+import chisel3.probe.{define, Probe, ProbeValue}
+object A extends Layer(LayerConfig.Inline)
+object B extends Layer(LayerConfig.Inline)
+
+class Foo extends RawModule {
+  val a = IO(Output(Probe(Bool(), A)))
+  val b = IO(Output(Probe(Bool(), B)))
+
+  layer.block(A) {
+    val a_wire = WireInit(false.B)
+    define(a, ProbeValue(a_wire))
+  }
+
+  val b_wire_probe = Wire(Probe(Bool(), B))
+  define(b, b_wire_probe)
+
+  layer.block(B) {
+    val b_wire = WireInit(false.B)
+    define(b_wire_probe, ProbeValue(b_wire))
+  }
+
+}
 class ysyx_25100261 extends Module {
   val io = IO(new TopIO)
   dontTouch(io)
@@ -38,202 +61,204 @@ class ysyx_25100261 extends Module {
 
   withModulePrefix("ysyx_25100261") {
 
-  val isBranchGuessWrong = Wire(Bool())
+    layer.enable(dpiwrap.DPICLayer)
 
-  val isFlushIDUReg     = RegInit(false.B)
-  val needFlushPipeline = Wire(Bool())
+    val isBranchGuessWrong = Wire(Bool())
 
-  val gprs = Module(new RegisterFile(READ_PORTS = 2))
-  val csrs = Module(new ControlStatusRegisterFile())
+    val isFlushIDUReg     = RegInit(false.B)
+    val needFlushPipeline = Wire(Bool())
 
-  val ifu = Module(new IFU)
-  val idu = Module(new IDU)
-  val exu = Module(new EXU)
-  val lsu = Module(new LSU)
-  val wbu = Module(new WBU)
+    val gprs = Module(new RegisterFile(READ_PORTS = 2))
+    val csrs = Module(new ControlStatusRegisterFile())
 
-  val isSoC = sys.env.getOrElse("ARCH", "") == "riscv32e-ysyxsoc"
+    val ifu = Module(new IFU)
+    val idu = Module(new IDU)
+    val exu = Module(new EXU)
+    val lsu = Module(new LSU)
+    val wbu = Module(new WBU)
 
-  if (isSoC) {
-    println("ARCH is SoC npc : INIT_PC = 0x30000000\n")
-  } else {
-    println("ARCH is normal npc : INIT_PC = 0x80000000\n")
-  }
+    val isSoC = sys.env.getOrElse("ARCH", "") == "riscv32e-ysyxsoc"
 
-  val INIT_PC = if (isSoC) "h30000000".U(32.W) else "h80000000".U(32.W)
+    if (isSoC) {
+      println("ARCH is SoC npc : INIT_PC = 0x30000000\n")
+    } else {
+      println("ARCH is normal npc : INIT_PC = 0x80000000\n")
+    }
 
-  val pc             = RegInit(INIT_PC)
-  val nxtPredictedPC = Wire(Types.UWord)
-  dontTouch(nxtPredictedPC)
+    val INIT_PC = if (isSoC) "h30000000".U(32.W) else "h80000000".U(32.W)
 
-  if (Config.useBTBAndBP) {
-    val btb = Module(new BranchTargetBuffer)
-    val bp  = Module(new BranchPredictor)
-    btb.io.query.addr   := pc
-    bp.io.pc            := pc
-    bp.io.historyHit    := btb.io.query.hit
-    bp.io.historyTarget := btb.io.query.target
-    bp.io.historyIsJAL  := btb.io.query.isJAL
+    val pc             = RegInit(INIT_PC)
+    val nxtPredictedPC = Wire(Types.UWord)
+    dontTouch(nxtPredictedPC)
 
-    btb.io.update.en     := exu.io.out.valid && exu.io.jmpHappen
-    btb.io.update.addr   := exu.io.out.bits.exuWriteBack.pc
-    btb.io.update.target := exu.io.out.bits.exuWriteBack.nxt_pc
-    btb.io.update.isJAL  := exu.io.isJAL
+    if (Config.useBTBAndBP) {
+      val btb = Module(new BranchTargetBuffer)
+      val bp  = Module(new BranchPredictor)
+      btb.io.query.addr   := pc
+      bp.io.pc            := pc
+      bp.io.historyHit    := btb.io.query.hit
+      bp.io.historyTarget := btb.io.query.target
+      bp.io.historyIsJAL  := btb.io.query.isJAL
 
-    nxtPredictedPC := bp.io.predictTarget
-  } else {
-    nxtPredictedPC := pc + 4.U
-    // val isBranch = ifu.io.out.bits.code(6, 0) === "b1100011".U
-    // val immSign  = ifu.io.out.bits.code(31)
-    // val imm      = Cat(
-    //   Fill(20, immSign),
-    //   ifu.io.out.bits.code(7),
-    //   ifu.io.out.bits.code(30, 25),
-    //   ifu.io.out.bits.code(11, 8),
-    //   0.U(1.W)
-    // )
-    // nxtPredictedPC := ifu.io.out. + Mux(
-    //   isBranch && immSign,
-    //   imm,
-    //   4.U
-    // )
-  }
+      btb.io.update.en     := exu.io.out.valid && exu.io.jmpHappen
+      btb.io.update.addr   := exu.io.out.bits.exuWriteBack.pc
+      btb.io.update.target := exu.io.out.bits.exuWriteBack.nxt_pc
+      btb.io.update.isJAL  := exu.io.isJAL
 
-  ifu.io.predictedNextPC := nxtPredictedPC
+      nxtPredictedPC := bp.io.predictTarget
+    } else {
+      nxtPredictedPC := pc + 4.U
+      // val isBranch = ifu.io.out.bits.code(6, 0) === "b1100011".U
+      // val immSign  = ifu.io.out.bits.code(31)
+      // val imm      = Cat(
+      //   Fill(20, immSign),
+      //   ifu.io.out.bits.code(7),
+      //   ifu.io.out.bits.code(30, 25),
+      //   ifu.io.out.bits.code(11, 8),
+      //   0.U(1.W)
+      // )
+      // nxtPredictedPC := ifu.io.out. + Mux(
+      //   isBranch && immSign,
+      //   imm,
+      //   4.U
+      // )
+    }
 
-  val isBranchGuessWrongReg = RegInit(false.B)
-  val isIFUAckCorrectTarget = Wire(Bool())
-  isBranchGuessWrong := isBranchGuessWrongReg || (exu.io.out.valid && exu.io.predWrong)
-  when(exu.io.out.valid) {
-    isBranchGuessWrongReg := exu.io.predWrong
-  }.elsewhen(isIFUAckCorrectTarget) {
-    isBranchGuessWrongReg := false.B
-  }
+    ifu.io.predictedNextPC := nxtPredictedPC
 
-  dontTouch(isBranchGuessWrong)
-  val curCorrectJmpTarget = RegEnableReadNew(
-    exu.io.out.bits.exuWriteBack.nxt_pc,
-    exu.io.out.valid
-  )
+    val isBranchGuessWrongReg = RegInit(false.B)
+    val isIFUAckCorrectTarget = Wire(Bool())
+    isBranchGuessWrong := isBranchGuessWrongReg || (exu.io.out.valid && exu.io.predWrong)
+    when(exu.io.out.valid) {
+      isBranchGuessWrongReg := exu.io.predWrong
+    }.elsewhen(isIFUAckCorrectTarget) {
+      isBranchGuessWrongReg := false.B
+    }
 
-  // NOTICE: for IFU
-  // must wait until IFU accepts the jump target (pc fire) can not
-  // just check the valid, sometimes IFU still fetching old wrong
-  // target, if think it meets the correct target, then the wrong
-  // target will be passed to IDU since that time isWrongPred is unset.
-  isIFUAckCorrectTarget := ifu.io.pc.fire && (ifu.io.pc.bits === curCorrectJmpTarget)
+    dontTouch(isBranchGuessWrong)
+    val curCorrectJmpTarget = RegEnableReadNew(
+      exu.io.out.bits.exuWriteBack.nxt_pc,
+      exu.io.out.valid
+    )
 
-  val isIDUMeetCorrectJmpTarget = Wire(Bool())
-  isIDUMeetCorrectJmpTarget := ifu.io.out.valid && (ifu.io.out.bits.pc === curCorrectJmpTarget)
-  dontTouch(isIFUAckCorrectTarget)
-  dontTouch(isIDUMeetCorrectJmpTarget)
-  dontTouch(curCorrectJmpTarget)
+    // NOTICE: for IFU
+    // must wait until IFU accepts the jump target (pc fire) can not
+    // just check the valid, sometimes IFU still fetching old wrong
+    // target, if think it meets the correct target, then the wrong
+    // target will be passed to IDU since that time isWrongPred is unset.
+    isIFUAckCorrectTarget := ifu.io.pc.fire && (ifu.io.pc.bits === curCorrectJmpTarget)
 
-  when(isBranchGuessWrong && (!isIFUAckCorrectTarget)) {
-    isFlushIDUReg := true.B
-  }.elsewhen(isIDUMeetCorrectJmpTarget) {
-    isFlushIDUReg := false.B
-  }
+    val isIDUMeetCorrectJmpTarget = Wire(Bool())
+    isIDUMeetCorrectJmpTarget := ifu.io.out.valid && (ifu.io.out.bits.pc === curCorrectJmpTarget)
+    dontTouch(isIFUAckCorrectTarget)
+    dontTouch(isIDUMeetCorrectJmpTarget)
+    dontTouch(curCorrectJmpTarget)
 
-  needFlushPipeline := (isFlushIDUReg) || isBranchGuessWrong
-  dontTouch(needFlushPipeline)
+    when(isBranchGuessWrong && (!isIFUAckCorrectTarget)) {
+      isFlushIDUReg := true.B
+    }.elsewhen(isIDUMeetCorrectJmpTarget) {
+      isFlushIDUReg := false.B
+    }
 
-  pc := Mux(
-    ifu.io.pc.ready,
-    // Sometimes although jump,
-    // target is near current pc and IFU just meets it
-    Mux(isBranchGuessWrong && (!isIFUAckCorrectTarget), curCorrectJmpTarget, nxtPredictedPC),
-    pc
-  )
+    needFlushPipeline := (isFlushIDUReg) || isBranchGuessWrong
+    dontTouch(needFlushPipeline)
 
-  val memArbiter = Module(new EXUIFU_MemVisitArbiter)
-  AXI4IO.connectMasterSlave(lsu.io.mem, memArbiter.io.exu)
+    pc := Mux(
+      ifu.io.pc.ready,
+      // Sometimes although jump,
+      // target is near current pc and IFU just meets it
+      Mux(isBranchGuessWrong && (!isIFUAckCorrectTarget), curCorrectJmpTarget, nxtPredictedPC),
+      pc
+    )
 
-  val icache = Module(new ICache)
-  icache.io.flush := exu.io.fencei
-  AXI4IO.connectMasterSlave(ifu.io.mem, icache.io.cpu)
-  AXI4IO.connectMasterSlave(icache.io.mem, memArbiter.io.ifu)
+    val memArbiter = Module(new EXUIFU_MemVisitArbiter)
+    AXI4IO.connectMasterSlave(lsu.io.mem, memArbiter.io.exu)
 
-  // AXI4IO.connectMasterSlave(ifu.io.mem, memArbiter.io.ifu)
+    val icache = Module(new ICache)
+    icache.io.flush := exu.io.fencei
+    AXI4IO.connectMasterSlave(ifu.io.mem, icache.io.cpu)
+    AXI4IO.connectMasterSlave(icache.io.mem, memArbiter.io.ifu)
 
-  val clint = Module(new CLINTUnit)
+    // AXI4IO.connectMasterSlave(ifu.io.mem, memArbiter.io.ifu)
 
-  val otherReqSlave = Wire(AXI4IO.Slave)
-  val memXBar       = if (isSoC) {
-    AXI4IO.transformSlaveToMasterValidIf(!reset.asBool)(io.master, otherReqSlave)
-    Module(
-      new AXI4LiteXBar(
-        Seq(
-          AddrSpace.CLINT -> clint.io,
-          AddrSpace.SOC   -> otherReqSlave
+    val clint = Module(new CLINTUnit)
+
+    val otherReqSlave = Wire(AXI4IO.Slave)
+    val memXBar       = if (isSoC) {
+      AXI4IO.transformSlaveToMasterValidIf(!reset.asBool)(io.master, otherReqSlave)
+      Module(
+        new AXI4LiteXBar(
+          Seq(
+            AddrSpace.CLINT -> clint.io,
+            AddrSpace.SOC   -> otherReqSlave
+          )
         )
       )
-    )
-  } else {
-    val uart = Module(new UARTUnit)
-    val mem  = Module(new AXI4MemUnit)
+    } else {
+      val uart = Module(new UARTUnit)
+      val mem  = Module(new AXI4MemUnit)
 
-    otherReqSlave := DontCare
-    Module(
-      new AXI4LiteXBar(
-        Seq(
-          AddrSpace.CLINT  -> clint.io,
-          AddrSpace.NPCMEM -> mem.io,
-          AddrSpace.SERIAL -> uart.io
+      otherReqSlave := DontCare
+      Module(
+        new AXI4LiteXBar(
+          Seq(
+            AddrSpace.CLINT  -> clint.io,
+            AddrSpace.NPCMEM -> mem.io,
+            AddrSpace.SERIAL -> uart.io
+          )
         )
       )
-    )
-  }
+    }
 
-  when(io.master.bvalid && io.master.bresp === AXI4IO.BResp.DECERR) {
-    printf("AXI4 DECERR on write address 0x%x\n", io.master.awaddr)
-    stop()
-    stop()
-  }
-  when(io.master.rvalid && io.master.rresp === AXI4IO.RResp.DECERR) {
-    printf("AXI4 DECERR on read address 0x%x\n", io.master.araddr)
-    stop()
-    stop()
-  }
+    when(io.master.bvalid && io.master.bresp === AXI4IO.BResp.DECERR) {
+      printf("AXI4 DECERR on write address 0x%x\n", io.master.awaddr)
+      stop()
+      stop()
+    }
+    when(io.master.rvalid && io.master.rresp === AXI4IO.RResp.DECERR) {
+      printf("AXI4 DECERR on read address 0x%x\n", io.master.araddr)
+      stop()
+      stop()
+    }
 
-  AXI4IO.connectMasterSlave(memArbiter.io.out, memXBar.io.in)
-  memXBar.connect()
+    AXI4IO.connectMasterSlave(memArbiter.io.out, memXBar.io.in)
+    memXBar.connect()
 
-  ifu.io.pc.bits  := pc
-  ifu.io.pc.valid := true.B
+    ifu.io.pc.bits  := pc
+    ifu.io.pc.valid := true.B
 
-  pipelineConnect(ifu.io.out, idu.io.in, idu.io.out)
-  pipelineConnect(idu.io.out, exu.io.in, exu.io.out)
-  pipelineConnect(exu.io.out, lsu.io.in, lsu.io.out)
+    pipelineConnect(ifu.io.out, idu.io.in, idu.io.out)
+    pipelineConnect(idu.io.out, exu.io.in, exu.io.out)
+    pipelineConnect(exu.io.out, lsu.io.in, lsu.io.out)
 
-  idu.io.rvec <> gprs.io.read
-  exu.io.csr_rvec <> csrs.io.read
+    idu.io.rvec <> gprs.io.read
+    exu.io.csr_rvec <> csrs.io.read
 
-  // idu.io.exuWrBack   := ExtractGPRInfoFromLSU(exu.io.out)
-  // idu.io.lsuWrBack   := ExtractGPRInfoFromLSU(lsu.io.in)
-  // idu.io.wbuWrBack   := ExtractGPRInfoFromWrBack(wbu.io.in)
-  idu.io.wrBackInfo.exus1 := exu.io.fwd1
-  idu.io.wrBackInfo.exus2 := exu.io.fwd2
-  idu.io.wrBackInfo.lsu   := ExtractFwdInfoFromLSU(lsu.io.in)
-  idu.io.wrBackInfo.wbu   := ExtractFwdInfoFromWrBack(wbu.io.in)
+    // idu.io.exuWrBack   := ExtractGPRInfoFromLSU(exu.io.out)
+    // idu.io.lsuWrBack   := ExtractGPRInfoFromLSU(lsu.io.in)
+    // idu.io.wbuWrBack   := ExtractGPRInfoFromWrBack(wbu.io.in)
+    idu.io.wrBackInfo.exus1 := exu.io.fwd1
+    idu.io.wrBackInfo.exus2 := exu.io.fwd2
+    idu.io.wrBackInfo.lsu   := ExtractFwdInfoFromLSU(lsu.io.in)
+    idu.io.wrBackInfo.wbu   := ExtractFwdInfoFromWrBack(wbu.io.in)
 
-  val exuWrBackDataVaild = !(exu.io.out.bits.isLoad || exu.io.out.bits.isStore)
+    val exuWrBackDataVaild = !(exu.io.out.bits.isLoad || exu.io.out.bits.isStore)
 
-  idu.io.flush  := needFlushPipeline
-  exu.io.flush1 := needFlushPipeline
+    idu.io.flush  := needFlushPipeline
+    exu.io.flush1 := needFlushPipeline
 
-  // Write back
+    // Write back
 
-  val foo = Wire(Decoupled(Bool()))
-  foo       := DontCare
-  foo.ready := true.B
-  foo.valid := true.B
-  pipelineConnect(lsu.io.out, wbu.io.in, foo)
+    val foo = Wire(Decoupled(Bool()))
+    foo       := DontCare
+    foo.ready := true.B
+    foo.valid := true.B
+    pipelineConnect(lsu.io.out, wbu.io.in, foo)
 
-  // wbu.io.in <> exu.io.out
-  gprs.io.write <> wbu.io.gpr
-  csrs.io.write <> wbu.io.csr
-  csrs.io.is_ecall := wbu.io.is_ecall
+    // wbu.io.in <> exu.io.out
+    gprs.io.write <> wbu.io.gpr
+    csrs.io.write <> wbu.io.csr
+    csrs.io.is_ecall := wbu.io.is_ecall
 
   }
 }
