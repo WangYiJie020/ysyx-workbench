@@ -17,6 +17,36 @@ import chisel3._
 import chisel3.layer.{Layer, LayerConfig}
 import chisel3.probe.{define, Probe, ProbeValue}
 
+// https://www.chisel-lang.org/docs/explanations/memories#masks
+// Create a 32-bit wide memory that is byte-masked
+class MaskedRdWrMem(size: Int, filePath: Option[String] = None) extends Module {
+  val width: Int = 8
+  val io = IO(new Bundle {
+    val write   = Input(Bool())
+    val addr    = Input(UInt(10.W))
+    val mask    = Input(Vec(4, Bool()))
+    val dataIn  = Input(Vec(4, UInt(width.W)))
+    val dataOut = Output(Vec(4, UInt(width.W)))
+  })
+
+  val mem = Mem(size, Vec(4, UInt(width.W)))
+
+  if (filePath.isDefined) {
+    chisel3.util.experimental.loadMemoryFromFile(mem, filePath.get)
+  }
+
+  io.dataOut := DontCare
+  val rdwrPort = mem(io.addr)
+  when(io.write) {
+    when(io.mask(0)) {
+      rdwrPort(0) := io.dataIn(0)
+    }
+    when(io.mask(1)) {
+      rdwrPort(1) := io.dataIn(1)
+    }
+  }.otherwise { io.dataOut := rdwrPort }
+}
+
 class AXI4MemUnit extends Module {
   val io = IO(AXI4IO.Slave)
 
@@ -90,16 +120,17 @@ class AXI4MemUnit extends Module {
   val enRdDataCall = WireDefault((rState === RState.waitMem) || (rState === RState.idle && sio.arvalid))
   dontTouch(enRdDataCall)
 
-  val mem = Mem(1024, UInt(32.W))
-  chisel3.util.experimental.loadMemoryFromFile(mem, "foo.mem")
+  val mem = Module(new MaskedRdWrMem(1024, Some("foo.mem")))
+  mem.io := DontCare
 
   when(rState === RState.waitMem) {
-
     // rdFIFO.io.enq.bits  := UnclockedCallNonVoidDPIC("pmem_read", UInt(32.W))(
     //   (!reset.asBool) && enRdDataCall,
     //   rdAddr
     // )
-    rdFIFO.io.enq.bits  := mem(rdAddr >> 2)
+    mem.io.write        := false.B
+    mem.io.addr         := rdAddr >> 2
+    rdFIFO.io.enq.bits  := mem.io.dataOut.asUInt
     rdFIFO.io.enq.valid := true.B
   }.otherwise {
     rdFIFO.io.enq.bits  := 0.U
@@ -167,6 +198,9 @@ class AXI4MemUnit extends Module {
   )
 
   when(bState === sBWaitMem) {
+    mem.io.write := true.B
+    mem.io.addr  := wrAddr >> 2
+    mem.io.dataIn := wrData.asTypeOf(mem.io.dataIn)
     ClockedCallVoidDPIC("pmem_write")(
       clock,
       (!reset.asBool),

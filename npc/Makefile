@@ -82,10 +82,17 @@ CHISEL2V_DONE = $(BUILD_DIR)/verilog$(SIM_ARCH_SUFFIX).done
 
 V2CXX_EMIT_DIR = $(BUILD_DIR)/gened/cxx
 MY_VSRCS = $(addprefix $(CHISEL2V_EMIT_DIR)/,$(shell cat $(CHISEL2V_EMIT_DIR)/filelist.f))
+
+# un synithesizable sources
+#
+# Layer : Verification code for assert/assume/cover... and printf ...
+# 				Chisel generates these code into separate files with name like `layers-*` to
+# 				make core logic synthesizable and clean
+#
+# Init  : Initialization code for Mem ...
+# 				
 LAYER_VSRCS = $(shell find $(abspath $(CHISEL2V_EMIT_DIR)) -name "layers-*")
-
 INIT_VSRCS = $(shell find $(abspath $(CHISEL2V_EMIT_DIR)) -name "*_init.sv")
-
 MY_VSRCS += $(LAYER_VSRCS) $(INIT_VSRCS)
 
 MY_VSRCS_INCDIRS = $(shell find $(abspath $(CHISEL2V_EMIT_DIR)) -type d)
