@@ -124,15 +124,16 @@ class AXI4MemUnit extends Module {
   dontTouch(enRdDataCall)
 
   val mem = Module(new MaskedRdWrMem(1024*1024*128, None)) 
+  val memIO = WireDefault(DontCare.asTypeOf(mem.io))
 
   when(rState === RState.waitMem) {
     // rdFIFO.io.enq.bits  := UnclockedCallNonVoidDPIC("pmem_read", UInt(32.W))(
     //   (!reset.asBool) && enRdDataCall,
     //   rdAddr
     // )
-    mem.io.write        := false.B
-    mem.io.addr         := rdAddr
-    rdFIFO.io.enq.bits  := mem.io.dataOut.asUInt
+    memIO.write        := false.B
+    memIO.addr         := rdAddr
+    rdFIFO.io.enq.bits  := memIO.dataOut.asUInt
     rdFIFO.io.enq.valid := true.B
   }.otherwise {
     rdFIFO.io.enq.bits  := 0.U
@@ -200,9 +201,9 @@ class AXI4MemUnit extends Module {
   )
 
   when(bState === sBWaitMem) {
-    mem.io.write  := true.B
-    mem.io.addr   := wrAddr
-    mem.io.dataIn := wrData.asTypeOf(mem.dataType)
+    memIO.write  := true.B
+    memIO.addr   := wrAddr
+    memIO.dataIn := wrData.asTypeOf(mem.dataType)
     ClockedCallVoidDPIC("pmem_write")(
       clock,
       (!reset.asBool),
