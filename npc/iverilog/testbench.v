@@ -33,8 +33,8 @@ always @(posedge clk) begin
 end
 
 initial begin
-    // $dumpfile("wave.fst");
-    // $dumpvars(0, testbench);
+    $dumpfile("wave.fst");
+    $dumpvars(0, testbench);
 end
 
 endmodule
