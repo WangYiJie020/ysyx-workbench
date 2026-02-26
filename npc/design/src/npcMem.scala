@@ -125,7 +125,7 @@ class AXI4MemUnit extends Module {
   val enRdDataCall = WireDefault((rState === RState.waitMem) || (rState === RState.idle && sio.arvalid))
   dontTouch(enRdDataCall)
 
-  val mem = Module(new MaskedRdWrMem(1024 * 1024 * 128, Some("npcmem_init.hex")))
+  val mem = Module(new MaskedRdWrMem(1024 * 1024 * 128, Some("build/npcmem_init.hex")))
   mem.io := DontCare
 
   when(rState === RState.waitMem) {
