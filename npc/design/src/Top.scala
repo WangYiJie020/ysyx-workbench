@@ -51,7 +51,7 @@ class ysyx_25100261 extends Module {
       val npcDevices = Module(new NPCDevices)
       npcDevices.io <> core.io.master
       io.master := DontCare
-      core.io.slave := io.slave
+      core.io.slave <> io.slave
       core.io.interrupt := io.interrupt
     }
   }
