@@ -58,7 +58,6 @@ class Foo extends RawModule {
 class ysyx_25100261 extends Module {
   val io = IO(new TopIO)
   dontTouch(io)
-  io := DontCare
   withModulePrefix("ysyx_25100261") {
     val core = Module(new CPUCore)
     core.io <> io
@@ -67,6 +66,7 @@ class ysyx_25100261 extends Module {
 
 class CPUCore extends Module {
   val io = IO(new TopIO)
+  io := DontCare
 
   val isBranchGuessWrong = Wire(Bool())
 
