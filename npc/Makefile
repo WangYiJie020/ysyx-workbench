@@ -111,14 +111,15 @@ SIM_HEADERS = $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.h" -or -name "*.h
 # use VPI_DONE as a dependency to avoid repeated insertion
 # since the sed command modifies the source files
 # the real modification only needs when CHISEL2V_DONE is updated
-VPI_DONE := $(BUILD_DIR)/vpi.done
-$(VPI_DONE): $(CHISEL2V_DONE)
+# VPI_DONE := $(BUILD_DIR)/vpi.done
+#$(VPI_DONE)
+vpI: $(CHISEL2V_DONE)
 ifeq ($(ENABLE_VPI), 1)
 	$(info # Inserting verilator public modifier)
 	@$(foreach src,$(MY_VSRCS),\
 	sed -i '1i /*verilator public_on*/' $(src); \
 	sed -i -e '$$a /*verilator public_off*/' $(src);)
-	touch $@
+	# touch $@
 endif
 
 
@@ -243,7 +244,7 @@ all: default
 test:
 	$(MILL) -i $(CHISEL_DESIGN).test
 
-verilog: $(CHISEL2V_DONE) $(VPI_DONE) $(RENAME_LAYER_MACRO)
+verilog: $(CHISEL2V_DONE) vpI $(RENAME_LAYER_MACRO)
 	$(info Merge verilog files into one file $(ALL_IN_ONE_VFILE))
 	@cat $(SYNTH_VSRCS) > $(ALL_IN_ONE_VFILE)
 
