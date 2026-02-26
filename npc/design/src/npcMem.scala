@@ -207,7 +207,7 @@ class AXI4MemUnit extends Module {
     mem.io.wrAddr   := wrAddr
     mem.io.mask   := wrMask.asBools
     mem.io.dataIn := wrData.asTypeOf(mem.dataType)
-    ClockedCallVoidDPIC("pmem_write")(
+    ClockedCallVoidDPIC("pmem_upd")(
       clock,
       (!reset.asBool),
       wrAddr,
