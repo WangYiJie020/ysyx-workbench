@@ -23,6 +23,8 @@ else
 include ./npctestsoc.mk
 endif
 
+VERILATOR_FLAGS += -D$(CPU_DESIGN_NAME)_ResetPCProvider_RESET_PC=32\'h$(RESET_PC)
+
 ALL_IN_ONE_VFILE = $(BUILD_DIR)/$(CPU_DESIGN_NAME).v
 
 SIM_BIN = $(SIM_BIN_DIR)/$(TOP_NAME)$(SIM_ARCH_SUFFIX)$(VSIM_OPT)
@@ -86,6 +88,7 @@ endef
 #$(addprefix $(CHISEL2V_EMIT_DIR)/,$(shell cat $(CHISEL2V_EMIT_DIR)/filelist.f))
 EMITED_VSRCS = $(call rd_filelist_indir, $(CHISEL2V_EMIT_DIR))
 CORE_VSRCS = $(EMITED_VSRCS)
+MY_VSRCS = $(CORE_VSRCS)
 
 UNSYNTH_FILE_KEYWORDS = DPICLayer|verification
 SYNTH_VSRCS = $(addprefix $(CHISEL2V_EMIT_DIR)/,$(shell grep -vE "$(UNSYNTH_FILE_KEYWORDS)" $(CHISEL2V_EMIT_DIR)/filelist.f))

@@ -20,7 +20,7 @@ SIM_VSRCS += $(SOC_PERIP_VSRCS)
 VERILATOR_INCDIRS += $(abspath $(SOC_HOME)/perip/uart16550/rtl)
 VERILATOR_INCDIRS += $(abspath $(SOC_HOME)/perip/spi/rtl)
 
-VERILATOR_FLAGS += -D$(CPU_DESIGN_NAME)_RESET_PC=32\'h30000000
+RESET_PC = 30000000
 
 VERILATOR_FLAGS += --timescale "1ns/1ns" --no-timing 
 VERILATOR_FLAGS += -Wno-SYMRSVDWORD # make uart verilog happy
