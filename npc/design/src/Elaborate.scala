@@ -1,4 +1,8 @@
 object Elaborate extends App {
+  if (args.size != 2) {
+    println("Usage: --target-dir <dir>")
+    sys.exit(1)
+  }
   val firtoolOptions = Array(
     "--lowering-options=" + List(
       // make yosys happy
@@ -14,7 +18,7 @@ object Elaborate extends App {
   circt.stage.ChiselStage.emitSystemVerilogFile(new top.ysyx_25100261(), args, firtoolOptions)
   println("Finish emit cpu Verilog.")
   circt.stage.ChiselStage.emitSystemVerilogFile(new top.NPCTestSoC(),
-    args ++ Array("--target-dir", "build/npctestsoc"),
+    Array("--target-dir", "build/npctestsoc"),
     firtoolOptions
   )
 }
