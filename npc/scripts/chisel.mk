@@ -1,7 +1,10 @@
 # Chisel
 
+$(shell mkdir -p $(CHISEL2V_EMIT_DIR))
+$(shell touch $(CHISEL2V_EMIT_DIR)/filelist.f)
+
 define rd_filelist_indir 
-$(addprefix $(1)/, $(shell cat $(1)/filelist.f 2>/dev/null))
+$(addprefix $(1)/, $(shell cat $(1)/filelist.f))
 endef
 
 MILL ?= 
