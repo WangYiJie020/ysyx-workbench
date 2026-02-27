@@ -3,6 +3,8 @@
 TOP_NAME = NPCTestSoC
 
 SOC_HOME = $(BUILD_DIR)/npctestsoc
+$(shell mkdir -p $(SOC_HOME))
+$(shell touch $(SOC_HOME)/filelist.f)
 
 SOC_LAYER_VSRCS = $(shell find $(abspath $(SOC_HOME)) -name "layers-*")
 SOC_VSRCS = $(call rd_filelist_indir, $(SOC_HOME))
