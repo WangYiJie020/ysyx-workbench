@@ -47,17 +47,17 @@ class PCProviderAsBlackBox extends BlackBox {
 }
 
 class NPCTestSoC extends Module {
-  val core       = Module(new CPUCoreAsBlackBox)
+  val cpu       = Module(new CPUCoreAsBlackBox)
   val npcDevices = Module(new NPCDevices)
 
   val resetPCProvider = Module(new PCProviderAsBlackBox)
   assert(resetPCProvider.io.resetPC === "h80000000".U, "Reset PC should be 0x80000000 for npc test SoC")
 
-  npcDevices.io <> core.io.io.master
-  core.io.clock := clock
-  core.io.reset := reset
-  core.io.io.slave := DontCare
-  core.io.io.interrupt := false.B
+  npcDevices.io <> cpu.io.io.master
+  cpu.io.clock := clock
+  cpu.io.reset := reset
+  cpu.io.io.slave := DontCare
+  cpu.io.io.interrupt := false.B
 }
 
 class ysyx_25100261 extends Module {
