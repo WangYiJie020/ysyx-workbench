@@ -3,6 +3,10 @@ INC_PATH += $(abspath ../sdb/include)
 LDFLAGS += $(SAN_FLAGS) -L$(abspath ../sdb/build) -lsdb
 ARCHIVES += $(NVBOARD_ARCHIVE) $(abspath ../sdb/build/libsdb.a)
 
+SDB_BUILD_LIB = $(abspath ../sdb/build/libsdb.a)
+$(SDB_BUILD_LIB):
+	@make -C ../sdb build
+
 DEPS_DIR = ./deps
 
 # spdlog
@@ -33,7 +37,7 @@ $(SIM_DEP_LIBS_CLONE_DONE):
 	@touch $@
 
 SIM_DEP_LIBS_BUILD_DONE = $(DEPS_DIR)/build.done
-$(SIM_DEP_LIBS_BUILD_DONE): $(SIM_DEP_LIBS_CLONE_DONE)
+$(SIM_DEP_LIBS_BUILD_DONE): $(SIM_DEP_LIBS_CLONE_DONE) $(SDB_BUILD_LIB)
 	@./scripts/dev-init/build_deps.sh $(DEPS_DIR)
 	@touch $@
 
