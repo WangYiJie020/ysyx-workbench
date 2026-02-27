@@ -32,7 +32,7 @@ class TopIO extends Bundle {
 
 class CPUCoreAsBlackBox extends BlackBox {
   override def desiredName: String = "ysyx_25100261"
-  val io = IO(new TopIO)
+  val io = IO(new TopIO).suggestName("io")
 }
 
 class NPCTestSoC extends Module {

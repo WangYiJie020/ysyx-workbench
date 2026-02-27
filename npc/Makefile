@@ -10,13 +10,17 @@ COMMIT_HASH = $(shell git rev-parse HEAD)
 CXXFLAGS += -DGIT_COMMIT_HASH=\"$(COMMIT_HASH)\"
 
 ifeq ($(ARCH), riscv32e-ysyxsoc)
-TOP_NAME = ysyxSoCFull
 SIM_ARCH_SUFFIX = _soc
-CXXFLAGS += -DSIM_SOC
 else
-TOP_NAME = $(CPU_DESIGN_NAME)
 SIM_ARCH_SUFFIX = _npc
+endif
+
 SIM_VSRCS =
+
+ifeq ($(ARCH), riscv32e-ysyxsoc)
+include ./soc.mk
+else
+include ./npctestsoc.mk
 endif
 
 ALL_IN_ONE_VFILE = $(BUILD_DIR)/$(CPU_DESIGN_NAME).v
@@ -29,16 +33,10 @@ MILL ?=
 
 default: $(SIM_BIN)
 
-ifeq ($(ARCH), riscv32e-ysyxsoc)
-include ./soc.mk
-endif
 
 IMG ?= 
 
-SOC_HOME ?= ../ysyxSoC
-
-SAN_FLAGS?=
-# SAN_FLAGS?= -fsanitize=address
+SAN_FLAGS?= #-fsanitize=address
 
 VERILATOR_FLAGS ?=
 
@@ -80,12 +78,17 @@ CHISEL2V_EMIT_DIR = $(BUILD_DIR)/gened/verilog
 CHISEL2V_DONE = $(BUILD_DIR)/verilog.done
 
 V2CXX_EMIT_DIR = $(BUILD_DIR)/gened/cxx
-EMITED_VSRCS = $(addprefix $(CHISEL2V_EMIT_DIR)/,$(shell cat $(CHISEL2V_EMIT_DIR)/filelist.f))
+
+define rd_filelist_indir 
+$(addprefix $(1)/, $(shell cat $(1)/filelist.f))
+endef
+
+#$(addprefix $(CHISEL2V_EMIT_DIR)/,$(shell cat $(CHISEL2V_EMIT_DIR)/filelist.f))
+EMITED_VSRCS = $(call rd_filelist_indir, $(CHISEL2V_EMIT_DIR))
+CORE_VSRCS = $(EMITED_VSRCS)
 
 UNSYNTH_FILE_KEYWORDS = DPICLayer|verification
 SYNTH_VSRCS = $(addprefix $(CHISEL2V_EMIT_DIR)/,$(shell grep -vE "$(UNSYNTH_FILE_KEYWORDS)" $(CHISEL2V_EMIT_DIR)/filelist.f))
-
-MY_VSRCS = $(EMITED_VSRCS)
 
 # un synithesizable sources
 #
