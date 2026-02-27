@@ -58,28 +58,28 @@ $(CHISEL2V_DONE): $(CHISEL_SRCS)
 # the real modification only needs when CHISEL2V_DONE is updated
 #
 
-# Insert verilog public modifier for VPI
-#   see https://verilator.org/guide/latest/extensions.html#cmdoption-verilator-public_-flat-flat_rd-flat_rw-_on
-# to enable VPI work (make signal accessible from C++ side)
-VPI_DONE := $(BUILD_DIR)/vpi.done
-$(VPI_DONE): $(CHISEL2V_DONE)
-ifeq ($(ENABLE_VPI), 1)
-	$(info # Inserting verilator public modifier)
-	@$(foreach src,$(MY_SIM_VSRCS),\
-	sed -i '1i /*verilator public_on*/' $(src); \
-	sed -i -e '$$a /*verilator public_off*/' $(src);)
-	@touch $@
-endif
+# # Insert verilog public modifier for VPI
+# #   see https://verilator.org/guide/latest/extensions.html#cmdoption-verilator-public_-flat-flat_rd-flat_rw-_on
+# # to enable VPI work (make signal accessible from C++ side)
+# VPI_DONE := $(BUILD_DIR)/vpi.done
+# $(VPI_DONE): $(CHISEL2V_DONE)
+# ifeq ($(ENABLE_VPI), 1)
+# 	$(info # Inserting verilator public modifier)
+# 	@$(foreach src,$(MY_SIM_VSRCS),\
+# 	sed -i '1i /*verilator public_on*/' $(src); \
+# 	sed -i -e '$$a /*verilator public_off*/' $(src);)
+# 	@touch $@
+# endif
 
 
 # Chisel generates macro like `layer$xxx` to control inline layer
 # renaming them to `$(CPU_DESIGN_NAME)_xxx` to avoid conflict and
 # make them more standard as macro names (convinient to pass to verilator)
 
-RENAME_LAYER_MACRO := $(BUILD_DIR)/rename_layer_macro.done
-$(RENAME_LAYER_MACRO): $(CHISEL2V_DONE)
-	$(info # Renaming unstandard layer$$ style macro)
-	@$(foreach src,$(MY_SIM_VSRCS), sed -i 's/layer\$$\(\w\+\)/$(CPU_DESIGN_NAME)_\1/g' $(src);)
-	@touch $@
+# RENAME_LAYER_MACRO := $(BUILD_DIR)/rename_layer_macro.done
+# $(RENAME_LAYER_MACRO): $(CHISEL2V_DONE)
+# 	$(info # Renaming unstandard layer$$ style macro)
+# 	@$(foreach src,$(MY_SIM_VSRCS), sed -i 's/layer\$$\(\w\+\)/$(CPU_DESIGN_NAME)_\1/g' $(src);)
+# 	@touch $@
 
-chisel-emit: $(CHISEL2V_DONE) $(VPI_DONE) $(RENAME_LAYER_MACRO)
+chisel-emit: $(CHISEL2V_DONE) #$(VPI_DONE) $(RENAME_LAYER_MACRO)
