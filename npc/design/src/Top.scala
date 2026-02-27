@@ -82,12 +82,16 @@ class ysyx_25100261_ResetPCProvider extends BlackBox with HasBlackBoxInline {
   val io = IO(new Bundle {
     val resetPC = Output(Types.UWord)
   })
+  val pcMacro = name + "_RESET_PC"
   setInline(s"${name}.v",
     s"""
+       |`ifndef ${pcMacro}
+       |  `define ${pcMacro} 32'h80000000
+       |`endif
        |module ${name}(
        |  output [31:0] resetPC
        |);
-       |  assign resetPC = `${name}_RESET_PC;
+       |  assign resetPC = `$pcMacro;
        |endmodule
      """.stripMargin)
 }

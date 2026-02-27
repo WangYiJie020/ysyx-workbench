@@ -7,6 +7,11 @@ define rd_filelist_indir
 $(addprefix $(1)/, $(shell cat $(1)/filelist.f))
 endef
 
+CHISEL_UNSYNTH_KEYWORDS = DPICLayer|verification
+define rd_synth_filelist_indir
+$(addprefix $(1)/, $(shell grep -vE "$(CHISEL_UNSYNTH_KEYWORDS)" $(1)/filelist.f))
+endef
+
 MILL ?= 
 
 GLOBAL_MILL_EXISTS := $(shell command -v mill 2> /dev/null)
@@ -36,9 +41,8 @@ VERILATOR_INCDIRS += $(shell find $(abspath $(CHISEL2V_EMIT_DIR)) -type d)
 # Core design verilog and some verification/dpic layer impl
 CHISEL_EMITED_VSRCS = $(call rd_filelist_indir, $(CHISEL2V_EMIT_DIR))
 
-CHISEL_UNSYNTH_KEYWORDS = DPICLayer|verification
 # Core design verilog only, remove layer impl
-CHISEL_EMITED_VSRCS_SYNTH  = $(addprefix $(CHISEL2V_EMIT_DIR)/,$(shell grep -vE "$(CHISEL_UNSYNTH_KEYWORDS)" $(CHISEL2V_EMIT_DIR)/filelist.f))
+CHISEL_EMITED_VSRCS_SYNTH = $(call rd_synth_filelist_indir, $(CHISEL2V_EMIT_DIR))
 
 # un synithesizable sources
 #

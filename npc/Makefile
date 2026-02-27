@@ -134,9 +134,11 @@ IVERILOG_SIM_FILE = $(BUILD_DIR)/iverilog_sim
 IVERILOG_TESTBENCH = ./iverilog/testbench.v
 IVERILOG = iverilog -g2012 -DENABLE_INITIAL_MEM_ $(COMMON_VERILOG_DEFINES_FLAGS)
 
-$(IVERILOG_SIM_FILE): verilog $(SYNTH_VSRCS) $(IVERILOG_TESTBENCH)
+IVERILOG_SIM_VSRCS = $(IVERILOG_TESTBENCH) $(SYNTH_VSRCS) $(SOC_SYNTH_VSRCS)
+
+$(IVERILOG_SIM_FILE): verilog $(IVERILOG_SIM_VSRCS)
 	$(info process verilog files with iverilog)
-	$(IVERILOG) -o $(IVERILOG_SIM_FILE) $(SYNTH_VSRCS) $(IVERILOG_TESTBENCH)
+	$(IVERILOG) -o $(IVERILOG_SIM_FILE) $(IVERILOG_SIM_VSRCS)
 
 sim-iverilog-img-hex: $(IMG)
 	$(info # Generate verilog hex file for iverilog sim)

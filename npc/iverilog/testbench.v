@@ -14,16 +14,24 @@ initial begin
 		rst = 0;
 end
 
-ysyx_25100261 dut (
+NPCTestSoC dut (
 		.clock(clk),
 		.reset(rst)
 );
 
+wire exu_out_valid;// = dut.core._exu_io_out_valid;
+wire [31:0] exu_code;
+wire [31:0] gpr_a0;
+
+assign exu_out_valid = dut.cpu.core.exu.io_out_valid;
+assign exu_code = dut.cpu.core.exu.io_in_bits_code;
+assign gpr_a0 = dut.cpu.core.gprs.a0;
+
 always @(posedge clk) begin
-	if (dut.core.wbu.isEBreak) begin
+	if (exu_out_valid && exu_code == 32'h00100073) begin // EBREAK
 		$display("EBREAK instruction executed. Ending simulation.");
-		if(dut.core.gprs.a0 != 0) begin
-			$display("HIT BAD TRAP a0 = %d", dut.core.gprs.a0);
+		if(gpr_a0 != 0) begin
+			$display("HIT BAD TRAP a0 = %d", gpr_a0);
 			$fatal;
 		end else begin
 			$display("HIT GOOD TRAP");
@@ -33,9 +41,8 @@ always @(posedge clk) begin
 end
 
 initial begin
-    $dumpfile("wave.fst");
-    $dumpvars(0, testbench);
-		#3000000000 $finish;
+    // $dumpfile("wave.fst");
+    // $dumpvars(0, testbench);
 end
 
 endmodule
