@@ -98,6 +98,7 @@ class ysyx_25100261_ResetPCProvider extends BlackBox with HasBlackBoxInline {
 
 class CPUCore extends Module {
   val io = IO(new TopIO)
+  dontTouch(io)
   io := DontCare
 
   val isBranchGuessWrong = Wire(Bool())
