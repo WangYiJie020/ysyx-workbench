@@ -7,6 +7,7 @@ $(shell mkdir -p $(SOC_HOME))
 $(shell touch $(SOC_HOME)/filelist.f)
 
 SOC_LAYER_VSRCS = $(shell find $(abspath $(SOC_HOME)) -name "layers-*")
+SOC_SYNTH_VSRCS = $(call rd_synth_filelist_indir, $(SOC_HOME))
 SOC_VSRCS = $(call rd_filelist_indir, $(SOC_HOME))
 
 MY_SIM_VSRCS += $(SOC_VSRCS)

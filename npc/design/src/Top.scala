@@ -86,7 +86,7 @@ class ysyx_25100261_ResetPCProvider extends BlackBox with HasBlackBoxInline {
   setInline(s"${name}.v",
     s"""
        |`ifndef ${pcMacro}
-       |  `define ${pcMacro} 32'h80000000
+       |  `define ${pcMacro} 32'h30000000
        |`endif
        |module ${name}(
        |  output [31:0] resetPC
