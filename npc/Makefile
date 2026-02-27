@@ -18,9 +18,9 @@ endif
 SIM_VSRCS =
 
 ifeq ($(ARCH), riscv32e-ysyxsoc)
-include ./soc.mk
+include ./scripts/soc.mk
 else
-include ./npctestsoc.mk
+include ./scripts/npctestsoc.mk
 endif
 
 VERILATOR_FLAGS += -D$(CPU_DESIGN_NAME)_ResetPCProvider_RESET_PC=32\'h$(RESET_PC)
