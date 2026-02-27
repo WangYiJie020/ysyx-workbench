@@ -76,8 +76,8 @@ endif
 CHISEL_DESIGN = design
 CHISEL_SRCS = $(shell find $(abspath $(CHISEL_DESIGN)) -name "*.scala")
 CHISEL_SRCS += build.mill
-CHISEL2V_EMIT_DIR = $(BUILD_DIR)/gened/verilog$(SIM_ARCH_SUFFIX)
-CHISEL2V_DONE = $(BUILD_DIR)/verilog$(SIM_ARCH_SUFFIX).done
+CHISEL2V_EMIT_DIR = $(BUILD_DIR)/gened/verilog
+CHISEL2V_DONE = $(BUILD_DIR)/verilog.done
 
 V2CXX_EMIT_DIR = $(BUILD_DIR)/gened/cxx
 EMITED_VSRCS = $(addprefix $(CHISEL2V_EMIT_DIR)/,$(shell cat $(CHISEL2V_EMIT_DIR)/filelist.f))
