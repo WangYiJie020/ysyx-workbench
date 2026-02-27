@@ -1,14 +1,13 @@
 NAME = kasan
-KASAN_DIR ?= ./baremetal_kasan
+KASAN_DIR ?= baremetal_kasan
 
 SRC_FILENAMES = kasan.c heap.c rt_utils.c
 
-KASAN_CLONE_DONE = clone.done
-$(KASAN_CLONE_DONE):
+foo.mk:
 	git clone --depth=1 https://github.com/androidoffsec/baremetal_kasan.git
-	touch $@
+	touch foo.mk
 
-$(SEC_FILENAMES): $(KASAN_CLONE_DONE)
+include foo.mk
 
 # fuck am compile order
 # $(shell mkdir -p ./build)
