@@ -5,7 +5,7 @@ ARCHIVES += $(NVBOARD_ARCHIVE) $(abspath ../sdb/build/libsdb.a)
 
 SDB_BUILD_LIB = $(abspath ../sdb/build/libsdb.a)
 $(SDB_BUILD_LIB):
-	@make -C ../sdb build
+	@make -C ../sdb
 
 DEPS_DIR = ./deps
 
