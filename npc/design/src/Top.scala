@@ -60,7 +60,7 @@ class NPCTestSoC extends Module {
   cpu.io.io.interrupt := false.B
 }
 
-class _ysyx_25100261 extends Module {
+class ysyx_25100261 extends Module {
   val io = IO(new TopIO)
   dontTouch(io)
   // val isSoC = sys.env.getOrElse("ARCH", "") == "riscv32e-ysyxsoc"
@@ -73,8 +73,8 @@ class _ysyx_25100261 extends Module {
   // val resetPC = if (isSoC) "h30000000".U else "h80000000".U
   println(s"Add module prefix ${getClass.getSimpleName}")
   withModulePrefix(getClass.getSimpleName) {
-    // val core = Module(new CPUCore)
-    // core.io <> io
+    val core = Module(new CPUCore)
+    core.io <> io
   }
 }
 
@@ -96,11 +96,10 @@ class ysyx_25100261_ResetPCProvider extends BlackBox with HasBlackBoxInline {
      """.stripMargin)
 }
 
-class ysyx_25100261  extends Module {
+class CPUCore extends Module {
   val io = IO(new TopIO)
   io := DontCare
 
-  withModulePrefix(getClass.getSimpleName) {
   val isBranchGuessWrong = Wire(Bool())
 
   val isFlushIDUReg     = RegInit(false.B)
@@ -274,5 +273,4 @@ class ysyx_25100261  extends Module {
   gprs.io.write <> wbu.io.gpr
   csrs.io.write <> wbu.io.csr
   csrs.io.is_ecall := wbu.io.is_ecall
-  }
 }
