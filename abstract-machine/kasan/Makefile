@@ -3,12 +3,8 @@ KASAN_DIR ?= baremetal_kasan
 
 SRC_FILENAMES = kasan.c heap.c rt_utils.c
 
-KASAN_CLONE_DONE = clone.done
-$(KASAN_CLONE_DONE):
+foo.mk:
 	git clone --depth=1 https://github.com/androidoffsec/baremetal_kasan.git
-	touch $@
-
-foo.mk: $(KASAN_CLONE_DONE)
 	touch foo.mk
 
 include foo.mk

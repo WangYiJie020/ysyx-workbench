@@ -9,6 +9,7 @@ cmake .. && cmake --build .
 cd ../..
 
 # build mini-gdbstub
-cd mini-gdbstub && make all
+cd mini-gdbstub
+make ARCH=rv32 all
 
 cd ..
