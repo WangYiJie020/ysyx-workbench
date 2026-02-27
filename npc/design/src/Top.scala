@@ -64,12 +64,13 @@ class ResetPCProvider extends BlackBox with HasBlackBoxInline {
   val io = IO(new Bundle {
     val resetPC = Output(Types.UWord)
   })
-  setInline("ResetPCProvider.v",
+  val prefix = "ysyx_25100261_"
+  setInline(s"${prefix}ResetPCProvider.v",
     s"""
-       |module ResetPCProvider(
+       |module ${prefix}ResetPCProvider(
        |  output [31:0] resetPC
        |);
-       |  assign resetPC = `ysyx_25100261_RESET_PC;
+       |  assign resetPC = `${prefix}RESET_PC;
        |endmodule
      """.stripMargin)
 }
