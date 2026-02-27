@@ -66,11 +66,6 @@ SIM_CSRCS += $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.c" -or -name "*.cc
 
 SIM_HEADERS = $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.h" -or -name "*.hpp")
 
-# sdb
-INC_PATH += $(abspath ../sdb/include)
-LDFLAGS += $(SAN_FLAGS) -L$(abspath ../sdb/build) -lsdb
-ARCHIVES += $(NVBOARD_ARCHIVE) $(abspath ../sdb/build/libsdb.a)
-
 STA_OUT_DIR = $(abspath $(BUILD_DIR)/sta)
 
 # dirs
@@ -116,7 +111,7 @@ ifneq ($(MOLD_EXISTS),)
   LDFLAGS += -fuse-ld=mold
 endif
 
-$(SIM_BIN): verilog $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) $(SIM_HEADERS) $(VERILATOR_CONTROL_FILE) 
+$(SIM_BIN): sim-bin-deps verilog $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) $(SIM_HEADERS) $(VERILATOR_CONTROL_FILE) 
 	@rm -rf $(V2CXX_EMIT_DIR)
 	$(info # Building simulation binary: $@)
 	@$(VERILATOR) $(VERILATOR_FLAGS) \
@@ -167,7 +162,7 @@ clean-bin:
 .PHONY: test help reformat checkformat clean
 
 ARGS?=
-sim: $(SIM_BIN)
+sim: $(SIM_BIN) 
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	@echo "=== ENV ==="
 	@echo "VSIM_OPT=$(VSIM_OPT)"
