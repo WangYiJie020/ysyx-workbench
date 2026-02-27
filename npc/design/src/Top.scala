@@ -32,6 +32,7 @@ class TopIO extends Bundle {
 
 class CPUCoreAsBlackBox extends BlackBox {
   override def desiredName: String = "ysyx_25100261"
+  // force chisel to generate the signals name with the same prefix `io`
   val io = IO(new Bundle {
     val io = new TopIO
   })
