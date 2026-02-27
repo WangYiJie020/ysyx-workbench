@@ -34,7 +34,7 @@ CHISEL2V_DONE = $(BUILD_DIR)/verilog.done
 
 CHISEL_DESIGN = design
 CHISEL_SRCS = $(shell find $(abspath $(CHISEL_DESIGN)) -name "*.scala")
-CHISEL_SRCS += build.mill
+CHISEL_SRCS += build.sc
 
 VERILATOR_INCDIRS += $(shell find $(abspath $(CHISEL2V_EMIT_DIR)) -type d)
 
