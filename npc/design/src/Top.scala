@@ -42,9 +42,7 @@ class CPUCoreAsBlackBox extends BlackBox {
 class PCProviderAsBlackBox extends BlackBox {
   override def desiredName: String = "ysyx_25100261_ResetPCProvider"
   val io = IO(new Bundle {
-    val io = new Bundle{
     val resetPC = Output(Types.UWord)
-    }
   })
 }
 
@@ -53,7 +51,7 @@ class NPCTestSoC extends Module {
   val npcDevices = Module(new NPCDevices)
 
   val resetPCProvider = Module(new PCProviderAsBlackBox)
-  assert(resetPCProvider.io.io.resetPC === "h80000000".U, "Reset PC should be 0x80000000 for npc test SoC")
+  assert(resetPCProvider.io.resetPC === "h80000000".U, "Reset PC should be 0x80000000 for npc test SoC")
 
   npcDevices.io <> core.io.io.master
   core.io.clock := clock
