@@ -48,6 +48,8 @@ class NPCTestSoC extends Module {
   assert(resetPCProvider.io.resetPC === "h80000000".U, "Reset PC should be 0x80000000 for npc test SoC")
 
   npcDevices.io <> core.io.io.master
+  core.io.clock := clock
+  core.io.reset := reset
   core.io.io.slave := DontCare
   core.io.io.interrupt := false.B
 }
