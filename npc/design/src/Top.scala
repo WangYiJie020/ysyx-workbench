@@ -44,7 +44,7 @@ class NPCTestSoC extends Module {
   val core       = Module(new CPUCoreAsBlackBox)
   val npcDevices = Module(new NPCDevices)
 
-  val resetPCProvider = Module(new ResetPCProvider)
+  val resetPCProvider = Module(new ysyx_25100261_ResetPCProvider)
   assert(resetPCProvider.io.resetPC === "h80000000".U, "Reset PC should be 0x80000000 for npc test SoC")
 
   npcDevices.io <> core.io.io.master
@@ -72,17 +72,16 @@ class ysyx_25100261 extends Module {
   }
 }
 
-class ResetPCProvider extends BlackBox with HasBlackBoxInline {
+class ysyx_25100261_ResetPCProvider extends BlackBox with HasBlackBoxInline {
   val io = IO(new Bundle {
     val resetPC = Output(Types.UWord)
   })
-  val prefix = "ysyx_25100261_"
-  setInline(s"${prefix}ResetPCProvider.v",
+  setInline(s"${name}.v",
     s"""
-       |module ${prefix}ResetPCProvider(
+       |module ${name}(
        |  output [31:0] resetPC
        |);
-       |  assign resetPC = `${prefix}RESET_PC;
+       |  assign resetPC = `${name}_RESET_PC;
        |endmodule
      """.stripMargin)
 }
@@ -105,7 +104,7 @@ class CPUCore extends Module {
   val lsu = Module(new LSU)
   val wbu = Module(new WBU)
 
-  val resetPCProvider = Module(new ResetPCProvider)
+  val resetPCProvider = Module(new ysyx_25100261_ResetPCProvider)
   val INIT_PC = resetPCProvider.io.resetPC
 
   val pc             = RegInit(INIT_PC)
