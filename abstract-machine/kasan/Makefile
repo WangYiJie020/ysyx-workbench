@@ -8,7 +8,10 @@ $(KASAN_CLONE_DONE):
 	git clone --depth=1 https://github.com/androidoffsec/baremetal_kasan.git
 	touch $@
 
-archive: $(KASAN_CLONE_DONE)
+foo.mk: $(KASAN_CLONE_DONE)
+	touch foo.mk
+
+include foo.mk
 
 # fuck am compile order
 # $(shell mkdir -p ./build)
