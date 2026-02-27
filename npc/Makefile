@@ -62,11 +62,11 @@ V2CXX_EMIT_DIR = $(BUILD_DIR)/gened/cxx
 CORE_VSRCS = $(CHISEL_EMITED_VSRCS)
 SYNTH_VSRCS = $(CHISEL_EMITED_VSRCS_SYNTH)
 
-MY_VSRCS += $(CORE_VSRCS)
-MY_VSRCS += $(CHISEL_EMITED_VSRCS_LAYER)
+MY_SIM_VSRCS += $(CORE_VSRCS)
+MY_SIM_VSRCS += $(CHISEL_EMITED_VSRCS_LAYER)
 
 
-SIM_VSRCS += $(MY_VSRCS)
+SIM_VSRCS += $(MY_SIM_VSRCS)
 SIM_CSRCS += $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 
 SIM_HEADERS = $(shell find $(abspath $(SIM_CSRC_DIR)) -name "*.h" -or -name "*.hpp")
@@ -152,7 +152,7 @@ sim-iverilog: $(IVERILOG_SIM_FILE) sim-iverilog-img-hex
 
 verilog-lint: verilog
 	$(info Lint verilog files with verilator)
-	@$(VERILATOR) --lint-only $(VERILATOR_FLAGS) -Wall $(MY_VSRCS)
+	@$(VERILATOR) --lint-only $(VERILATOR_FLAGS) -Wall $(SYNTH_VSRCS)
 
 all: default
 

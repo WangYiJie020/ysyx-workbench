@@ -65,7 +65,7 @@ VPI_DONE := $(BUILD_DIR)/vpi.done
 $(VPI_DONE): $(CHISEL2V_DONE)
 ifeq ($(ENABLE_VPI), 1)
 	$(info # Inserting verilator public modifier)
-	@$(foreach src,$(MY_VSRCS),\
+	@$(foreach src,$(MY_SIM_VSRCS),\
 	sed -i '1i /*verilator public_on*/' $(src); \
 	sed -i -e '$$a /*verilator public_off*/' $(src);)
 	@touch $@
@@ -79,7 +79,7 @@ endif
 RENAME_LAYER_MACRO := $(BUILD_DIR)/rename_layer_macro.done
 $(RENAME_LAYER_MACRO): $(CHISEL2V_DONE)
 	$(info # Renaming unstandard layer$$ style macro)
-	@$(foreach src,$(MY_VSRCS), sed -i 's/layer\$$\(\w\+\)/$(CPU_DESIGN_NAME)_\1/g' $(src);)
+	@$(foreach src,$(MY_SIM_VSRCS), sed -i 's/layer\$$\(\w\+\)/$(CPU_DESIGN_NAME)_\1/g' $(src);)
 	@touch $@
 
 chisel-emit: $(CHISEL2V_DONE) $(VPI_DONE) $(RENAME_LAYER_MACRO)
