@@ -1,7 +1,7 @@
 # Chisel
 
 define rd_filelist_indir 
-$(addprefix $(1)/, $(shell cat $(1)/filelist.f))
+$(addprefix $(1)/, $(shell cat $(1)/filelist.f 2>/dev/null))
 endef
 
 MILL ?= 
