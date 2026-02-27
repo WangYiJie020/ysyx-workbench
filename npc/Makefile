@@ -26,8 +26,6 @@ else
 include ./scripts/npctestsoc.mk
 endif
 
-ALL_IN_ONE_VFILE = $(BUILD_DIR)/$(CPU_DESIGN_NAME).v
-
 VERILATOR = verilator
 
 SIM_BIN = $(SIM_BIN_DIR)/$(TOP_NAME)$(SIM_ARCH_SUFFIX)$(VSIM_OPT)
@@ -93,7 +91,11 @@ VERILATOR_FLAGS += --hierarchical
 
 COMMON_VERILOG_DEFINES = ysyx_25100261_InlinePrintfLayer
 COMMON_VERILOG_DEFINES += $(CPU_DESIGN_NAME)_ResetPCProvider_RESET_PC=32\'h$(RESET_PC)
-VERILATOR_FLAGS += $(addprefix -D,$(COMMON_VERILOG_DEFINES))
+# need reserved since both verilator and iverilog will use it
+COMMON_VERILOG_DEFINES_FLAGS = $(addprefix -D,$(COMMON_VERILOG_DEFINES))
+
+VERILATOR_FLAGS += $(COMMON_VERILOG_DEFINES_FLAGS)
+
 
 VERILATOR_CONTROL_FILE = verilator.vlt
 
@@ -134,9 +136,12 @@ all: default
 test:
 	$(MILL) -i $(CHISEL_DESIGN).test
 
-verilog: chisel-emit
+ALL_IN_ONE_VFILE = $(BUILD_DIR)/$(CPU_DESIGN_NAME).v
+$(ALL_IN_ONE_VFILE):
 	$(info # Merge verilog files into one file $(ALL_IN_ONE_VFILE))
 	@cat $(SYNTH_VSRCS) > $(ALL_IN_ONE_VFILE)
+
+verilog: chisel-emit $(ALL_IN_ONE_VFILE)
 
 help:
 	$(MILL) -i $(CHISEL_DESIGN).runMain Elaborate --help
@@ -179,7 +184,7 @@ IVERILOG = iverilog -g2012 -DENABLE_INITIAL_MEM_ $(COMMON_VERILOG_DEFINES_FLAGS)
 IVERILOG_SIM_VSRCS = $(IVERILOG_TESTBENCH) $(SYNTH_VSRCS) $(SOC_SYNTH_VSRCS)
 
 $(IVERILOG_SIM_FILE): verilog $(IVERILOG_SIM_VSRCS)
-	$(info Process verilog files with iverilog)
+	$(info # Process verilog files with iverilog)
 	$(IVERILOG) -o $(IVERILOG_SIM_FILE) $(IVERILOG_SIM_VSRCS)
 
 sim-iverilog-img-hex: $(IMG)
