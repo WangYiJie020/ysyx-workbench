@@ -2,9 +2,6 @@
 
 cd $1
 
-# avoid pollute cmake
-unset ARCH
-
 # spdlog
 cd spdlog && mkdir -p build
 cd build
@@ -12,6 +9,7 @@ cmake .. && cmake --build .
 cd ../..
 
 # build mini-gdbstub
-cd mini-gdbstub && make all
+cd mini-gdbstub
+make ARCH=rv32 all
 
 cd ..
