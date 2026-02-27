@@ -30,8 +30,13 @@ class TopIO extends Bundle {
   val slave     = AXI4IO.Slave
 }
 
+class CPUCoreAsBlackBox extends BlackBox {
+  override def desiredName: String = "ysyx_25100261"
+  val io = IO(new TopIO)
+}
+
 class NPCTestSoC extends Module {
-  val core       = Module(new CPUCore)
+  val core       = Module(new CPUCoreAsBlackBox)
   val npcDevices = Module(new NPCDevices)
 
   val resetPCProvider = Module(new ResetPCProvider)

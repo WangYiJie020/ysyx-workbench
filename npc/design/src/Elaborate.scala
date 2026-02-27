@@ -10,7 +10,11 @@ object Elaborate extends App {
     "-disable-all-randomization",
     "-strip-debug-info"
   )
-  println("Emitting Verilog...")
+  println("Emitting cpu Verilog...")
   circt.stage.ChiselStage.emitSystemVerilogFile(new top.ysyx_25100261(), args, firtoolOptions)
-  println("Finish emit Verilog.")
+  println("Finish emit cpu Verilog.")
+  circt.stage.ChiselStage.emitSystemVerilogFile(new top.NPCTestSoC(),
+    args ++ Array("--target-dir", "build/npctestsoc"),
+    firtoolOptions
+  )
 }
