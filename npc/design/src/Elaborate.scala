@@ -17,12 +17,11 @@ object Elaborate extends App {
     "-strip-debug-info"
   )
   println("Emitting cpu Verilog...")
-  val topInstance = new top.ysyx_25100261()
-  circt.stage.ChiselStage.emitSystemVerilogFile(topInstance, args, firtoolOptions)
+  circt.stage.ChiselStage.emitSystemVerilogFile(new top.ysyx_25100261(), args, firtoolOptions)
   println("Finish emit cpu Verilog.")
 
   println("Preprocessing cpu Verilog...")
-  val designName = topInstance.getClass.getSimpleName
+  val designName = "ysyx_25100261"
   val preProcCore = s"./scripts/preproc_vsrcs.sh ${args(1)} ${designName}".!
   if (preProcCore != 0) sys.exit(preProcCore)
 
