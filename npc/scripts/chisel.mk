@@ -1,5 +1,11 @@
 # Chisel
 
+# fuck CI
+$(shell echo '0.12.4' > ../../../.mill-version)
+
+# $(info in ~ $(shell tree -L 6 ~))
+# $(info in /home/runner/work/ysyx-submit-test/ysyx-submit-test/ $(shell ls /home/runner/work/ysyx-submit-test/ysyx-submit-test/))
+
 $(shell mkdir -p $(CHISEL2V_EMIT_DIR))
 $(shell touch $(CHISEL2V_EMIT_DIR)/filelist.f)
 
@@ -34,7 +40,7 @@ CHISEL2V_DONE = $(BUILD_DIR)/verilog.done
 
 CHISEL_DESIGN = design
 CHISEL_SRCS = $(shell find $(abspath $(CHISEL_DESIGN)) -name "*.scala")
-CHISEL_SRCS += build.sc
+CHISEL_SRCS += build.mill
 
 VERILATOR_INCDIRS += $(shell find $(abspath $(CHISEL2V_EMIT_DIR)) -type d)
 
