@@ -35,7 +35,7 @@ class CPUCoreAsBlackBox extends BlackBox {
   // force chisel to generate the signals name with the same prefix `io`
   val io = IO(new Bundle {
     val clock = Input(Clock())
-    val reset = Input(Reset())
+    val reset = Input(Bool())
     val io = new TopIO
   })
 }
