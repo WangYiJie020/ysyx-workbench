@@ -88,7 +88,7 @@ endef
 #$(addprefix $(CHISEL2V_EMIT_DIR)/,$(shell cat $(CHISEL2V_EMIT_DIR)/filelist.f))
 EMITED_VSRCS = $(call rd_filelist_indir, $(CHISEL2V_EMIT_DIR))
 CORE_VSRCS = $(EMITED_VSRCS)
-MY_VSRCS = $(CORE_VSRCS)
+MY_VSRCS += $(CORE_VSRCS)
 
 UNSYNTH_FILE_KEYWORDS = DPICLayer|verification
 SYNTH_VSRCS = $(addprefix $(CHISEL2V_EMIT_DIR)/,$(shell grep -vE "$(UNSYNTH_FILE_KEYWORDS)" $(CHISEL2V_EMIT_DIR)/filelist.f))
