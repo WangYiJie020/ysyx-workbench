@@ -67,11 +67,24 @@ LINKAGE   = $(OBJS)  # library archives are added by LIB_TEMPLATE below
 
 ## 3. General Compilation Flags
 
+include $(YSYX_HOME)/init-deps/always-install-llvm.mk
+
+# update-alternatives.mk:
+# $(info $(shell ls /usr/bin | grep clang))
+# $(info $(shell ls /usr/lib | grep llvm))
+# $(info $(shell ls /usr/lib/clang))
+# 	$(info $(shell ls /usr/bin/clang))
+# 	# $(info $(shell find / -name "clang-21" 2>/dev/null))
+# 	-$(shell sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-21 100)
+# 	-$(shell sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-21 100)
+#
+# -include update-alternatives.mk
+
 ### (Cross) compilers, e.g., mips-linux-gnu-g++
 AS        = $(CROSS_COMPILE)gcc
 # CC        = $(CROSS_COMPILE)gcc
-CC        = clang --target=riscv64-linux-gnu
-CXX        = clang++ --target=riscv64-linux-gnu
+CC        = clang-21 --target=riscv64-linux-gnu
+CXX       = clang++-21 --target=riscv64-linux-gnu
 # CXX       = $(CROSS_COMPILE)g++
 LD        = $(CROSS_COMPILE)ld
 # LD        = mold

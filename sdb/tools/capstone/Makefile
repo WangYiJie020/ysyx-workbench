@@ -14,8 +14,9 @@
 #**************************************************************************************/
 
 REPO_PATH = repo
+REPO_URL = https://github.com/capstone-engine/capstone.git
 ifeq ($(wildcard repo/include/capstone/capstone.h),)
-  $(shell git clone --depth=1 -b 5.0.3 git@github.com:capstone-engine/capstone.git $(REPO_PATH))
+$(shell git clone --depth=1 -b 5.0.3 $(REPO_URL) $(REPO_PATH))
 endif
 
 CAPSTONE = $(REPO_PATH)/libcapstone.so.5
