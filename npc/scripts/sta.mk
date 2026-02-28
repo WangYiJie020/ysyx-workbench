@@ -16,7 +16,7 @@ endif
 sta: verilog $(STA_VSRCS)
 	# @echo "Removing DPI-C void functions from verilog sources..."
 	# ./scripts/remove_dpi.sh $(CHISEL2V_EMIT_DIR) $(STA_NODPI_PATH)
-	make -C $(YOSYS_STA_PATH) sta \
+	$(MAKE) -C $(YOSYS_STA_PATH) sta \
 		DESIGN=$(STA_DEST_FULL_NAME) \
 		CLK_FREQ_MHZ=$(STA_FREQ_MHZ) \
 		CLK_PORT_NAME=clock \
@@ -26,7 +26,7 @@ sta: verilog $(STA_VSRCS)
 sta-area: verilog $(STA_VSRCS)
 	@echo "Removing DPI-C void functions from verilog sources..."
 	./scripts/remove_dpi.sh $(CHISEL2V_EMIT_DIR) $(STA_NODPI_PATH)
-	make -C $(YOSYS_STA_PATH) stat_only \
+	$(MAKE) -C $(YOSYS_STA_PATH) stat_only \
 		DESIGN=$(STA_DEST_FULL_NAME) \
 		CLK_FREQ_MHZ=$(STA_FREQ_MHZ) \
 		CLK_PORT_NAME=clock \
@@ -34,4 +34,4 @@ sta-area: verilog $(STA_VSRCS)
 		RTL_FILES="$(STA_VSRCS)" \
 
 sta-all-area: verilog
-	./scripts/sta_all.sh $(CHISEL2V_EMIT_DIR)/filelist.f $(STA_OUT_DIR)
+	+./scripts/sta_all.sh $(CHISEL2V_EMIT_DIR)/filelist.f $(STA_OUT_DIR)
