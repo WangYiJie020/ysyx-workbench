@@ -2,7 +2,13 @@
 
 LOCKFILE="/tmp/llvm_install.lock"
 
-do_install() {
+DEST_CLANG_VERSION=21
+DEST_CLANG=clang-$DEST_CLANG_VERSION
+
+DEST_GPP_VERSION=13
+DEST_GPP=g++-$DEST_GPP_VERSION
+
+do_install_clang() {
 	# 1. 获取 Clang 主版本号
 	# 如果没安装 clang，这里会报错，所以加个简单的判断
 	if ! command -v clang &> /dev/null; then
@@ -15,9 +21,8 @@ do_install() {
 
 	echo "Current clang version is [$CLANG_VERSION_MAJOR]"
 
-	# 2. 检查版本是否小于 15
-	if [ "$CLANG_VERSION_MAJOR" -lt 15 ]; then
-		if [ -f /usr/bin/clang-21 ]; then
+	if [ "$CLANG_VERSION_MAJOR" -lt $DEST_CLANG_VERSION ]; then
+		if [ -f /usr/bin/$DEST_CLANG ]; then
 			echo "LLVM 21 is already installed."
 			exit 0
 		else
@@ -28,43 +33,55 @@ do_install() {
 		# sudo apt remove -y llvm llvm-dev
 		
 		echo "Downloading LLVM script..."
-		wget 'https://apt.llvm.org/llvm.sh'
-		chmod +x llvm.sh
+		wget 'https://apt.llvm.org/llvm.sh' -O /tmp/llvm.sh > /dev/null
+		chmod +x /tmp/llvm.sh
 		
-		echo "Installing LLVM 21..."
-		sudo ./llvm.sh 21 > /dev/null
+		echo "Installing LLVM $DEST_CLANG_VERSION..."
+		sudo /tmp/llvm.sh $DEST_CLANG_VERSION > /dev/null
 		
 		# 验证安装情况
 		echo "Checking installation paths:"
 		ls /usr/bin | grep clang | tr '\n' ' '
 		ls /usr/lib | grep llvm | tr '\n' ' '
 		ls /usr/lib/clang
-		sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-21 100
-		sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-21 100
+		sudo update-alternatives --install /usr/bin/clang clang /usr/bin/$DEST_CLANG 100
+		sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/$DEST_CLANG++ 100
 		# must set
-		sudo update-alternatives --set clang /usr/bin/clang-21
-		sudo update-alternatives --set clang++ /usr/bin/clang++-21
-		echo "clang-21 path: $(which clang-21)"
+		sudo update-alternatives --set clang /usr/bin/$DEST_CLANG
+		sudo update-alternatives --set clang++ /usr/bin/$DEST_CLANG++
+		echo "clang-$DEST_CLANG_VERSION path: $(which $DEST_CLANG)"
 		echo "default clang path: $(which clang)"
 		echo "all clang $(which -a clang)"
+		if [ "$(which clang)" != "/usr/bin/$DEST_CLANG" ]; then
+			echo "Error: Default clang is not set to $DEST_CLANG"
+			exit 1
+		fi
+		if [ "$(clang -dumpversion | cut -f1 -d.)" != "$DEST_CLANG_VERSION" ]; then
+			echo "Error: clang version is not $DEST_CLANG_VERSION"
+			exit 1
+		fi
+	fi
+}
 
-		echo "g++ version: $(g++ -dumpversion)"
-		echo "Installing g++-13 for new stdlib"
-		sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y > /dev/null
-		sudo apt-get update > /dev/null
-		sudo apt-get install g++-13 gcc-riscv64-linux-gnu binutils-riscv64-linux-gnu -y > /dev/null
-		sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 100
-		sudo update-alternatives --set g++ /usr/bin/g++-13
-		echo "current g++ version: $(g++ -dumpversion)"
-
-		# no need
-		# 	sudo ln -sf /usr/bin/clang-21 /usr/bin/clang
-		# 	sudo ln -sf /usr/bin/clang++-21 /usr/bin/clang++
-		# 	echo "After ln, default clang path: $(which clang)"
-		#
-
-		# # 3. 标记安装完成
-		# touch "$INSTALL_FLAG"
+do_install_gpp() {
+	GPP_VERSION=$(g++ -dumpversion)
+	echo "g++ version: $GPP_VERSION"
+	if [ $GPP_VERSION -lt $DEST_GPP_VERSION ]; then
+			echo "g++ version is less than $DEST_GPP_VERSION"
+	else
+			echo "g++ version is $GPP_VERSION, no need to install."
+			return
+	fi
+	echo "Installing g++-13 for new stdlib"
+	sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y > /dev/null
+	sudo apt-get update > /dev/null
+	sudo apt-get install g++-13 gcc-riscv64-linux-gnu binutils-riscv64-linux-gnu -y > /dev/null
+	sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/$DEST_GPP 100
+	sudo update-alternatives --set g++ /usr/bin/$DEST_GPP
+	echo "current g++ version: $(g++ -dumpversion)"
+	if [ "$(g++ -dumpversion)" != "$DEST_GPP_VERSION" ]; then
+			echo "Error: g++ version is not $DEST_GPP_VERSION"
+			exit 1
 	fi
 }
 
@@ -73,4 +90,8 @@ echo "Waiting for file lock on $LOCKFILE..."
 flock -x 200
 
 # 获得锁后执行逻辑
-do_install
+do_install_clang
+do_install_gpp
+
+echo "Installing ccache..."
+sudo apt-get install -y ccache > /dev/null
