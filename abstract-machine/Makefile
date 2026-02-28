@@ -178,7 +178,7 @@ endif
 ### Rule (link): objects (`*.o`) and libraries (`*.a`) -> `IMAGE.elf`, the final ELF binary to be packed into image (ld)
 $(IMAGE).elf: $(LINKAGE) $(LDSCRIPTS)
 	@echo LD = $(LD)
-	@echo LD version = $($(LD) --v)
+	@echo LD version = $($(LD) -v)
 	@echo LDFLAGS = $(LDFLAGS)
 	@echo \# Creating image [$(ARCH)]
 	@echo + LD "->" $(IMAGE_REL).elf
