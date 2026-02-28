@@ -7,6 +7,7 @@ ARCHIVES += $(NVBOARD_ARCHIVE) $(abspath ../sdb/build/libsdb.a)
 
 SDB_BUILD_LIB = $(abspath ../sdb/build/libsdb.a)
 $(SDB_BUILD_LIB):
+	@mkdir -p $(dir $@)
 	@flock $@.lock -c '\
 		if [ ! -f $(SDB_BUILD_LIB) ]; then \
 			$(MAKE) -C ../sdb; \
