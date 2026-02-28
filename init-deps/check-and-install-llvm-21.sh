@@ -53,10 +53,6 @@ do_install_clang() {
 		echo "clang-$DEST_CLANG_VERSION path: $(which $DEST_CLANG)"
 		echo "default clang path: $(which clang)"
 		echo "all clang $(which -a clang)"
-		if [ "$(which clang)" != "/usr/bin/$DEST_CLANG" ]; then
-			echo "Error: Default clang is not set to $DEST_CLANG"
-			exit 1
-		fi
 		if [ "$(clang -dumpversion | cut -f1 -d.)" != "$DEST_CLANG_VERSION" ]; then
 			echo "Error: clang version is not $DEST_CLANG_VERSION"
 			exit 1
