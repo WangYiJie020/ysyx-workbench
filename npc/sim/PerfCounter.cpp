@@ -114,8 +114,12 @@ IDUFlushPerfCounter::IDUFlushReason IDUFlushPerfCounter::getCurReason() const {
   else if (exu.dbgIsCSRJmp)
     reason = IDUFlushReason::Exception;
   else {
-    reason = IDUFlushReason::Unknown;
-    spdlog::warn("Unknown flush reason at {}ps", sim_get_time());
+    if (exu.io_fencei)
+      reason = IDUFlushReason::Fence;
+    else {
+      reason = IDUFlushReason::Unknown;
+      spdlog::warn("Unknown flush reason at {}ps", sim_get_time());
+    }
   }
 
   return reason;

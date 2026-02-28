@@ -106,8 +106,8 @@ void RAWStallPerfCounter::dumpStatistics(std::ostream &os) {
 }
 
 const char *IDUFlushPerfCounter::nameOfReason(int r) {
-  static const char *name_of_reason[] = {"BranchTaken", "JALR", "JAL",
-                                         "Exception", "Unknown"};
+  static const char *name_of_reason[] = {"BranchTaken", "JALR",  "JAL",
+                                         "Exception",   "Fence", "Unknown"};
   if (r < sizeof(name_of_reason) / sizeof(name_of_reason[0])) {
     return name_of_reason[r];
   } else {
@@ -167,7 +167,7 @@ void BranchPredPerfCounter::dumpStatistics(std::ostream &os) {
           ? NAN
           : ((double)totAccuracy / (double)totBranchCount) * 100.0;
   os << "accuracy: " << accuracyPerc << " %\n";
-	os << "mispredict rate: " << (100.0 - accuracyPerc) << " %\n";
+  os << "mispredict rate: " << (100.0 - accuracyPerc) << " %\n";
 
   Table t;
   t.add_row({"Type", "Total\nCount", "Mispredict\nCount", "Accuracy\n%",

@@ -287,6 +287,7 @@ struct IDUFlushPerfCounter : public PerfCounterBase {
     JALR,
     JAL,
     Exception,
+		Fence,
     Unknown,
     REASON_NUM
   };
