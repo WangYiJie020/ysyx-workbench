@@ -43,6 +43,14 @@ if [ "$CLANG_VERSION_MAJOR" -lt 15 ]; then
 	echo "clang-21 path: $(which clang-21)"
 	echo "default clang path: $(which clang)"
 	echo "all clang $(which -a clang)"
+
+	if [ -d /home/runner/work/ysyx-submit-test/ ]; then
+		echo "Running in GitHub Actions environment, use ln to force clang to point to new version"
+		sudo ln -sf /usr/bin/clang-21 /usr/bin/clang
+		sudo ln -sf /usr/bin/clang++-21 /usr/bin/clang++
+		echo "After ln, default clang path: $(which clang)"
+	fi
+
 	# # 3. 标记安装完成
 	# touch "$INSTALL_FLAG"
 fi
