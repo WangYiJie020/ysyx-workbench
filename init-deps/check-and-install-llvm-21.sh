@@ -47,6 +47,7 @@ if [ "$CLANG_VERSION_MAJOR" -lt 15 ]; then
 
 	echo "g++ version: $(g++ -dumpversion)"
 	echo "Installing g++-13 for new stdlib"
+	sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
 	sudo apt-get update
   sudo apt-get install g++-13 -y
 	sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 100
