@@ -111,7 +111,7 @@ ifneq ($(MOLD_EXISTS),)
   LDFLAGS += -fuse-ld=mold
 endif
 
-$(SIM_BIN): sim-bin-deps verilog $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) $(SIM_HEADERS) $(VERILATOR_CONTROL_FILE) 
+$(SIM_BIN): $(SIM_BIN_DEPS_DONE) $(SYNTH_VSRCS_ALLINONE) $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) $(SIM_HEADERS) $(VERILATOR_CONTROL_FILE) 
 	@rm -rf $(V2CXX_EMIT_DIR)
 	$(info # Building simulation binary: $@)
 	@$(VERILATOR) $(VERILATOR_FLAGS) \
