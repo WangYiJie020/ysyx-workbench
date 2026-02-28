@@ -93,10 +93,10 @@ flock -x 200
 do_install_clang
 do_install_gpp
 
-echo "check ccache installation..."
-if ! command -v ccache &> /dev/null; then
-	echo "ccache is not installed. Installing ccache..."
-	sudo apt-get install -y ccache > /dev/null
-else
-	echo "ccache is already installed."
-fi
+# echo "check ccache installation..."
+# if ! command -v ccache &> /dev/null; then
+# 	echo "ccache is not installed. Installing ccache..."
+# 	sudo apt-get install -y ccache > /dev/null
+# else
+# 	echo "ccache is already installed."
+# fi
