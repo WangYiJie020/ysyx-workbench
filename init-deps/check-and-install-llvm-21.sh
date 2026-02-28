@@ -38,18 +38,28 @@ if [ "$CLANG_VERSION_MAJOR" -lt 15 ]; then
 	ls /usr/lib/clang
 	sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-21 100
 	sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-21 100
+	# must set
 	sudo update-alternatives --set clang /usr/bin/clang-21
 	sudo update-alternatives --set clang++ /usr/bin/clang++-21
 	echo "clang-21 path: $(which clang-21)"
 	echo "default clang path: $(which clang)"
 	echo "all clang $(which -a clang)"
 
-	if [ -d /home/runner/work/ysyx-submit-test/ ]; then
-		echo "Running in GitHub Actions environment, use ln to force clang to point to new version"
-		sudo ln -sf /usr/bin/clang-21 /usr/bin/clang
-		sudo ln -sf /usr/bin/clang++-21 /usr/bin/clang++
-		echo "After ln, default clang path: $(which clang)"
-	fi
+	echo "g++ version: $(g++ -dumpversion)"
+	echo "Installing g++-13 for new stdlib"
+	sudo apt-get update
+  sudo apt-get install g++-13 -y
+	sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 100
+	sudo update-alternatives --set g++ /usr/bin/g++-13
+	echo "current g++ version: $(g++ -dumpversion)"
+
+	# no need
+	# if [ -d /home/runner/work/ysyx-submit-test/ ]; then
+	# 	echo "Running in GitHub Actions environment, use ln to force clang to point to new version"
+	# 	sudo ln -sf /usr/bin/clang-21 /usr/bin/clang
+	# 	sudo ln -sf /usr/bin/clang++-21 /usr/bin/clang++
+	# 	echo "After ln, default clang path: $(which clang)"
+	# fi
 
 	# # 3. 标记安装完成
 	# touch "$INSTALL_FLAG"
