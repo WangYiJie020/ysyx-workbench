@@ -1,5 +1,9 @@
 #!/bin/bash
 
+echo "update self repo"
+git config pull.rebase false
+git pull
+
 # 1. 获取 Clang 主版本号
 # 如果没安装 clang，这里会报错，所以加个简单的判断
 if ! command -v clang &> /dev/null; then
