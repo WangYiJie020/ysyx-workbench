@@ -45,7 +45,4 @@ $(SIM_DEP_LIBS_BUILD_DONE): $(SIM_DEP_LIBS_CLONE_DONE) $(SDB_BUILD_LIB)
 
 sim-bin-deps: $(SIM_DEP_LIBS_CLONE_DONE) $(SIM_DEP_LIBS_BUILD_DONE)
 
-SIM_BIN_DEPS_DONE = $(DEPS_DIR)/sim-bin-deps.done
-$(SIM_BIN_DEPS_DONE): sim-bin-deps
-	@touch $@
 
