@@ -4,6 +4,7 @@ LOCKFILE="/tmp/llvm_install.lock"
 
 DEST_CLANG_VERSION=21
 DEST_CLANG=clang-$DEST_CLANG_VERSION
+DEST_CLANGPP=clang++-$DEST_CLANG_VERSION
 
 DEST_GPP_VERSION=13
 DEST_GPP=g++-$DEST_GPP_VERSION
@@ -45,17 +46,13 @@ do_install_clang() {
 		ls /usr/lib | grep llvm | tr '\n' ' '
 		ls /usr/lib/clang
 		sudo update-alternatives --install /usr/bin/clang clang /usr/bin/$DEST_CLANG 100
-		sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/$DEST_CLANG++ 100
+		sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/$DEST_CLANGPP 100
 		# must set
 		sudo update-alternatives --set clang /usr/bin/$DEST_CLANG
-		sudo update-alternatives --set clang++ /usr/bin/$DEST_CLANG++
+		sudo update-alternatives --set clang++ /usr/bin/$DEST_CLANGPP
 		echo "clang-$DEST_CLANG_VERSION path: $(which $DEST_CLANG)"
 		echo "default clang path: $(which clang)"
 		echo "all clang $(which -a clang)"
-		if [ "$(which clang)" != "/usr/bin/$DEST_CLANG" ]; then
-			echo "Error: Default clang is not set to $DEST_CLANG"
-			exit 1
-		fi
 		if [ "$(clang -dumpversion | cut -f1 -d.)" != "$DEST_CLANG_VERSION" ]; then
 			echo "Error: clang version is not $DEST_CLANG_VERSION"
 			exit 1
