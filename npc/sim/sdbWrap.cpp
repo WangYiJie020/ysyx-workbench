@@ -109,14 +109,15 @@ void sdb_init(word_t init_pc, size_t img_size, const char *img_file,
     }
 
     if (setting.difftest) {
-			try{
-      diff_handler = sdb::make_difftest_trace_handler(
-          "../nemu/build/riscv32-nemu-interpreter-so", 0);
-			}
-			catch(std::exception &e){
-				spdlog::error("Failed to create difftest trace handler: {}", e.what());
-				return;
-			}
+      try {
+        diff_handler = sdb::make_difftest_trace_handler(
+            "../nemu/build/riscv32-nemu-interpreter-so", 0);
+      } catch (std::exception &e) {
+        spdlog::warn("Failed to create difftest trace handler: {}, difftest "
+                     "will be disabled",
+                     e.what());
+        return;
+      }
       dbg->add_trace(diff_handler);
     }
   }
@@ -133,16 +134,14 @@ int sdb_mainloop() {
   spdlog::info("sdb entering {} mode",
                cfg.is_batch_mode() ? "batch" : "interactive");
 
-
   if (cfg.is_batch_mode()) {
     sdb_exec("c", nullptr);
     return sdb_is_hitbadtrap() ? 1 : 0;
   }
 
-
   std::string top_vpi_name =
       std::string("TOP.") + std::string(_STR(TOP_NAME)).substr(1);
-	// sprobe.add_watch(top_vpi_name + ".asic.cpu.cpu.io_master_araddr");
+  // sprobe.add_watch(top_vpi_name + ".asic.cpu.cpu.io_master_araddr");
   _old_cycle_callback = cfg.setting.cycle_finish_cb;
   cfg.setting.cycle_finish_cb = cyc_callback;
 
