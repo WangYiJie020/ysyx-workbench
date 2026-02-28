@@ -107,10 +107,10 @@ void test_algo(algo_t algo, size_t btb_size = 4) {
       //     record.nxt_pc);
     }
     total++;
-    // Update BTB
-    if (record.nxt_pc != record.pc + 4) {
-      btb.update(record.pc, record.nxt_pc, isJAL(record.code));
-    }
+		// Update BTB
+		if(record.nxt_pc != record.pc + 4) {
+			btb.update(record.pc, record.nxt_pc, isJAL(record.code));
+		}
   }
   btrace_pack_close(pack);
   size_t correct = total - wrong;
@@ -121,12 +121,12 @@ void test_algo(algo_t algo, size_t btb_size = 4) {
 int main() {
   printf("Testing always not take algorithm:\n");
   test_algo(algo_always_not_take);
-
-  size_t btb_sizes[] = {2, 4, 8, 16, 32, 64, 128};
-  for (size_t size : btb_sizes) {
-    printf("Testing BTFN algorithm: BTB size = %zu:\n", size);
-    test_algo(algo_BTFN, size);
-  }
+	
+	size_t btb_sizes[] = {2, 4, 8, 16};
+	for(size_t size : btb_sizes) {
+		printf("Testing BTFN algorithm: BTB size = %zu:\n", size);
+		test_algo(algo_BTFN, size);
+	}
 
   return 0;
 }
