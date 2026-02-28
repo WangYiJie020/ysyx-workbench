@@ -132,7 +132,7 @@ test:
 	$(MILL) -i $(CHISEL_DESIGN).test
 
 SYNTH_VSRCS_ALLINONE = $(BUILD_DIR)/$(CPU_DESIGN_NAME).v
-$(SYNTH_VSRCS_ALLINONE): chisel-emit
+$(SYNTH_VSRCS_ALLINONE): $(CHISEL2V_DONE)
 	$(info # Merge verilog files into one file $(SYNTH_VSRCS_ALLINONE))
 	@cat $(SYNTH_VSRCS) > $(SYNTH_VSRCS_ALLINONE)
 
