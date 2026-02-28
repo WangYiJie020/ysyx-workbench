@@ -122,7 +122,7 @@ $(SIM_BIN): sim-bin-deps verilog $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) $(SIM_HEA
 		--Mdir $(V2CXX_EMIT_DIR) --exe -o $(abspath $(SIM_BIN))
 	@echo "=== Build sim binary with clang++ ==="
 	@echo "clang++ version: $(shell clang++ -dumpversion)"
-	@make -s -C $(V2CXX_EMIT_DIR) -f V$(TOP_NAME).mk -j$(shell nproc) OPT_FAST=$(VSIM_OPT) CXX=clang++ LINK=clang++ AR="ar -T"
+	@$(MAKE) -s -C $(V2CXX_EMIT_DIR) -f V$(TOP_NAME).mk -j$(shell nproc) OPT_FAST=$(VSIM_OPT) CXX=clang++ LINK=clang++ AR="ar -T"
 
 verilog-lint: verilog
 	$(info Lint verilog files with verilator)
@@ -225,6 +225,6 @@ sim-iverilog-netlist: $(IVERILOG_NETLIST_SIM_FILE) sim-iverilog-img-hex
 	vvp $(IVERILOG_NETLIST_SIM_FILE) -fst
 
 perf: 
-	./scripts/make_perf.sh
+	+./scripts/make_perf.sh
 
 -include ../Makefile
