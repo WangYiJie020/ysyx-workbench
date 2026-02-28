@@ -83,8 +83,8 @@ include ../init-deps/always-install-llvm.mk
 ### (Cross) compilers, e.g., mips-linux-gnu-g++
 AS        = $(CROSS_COMPILE)gcc
 # CC        = $(CROSS_COMPILE)gcc
-CC        = clang-15 --target=riscv64-linux-gnu
-CXX       = clang++-15 --target=riscv64-linux-gnu
+CC        = clang-21 --target=riscv64-linux-gnu
+CXX       = clang++-21 --target=riscv64-linux-gnu
 # CXX       = $(CROSS_COMPILE)g++
 LD        = $(CROSS_COMPILE)ld
 # LD        = mold
