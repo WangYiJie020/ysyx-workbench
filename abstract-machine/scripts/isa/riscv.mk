@@ -10,7 +10,7 @@ CLANG_VERSION_OLDER_THAN_15 := $(shell [ $(CLANG_VERSION_MAJOR) -lt 15 ] && echo
 
 $(info Clang version $(CLANG_VERSION_MAJOR))
 ifeq ($(CLANG_VERSION_OLDER_THAN_15),1)
-$(warning $(CC) version should be at least 15)
+$(warning # WARN $(CC) version should be at least 15)
 $(info fuck CI)
 RISCV_MARCH_EXT_CSRS_AND_FENCE_I := 
 COMMON_CFLAGS += -Wno-error=unused-command-line-argument

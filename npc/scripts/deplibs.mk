@@ -10,15 +10,10 @@ $(LLVM21_INSTALLED):
 ifeq ($(CLANG_VERSION_OLDER_THAN_15), 1)
 	$(info fuck clang $(CLANG_VERSION_MAJOR))
 	sudo apt remove llvm llvm-dev
-	$(info Try llvm 21!)
-	$(info # Downloading LLVM script)
+	@echo "Downloading LLVM script"
 	wget 'https://apt.llvm.org/llvm.sh' && chmod +x llvm.sh
-	$(info # Installing LLVM 21)
+	@echo "Installing LLVM 21"
 	sudo ./llvm.sh 21
-	$(info # Setting LLVM 21 as default clang)
-	sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-21 100
-	sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-21 100
-	$(info # New clang $(shell which clang) version $(shell clang -dumpversion))
 endif
 	touch $@
 
