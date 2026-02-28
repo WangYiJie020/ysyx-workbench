@@ -36,9 +36,10 @@ if [ "$CLANG_VERSION_MAJOR" -lt 15 ]; then
 	ls /usr/bin | grep clang | tr '\n' ' '
 	ls /usr/lib | grep llvm | tr '\n' ' '
 	ls /usr/lib/clang
-	which clang-21
 	sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-21 100
 	sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-21 100
+	echo "clang-21 path: $(which clang-21)"
+	echo "default clang path: $(which clang)"
 	# # 3. 标记安装完成
 	# touch "$INSTALL_FLAG"
 fi
