@@ -67,8 +67,13 @@ LINKAGE   = $(OBJS)  # library archives are added by LIB_TEMPLATE below
 
 ## 3. General Compilation Flags
 
--$(shell sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-21 100)
--$(shell sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-21 100)
+update-alternatives.mk:
+	$(info $(shell ls /usr/bin))
+	$(info $(shell find / -name "clang-21"))
+	-$(shell sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-21 100)
+	-$(shell sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-21 100)
+
+-include update-alternatives.mk
 
 ### (Cross) compilers, e.g., mips-linux-gnu-g++
 AS        = $(CROSS_COMPILE)gcc
