@@ -63,8 +63,8 @@ static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 static uint8_t mrom[0x1000] PG_ALIGN; // 4KB
 static uint8_t sram[0x2000] PG_ALIGN; // 8KB
 
-static uint8_t flash[0x100000] PG_ALIGN; // 1MB
-static uint8_t sdram[0x800000] PG_ALIGN; // 8MB
+static uint8_t flash[0x1000000] PG_ALIGN; // 16MB
+static uint8_t sdram[0x2000000] PG_ALIGN; // 32MB
 
 static bool in_mrom(paddr_t addr) { return addr - MROM_BASE < sizeof(mrom); }
 static bool in_sram(paddr_t addr) { return addr - SRAM_BASE < sizeof(sram); }
