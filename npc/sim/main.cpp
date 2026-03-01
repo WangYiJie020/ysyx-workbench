@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
     dumpPerfCountersStatistics(std::cout);
     dumpPerfReportOnDir(perfOutDir);
   } else {
-    spdlog::error("sim ended with bad trap");
+    spdlog::error("sim ended with bad status");
   }
 
   get_dut()->final();
