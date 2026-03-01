@@ -46,10 +46,9 @@ int main(int argc, char **argv) {
   std::string perfOutRootDir = isMakePerf() ? "history_perf" : "build/perf";
   std::string perfOutDir = getOutputDir(perfOutRootDir);
 
-	spdlog::info("perf report output dir: {}", perfOutDir);
+  spdlog::info("perf report output dir: {}", perfOutDir);
 
   spdlog::info("Sim init pc set to 0x{:08x}", sim_get_config()->init_pc);
-
 
   auto &setting = sim_get_config()->setting;
   load_sim_setting_from_env(setting);
@@ -69,10 +68,13 @@ int main(int argc, char **argv) {
     sdb_mainloop();
   }
 
-  spdlog::info("sim ended");
-
-  dumpPerfCountersStatistics(std::cout);
-  dumpPerfReportOnDir(perfOutDir);
+  if (sim_hit_good_trap()) {
+    spdlog::info("sim ended good, dumping statistics...");
+    dumpPerfCountersStatistics(std::cout);
+    dumpPerfReportOnDir(perfOutDir);
+  } else {
+    spdlog::error("sim ended with bad status");
+  }
 
   get_dut()->final();
   if (!setting.gdb_mode) {
