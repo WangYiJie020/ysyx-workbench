@@ -24,7 +24,7 @@ compile_commands.json
 !.gitignore
 !init.sh
 /fceux-am
-/am-kernels
 /nvboard
 /rt-thread-am
 /ysyxSoC
+/am-kernels

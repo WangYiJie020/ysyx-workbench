@@ -14,6 +14,7 @@ extern "C" {
 typedef struct {
     unsigned v;
 } __attribute__((packed)) unaligned_u32;
+#define DerefUnalignedU32(p) (((volatile unaligned_u32 *)(p))->v)
 
 // string.h
 

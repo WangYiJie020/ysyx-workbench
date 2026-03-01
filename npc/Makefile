@@ -1,3 +1,5 @@
+IS_CI_ENV := $(shell test -d /home/runner/work/ysyx-submit-test/ysyx-submit-test/ && echo y)
+
 BUILD_DIR = ./build
 # case sensitive
 CPU_DESIGN_NAME = ysyx_25100261
