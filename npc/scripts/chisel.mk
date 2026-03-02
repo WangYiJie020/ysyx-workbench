@@ -59,6 +59,9 @@ CHISEL_EMITED_VSRCS_SYNTH = $(call rd_synth_filelist_indir, $(CHISEL2V_EMIT_DIR)
 CHISEL_EMITED_VSRCS_LAYER = $(shell find $(abspath $(CHISEL2V_EMIT_DIR)) -name "layers-*")
 
 $(CHISEL2V_DONE): $(CHISEL_SRCS)
+	@+flock $(CHISEL2V_DONE).lock $(MAKE) .actual_chisel_emit
+
+.actual_chisel_emit: $(CHISEL_SRCS)
 	$(call git_commit, "generate verilog")
 	@echo "# Removing old emitted verilog"
 	@rm -rf $(CHISEL2V_EMIT_DIR)/*
@@ -96,4 +99,3 @@ $(CHISEL2V_DONE): $(CHISEL_SRCS)
 # 	@$(foreach src,$(MY_SIM_VSRCS), sed -i 's/layer\$$\(\w\+\)/$(CPU_DESIGN_NAME)_\1/g' $(src);)
 # 	@touch $@
 
-chisel-emit: $(CHISEL2V_DONE) #$(VPI_DONE) $(RENAME_LAYER_MACRO)
