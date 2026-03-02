@@ -212,17 +212,17 @@ void sim_step_inst() {
       spdlog::warn("simulation has stepped {} cycles without pc change, maybe "
                    "lock happened",
                    cnt);
-      printf("wanting to continue? (y/[n]) ");
-      char c = getchar();
-      if (c == 'y' || c == 'Y') {
-        cnt = 0;
-        while (getchar() != '\n') {
-        }
-        continue;
-      } else {
+      // printf("wanting to continue? (y/[n]) ");
+      // char c = getchar();
+      // if (c == 'y' || c == 'Y') {
+      //   cnt = 0;
+      //   while (getchar() != '\n') {
+      //   }
+      //   continue;
+      // } else {
         spdlog::info("sim exit due to possible deadloop");
         exit(1);
-      }
+      // }
     }
   }
   pc_changed = false;
