@@ -1,7 +1,7 @@
-From 7b358a3e8266b8b530d146c0b8e42810cf3f9155 Mon Sep 17 00:00:00 2001
+From 6f24032aed0a052c903c637eabd76a73b22e5ad9 Mon Sep 17 00:00:00 2001
 From: Wang Yi Jie <miwyj@mail.scut.edu.cn>
 Date: Fri, 27 Feb 2026 16:49:16 +0800
-Subject: [PATCH 3/4] restore remove .git from workbench
+Subject: [PATCH 3/6] restore remove .git from workbench
 
 ---
  bsp/abstract-machine/extra.soc.ld  | 53 ++++++++++++++++++++++++++++++
@@ -11,7 +11,7 @@ Subject: [PATCH 3/4] restore remove .git from workbench
 
 diff --git a/bsp/abstract-machine/extra.soc.ld b/bsp/abstract-machine/extra.soc.ld
 new file mode 100644
-index 000000000..d24982f01
+index 0000000..d24982f
 --- /dev/null
 +++ b/bsp/abstract-machine/extra.soc.ld
 @@ -0,0 +1,53 @@
@@ -69,7 +69,7 @@ index 000000000..d24982f01
 +}
 +INSERT BEFORE .bss;
 diff --git a/bsp/abstract-machine/src/context.c b/bsp/abstract-machine/src/context.c
-index 3c8dfa92a..43dd0c0ef 100644
+index 3c8dfa9..43dd0c0 100644
 --- a/bsp/abstract-machine/src/context.c
 +++ b/bsp/abstract-machine/src/context.c
 @@ -19,6 +19,7 @@ static Context* ev_handler(Event e, Context *c) {

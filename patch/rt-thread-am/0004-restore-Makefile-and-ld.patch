@@ -1,7 +1,7 @@
-From 4c05f37364799f9eb977a9f5a729497fcc238599 Mon Sep 17 00:00:00 2001
+From fdcac83a9d84f022aefecaa637e767c712d20ed3 Mon Sep 17 00:00:00 2001
 From: Wang Yi Jie <miwyj@mail.scut.edu.cn>
 Date: Fri, 27 Feb 2026 16:59:12 +0800
-Subject: [PATCH 4/4] restore Makefile and ld
+Subject: [PATCH 4/6] restore Makefile and ld
 
 ---
  bsp/abstract-machine/Makefile | 9 ++++++++-
@@ -9,7 +9,7 @@ Subject: [PATCH 4/4] restore Makefile and ld
  2 files changed, 16 insertions(+), 1 deletion(-)
 
 diff --git a/bsp/abstract-machine/Makefile b/bsp/abstract-machine/Makefile
-index 8d70f310b..551165809 100644
+index 8d70f31..5511658 100644
 --- a/bsp/abstract-machine/Makefile
 +++ b/bsp/abstract-machine/Makefile
 @@ -8,7 +8,14 @@ NAME = rtthread
@@ -29,7 +29,7 @@ index 8d70f310b..551165809 100644
  -include $(AM_APPS_MK)
  include $(AM_HOME)/Makefile
 diff --git a/bsp/abstract-machine/extra.ld b/bsp/abstract-machine/extra.ld
-index 5cdc65670..6fb413f03 100644
+index 5cdc656..6fb413f 100644
 --- a/bsp/abstract-machine/extra.ld
 +++ b/bsp/abstract-machine/extra.ld
 @@ -1,5 +1,7 @@
