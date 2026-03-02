@@ -61,8 +61,6 @@ CHISEL_EMITED_VSRCS_LAYER = $(shell find $(abspath $(CHISEL2V_EMIT_DIR)) -name "
 $(CHISEL2V_DONE): $(CHISEL_SRCS)
 	$(call git_commit, "generate verilog")
 	@flock $@.lock -c '\
-		echo "# Removing old emitted verilog" &&\
-		rm -rf $(CHISEL2V_EMIT_DIR)/* &&\
 		echo "# Emitting verilog with Mill" &&\
 		$(MILL) -i $(CHISEL_DESIGN).runMain Elaborate --target-dir $(CHISEL2V_EMIT_DIR) &&\
 		touch $(CHISEL2V_DONE) \
