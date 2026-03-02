@@ -83,10 +83,10 @@ include $(YSYX_HOME)/init-deps/fix-am.mk
 
 ### (Cross) compilers, e.g., mips-linux-gnu-g++
 AS        = $(CROSS_COMPILE)gcc
-# CC        = $(CROSS_COMPILE)gcc
-CC        = clang --target=riscv64-linux-gnu
-CXX       = clang++ --target=riscv64-linux-gnu
-# CXX       = $(CROSS_COMPILE)g++
+CC        = $(CROSS_COMPILE)gcc
+# CC        = clang --target=riscv64-linux-gnu
+# CXX       = clang++ --target=riscv64-linux-gnu
+CXX       = $(CROSS_COMPILE)g++
 LD        = $(CROSS_COMPILE)ld
 # LD        = mold
 AR        = $(CROSS_COMPILE)ar
