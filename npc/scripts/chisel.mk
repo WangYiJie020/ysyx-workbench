@@ -61,11 +61,11 @@ CHISEL_EMITED_VSRCS_LAYER = $(shell find $(abspath $(CHISEL2V_EMIT_DIR)) -name "
 $(CHISEL2V_DONE): $(CHISEL_SRCS)
 	$(call git_commit, "generate verilog")
 	$(info # Emitting verilog with Mill)
-	@flock $@.lock -c '\
-		rm -rf $(CHISEL2V_EMIT_DIR)/* && \
-		$(MILL) -i $(CHISEL_DESIGN).runMain Elaborate --target-dir $(CHISEL2V_EMIT_DIR) && \
-		touch $(CHISEL2V_DONE); \
-		'
+	# @flock $@.lock -c '
+	rm -rf $(CHISEL2V_EMIT_DIR)/* && \
+	$(MILL) -i $(CHISEL_DESIGN).runMain Elaborate --target-dir $(CHISEL2V_EMIT_DIR) && \
+	touch $(CHISEL2V_DONE); \
+	# '
 
 #
 # use file xxx.done as a dependency to avoid repeated insertion
