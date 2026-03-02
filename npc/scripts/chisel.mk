@@ -62,11 +62,10 @@ $(CHISEL2V_DONE): $(CHISEL_SRCS)
 	$(call git_commit, "generate verilog")
 	$(info # Emitting verilog with Mill)
 	@flock $@.lock -c '\
-		if [ ! -f $(CHISEL2V_DONE) ]; then \
-			rm -rf $(CHISEL2V_EMIT_DIR)/* && \
-			$(MILL) -i $(CHISEL_DESIGN).runMain Elaborate --target-dir $(CHISEL2V_EMIT_DIR) && \
-			touch $(CHISEL2V_DONE); \
-		fi'
+		rm -rf $(CHISEL2V_EMIT_DIR)/* && \
+		$(MILL) -i $(CHISEL_DESIGN).runMain Elaborate --target-dir $(CHISEL2V_EMIT_DIR) && \
+		touch $(CHISEL2V_DONE); \
+		'
 
 #
 # use file xxx.done as a dependency to avoid repeated insertion
