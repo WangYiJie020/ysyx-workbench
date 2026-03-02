@@ -60,6 +60,7 @@ CHISEL_EMITED_VSRCS_LAYER = $(shell find $(abspath $(CHISEL2V_EMIT_DIR)) -name "
 
 $(CHISEL2V_DONE): $(CHISEL_SRCS)
 	$(call git_commit, "generate verilog")
+	$(info # Emitting verilog with Mill)
 	@flock $@.lock -c '\
 		if [ ! -f $(CHISEL2V_DONE) ]; then \
 			rm -rf $(CHISEL2V_EMIT_DIR)/* && \
