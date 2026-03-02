@@ -59,15 +59,16 @@ CHISEL_EMITED_VSRCS_SYNTH = $(call rd_synth_filelist_indir, $(CHISEL2V_EMIT_DIR)
 CHISEL_EMITED_VSRCS_LAYER = $(shell find $(abspath $(CHISEL2V_EMIT_DIR)) -name "layers-*")
 
 $(CHISEL2V_DONE): $(CHISEL_SRCS)
-	@+flock $(CHISEL2V_DONE).lock $(MAKE) .actual_chisel_emit
-
-.actual_chisel_emit:
+ifndef IN_LOCK
+	@+flock $(CHISEL2V_DONE).lock $(MAKE) $(CHISEL2V_DONE) IN_LOCK=1
+else
 	$(call git_commit, "generate verilog")
 	@echo "# Removing old emitted verilog"
 	@rm -rf $(CHISEL2V_EMIT_DIR)/*
 	@echo "# Emitting verilog with Mill"
 	$(MILL) -i $(CHISEL_DESIGN).runMain Elaborate --target-dir $(CHISEL2V_EMIT_DIR)
 	@touch $(CHISEL2V_DONE)
+endif
 
 #
 # use file xxx.done as a dependency to avoid repeated insertion
