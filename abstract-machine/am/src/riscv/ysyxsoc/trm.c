@@ -159,8 +159,8 @@ typedef int (*entry_func_t)(const char *args);
 FSBL_TEXT static inline const char *_rodata_loadpos(const char *ptr) {
   return ptr - (uintptr_t)_rodata_start + (uintptr_t)__rodata_load_start__;
 }
-#define boot_putstr(s) putstr(_rodata_loadpos(s))
-#define boot_log(s) boot_putstr("[BOOT] " s)
+#define ssbl_putstr(s) putstr(_rodata_loadpos(s))
+#define boot_log(s) ssbl_putstr("[BOOT] " s)
 
 #define _TOSTR(x) #x
 #define BOOT_ASSERT(cond)                                                      \
@@ -249,10 +249,34 @@ FSBL_TEXT void _trm_init() {
   _second_boot();
 }
 
+
+SSBL_TEXT void _ssbl_puthex(uint32_t x){
+	char buf[8];
+	int idx=0;
+	if(x==0)buf[idx++]='0';
+	while(x){
+		uint8_t t=x&0xf;
+		if(t<10)buf[idx++]=(t+'0');
+		else buf[idx++]=(t-10+'A');
+		x>>=4;
+	}
+	idx--;
+	for(;idx>=0;idx--)ssbl_putch(buf[idx]);
+}
+
 SSBL_TEXT void _second_boot() {
+	ssbl_putstr("rodata load start = ");
+	_ssbl_puthex((uintptr_t)__rodata_load_start__);
+	ssbl_putstr("\nrodata start = ");
+	_ssbl_puthex((uintptr_t)_rodata_start);
+	ssbl_putstr("\nrodata size = ");
+	_ssbl_puthex((uintptr_t)__rodata_size__);
+	putch('\n');
+
+  _ssbl_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
+	// after copy .rodata, we can directly use strings ptr in .rodata
 #undef putch
 #define putch ssbl_putch
-  _ssbl_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
   boot_log(".rodata copied.\n");
 
 // after rodata copy, we can use putstr directly
@@ -276,7 +300,7 @@ SSBL_TEXT void _second_boot() {
   // boot_log("call foo\n");
   // foo();
   // boot_log("foo returned\n");
-
+	
   LOG_STEP("copy .text", _ssbl_memcpy(_text_start, __text_load_start__,
                                       (size_t)__text_size__));
   LOG_STEP("copy .data", _ssbl_memcpy(_data_start, __data_load_start__,
