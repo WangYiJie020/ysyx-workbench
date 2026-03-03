@@ -211,11 +211,12 @@ $(DEFAULT_NETLIST): sta
 # or passed from outside
 NETLIST ?= $(DEFAULT_NETLIST)
 
-# normally, the STA flow will also generate a sim version of the netlist
-# which collect signals xxx_0_ ... xxx_n_ to [n-1:0] xxx for convenient
-# testbench writing. 
-# If the sim version netlist is not generated, will fail since not support.
-NETLIST_FOR_SIM = $(NETLIST).sim
+# # normally, the STA flow will also generate a sim version of the netlist
+# # which collect signals xxx_0_ ... xxx_n_ to [n-1:0] xxx for convenient
+# # testbench writing. 
+# # If the sim version netlist is not generated, will fail since not support.
+# NETLIST_FOR_SIM = $(NETLIST).sim
+NETLIST_FOR_SIM = $(NETLIST)
 
 # in CI passed from outside
 CELLS ?= $(YOSYS_STA_PATH)/pdk/nangate45/sim/cells.v
