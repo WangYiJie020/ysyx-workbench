@@ -159,8 +159,8 @@ typedef int (*entry_func_t)(const char *args);
 FSBL_TEXT static inline const char *_rodata_loadpos(const char *ptr) {
   return ptr - (uintptr_t)_rodata_start + (uintptr_t)__rodata_load_start__;
 }
-#define boot_putstr(s) putstr(_rodata_loadpos(s))
-#define boot_log(s) boot_putstr("[BOOT] " s)
+#define ssbl_putstr(s) putstr(_rodata_loadpos(s))
+#define boot_log(s) ssbl_putstr("[BOOT] " s)
 
 #define _TOSTR(x) #x
 #define BOOT_ASSERT(cond)                                                      \
@@ -265,11 +265,11 @@ SSBL_TEXT void _ssbl_puthex(uint32_t x){
 }
 
 SSBL_TEXT void _second_boot() {
-	putstr("rodata load start = ");
+	ssbl_putstr("rodata load start = ");
 	_ssbl_puthex((uintptr_t)__rodata_load_start__);
-	putstr("\nrodata start = ");
+	ssbl_putstr("\nrodata start = ");
 	_ssbl_puthex((uintptr_t)_rodata_start);
-	putstr("\nrodata size = ");
+	ssbl_putstr("\nrodata size = ");
 	_ssbl_puthex((uintptr_t)__rodata_size__);
 	putch('\n');
 
