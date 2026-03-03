@@ -92,6 +92,10 @@ VERILATOR_FLAGS += --hierarchical
 
 COMMON_VERILOG_DEFINES = ysyx_25100261_InlinePrintfLayer
 COMMON_VERILOG_DEFINES += $(CPU_DESIGN_NAME)_ResetPCProvider_RESET_PC=32\'h$(RESET_PC)
+ifdef GITHUB_ACTIONS
+COMMON_VERILOG_DEFINES += IS_CI_ENV
+endif
+
 # need reserved since both verilator and iverilog will use it
 COMMON_VERILOG_DEFINES_FLAGS = $(addprefix -D,$(COMMON_VERILOG_DEFINES))
 
@@ -211,11 +215,12 @@ $(DEFAULT_NETLIST): sta
 # or passed from outside
 NETLIST ?= $(DEFAULT_NETLIST)
 
-# normally, the STA flow will also generate a sim version of the netlist
-# which collect signals xxx_0_ ... xxx_n_ to [n-1:0] xxx for convenient
-# testbench writing. 
-# If the sim version netlist is not generated, will fail since not support.
-NETLIST_FOR_SIM = $(NETLIST).sim
+# # normally, the STA flow will also generate a sim version of the netlist
+# # which collect signals xxx_0_ ... xxx_n_ to [n-1:0] xxx for convenient
+# # testbench writing. 
+# # If the sim version netlist is not generated, will fail since not support.
+# NETLIST_FOR_SIM = $(NETLIST).sim
+NETLIST_FOR_SIM = $(NETLIST)
 
 # in CI passed from outside
 CELLS ?= $(YOSYS_STA_PATH)/pdk/nangate45/sim/cells.v
