@@ -25,6 +25,7 @@ class UARTToStdOut extends BlackBox with HasBlackBoxInline {
      |  always @(posedge clock) begin
      |    if (enable) begin
      |      $$write("%c", chData);
+     |      $$fflush();
      |    end
      |  end
      |endmodule
