@@ -50,6 +50,7 @@ int main(int argc, char **argv) {
       sim_get_config()->setting.nvboard = true;
     }
       nvboard_bind_pin(nullptr, 1, UART_TX);
+      nvboard_bind_pin(nullptr, 1, UART_RX);
   } else {
     spdlog::info("Simulating CPU core design");
     sim_get_config()->init_pc = 0x80000000;
