@@ -1,5 +1,4 @@
 #include "sim.hpp"
-#include "VNPCTestSoC__Dpi.h"
 #include "sdbWrap.hpp"
 
 #include <algorithm>

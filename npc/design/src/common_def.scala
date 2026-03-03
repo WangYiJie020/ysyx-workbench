@@ -13,7 +13,7 @@ object InlinePrintfLayer extends Layer(LayerConfig.Inline)
 object InlinePrintf {
   def apply(pable: Printable) = {
     layer.block(InlinePrintfLayer) {
-      printf(pable)
+      SimLog.file("/dev/stdout").printf(pable)
     }
   }
 }
