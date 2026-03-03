@@ -47,7 +47,7 @@ struct sim_setting {
   bool etrace = true;
   bool difftest = true;
 
-  bool nvboard = false;
+  bool nvboard = true;
 
   bool zero_uninit_ram = false;
 
