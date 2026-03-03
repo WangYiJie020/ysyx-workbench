@@ -20,3 +20,4 @@ inline auto newFileLoggerSink(const std::string &name) {
 }
 
 inline bool isMakePerf() { return getenv("MAKE_PERF") != nullptr; }
+bool isCIEnv();

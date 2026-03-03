@@ -17,12 +17,11 @@
 
 #include "common.hpp"
 
-int gdb_mainloop();
+#if 1
+#include <nvboard.h>
+#endif
 
-bool isCIEnv() {
-	const char* ci_env = std::getenv("GITHUB_ACTIONS");
-	return ci_env != nullptr && std::string_view(ci_env) == "true";
-}
+int gdb_mainloop();
 
 int main(int argc, char **argv) {
   auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
@@ -41,10 +40,10 @@ int main(int argc, char **argv) {
   if (is_soc()) {
     spdlog::info("Simulating SoC design");
     sim_get_config()->init_pc = 0x30000000;
-		if(isCIEnv()) {
-			spdlog::info("CI environment detected, enabling nvboard");
-			sim_get_config()->setting.nvboard = true;
-		}
+    if (isCIEnv()) {
+      spdlog::info("CI environment detected, enabling nvboard");
+      sim_get_config()->setting.nvboard = true;
+    }
   } else {
     spdlog::info("Simulating CPU core design");
     sim_get_config()->init_pc = 0x80000000;
