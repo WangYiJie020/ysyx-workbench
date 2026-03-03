@@ -63,14 +63,6 @@ class NPCTestSoC extends Module {
 class ysyx_25100261 extends Module {
   val io = IO(new TopIO)
   dontTouch(io)
-  // val isSoC = sys.env.getOrElse("ARCH", "") == "riscv32e-ysyxsoc"
-  //
-  // if (isSoC) {
-  //   println("ARCH is SoC npc : INIT_PC = 0x30000000\n")
-  // } else {
-  //   println("ARCH is normal npc : INIT_PC = 0x80000000\n")
-  // }
-  // val resetPC = if (isSoC) "h30000000".U else "h80000000".U
   println(s"Add module prefix ${getClass.getSimpleName}")
   withModulePrefix(getClass.getSimpleName) {
     val core = Module(new CPUCore)
@@ -86,7 +78,7 @@ class ysyx_25100261_ResetPCProvider extends BlackBox with HasBlackBoxInline {
   setInline(s"${name}.v",
     s"""
        |`ifndef ${pcMacro}
-       |  `define ${pcMacro} 32'h30000000
+       |  `define ${pcMacro} 32'h80000000
        |`endif
        |module ${name}(
        |  output [31:0] resetPC

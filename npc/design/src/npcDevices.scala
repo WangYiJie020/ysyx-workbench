@@ -15,13 +15,15 @@ class NPCDevices extends Module {
   io := DontCare
 
   val uart = Module(new UARTUnit)
-  val mem  = Module(new AXI4MemUnit)
+  val mem  = Module(new AXI4MemUnit(Some("build/npcmem_init.hex")))
+  // val startupRom = Module(new AXI4MemUnit(Some("build/startuprom_init.hex")))
 
   val xbar =  Module(
     new AXI4LiteXBar(
       Seq(
         AddrSpace.NPCMEM -> mem.io,
-        AddrSpace.SERIAL -> uart.io
+        AddrSpace.SERIAL -> uart.io,
+        // ("h30000000".U, "h40000000".U) -> startupRom.io
       )
     )
   )

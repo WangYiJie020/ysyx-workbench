@@ -24,11 +24,45 @@ wire [31:0] exu_code;
 wire [31:0] gpr_a0;
 
 `ifdef SIM_NETLIST
-`ifdef IS_CI_ENV
-assign exu_out_valid = dut.cpu.\core/_exu_io_out_valid ;
-assign exu_code = dut.cpu.\core/exu/_stageCalc_io_out_bits_dinst_code ;
-assign gpr_a0 = dut.cpu.\core/gprs/reg_10 ;
+	`ifdef IS_CI_ENV
+		assign exu_out_valid = dut.cpu.\core/_exu_io_out_valid ;
+		assign exu_code = dut.cpu.\core/exu/_stageCalc_io_out_bits_dinst_code ;
+		assign gpr_a0 = dut.cpu.\core/gprs/reg_10 ;
+	`else
+		assign exu_out_valid = dut.cpu.\core._exu_io_out_valid ;
+		assign exu_code = dut.cpu.\core.exu._stageCalc_io_out_bits_dinst_code ;
+		assign gpr_a0 = dut.cpu.\core.gprs.reg_10 ;
+	`endif
 `else
+	assign exu_out_valid = dut.cpu.core.exu.io_out_valid;
+	assign exu_code = dut.cpu.core.exu.io_in_bits_code;
+	assign gpr_a0 = dut.cpu.core.gprs.reg_10;
+`endif
+
+always @(posedge clk) begin
+	if (exu_out_valid && exu_code == 32'h00100073) begin // EBREAK
+		$display("EBREAK instruction executed. Ending simulation.");
+		if(gpr_a0 != 0) begin
+			$display("HIT BAD TRAP a0 = %d", gpr_a0);
+			$fatal;
+		end else begin
+			$display("HIT GOOD TRAP");
+		end
+		$finish;
+	end
+end
+
+initial begin
+  //   $dumpfile("wave.fst");
+  //   $dumpvars(0, testbench);
+		// #1000;
+		// $finish;
+end
+
+endmodule
+
+
+/*
 assign exu_out_valid = dut.cpu.core._exu_io_out_valid;
 assign exu_code = {
 	dut.cpu.core.\exu._stageCalc_io_out_bits_dinst_code_31_ ,
@@ -99,29 +133,4 @@ assign gpr_a0 = {
 	dut.cpu.core.\gprs.reg_10_1_ ,
 	dut.cpu.core.\gprs.reg_10_0_
 };
-`endif
-`else
-assign exu_out_valid = dut.cpu.core.exu.io_out_valid;
-assign exu_code = dut.cpu.core.exu.io_in_bits_code;
-assign gpr_a0 = dut.cpu.core.gprs.reg_10;
-`endif
-
-always @(posedge clk) begin
-	if (exu_out_valid && exu_code == 32'h00100073) begin // EBREAK
-		$display("EBREAK instruction executed. Ending simulation.");
-		if(gpr_a0 != 0) begin
-			$display("HIT BAD TRAP a0 = %d", gpr_a0);
-			$fatal;
-		end else begin
-			$display("HIT GOOD TRAP");
-		end
-		$finish;
-	end
-end
-
-initial begin
-    // $dumpfile("wave.fst");
-    // $dumpvars(0, testbench);
-end
-
-endmodule
+*/
