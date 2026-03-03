@@ -304,6 +304,9 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   if (setting.nvboard) {
     spdlog::info("initializing nvboard");
     nvboard_bind_all_pins(&dut);
+
+      nvboard_bind_pin(nullptr, 1, UART_TX);
+      // nvboard_bind_pin(nullptr, 1, UART_RX);
     nvboard_init();
   }
 #endif

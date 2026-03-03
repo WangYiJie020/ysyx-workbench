@@ -11,3 +11,9 @@ std::string getOutputDir(std::string_view prefix) {
   system(("mkdir -p " + logDir).c_str());
   return logDir;
 }
+
+
+bool isCIEnv() {
+  const char *ci_env = std::getenv("GITHUB_ACTIONS");
+  return ci_env != nullptr && std::string_view(ci_env) == "true";
+}

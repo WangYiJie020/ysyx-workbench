@@ -23,11 +23,6 @@
 
 int gdb_mainloop();
 
-bool isCIEnv() {
-  const char *ci_env = std::getenv("GITHUB_ACTIONS");
-  return ci_env != nullptr && std::string_view(ci_env) == "true";
-}
-
 int main(int argc, char **argv) {
   auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
   console_sink->set_level(spdlog::level::info);
@@ -49,8 +44,6 @@ int main(int argc, char **argv) {
       spdlog::info("CI environment detected, enabling nvboard");
       sim_get_config()->setting.nvboard = true;
     }
-      nvboard_bind_pin(nullptr, 1, UART_TX);
-      nvboard_bind_pin(nullptr, 1, UART_RX);
   } else {
     spdlog::info("Simulating CPU core design");
     sim_get_config()->init_pc = 0x80000000;
