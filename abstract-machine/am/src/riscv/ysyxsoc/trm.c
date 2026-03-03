@@ -249,9 +249,33 @@ FSBL_TEXT void _trm_init() {
   _second_boot();
 }
 
+
+SSBL_TEXT void _ssbl_puthex(uint32_t x){
+	char buf[8];
+	int idx=0;
+	if(x==0)buf[idx++]='0';
+	while(x){
+		uint8_t t=x&0xf;
+		if(t<10)buf[idx++]=(t+'0');
+		else buf[idx++]=(t-10+'A');
+		x>>=4;
+	}
+	idx--;
+	for(;idx>=0;idx--)ssbl_putch(buf[idx]);
+}
+
 SSBL_TEXT void _second_boot() {
 #undef putch
 #define putch ssbl_putch
+
+	putstr("rodata load start = ");
+	_ssbl_puthex((uintptr_t)__rodata_load_start__);
+	putstr("\nrodata start = ");
+	_ssbl_puthex((uintptr_t)_rodata_start);
+	putstr("\nrodata size = ");
+	_ssbl_puthex((uintptr_t)__rodata_size__);
+	putch('\n');
+
   _ssbl_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
   boot_log(".rodata copied.\n");
 
@@ -277,12 +301,6 @@ SSBL_TEXT void _second_boot() {
   // foo();
   // boot_log("foo returned\n");
 	
-	putstr("text load start = ");
-	putnum_base16((uintptr_t)__text_load_start__);
-	putstr(" text size = ");
-	putnum_base16((size_t)__text_size__);
-	putch('\n');
-
   LOG_STEP("copy .text", _ssbl_memcpy(_text_start, __text_load_start__,
                                       (size_t)__text_size__));
   LOG_STEP("copy .data", _ssbl_memcpy(_data_start, __data_load_start__,
