@@ -24,11 +24,45 @@ wire [31:0] exu_code;
 wire [31:0] gpr_a0;
 
 `ifdef SIM_NETLIST
-`ifdef IS_CI_ENV
-assign exu_out_valid = dut.cpu.\core/_exu_io_out_valid ;
-assign exu_code = dut.cpu.\core/exu/_stageCalc_io_out_bits_dinst_code ;
-
+	`ifdef IS_CI_ENV
+		assign exu_out_valid = dut.cpu.\core/_exu_io_out_valid ;
+		assign exu_code = dut.cpu.\core/exu/_stageCalc_io_out_bits_dinst_code ;
+		assign gpr_a0 = dut.cpu.\core/gprs/reg_10 ;
+	`else
+		assign exu_out_valid = dut.cpu.\core._exu_io_out_valid ;
+		assign exu_code = dut.cpu.\core.exu._stageCalc_io_out_bits_dinst_code ;
+		assign gpr_a0 = dut.cpu.\core.gprs.reg_10 ;
+	`endif
 `else
+	assign exu_out_valid = dut.cpu.core.exu.io_out_valid;
+	assign exu_code = dut.cpu.core.exu.io_in_bits_code;
+	assign gpr_a0 = dut.cpu.core.gprs.reg_10;
+`endif
+
+always @(posedge clk) begin
+	if (exu_out_valid && exu_code == 32'h00100073) begin // EBREAK
+		$display("EBREAK instruction executed. Ending simulation.");
+		if(gpr_a0 != 0) begin
+			$display("HIT BAD TRAP a0 = %d", gpr_a0);
+			$fatal;
+		end else begin
+			$display("HIT GOOD TRAP");
+		end
+		$finish;
+	end
+end
+
+initial begin
+    $dumpfile("wave.fst");
+    $dumpvars(0, testbench);
+		#1000;
+		$finish;
+end
+
+endmodule
+
+
+/*
 assign exu_out_valid = dut.cpu.core._exu_io_out_valid;
 assign exu_code = {
 	dut.cpu.core.\exu._stageCalc_io_out_bits_dinst_code_31_ ,
@@ -66,62 +100,37 @@ assign exu_code = {
 	dut.cpu.core.\exu._stageCalc_io_out_bits_dinst_code_0_
 };
 assign gpr_a0 = {
-	dut.cpu.core.\gprs.a0_31_ ,
-	dut.cpu.core.\gprs.a0_30_ ,
-	dut.cpu.core.\gprs.a0_29_ ,
-	dut.cpu.core.\gprs.a0_28_ ,
-	dut.cpu.core.\gprs.a0_27_ ,
-	dut.cpu.core.\gprs.a0_26_ ,
-	dut.cpu.core.\gprs.a0_25_ ,
-	dut.cpu.core.\gprs.a0_24_ ,
-	dut.cpu.core.\gprs.a0_23_ ,
-	dut.cpu.core.\gprs.a0_22_ ,
-	dut.cpu.core.\gprs.a0_21_ ,
-	dut.cpu.core.\gprs.a0_20_ ,
-	dut.cpu.core.\gprs.a0_19_ ,
-	dut.cpu.core.\gprs.a0_18_ ,
-	dut.cpu.core.\gprs.a0_17_ ,
-	dut.cpu.core.\gprs.a0_16_ ,
-	dut.cpu.core.\gprs.a0_15_ ,
-	dut.cpu.core.\gprs.a0_14_ ,
-	dut.cpu.core.\gprs.a0_13_ ,
-	dut.cpu.core.\gprs.a0_12_ ,
-	dut.cpu.core.\gprs.a0_11_ ,
-	dut.cpu.core.\gprs.a0_10_ ,
-	dut.cpu.core.\gprs.a0_9_ ,
-	dut.cpu.core.\gprs.a0_8_ ,
-	dut.cpu.core.\gprs.a0_7_ ,
-	dut.cpu.core.\gprs.a0_6_ ,
-	dut.cpu.core.\gprs.a0_5_ ,
-	dut.cpu.core.\gprs.a0_4_ ,
-	dut.cpu.core.\gprs.a0_3_ ,
-	dut.cpu.core.\gprs.a0_2_ ,
-	dut.cpu.core.\gprs.a0_1_ ,
-	dut.cpu.core.\gprs.a0_0_
+	dut.cpu.core.\gprs.reg_10_31_ ,
+	dut.cpu.core.\gprs.reg_10_30_ ,
+	dut.cpu.core.\gprs.reg_10_29_ ,
+	dut.cpu.core.\gprs.reg_10_28_ ,
+	dut.cpu.core.\gprs.reg_10_27_ ,
+	dut.cpu.core.\gprs.reg_10_26_ ,
+	dut.cpu.core.\gprs.reg_10_25_ ,
+	dut.cpu.core.\gprs.reg_10_24_ ,
+	dut.cpu.core.\gprs.reg_10_23_ ,
+	dut.cpu.core.\gprs.reg_10_22_ ,
+	dut.cpu.core.\gprs.reg_10_21_ ,
+	dut.cpu.core.\gprs.reg_10_20_ ,
+	dut.cpu.core.\gprs.reg_10_19_ ,
+	dut.cpu.core.\gprs.reg_10_18_ ,
+	dut.cpu.core.\gprs.reg_10_17_ ,
+	dut.cpu.core.\gprs.reg_10_16_ ,
+	dut.cpu.core.\gprs.reg_10_15_ ,
+	dut.cpu.core.\gprs.reg_10_14_ ,
+	dut.cpu.core.\gprs.reg_10_13_ ,
+	dut.cpu.core.\gprs.reg_10_12_ ,
+	dut.cpu.core.\gprs.reg_10_11_ ,
+	dut.cpu.core.\gprs.reg_10_10_ ,
+	dut.cpu.core.\gprs.reg_10_9_ ,
+	dut.cpu.core.\gprs.reg_10_8_ ,
+	dut.cpu.core.\gprs.reg_10_7_ ,
+	dut.cpu.core.\gprs.reg_10_6_ ,
+	dut.cpu.core.\gprs.reg_10_5_ ,
+	dut.cpu.core.\gprs.reg_10_4_ ,
+	dut.cpu.core.\gprs.reg_10_3_ ,
+	dut.cpu.core.\gprs.reg_10_2_ ,
+	dut.cpu.core.\gprs.reg_10_1_ ,
+	dut.cpu.core.\gprs.reg_10_0_
 };
-`endif
-`else
-assign exu_out_valid = dut.cpu.core.exu.io_out_valid;
-assign exu_code = dut.cpu.core.exu.io_in_bits_code;
-assign gpr_a0 = dut.cpu.core.gprs.a0;
-`endif
-
-always @(posedge clk) begin
-	if (exu_out_valid && exu_code == 32'h00100073) begin // EBREAK
-		$display("EBREAK instruction executed. Ending simulation.");
-		if(gpr_a0 != 0) begin
-			$display("HIT BAD TRAP a0 = %d", gpr_a0);
-			$fatal;
-		end else begin
-			$display("HIT GOOD TRAP");
-		end
-		$finish;
-	end
-end
-
-initial begin
-    // $dumpfile("wave.fst");
-    // $dumpvars(0, testbench);
-end
-
-endmodule
+*/

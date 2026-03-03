@@ -52,7 +52,7 @@ class MaskedRdWrMem(sizeInByte: Int, filePath: Option[String] = None) extends Mo
   }.otherwise { io.dataOut := rdPort }
 }
 
-class AXI4MemUnit extends Module {
+class AXI4MemUnit(val InitHexFilePath: Option[String]) extends Module {
   val io = IO(AXI4IO.Slave)
 
   val sio = io
@@ -125,7 +125,7 @@ class AXI4MemUnit extends Module {
   val enRdDataCall = WireDefault((rState === RState.waitMem) || (rState === RState.idle && sio.arvalid))
   dontTouch(enRdDataCall)
 
-  val mem = Module(new MaskedRdWrMem(1024 * 1024 * 128, Some("build/npcmem_init.hex")))
+  val mem = Module(new MaskedRdWrMem(1024 * 1024 * 128, InitHexFilePath))
   mem.io := DontCare
 
   when(rState === RState.waitMem) {
