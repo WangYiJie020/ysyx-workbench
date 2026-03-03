@@ -108,6 +108,8 @@ CFLAGS   += -O2 -MMD -Wall -Werror $(INCFLAGS) \
             -Wno-main -U_FORTIFY_SOURCE -fvisibility=hidden
 
 CXXFLAGS +=  $(CFLAGS) -ffreestanding -fno-rtti -fno-exceptions
+
+CFLAGS += -Wno-error=array-bounds
 #
 # CXXFLAGS += -Wno-error=non-c-typedef-for-linkage
 # CXXFLAGS += -Wno-error=tautological-constant-out-of-range-compare

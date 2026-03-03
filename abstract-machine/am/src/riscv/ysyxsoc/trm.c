@@ -276,6 +276,12 @@ SSBL_TEXT void _second_boot() {
   // boot_log("call foo\n");
   // foo();
   // boot_log("foo returned\n");
+	
+	putstr("text load start = ");
+	putnum_base16((uintptr_t)__text_load_start__);
+	putstr(" text size = ");
+	putnum_base16((size_t)__text_size__);
+	putch('\n');
 
   LOG_STEP("copy .text", _ssbl_memcpy(_text_start, __text_load_start__,
                                       (size_t)__text_size__));
