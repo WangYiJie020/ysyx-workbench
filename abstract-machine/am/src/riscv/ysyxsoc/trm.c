@@ -265,9 +265,6 @@ SSBL_TEXT void _ssbl_puthex(uint32_t x){
 }
 
 SSBL_TEXT void _second_boot() {
-#undef putch
-#define putch ssbl_putch
-
 	putstr("rodata load start = ");
 	_ssbl_puthex((uintptr_t)__rodata_load_start__);
 	putstr("\nrodata start = ");
@@ -277,6 +274,9 @@ SSBL_TEXT void _second_boot() {
 	putch('\n');
 
   _ssbl_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
+	// after copy .rodata, we can directly use strings ptr in .rodata
+#undef putch
+#define putch ssbl_putch
   boot_log(".rodata copied.\n");
 
 // after rodata copy, we can use putstr directly
