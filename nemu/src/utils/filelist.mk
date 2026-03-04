@@ -24,5 +24,6 @@ $(LIBCAPSTONE):
 endif
 
 GEN_INST = tools/gen-inst/build/out.cc
-src/isa/riscv32/inst.c: $(GEN_INST)
+$(GEN_INST):
 	$(MAKE) -C tools/gen-inst
+src/isa/riscv32/inst.c: $(GEN_INST)
