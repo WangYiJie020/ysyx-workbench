@@ -106,7 +106,7 @@ class LSU extends Module {
   val nxtStateWhenWaitR = Mux(memIO.rvalid && memIO.rready, nxtStateWhenWaitOut, State.waitR)
   val nxtStateWhenWaitW = Mux(memIO.wvalid && memIO.wready, nxtStateWhenWaitB, State.waitW)
 
-  val nxtStateWhenAddrAck = Mux(isMemLoad, nxtStateWhenWaitR, State.waitW)
+  val nxtStateWhenAddrAck = Mux(isMemLoad, nxtStateWhenWaitR, nxtStateWhenWaitW)
 
   state := MuxLookup(state, State.idle)(
     Seq(
