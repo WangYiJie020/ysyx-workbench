@@ -11,7 +11,8 @@ import scala.collection.mutable
 
 import chisel3.probe.{Probe, ProbeValue}
 
-object DPICLayer extends Layer(LayerConfig.Extract())
+object DPICLayer     extends Layer(LayerConfig.Extract())
+object DifftestLayer extends Layer(LayerConfig.Extract())
 
 object DPICUseSummary {
   val usedDPICs:         mutable.Set[String] = mutable.Set.empty
@@ -96,6 +97,8 @@ class DPICNonVoidRetWrapper[T <: Data](
 
 object SkipDifftestRef {
   def apply(clock: Clock, enable: Bool): Unit = {
-    ClockedCallVoidDPIC("skip_difftest_ref")(clock, enable)
+    layer.block(DifftestLayer) {
+      ClockedCallVoidDPIC("skip_difftest_ref")(clock, enable)
+    }
   }
 }
