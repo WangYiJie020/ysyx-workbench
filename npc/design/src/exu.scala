@@ -207,9 +207,6 @@ class EXUStageChooseNxt extends Module {
   val snpc     = io.in.bits.dinst.info.snpc
 
   writeBackInfo.gpr.en := io.in.bits.gprWeEn
-
-  writeBackInfo.skipDifftest := DontCare // fill in LSU
-
   writeBackInfo.gpr.addr := dinst.info.rd
   val sysInstWrBackData = io.in.bits.csrRdata
 
