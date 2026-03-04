@@ -23,6 +23,7 @@ import branchpredictor._
 import config._
 
 import npc_devices._
+import dpiwrap.DifftestLayer
 
 class TopIO extends Bundle {
   val interrupt = Input(Bool())
@@ -73,7 +74,7 @@ class NPCTestSoC extends Module {
 class ysyx_25100261_ResetPCProvider extends BlackBox with HasBlackBoxInline {
   val io      = IO(new Bundle {
     val resetPC = Output(Types.UWord)
-  })
+})
   val pcMacro = name + "_RESET_PC"
   setInline(
     s"${name}.v",
@@ -242,6 +243,15 @@ class ysyx_25100261 extends Module {
 
     ifu.io.pc.bits  := pc
     ifu.io.pc.valid := true.B
+
+    layer.block(DifftestLayer) {
+      val lsuDifftest = Module(new LSUForDifftest)
+      pipelineConnect(exu.io.out, lsuDifftest.io.in, lsuDifftest.io.out)
+      lsuDifftest.io.actualLSU.inReady := lsu.io.in.ready
+      lsuDifftest.io.actualLSU.outValid := lsu.io.out.valid
+      val wbuDifftest = Module(new WBUForDifftest)
+      pipelineConnect(lsu.io.out, wbuDifftest.io.in)
+    }
 
     pipelineConnect(ifu.io.out, idu.io.in, idu.io.out)
     pipelineConnect(idu.io.out, exu.io.in, exu.io.out)

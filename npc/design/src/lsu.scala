@@ -300,19 +300,6 @@ class LSU extends Module {
   outWriteBackInfo.nxt_pc        := inExuWriteBackInfo.nxt_pc
   outWriteBackInfo.iid           := inExuWriteBackInfo.iid
 
-  val isSerialAddr = AddrSpace.inRng(memAddr, AddrSpace.SERIAL)
-  val isSPIAddr    = AddrSpace.inRng(memAddr, AddrSpace.SPI)
-  val isClintAddr  = AddrSpace.inRng(memAddr, AddrSpace.CLINT)
-  val isVGAAddr    = AddrSpace.inRng(memAddr, AddrSpace.VGA)
-  val isPS2Addr    = AddrSpace.inRng(memAddr, AddrSpace.PS2)
-
-  val needSkipDifftest =
-    (isMemOp && (isSerialAddr || isSPIAddr || isClintAddr || isVGAAddr || isPS2Addr)) || (isLoadOp && isCLINTAddr)
-
-  SkipDifftestRef(clock, RegNext(needSkipDifftest, init = false.B))
-
-  outWriteBackInfo.skipDifftest := DontCare
-
   val isSRAMAddr = AddrSpace.inRng(memAddr, AddrSpace.SRAM)
   when(io.mem.awvalid && io.mem.awready && isSRAMAddr) {
     ClockedCallVoidDPIC("sram_upd", Some(Seq("addr", "data", "mask")))(
@@ -324,3 +311,41 @@ class LSU extends Module {
     )
   }
 }
+
+class LSUForDifftest extends Module {
+  val io = IO(new Bundle {
+    val in = Flipped(Decoupled(new LSUInput))
+
+    val actualLSU = new Bundle {
+      val inReady = Input(Bool())
+      val outValid = Input(Bool())
+    }
+
+    val out = Decoupled(new DifftestWriteBackInfo)
+  })
+
+  io.in.ready := io.actualLSU.inReady
+  io.out.valid := io.actualLSU.outValid
+
+  val memAddr = io.in.bits.destAddr
+  val isSerialAddr = AddrSpace.inRng(memAddr, AddrSpace.SERIAL)
+  val isSPIAddr    = AddrSpace.inRng(memAddr, AddrSpace.SPI)
+  val isClintAddr  = AddrSpace.inRng(memAddr, AddrSpace.CLINT)
+  val isVGAAddr    = AddrSpace.inRng(memAddr, AddrSpace.VGA)
+  val isPS2Addr    = AddrSpace.inRng(memAddr, AddrSpace.PS2)
+
+  val isLoadOp = io.in.bits.isLoad && io.in.valid
+  val isStore  = io.in.bits.isStore && io.in.valid
+  val isMemLoad = isLoadOp && (!isClintAddr)
+  val isMemOp = isMemLoad || isStore
+
+  val needSkipDifftest =
+    (isMemOp && (isSerialAddr || isSPIAddr || isClintAddr || isVGAAddr || isPS2Addr)) || (isLoadOp && isClintAddr)
+
+  val outInfo = io.out.bits
+  outInfo.pc := io.in.bits.exuWriteBack.pc
+  outInfo.needSkipRef := needSkipDifftest
+  outInfo.isEBreak := io.in.bits.exuWriteBack.is_ebreak
+  outInfo.nxtPC := io.in.bits.exuWriteBack.nxt_pc
+}
+

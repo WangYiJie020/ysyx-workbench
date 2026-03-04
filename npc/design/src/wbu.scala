@@ -55,20 +55,6 @@ class WBU extends Module {
 
   io.in.ready := true.B
 
-  // val halted    = RegInit(false.B)
-  val isEBreak = WireDefault(wbinfo.is_ebreak && valid)
-  dontTouch(isEBreak)
-  when(isEBreak) {
-    ClockedCallVoidDPIC("raise_ebreak")(clock, isEBreak)
-    // halted := true.B
-    stop()
-  }
-
-  when(valid && (!isEBreak)) {
-    ClockedCallVoidDPIC("pc_upd")(clock, valid && !isEBreak, wbinfo.pc, wbinfo.nxt_pc)
-  }
-
-
   io.gpr.en   := wbinfo.gpr.en && valid
   io.gpr.addr := wbinfo.gpr.addr
   io.gpr.data := wbinfo.gpr.data
@@ -81,4 +67,30 @@ class WBU extends Module {
   io.done := valid
 
   dontTouch(io)
+}
+
+class DifftestWriteBackInfo extends Bundle {
+  val pc= Types.UWord
+  val nxtPC = Types.UWord
+  val isEBreak = Bool()
+  val needSkipRef = Bool()
+}
+class WBUForDifftest extends Module {
+  val io = IO(new Bundle {
+    val in = Flipped(Decoupled(new DifftestWriteBackInfo))
+  })
+  val wbinfo = io.in.bits
+  val valid  = io.in.valid
+  io.in.ready := true.B
+
+  val isEBreak = WireDefault(wbinfo.isEBreak && valid)
+  dontTouch(isEBreak)
+  when(isEBreak) {
+    ClockedCallVoidDPIC("raise_ebreak")(clock, isEBreak)
+    stop()
+  }
+
+  when(valid && (!isEBreak)) {
+    ClockedCallVoidDPIC("pc_upd")(clock, valid && !isEBreak, wbinfo.pc, wbinfo.nxtPC)
+  }
 }
