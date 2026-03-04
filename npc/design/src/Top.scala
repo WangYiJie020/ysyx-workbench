@@ -61,15 +61,15 @@ class NPCTestSoC extends Module {
   cpu.io.io.interrupt := false.B
 }
 
-// class ysyx_25100261 extends Module {
-//   val io = IO(new TopIO)
-//   dontTouch(io)
-//   println(s"Add module prefix ${getClass.getSimpleName}")
-//   withModulePrefix(getClass.getSimpleName) {
-//     val core = Module(new CPUCore)
-//     core.io <> io
-//   }
-// }
+class ysyx_25100261 extends Module {
+  val io = IO(new TopIO)
+  dontTouch(io)
+  println(s"Add module prefix ${getClass.getSimpleName}")
+  withModulePrefix(getClass.getSimpleName) {
+    val core = Module(new CPUCore)
+    core.io <> io
+  }
+}
 
 class ysyx_25100261_ResetPCProvider extends BlackBox with HasBlackBoxInline {
   val io      = IO(new Bundle {
@@ -91,12 +91,12 @@ class ysyx_25100261_ResetPCProvider extends BlackBox with HasBlackBoxInline {
   )
 }
 
-class ysyx_25100261 extends Module {
+class CPUCore extends Module {
   val io = IO(new TopIO)
   dontTouch(io)
   io := DontCare
 
-  withModulePrefix(getClass.getSimpleName) {
+  // withModulePrefix(getClass.getSimpleName) {
 
     val isBranchGuessWrong = Wire(Bool())
 
@@ -299,5 +299,5 @@ class ysyx_25100261 extends Module {
     csrs.io.write <> wbu.io.csr
     csrs.io.is_ecall := wbu.io.is_ecall
 
-  }
+  // }
 }
