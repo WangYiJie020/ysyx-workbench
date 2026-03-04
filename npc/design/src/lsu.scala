@@ -48,6 +48,8 @@ object ExtractFwdInfoFromLSU {
 class LSUIO extends Bundle {
   val mem = AXI4IO.Master
 
+  val mcycle64 = Input(UInt(64.W))
+
   val in  = Flipped(Decoupled(new LSUInput))
   val out = Decoupled(new WriteBackInfo)
 }
@@ -79,20 +81,21 @@ class LSU extends Module {
   val memRdRawData = Wire(Types.UWord)
   memRdRawData := io.mem.rdata
 
-  val isLoad  = in.isLoad && io.in.valid
-  val isStore = in.isStore && io.in.valid
-  val isMemOp = isLoad || isStore
+  val isLoad      = in.isLoad && io.in.valid
+  val isStore     = in.isStore && io.in.valid
+  val isCLINTAddr = in.destAddr(31, 28) === AddrSpace.CLINT._1(31, 28)
+
+  val isMemOp = (isLoad && (!isCLINTAddr)) || isStore
+
+  // Lo: 0x20000048 -> 08 -> 0b1000
+  // Hi: 0x2000004c -> 12 -> 0b1100
+  val clintRdData = Mux(in.destAddr(2), io.mcycle64(63, 32), io.mcycle64(31, 0))
 
   val memIO = io.mem
   io.out.valid := io.in.valid && ((!isMemOp) || isWaitOut || ((isWaitB | isWaitW) && memIO.bvalid) || ((isWaitR | isIdle) && memIO.rvalid))
   io.in.ready  := ((!isMemOp) || (isWaitOut) || ((isWaitW | isWaitB) && memIO.bvalid) || ((isWaitR | isIdle) && memIO.rvalid)) && io.out.ready
 
   val addrAck = Mux(isLoad, io.mem.arready, io.mem.awready)
-
-// val memOPDone = ???
-
-  // val selfFinish = Wire(Bool())
-  // selfFinish := ((!isMemOp) || memOPDone)
 
   val nxtStateWhenIdleMeetMemOp = Mux(isLoad, State.waitAR, State.waitAW)
 
@@ -288,7 +291,7 @@ class LSU extends Module {
   outWriteBackInfo.csr_ecallflag := inExuWriteBackInfo.csr_ecallflag
   outWriteBackInfo.gpr.addr      := inExuWriteBackInfo.gpr.addr
   outWriteBackInfo.gpr.en        := inExuWriteBackInfo.gpr.en
-  outWriteBackInfo.gpr.data      := Mux(isMemOp, loadResult, inExuWriteBackInfo.gpr.data)
+  outWriteBackInfo.gpr.data      := Mux(isMemOp, loadResult, Mux(isCLINTAddr, clintRdData, inExuWriteBackInfo.gpr.data))
   outWriteBackInfo.is_ebreak     := inExuWriteBackInfo.is_ebreak
   outWriteBackInfo.pc            := inExuWriteBackInfo.pc
   outWriteBackInfo.nxt_pc        := inExuWriteBackInfo.nxt_pc
