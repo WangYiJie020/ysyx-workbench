@@ -119,7 +119,7 @@ class ICache extends Module {
   )
   val destAddrAligned = destAddrTag ## destAddrIdx ## 0.U(log2Ceil(ICacheParameters.BLOCK_SIZE).W)
 
-  val memIOCurRdOffset  = RegInit(0.U(log2Ceil(ICacheParameters.BLOCK_SIZE_INWORDS - 1).W))
+  val memIOCurRdOffset  = if(ICacheParameters.BLOCK_SIZE_INWORDS > 1) RegInit(0.U(log2Ceil(ICacheParameters.BLOCK_SIZE_INWORDS - 1).W)) else 0.U
   val memIORdDataVecReg = Reg(Vec(ICacheParameters.BLOCK_SIZE_INWORDS - 1, Types.UWord))
   when(io.mem.rvalid && io.mem.rready) {
     when(memIOMeetLast) {
