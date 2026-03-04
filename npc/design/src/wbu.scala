@@ -91,7 +91,7 @@ class WBUForDifftest extends Module {
   }
 
   when(valid && wbinfo.needSkipRef) {
-    RawClockedVoidFunctionCall("skip_difftest_ref")(clock, valid && wbinfo.needSkipRef, wbinfo.pc, wbinfo.nxtPC)
+    RawClockedVoidFunctionCall("skip_difftest_ref")(clock, valid && wbinfo.needSkipRef)
   }
 
   when(valid && (!isEBreak)) {
