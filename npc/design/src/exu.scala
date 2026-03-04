@@ -310,6 +310,7 @@ class EXU extends Module {
   io.isJAL     := stageChooseNxt.io.isJAL
   io.predWrong := stageChooseNxt.io.predWrong
   io.nxtPC     := stageChooseNxt.io.nxtPC
+  io.pc        := stageChooseNxt.io.pc
   io.fencei    := stageChooseNxt.io.fencei
 
   stageCalc.io.flush := io.flush1
