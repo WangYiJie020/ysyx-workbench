@@ -133,7 +133,7 @@ class ControlStatusRegisterFile extends Module {
   val r3 = Reg(UInt(4.W))  // mcause
   val r4 = Reg(UInt(32.W))  // mtvec
   val waregs = VecInit(
-    Seq(r1, r2, r3, r4)
+    r1, r2, r3, r4
   )
   when(reset.asBool) {
     waregs(0) := "h00001800".U // mstatus
