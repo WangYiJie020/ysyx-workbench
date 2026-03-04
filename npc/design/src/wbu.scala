@@ -90,6 +90,10 @@ class WBUForDifftest extends Module {
     stop()
   }
 
+  when(valid && wbinfo.needSkipRef) {
+    ClockedCallVoidDPIC("skip_difftest_ref")(clock, valid && wbinfo.needSkipRef, wbinfo.pc, wbinfo.nxtPC)
+  }
+
   when(valid && (!isEBreak)) {
     ClockedCallVoidDPIC("pc_upd")(clock, valid && !isEBreak, wbinfo.pc, wbinfo.nxtPC)
   }
