@@ -16,9 +16,13 @@ int cpu_current() {
 }
 
 int atomic_xchg(int *addr, int newval) {
+#ifdef __clang__
 	// make clang happy
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Watomic-alignment"
+#endif
   return atomic_exchange((_Atomic(int)*)addr, newval);
+#ifdef __clang__
 #pragma clang diagnostic pop
+#endif
 }
