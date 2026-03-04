@@ -7,6 +7,7 @@ import busfsm._
 import chisel3.util.circt.dpi._
 import axi4._
 
+import dpiwrap._
 import regfile.GPRegReqIO
 import dpiwrap.ClockedCallVoidDPIC
 
@@ -48,6 +49,8 @@ object ExtractFwdInfoFromLSU {
 class LSUIO extends Bundle {
   val mem = AXI4IO.Master
 
+  val mcycle64 = Input(UInt(64.W))
+
   val in  = Flipped(Decoupled(new LSUInput))
   val out = Decoupled(new WriteBackInfo)
 }
@@ -79,22 +82,25 @@ class LSU extends Module {
   val memRdRawData = Wire(Types.UWord)
   memRdRawData := io.mem.rdata
 
-  val isLoad  = in.isLoad && io.in.valid
-  val isStore = in.isStore && io.in.valid
-  val isMemOp = isLoad || isStore
+  val isLoadOp    = in.isLoad && io.in.valid
+  // only compare high 8 bit since clint addr is 0x0200_0048/4c, 0x02 is unique in whole addr space
+  val isCLINTAddr = in.destAddr(31, 27) === AddrSpace.CLINT._1(31, 27)
+  val isMemLoad   = isLoadOp && (!isCLINTAddr)
+  val isStore     = in.isStore && io.in.valid
+
+  val isMemOp = isMemLoad || isStore
+
+  // Lo: 0x20000048 -> 08 -> 0b1000
+  // Hi: 0x2000004c -> 12 -> 0b1100
+  val clintRdData = Mux(in.destAddr(2), io.mcycle64(63, 32), io.mcycle64(31, 0))
 
   val memIO = io.mem
   io.out.valid := io.in.valid && ((!isMemOp) || isWaitOut || ((isWaitB | isWaitW) && memIO.bvalid) || ((isWaitR | isIdle) && memIO.rvalid))
   io.in.ready  := ((!isMemOp) || (isWaitOut) || ((isWaitW | isWaitB) && memIO.bvalid) || ((isWaitR | isIdle) && memIO.rvalid)) && io.out.ready
 
-  val addrAck = Mux(isLoad, io.mem.arready, io.mem.awready)
+  val addrAck = Mux(isMemLoad, io.mem.arready, io.mem.awready)
 
-// val memOPDone = ???
-
-  // val selfFinish = Wire(Bool())
-  // selfFinish := ((!isMemOp) || memOPDone)
-
-  val nxtStateWhenIdleMeetMemOp = Mux(isLoad, State.waitAR, State.waitAW)
+  val nxtStateWhenIdleMeetMemOp = Mux(isMemLoad, State.waitAR, State.waitAW)
 
   val nxtStateWhenWaitOut = Mux(io.out.ready, State.idle, State.waitOut)
   val nxtStateWhenWaitB   = Mux(memIO.bvalid && memIO.bready, nxtStateWhenWaitOut, State.waitB)
@@ -102,7 +108,7 @@ class LSU extends Module {
   val nxtStateWhenWaitR = Mux(memIO.rvalid && memIO.rready, nxtStateWhenWaitOut, State.waitR)
   val nxtStateWhenWaitW = Mux(memIO.wvalid && memIO.wready, nxtStateWhenWaitB, State.waitW)
 
-  val nxtStateWhenAddrAck = Mux(isLoad, nxtStateWhenWaitR, State.waitW)
+  val nxtStateWhenAddrAck = Mux(isMemLoad, nxtStateWhenWaitR, nxtStateWhenWaitW)
 
   state := MuxLookup(state, State.idle)(
     Seq(
@@ -127,7 +133,7 @@ class LSU extends Module {
   // val memAddrUnalignPartBitlen = memAddrUnalignPart << 3
 
   memIO.araddr  := memAddr
-  memIO.arvalid := isLoad && (isIdle || isWaitAR)
+  memIO.arvalid := isMemLoad && (isIdle || isWaitAR)
 
   // val memOpSize = MuxLookup(func3t, 0.U)(
   //   Seq(
@@ -288,21 +294,11 @@ class LSU extends Module {
   outWriteBackInfo.csr_ecallflag := inExuWriteBackInfo.csr_ecallflag
   outWriteBackInfo.gpr.addr      := inExuWriteBackInfo.gpr.addr
   outWriteBackInfo.gpr.en        := inExuWriteBackInfo.gpr.en
-  outWriteBackInfo.gpr.data      := Mux(isMemOp, loadResult, inExuWriteBackInfo.gpr.data)
-  outWriteBackInfo.is_ebreak     := inExuWriteBackInfo.is_ebreak
-  outWriteBackInfo.pc            := inExuWriteBackInfo.pc
-  outWriteBackInfo.nxt_pc        := inExuWriteBackInfo.nxt_pc
+  outWriteBackInfo.gpr.data      := Mux(isLoadOp, Mux(isCLINTAddr, clintRdData, loadResult), inExuWriteBackInfo.gpr.data)
+  // outWriteBackInfo.is_ebreak     := inExuWriteBackInfo.is_ebreak
+  // outWriteBackInfo.pc            := inExuWriteBackInfo.pc
+  // outWriteBackInfo.nxt_pc        := inExuWriteBackInfo.nxt_pc
   outWriteBackInfo.iid           := inExuWriteBackInfo.iid
-
-  val isSerialAddr = AddrSpace.inRng(memAddr, AddrSpace.SERIAL)
-  val isSPIAddr    = AddrSpace.inRng(memAddr, AddrSpace.SPI)
-  val isClintAddr  = AddrSpace.inRng(memAddr, AddrSpace.CLINT)
-  val isVGAAddr    = AddrSpace.inRng(memAddr, AddrSpace.VGA)
-  val isPS2Addr    = AddrSpace.inRng(memAddr, AddrSpace.PS2)
-
-  val needSkipDifftest = isMemOp && (isSerialAddr || isSPIAddr || isClintAddr || isVGAAddr || isPS2Addr)
-
-  outWriteBackInfo.skipDifftest := needSkipDifftest
 
   val isSRAMAddr = AddrSpace.inRng(memAddr, AddrSpace.SRAM)
   when(io.mem.awvalid && io.mem.awready && isSRAMAddr) {
@@ -315,3 +311,50 @@ class LSU extends Module {
     )
   }
 }
+
+class LSUInputForDifftest extends Bundle {
+  val isLoad       = Bool()
+  val isStore      = Bool()
+  val destAddr     = Types.UWord
+  val pc           = Types.UWord
+  val nxtPC       = Types.UWord
+  val isEBreak    = Bool()
+}
+
+class LSUForDifftest extends Module {
+  val io = IO(new Bundle {
+    val in = Flipped(Decoupled(new LSUInputForDifftest))
+
+    val actualLSU = new Bundle {
+      val inReady = Input(Bool())
+      val outValid = Input(Bool())
+    }
+
+    val out = Decoupled(new DifftestWriteBackInfo)
+  })
+
+  io.in.ready := io.actualLSU.inReady
+  io.out.valid := io.actualLSU.outValid
+
+  val memAddr = io.in.bits.destAddr
+  val isSerialAddr = AddrSpace.inRng(memAddr, AddrSpace.SERIAL)
+  val isSPIAddr    = AddrSpace.inRng(memAddr, AddrSpace.SPI)
+  val isClintAddr  = AddrSpace.inRng(memAddr, AddrSpace.CLINT)
+  val isVGAAddr    = AddrSpace.inRng(memAddr, AddrSpace.VGA)
+  val isPS2Addr    = AddrSpace.inRng(memAddr, AddrSpace.PS2)
+
+  val isLoadOp = io.in.bits.isLoad && io.in.valid
+  val isStore  = io.in.bits.isStore && io.in.valid
+  val isMemLoad = isLoadOp && (!isClintAddr)
+  val isMemOp = isMemLoad || isStore
+
+  val needSkipDifftest =
+    (isMemOp && (isSerialAddr || isSPIAddr || isClintAddr || isVGAAddr || isPS2Addr)) || (isLoadOp && isClintAddr)
+
+  val outInfo = io.out.bits
+  outInfo.pc := io.in.bits.pc
+  outInfo.needSkipRef := needSkipDifftest
+  outInfo.isEBreak := io.in.bits.isEBreak
+  outInfo.nxtPC := io.in.bits.nxtPC
+}
+

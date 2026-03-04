@@ -132,11 +132,21 @@ object RegEnableReadNew {
   }
 }
 
+object EmptyDecoupledData {
+  def apply() = {
+    val out = Wire(Decoupled(UInt(0.W)))
+    out.ready := true.B
+    out.valid := true.B
+    out.bits  := DontCare
+    out
+  }
+}
+
 object pipelineConnect {
   def apply[T <: Data, T2 <: Data](
     prevOut: DecoupledIO[T],
     thisIn:  DecoupledIO[T],
-    thisOut: DecoupledIO[T2]
+    thisOut: DecoupledIO[T2] = EmptyDecoupledData()
   ) = {
 
     val thisInReady = thisIn.ready

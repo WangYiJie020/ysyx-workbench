@@ -14,7 +14,7 @@ class EXUStageCalcOut extends Bundle {
   val isTypSys = Bool()
   val isECALL  = Bool()
   val isMRET   = Bool()
-  val isEBREAK = Bool()
+  // val isEBREAK = Bool()
 
   val csrRdata = Types.UWord
   val csrWr    = CSRegReqIO.TX.Write
@@ -82,16 +82,16 @@ class EXUStageCalc extends Module {
 
   // csr
 
-  val is_mret   = dinst.code === "h30200073".U
-  val is_ecall  = dinst.code === "h73".U
-  val is_ebreak = dinst.code === "h00100073".U
+  val is_mret  = dinst.code === "h30200073".U
+  val is_ecall = dinst.code === "h73".U
+  // val is_ebreak = dinst.code === "h00100073".U
 
   val outInfo = io.out.bits
 
   outInfo.isTypSys := isTypSys
   outInfo.isECALL  := is_ecall
   outInfo.isMRET   := is_mret
-  outInfo.isEBREAK := is_ebreak
+  // outInfo.isEBREAK := is_ebreak
 
   val csrren    = io.csr_rvec.en
   val csr_raddr = io.csr_rvec.addr
@@ -162,6 +162,8 @@ class EXUStageChooseNxt extends Module {
     val jmpHappen = Output(Bool())
     val isJAL     = Output(Bool())
     val predWrong = Output(Bool())
+    val nxtPC     = Output(Types.UWord)
+    val pc        = Output(Types.UWord)
 
     val fencei = Output(Bool())
 
@@ -182,7 +184,7 @@ class EXUStageChooseNxt extends Module {
   val isTypBranch     = InstType.hasSame(dinst.info.typ, InstType.branch)
   val isTypArithmetic = InstType.hasSame(dinst.info.typ, InstType.arithmetic)
   val isTypLUI        = InstType.hasSame(dinst.info.typ, InstType.lui)
-  val isFenceI       = InstType.hasSame(dinst.info.typ, InstType.fencei)
+  val isFenceI        = InstType.hasSame(dinst.info.typ, InstType.fencei)
 
   val isFmtB = InstFmt.hasSame(dinst.info.fmt, InstFmt.branch)
 
@@ -194,7 +196,7 @@ class EXUStageChooseNxt extends Module {
   lsuInfo.storeData := io.in.bits.dinst.info.reg2
   val writeBackInfo = lsuInfo.exuWriteBack
   writeBackInfo.csr <> io.in.bits.csrWr
-  writeBackInfo.is_ebreak     := io.in.bits.isEBREAK
+  // writeBackInfo.is_ebreak     := io.in.bits.isEBREAK
   writeBackInfo.csr_ecallflag := io.in.bits.isECALL
 
   // No consider exception
@@ -206,10 +208,7 @@ class EXUStageChooseNxt extends Module {
   val pcAddImm = io.in.bits.pcAddImm
   val snpc     = io.in.bits.dinst.info.snpc
 
-  writeBackInfo.gpr.en := io.in.bits.gprWeEn
-
-  writeBackInfo.skipDifftest := DontCare // fill in LSU
-
+  writeBackInfo.gpr.en   := io.in.bits.gprWeEn
   writeBackInfo.gpr.addr := dinst.info.rd
   val sysInstWrBackData = io.in.bits.csrRdata
 
@@ -227,9 +226,7 @@ class EXUStageChooseNxt extends Module {
 
   io.fwd := WrBackForwardInfo(io.in.valid, io.in.bits.dinst, ~isMemOP, writeBackInfo.gpr.data)
 
-  writeBackInfo.iid    := dinst.iid
-  writeBackInfo.pc     := dinst.pc
-  writeBackInfo.nxt_pc := nxtPC
+  writeBackInfo.iid := dinst.iid
 
   val isJmpCsr   = io.in.bits.isECALL || io.in.bits.isMRET
   val takeBranch = WireDefault(false.B)
@@ -241,7 +238,7 @@ class EXUStageChooseNxt extends Module {
   // when fence.i, also treat it as jump
   // to make flush to refetch the inst nxt fence.i
   io.predWrong := (normalNxtPC =/= dinst.predictedNextPC) || isJmpCsr || isFenceI
-  io.fencei := isFenceI && io.in.valid
+  io.fencei    := isFenceI && io.in.valid
 
   val r1AddImm = io.in.bits.reg1AddImm
 
@@ -255,6 +252,8 @@ class EXUStageChooseNxt extends Module {
     )
   )
   nxtPC       := Mux(isJmpCsr, io.in.bits.csrRdata, normalNxtPC)
+  io.nxtPC    := nxtPC
+  io.pc       := io.in.bits.dinst.pc
 
   val dbgIsBranch = WireDefault(isTypBranch)
   val dbgIsJALR   = WireDefault(isTypJALR)
@@ -272,11 +271,14 @@ class EXU extends Module {
     val csr_rvec  = CSRegReqIO.TX.SingleRead
     val jmpHappen = Output(Bool())
     val isJAL     = Output(Bool())
+
     val predWrong = Output(Bool())
+    val pc        = Output(Types.UWord)
+    val nxtPC     = Output(Types.UWord)
 
     val flush1 = Input(Bool())
 
-    val fencei  = Output(Bool())
+    val fencei = Output(Bool())
 
     val fwd1 = Output(new WrBackForwardInfo)
     val fwd2 = Output(new WrBackForwardInfo)
@@ -307,10 +309,36 @@ class EXU extends Module {
   io.jmpHappen := stageChooseNxt.io.jmpHappen
   io.isJAL     := stageChooseNxt.io.isJAL
   io.predWrong := stageChooseNxt.io.predWrong
-  io.fencei     := stageChooseNxt.io.fencei
+  io.nxtPC     := stageChooseNxt.io.nxtPC
+  io.pc        := stageChooseNxt.io.pc
+  io.fencei    := stageChooseNxt.io.fencei
 
   stageCalc.io.flush := io.flush1
 
   pipelineConnect(stageCalc.io.out, stageChooseNxt.io.in, stageChooseNxt.io.out)
 
+}
+
+class EXUForDifftest extends Module {
+  val io = IO(new Bundle {
+    val in     = Flipped(Decoupled(new DecodedInst))
+    val actual = new Bundle {
+      val inReady  = Input(Bool())
+      val pc       = Input(Types.UWord)
+      val nxtPC    = Input(Types.UWord)
+      val memAddr  = Input(Types.UWord)
+      val outValid = Input(Bool())
+    }
+    val out    = Decoupled(new LSUInputForDifftest)
+  })
+  io.in.ready := io.actual.inReady
+  io.out.valid := io.actual.outValid
+
+  val outInfo = io.out.bits
+  outInfo.isLoad   := InstType.hasSame(io.in.bits.info.typ, InstType.load)
+  outInfo.isStore  := InstType.hasSame(io.in.bits.info.typ, InstType.store)
+  outInfo.pc       := io.actual.pc
+  outInfo.nxtPC    := io.actual.nxtPC
+  outInfo.isEBreak := io.in.bits.code === "h00100073".U
+  outInfo.destAddr := io.actual.memAddr
 }

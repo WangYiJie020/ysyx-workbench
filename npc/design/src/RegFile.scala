@@ -93,8 +93,9 @@ object CSRAddr {
   val marchid   = "hF12".U(12.W)
 }
 
-class CSRIO                     extends Bundle {
+class CSRIO extends Bundle {
   val is_ecall = Input(Bool())
+  val mcycle64 = Output(UInt(64.W))
   val read     = CSRegReqIO.RX.SingleRead
   val write    = CSRegReqIO.RX.Write
 }
@@ -117,6 +118,7 @@ class ControlStatusRegisterFile extends Module {
   // }
   //
   val mcycle64 = Cat(mcycleHi, mcycleLo)
+  io.mcycle64 := mcycle64
 
   val mvendor_id = "h79737978".U(32.W) // ysyx
   val march_id   = "d25100261".U(32.W)
@@ -130,14 +132,14 @@ class ControlStatusRegisterFile extends Module {
     waregs(0) := "h00001800".U // mstatus
   }
 
-  val walut  = Seq(
+  val walut = Seq(
     CSRAddr.mstatus -> 0.U,
     CSRAddr.mepc    -> 1.U,
     CSRAddr.mcause  -> 2.U,
     CSRAddr.mtvec   -> 3.U
   )
-  val widx   = MuxLookup(io.write.addr, 0.U)(walut)
-  val ridx   = MuxLookup(io.read.addr, 0.U)(walut)
+  val widx  = MuxLookup(io.write.addr, 0.U)(walut)
+  val ridx  = MuxLookup(io.read.addr, 0.U)(walut)
 
   when(io.read.en) {
     io.read.data := MuxLookup(io.read.addr, waregs(ridx))(
