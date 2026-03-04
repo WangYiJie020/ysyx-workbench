@@ -68,7 +68,6 @@ class WBU extends Module {
     ClockedCallVoidDPIC("pc_upd")(clock, valid && !isEBreak, wbinfo.pc, wbinfo.nxt_pc)
   }
 
-  SkipDifftestRef(clock, valid && wbinfo.skipDifftest)
 
   io.gpr.en   := wbinfo.gpr.en && valid
   io.gpr.addr := wbinfo.gpr.addr
