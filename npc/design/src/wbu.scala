@@ -18,7 +18,7 @@ class WriteBackInfo extends Bundle {
   val csr           = CSRegReqIO.TX.Write
   val csr_ecallflag = Bool()
 
-  // val is_ebreak = Bool()
+  val is_ebreak = Bool()
 
   // val skipDifftest = Bool()
 
