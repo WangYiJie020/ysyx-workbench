@@ -29,14 +29,14 @@ wire [31:0] gpr_a0;
 		assign exu_code = dut.cpu.\core/exu/_stageCalc_io_out_bits_dinst_code ;
 		assign gpr_a0 = dut.cpu.\core/gprs/reg_10 ;
 	`else
-		assign exu_out_valid = dut.cpu.\core._exu_io_out_valid ;
-		assign exu_code = dut.cpu.\core.exu._stageCalc_io_out_bits_dinst_code ;
-		assign gpr_a0 = dut.cpu.\core.gprs.reg_10 ;
+		assign exu_out_valid = dut.cpu._exu_io_out_valid ;
+		assign exu_code = dut.cpu.\exu._stageCalc_io_out_bits_dinst_code ;
+		assign gpr_a0 = dut.cpu.\gprs.reg_10 ;
 	`endif
 `else
-	assign exu_out_valid = dut.cpu.core.exu.io_out_valid;
-	assign exu_code = dut.cpu.core.exu.io_in_bits_code;
-	assign gpr_a0 = dut.cpu.core.gprs.reg_10;
+	assign exu_out_valid = dut.cpu.exu.io_out_valid;
+	assign exu_code = dut.cpu.exu.io_in_bits_code;
+	assign gpr_a0 = dut.cpu.gprs.reg_10;
 `endif
 
 always @(posedge clk) begin
