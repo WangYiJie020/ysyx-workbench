@@ -305,7 +305,7 @@ class LSU extends Module {
   val isPS2Addr    = AddrSpace.inRng(memAddr, AddrSpace.PS2)
 
   val needSkipDifftest =
-    (isMemOp && (isSerialAddr || isSPIAddr || isClintAddr || isVGAAddr || isPS2Addr)) || (isMemLoad && isCLINTAddr)
+    (isMemOp && (isSerialAddr || isSPIAddr || isClintAddr || isVGAAddr || isPS2Addr)) || (isLoadOp && isCLINTAddr)
 
   outWriteBackInfo.skipDifftest := needSkipDifftest
 
