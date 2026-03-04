@@ -7,6 +7,7 @@ ARCHIVES += $(NVBOARD_ARCHIVE) $(abspath ../sdb/build/libsdb.a)
 
 SDB_BUILD_LIB = $(abspath ../sdb/build/libsdb.a)
 $(SDB_BUILD_LIB):
+	$(YSYX_HOME)/init-deps/check-and-install-buildtools.sh
 	@mkdir -p $(dir $@)
 	@flock $@.lock -c '\
 		if [ ! -f $(SDB_BUILD_LIB) ]; then \
@@ -43,8 +44,7 @@ $(SIM_DEP_LIBS_CLONE_DONE):
 	@touch $@
 
 SIM_DEP_LIBS_BUILD_DONE = $(DEPS_DIR)/build.done
-$(SIM_DEP_LIBS_BUILD_DONE): $(SIM_DEP_LIBS_CLONE_DONE) $(SDB_BUILD_LIB)
-	$(YSYX_HOME)/init-deps/check-and-install-buildtools.sh
+$(SIM_DEP_LIBS_BUILD_DONE): $(SDB_BUILD_LIB) $(SIM_DEP_LIBS_CLONE_DONE) 
 	@+./scripts/dev-init/build_deps.sh $(DEPS_DIR)
 	@touch $@
 
