@@ -30,13 +30,13 @@ class TopIO extends Bundle {
   val slave     = AXI4IO.Slave
 }
 
-class CPUCoreAsBlackBox extends BlackBox {
+class CPUCoreAsBlackBox    extends BlackBox {
   override def desiredName: String = "ysyx_25100261"
   // force chisel to generate the signals name with the same prefix `io`
   val io = IO(new Bundle {
     val clock = Input(Clock())
     val reset = Input(Bool())
-    val io = new TopIO
+    val io    = new TopIO
   })
 }
 class PCProviderAsBlackBox extends BlackBox {
@@ -47,35 +47,36 @@ class PCProviderAsBlackBox extends BlackBox {
 }
 
 class NPCTestSoC extends Module {
-  val cpu       = Module(new CPUCoreAsBlackBox)
+  val cpu        = Module(new CPUCoreAsBlackBox)
   val npcDevices = Module(new NPCDevices)
 
   val resetPCProvider = Module(new PCProviderAsBlackBox)
   assert(resetPCProvider.io.resetPC === "h80000000".U, "Reset PC should be 0x80000000 for npc test SoC")
 
   npcDevices.io <> cpu.io.io.master
-  cpu.io.clock := clock
-  cpu.io.reset := reset
-  cpu.io.io.slave := DontCare
+  cpu.io.clock        := clock
+  cpu.io.reset        := reset
+  cpu.io.io.slave     := DontCare
   cpu.io.io.interrupt := false.B
 }
 
-// class ysyx_25100261 extends Module {
-//   val io = IO(new TopIO)
-//   dontTouch(io)
-//   println(s"Add module prefix ${getClass.getSimpleName}")
-//   withModulePrefix(getClass.getSimpleName) {
-//     val core = Module(new CPUCore)
-//     core.io <> io
-//   }
-// }
+class ysyx_25100261 extends Module {
+  val io = IO(new TopIO)
+  dontTouch(io)
+  println(s"Add module prefix ${getClass.getSimpleName}")
+  withModulePrefix(getClass.getSimpleName) {
+    val core = Module(new CPUCore)
+    core.io <> io
+  }
+}
 
 class ysyx_25100261_ResetPCProvider extends BlackBox with HasBlackBoxInline {
-  val io = IO(new Bundle {
+  val io      = IO(new Bundle {
     val resetPC = Output(Types.UWord)
   })
   val pcMacro = name + "_RESET_PC"
-  setInline(s"${name}.v",
+  setInline(
+    s"${name}.v",
     s"""
        |`ifndef ${pcMacro}
        |  `define ${pcMacro} 32'h80000000
@@ -85,15 +86,14 @@ class ysyx_25100261_ResetPCProvider extends BlackBox with HasBlackBoxInline {
        |);
        |  assign resetPC = `$pcMacro;
        |endmodule
-     """.stripMargin)
+     """.stripMargin
+  )
 }
 
-class ysyx_25100261 extends Module {
+class CPUCore extends Module {
   val io = IO(new TopIO)
   dontTouch(io)
   io := DontCare
-
-  withModulePrefix(getClass.getSimpleName) {
 
   val isBranchGuessWrong = Wire(Bool())
 
@@ -109,8 +109,10 @@ class ysyx_25100261 extends Module {
   val lsu = Module(new LSU)
   val wbu = Module(new WBU)
 
+  lsu.io.mcycle64 := csrs.io.mcycle64
+
   val resetPCProvider = Module(new ysyx_25100261_ResetPCProvider)
-  val INIT_PC = resetPCProvider.io.resetPC
+  val INIT_PC         = resetPCProvider.io.resetPC
 
   val pc             = RegInit(INIT_PC)
   val nxtPredictedPC = Wire(Types.UWord)
@@ -206,18 +208,23 @@ class ysyx_25100261 extends Module {
 
   // AXI4IO.connectMasterSlave(ifu.io.mem, memArbiter.io.ifu)
 
-  val clint = Module(new CLINTUnit)
+  // val clint = Module(new CLINTUnit)
+  //
+  // val otherReqSlave = Wire(AXI4IO.Slave)
+  // AXI4IO.transformSlaveToMasterValidIf(!reset.asBool)(io.master, otherReqSlave)
+  // val memXBar       = Module(
+  //   new AXI4LiteXBar(
+  //     Seq(
+  //       AddrSpace.CLINT -> clint.io,
+  //       AddrSpace.SOC   -> otherReqSlave
+  //     )
+  //   )
+  // )
 
-  val otherReqSlave = Wire(AXI4IO.Slave)
-  AXI4IO.transformSlaveToMasterValidIf(!reset.asBool)(io.master, otherReqSlave)
-  val memXBar       = Module(
-    new AXI4LiteXBar(
-      Seq(
-        AddrSpace.CLINT -> clint.io,
-        AddrSpace.SOC   -> otherReqSlave
-      )
-    )
-  )
+  // AXI4IO.connectMasterSlave(memArbiter.io.out, memXBar.io.in)
+  // memXBar.connect()
+
+  memArbiter.io.out <> io.master
 
   when(io.master.bvalid && io.master.bresp === AXI4IO.BResp.DECERR) {
     printf("AXI4 DECERR on write address 0x%x\n", io.master.awaddr)
@@ -229,9 +236,6 @@ class ysyx_25100261 extends Module {
     stop()
     stop()
   }
-
-  AXI4IO.connectMasterSlave(memArbiter.io.out, memXBar.io.in)
-  memXBar.connect()
 
   ifu.io.pc.bits  := pc
   ifu.io.pc.valid := true.B
@@ -268,5 +272,4 @@ class ysyx_25100261 extends Module {
   gprs.io.write <> wbu.io.gpr
   csrs.io.write <> wbu.io.csr
   csrs.io.is_ecall := wbu.io.is_ecall
-  }
 }
