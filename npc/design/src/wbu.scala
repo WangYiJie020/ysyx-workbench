@@ -87,7 +87,7 @@ class WBUForDifftest extends Module {
   dontTouch(isEBreak)
   when(isEBreak) {
     RawClockedVoidFunctionCall("raise_ebreak")(clock, isEBreak)
-    // stop()
+    stop()
   }
 
   when(valid && wbinfo.needSkipRef) {
