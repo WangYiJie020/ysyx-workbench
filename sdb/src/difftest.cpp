@@ -62,6 +62,7 @@ hander_t::difftest_trace_handler(string_view ref_so_file,int port){
 	_log("Difftest load ref from {}\n",ref_so_file);
 	_require_call_after_inst_exec=true;
 	_imp->ref_init(port);
+	this->name = "difftest-handler";
 }
 
 static reg_snapshot_t pack_regs_and_pc(const trace_context& ctx){
@@ -94,7 +95,7 @@ void hander_t::handle(_ctx_ref ctx){
 	for(size_t i=0;i<regs.size();i++){
 		if(ref_regs[i]!=regs[i]){
 			_log(
-				"Difftest failed at pc = {:#x}, reg {}({}) not match: dut = {:#x}, ref = {:#x}",
+				"Difftest failed at pc = {:#x}, reg {}({}) not match: dut = {:#x}, ref = {:#x}\n",
 				ctx.pc,
 				i,
 				i < ctx.reg_names.size() ? ctx.reg_names[i] : "pc",
