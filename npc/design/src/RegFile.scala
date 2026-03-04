@@ -178,7 +178,9 @@ class ControlStatusRegisterFile extends Module {
       printf(cf"[CSR] mstatus <= 0x${Hexadecimal(io.write.data)}\n")
       }
       is(CSRAddr.mepc)    { mepc    := io.write.data }
-      is(CSRAddr.mcause)  { mcause  := io.write.data }
+      is(CSRAddr.mcause)  { 
+        printf(cf"[CSR] mcause <= 0x${Hexadecimal(io.write.data)}\n")
+      mcause  := io.write.data }
       is(CSRAddr.mtvec)   { mtvec   := io.write.data }
     }
     when(io.is_ecall && (io.write.addr === CSRAddr.mepc)) {
