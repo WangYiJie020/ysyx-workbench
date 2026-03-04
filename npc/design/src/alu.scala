@@ -66,7 +66,7 @@ class ALU extends Module {
   // add_sub_res := Mux(isAdd, src1 + src2, src1 - src2)
 
   val full_add_res = src1 +& op2_inv + cin
-  add_sub_res := full_add_res(1, 0)
+  add_sub_res := full_add_res(31, 0)
   val carry_out = full_add_res(32)
 
   // By using carry out to determine slt/sltu
