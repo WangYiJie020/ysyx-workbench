@@ -291,7 +291,7 @@ class LSU extends Module {
   outWriteBackInfo.csr_ecallflag := inExuWriteBackInfo.csr_ecallflag
   outWriteBackInfo.gpr.addr      := inExuWriteBackInfo.gpr.addr
   outWriteBackInfo.gpr.en        := inExuWriteBackInfo.gpr.en
-  outWriteBackInfo.gpr.data      := Mux(isMemOp, loadResult, Mux(isCLINTAddr, clintRdData, inExuWriteBackInfo.gpr.data))
+  outWriteBackInfo.gpr.data      := Mux(isLoad, Mux(isCLINTAddr, clintRdData, loadResult), inExuWriteBackInfo.gpr.data)
   outWriteBackInfo.is_ebreak     := inExuWriteBackInfo.is_ebreak
   outWriteBackInfo.pc            := inExuWriteBackInfo.pc
   outWriteBackInfo.nxt_pc        := inExuWriteBackInfo.nxt_pc
