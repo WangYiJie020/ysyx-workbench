@@ -111,6 +111,8 @@ class ysyx_25100261 extends Module {
     val lsu = Module(new LSU)
     val wbu = Module(new WBU)
 
+    lsu.io.mcycle64 := csrs.io.mcycle64
+
     val resetPCProvider = Module(new ysyx_25100261_ResetPCProvider)
     val INIT_PC         = resetPCProvider.io.resetPC
 
