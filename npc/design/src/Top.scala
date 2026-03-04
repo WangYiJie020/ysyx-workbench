@@ -254,6 +254,9 @@ class ysyx_25100261 extends Module {
       pipelineConnect(exuOut, lsuDifftest.io.in, lsuDifftest.io.out)
       lsuDifftest.io.actualLSU.inReady := lsu.io.in.ready
       lsuDifftest.io.actualLSU.outValid := lsu.io.out.valid
+
+
+    RawClockedVoidFunctionCall("raise_ebreak")(clock, true.B)
       // val wbuDifftest = Module(new WBUForDifftest)
       // pipelineConnect(lsuDifftest.io.out, wbuDifftest.io.in)
     }
