@@ -82,7 +82,7 @@ class LSU extends Module {
   memRdRawData := io.mem.rdata
 
   val isLoadOp    = in.isLoad && io.in.valid
-  val isCLINTAddr = in.destAddr(31, 28) === AddrSpace.CLINT._1(31, 28)
+  val isCLINTAddr = in.destAddr(31, 24) === AddrSpace.CLINT._1(31, 24)
   val isMemLoad   = isLoadOp && (!isCLINTAddr)
   val isStore     = in.isStore && io.in.valid
 
