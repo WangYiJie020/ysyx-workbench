@@ -20,7 +20,7 @@ class WriteBackInfo extends Bundle {
 
   val is_ebreak = Bool()
 
-  val skipDifftest = Bool()
+  // val skipDifftest = Bool()
 
   val pc     = Types.UWord
   val nxt_pc = Types.UWord
