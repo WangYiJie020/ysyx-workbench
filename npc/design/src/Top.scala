@@ -210,18 +210,23 @@ class ysyx_25100261 extends Module {
 
     // AXI4IO.connectMasterSlave(ifu.io.mem, memArbiter.io.ifu)
 
-    val clint = Module(new CLINTUnit)
+    // val clint = Module(new CLINTUnit)
+    //
+    // val otherReqSlave = Wire(AXI4IO.Slave)
+    // AXI4IO.transformSlaveToMasterValidIf(!reset.asBool)(io.master, otherReqSlave)
+    // val memXBar       = Module(
+    //   new AXI4LiteXBar(
+    //     Seq(
+    //       AddrSpace.CLINT -> clint.io,
+    //       AddrSpace.SOC   -> otherReqSlave
+    //     )
+    //   )
+    // )
 
-    val otherReqSlave = Wire(AXI4IO.Slave)
-    AXI4IO.transformSlaveToMasterValidIf(!reset.asBool)(io.master, otherReqSlave)
-    val memXBar       = Module(
-      new AXI4LiteXBar(
-        Seq(
-          AddrSpace.CLINT -> clint.io,
-          AddrSpace.SOC   -> otherReqSlave
-        )
-      )
-    )
+    // AXI4IO.connectMasterSlave(memArbiter.io.out, memXBar.io.in)
+    // memXBar.connect()
+
+    memArbiter.io.out <> io.master
 
     when(io.master.bvalid && io.master.bresp === AXI4IO.BResp.DECERR) {
       printf("AXI4 DECERR on write address 0x%x\n", io.master.awaddr)
@@ -234,8 +239,6 @@ class ysyx_25100261 extends Module {
       stop()
     }
 
-    AXI4IO.connectMasterSlave(memArbiter.io.out, memXBar.io.in)
-    memXBar.connect()
 
     ifu.io.pc.bits  := pc
     ifu.io.pc.valid := true.B
