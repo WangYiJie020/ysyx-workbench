@@ -81,11 +81,12 @@ class LSU extends Module {
   val memRdRawData = Wire(Types.UWord)
   memRdRawData := io.mem.rdata
 
-  val isLoad      = in.isLoad && io.in.valid
-  val isStore     = in.isStore && io.in.valid
+  val isLoadOp    = in.isLoad && io.in.valid
   val isCLINTAddr = in.destAddr(31, 28) === AddrSpace.CLINT._1(31, 28)
+  val isMemLoad   = isLoadOp && (!isCLINTAddr)
+  val isStore     = in.isStore && io.in.valid
 
-  val isMemOp = (isLoad && (!isCLINTAddr)) || isStore
+  val isMemOp = isMemLoad || isStore
 
   // Lo: 0x20000048 -> 08 -> 0b1000
   // Hi: 0x2000004c -> 12 -> 0b1100
@@ -95,9 +96,9 @@ class LSU extends Module {
   io.out.valid := io.in.valid && ((!isMemOp) || isWaitOut || ((isWaitB | isWaitW) && memIO.bvalid) || ((isWaitR | isIdle) && memIO.rvalid))
   io.in.ready  := ((!isMemOp) || (isWaitOut) || ((isWaitW | isWaitB) && memIO.bvalid) || ((isWaitR | isIdle) && memIO.rvalid)) && io.out.ready
 
-  val addrAck = Mux(isLoad, io.mem.arready, io.mem.awready)
+  val addrAck = Mux(isMemLoad, io.mem.arready, io.mem.awready)
 
-  val nxtStateWhenIdleMeetMemOp = Mux(isLoad, State.waitAR, State.waitAW)
+  val nxtStateWhenIdleMeetMemOp = Mux(isMemLoad, State.waitAR, State.waitAW)
 
   val nxtStateWhenWaitOut = Mux(io.out.ready, State.idle, State.waitOut)
   val nxtStateWhenWaitB   = Mux(memIO.bvalid && memIO.bready, nxtStateWhenWaitOut, State.waitB)
@@ -105,7 +106,7 @@ class LSU extends Module {
   val nxtStateWhenWaitR = Mux(memIO.rvalid && memIO.rready, nxtStateWhenWaitOut, State.waitR)
   val nxtStateWhenWaitW = Mux(memIO.wvalid && memIO.wready, nxtStateWhenWaitB, State.waitW)
 
-  val nxtStateWhenAddrAck = Mux(isLoad, nxtStateWhenWaitR, State.waitW)
+  val nxtStateWhenAddrAck = Mux(isMemLoad, nxtStateWhenWaitR, State.waitW)
 
   state := MuxLookup(state, State.idle)(
     Seq(
@@ -130,7 +131,7 @@ class LSU extends Module {
   // val memAddrUnalignPartBitlen = memAddrUnalignPart << 3
 
   memIO.araddr  := memAddr
-  memIO.arvalid := isLoad && (isIdle || isWaitAR)
+  memIO.arvalid := isMemLoad && (isIdle || isWaitAR)
 
   // val memOpSize = MuxLookup(func3t, 0.U)(
   //   Seq(
@@ -291,7 +292,7 @@ class LSU extends Module {
   outWriteBackInfo.csr_ecallflag := inExuWriteBackInfo.csr_ecallflag
   outWriteBackInfo.gpr.addr      := inExuWriteBackInfo.gpr.addr
   outWriteBackInfo.gpr.en        := inExuWriteBackInfo.gpr.en
-  outWriteBackInfo.gpr.data      := Mux(isLoad, Mux(isCLINTAddr, clintRdData, loadResult), inExuWriteBackInfo.gpr.data)
+  outWriteBackInfo.gpr.data      := Mux(isLoadOp, Mux(isCLINTAddr, clintRdData, loadResult), inExuWriteBackInfo.gpr.data)
   outWriteBackInfo.is_ebreak     := inExuWriteBackInfo.is_ebreak
   outWriteBackInfo.pc            := inExuWriteBackInfo.pc
   outWriteBackInfo.nxt_pc        := inExuWriteBackInfo.nxt_pc
@@ -303,7 +304,8 @@ class LSU extends Module {
   val isVGAAddr    = AddrSpace.inRng(memAddr, AddrSpace.VGA)
   val isPS2Addr    = AddrSpace.inRng(memAddr, AddrSpace.PS2)
 
-  val needSkipDifftest = (isMemOp && (isSerialAddr || isSPIAddr || isClintAddr || isVGAAddr || isPS2Addr)) || (isLoad && isCLINTAddr)
+  val needSkipDifftest =
+    (isMemOp && (isSerialAddr || isSPIAddr || isClintAddr || isVGAAddr || isPS2Addr)) || (isMemLoad && isCLINTAddr)
 
   outWriteBackInfo.skipDifftest := needSkipDifftest
 
