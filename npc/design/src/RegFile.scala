@@ -173,7 +173,10 @@ class ControlStatusRegisterFile extends Module {
   when(en_wrtie) {
     // waregs(widx) := io.write.data
     switch(io.write.addr) {
-      is(CSRAddr.mstatus) { mstatus := io.write.data }
+      is(CSRAddr.mstatus) { 
+      mstatus := io.write.data 
+      printf(cf"[CSR] mstatus <= 0x${Hexadecimal(io.write.data)}\n")
+      }
       is(CSRAddr.mepc)    { mepc    := io.write.data }
       is(CSRAddr.mcause)  { mcause  := io.write.data }
       is(CSRAddr.mtvec)   { mtvec   := io.write.data }
