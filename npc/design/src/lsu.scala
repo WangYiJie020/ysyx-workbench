@@ -84,7 +84,7 @@ class LSU extends Module {
 
   val isLoadOp    = in.isLoad && io.in.valid
   // only compare high 8 bit since clint addr is 0x0200_0048/4c, 0x02 is unique in whole addr space
-  val isCLINTAddr = in.destAddr(31, 28) === AddrSpace.CLINT._1(31, 28)
+  val isCLINTAddr = in.destAddr(31, 27) === AddrSpace.CLINT._1(31, 27)
   val isMemLoad   = isLoadOp && (!isCLINTAddr)
   val isStore     = in.isStore && io.in.valid
 
@@ -295,9 +295,9 @@ class LSU extends Module {
   outWriteBackInfo.gpr.addr      := inExuWriteBackInfo.gpr.addr
   outWriteBackInfo.gpr.en        := inExuWriteBackInfo.gpr.en
   outWriteBackInfo.gpr.data      := Mux(isLoadOp, Mux(isCLINTAddr, clintRdData, loadResult), inExuWriteBackInfo.gpr.data)
-  outWriteBackInfo.is_ebreak     := inExuWriteBackInfo.is_ebreak
-  outWriteBackInfo.pc            := inExuWriteBackInfo.pc
-  outWriteBackInfo.nxt_pc        := inExuWriteBackInfo.nxt_pc
+  // outWriteBackInfo.is_ebreak     := inExuWriteBackInfo.is_ebreak
+  // outWriteBackInfo.pc            := inExuWriteBackInfo.pc
+  // outWriteBackInfo.nxt_pc        := inExuWriteBackInfo.nxt_pc
   outWriteBackInfo.iid           := inExuWriteBackInfo.iid
 
   val isSRAMAddr = AddrSpace.inRng(memAddr, AddrSpace.SRAM)
@@ -312,9 +312,18 @@ class LSU extends Module {
   }
 }
 
+class LSUInputForDifftest extends Bundle {
+  val isLoad       = Bool()
+  val isStore      = Bool()
+  val destAddr     = Types.UWord
+  val pc           = Types.UWord
+  val nxtPC       = Types.UWord
+  val isEBreak    = Bool()
+}
+
 class LSUForDifftest extends Module {
   val io = IO(new Bundle {
-    val in = Flipped(Decoupled(new LSUInput))
+    val in = Flipped(Decoupled(new LSUInputForDifftest))
 
     val actualLSU = new Bundle {
       val inReady = Input(Bool())
@@ -343,9 +352,9 @@ class LSUForDifftest extends Module {
     (isMemOp && (isSerialAddr || isSPIAddr || isClintAddr || isVGAAddr || isPS2Addr)) || (isLoadOp && isClintAddr)
 
   val outInfo = io.out.bits
-  outInfo.pc := io.in.bits.exuWriteBack.pc
+  outInfo.pc := io.in.bits.pc
   outInfo.needSkipRef := needSkipDifftest
-  outInfo.isEBreak := io.in.bits.exuWriteBack.is_ebreak
-  outInfo.nxtPC := io.in.bits.exuWriteBack.nxt_pc
+  outInfo.isEBreak := io.in.bits.isEBreak
+  outInfo.nxtPC := io.in.bits.nxtPC
 }
 

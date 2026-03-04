@@ -131,8 +131,8 @@ class ysyx_25100261 extends Module {
       bp.io.historyIsJAL  := btb.io.query.isJAL
 
       btb.io.update.en     := exu.io.out.valid && exu.io.jmpHappen
-      btb.io.update.addr   := exu.io.out.bits.exuWriteBack.pc
-      btb.io.update.target := exu.io.out.bits.exuWriteBack.nxt_pc
+      btb.io.update.addr   := exu.io.pc
+      btb.io.update.target := exu.io.nxtPC
       btb.io.update.isJAL  := exu.io.isJAL
 
       nxtPredictedPC := bp.io.predictTarget
@@ -167,7 +167,7 @@ class ysyx_25100261 extends Module {
 
     dontTouch(isBranchGuessWrong)
     val curCorrectJmpTarget = RegEnableReadNew(
-      exu.io.out.bits.exuWriteBack.nxt_pc,
+      exu.io.nxtPC,
       exu.io.out.valid
     )
 
@@ -245,13 +245,19 @@ class ysyx_25100261 extends Module {
     ifu.io.pc.valid := true.B
 
     layer.block(DifftestLayer) {
+      val iduOut = Wire(Decoupled(new DecodedInst))
+      iduOut.valid := idu.io.out.valid
+      iduOut.bits  := idu.io.out.bits
+
+      val exuDifftest = Module(new EXUForDifftest)
+      exuDifftest.io.actual.inReady := exu.io.in.ready
+      exuDifftest.io.actual.nxtPC   := exu.io.nxtPC
+      exuDifftest.io.actual.memAddr := exu.io.out.bits.destAddr
+      exuDifftest.io.actual.outValid := exu.io.out.valid
+      pipelineConnect(iduOut, exuDifftest.io.in, exuDifftest.io.out)
+
       val lsuDifftest = Module(new LSUForDifftest)
-
-      val exuOut = Wire(Flipped(Decoupled(new LSUInput)))
-      exuOut.valid := exu.io.out.valid
-      exuOut.bits  := exu.io.out.bits
-
-      pipelineConnect(exuOut, lsuDifftest.io.in, lsuDifftest.io.out)
+      pipelineConnect(exuDifftest.io.out, lsuDifftest.io.in, lsuDifftest.io.out)
       lsuDifftest.io.actualLSU.inReady := lsu.io.in.ready
       lsuDifftest.io.actualLSU.outValid := lsu.io.out.valid
 

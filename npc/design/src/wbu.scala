@@ -18,12 +18,11 @@ class WriteBackInfo extends Bundle {
   val csr           = CSRegReqIO.TX.Write
   val csr_ecallflag = Bool()
 
-  val is_ebreak = Bool()
-
+  // val is_ebreak = Bool()
   // val skipDifftest = Bool()
 
-  val pc     = Types.UWord
-  val nxt_pc = Types.UWord
+  // val pc     = Types.UWord
+  // val nxt_pc = Types.UWord
 
   val iid = Types.InstID
 }
