@@ -100,7 +100,7 @@ class DPICNonVoidRetWrapper[T <: Data](
 
 object SkipDifftestRef {
   def apply(clock: Clock, enable: Bool): Unit = {
-    layer.block(DifftestLayer) {
+    layer.block(SubDPICLayers.DifftestLayer) {
       ClockedCallVoidDPIC("skip_difftest_ref")(clock, enable)
     }
   }
