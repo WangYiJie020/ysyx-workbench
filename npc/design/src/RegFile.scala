@@ -128,28 +128,34 @@ class ControlStatusRegisterFile extends Module {
   // val waregs = RegInit(VecInit("h00001800".U(32.W) +: Seq.fill(3)(0.U(32.W))))
 
 
-  val r1 = Reg(UInt(32.W)) // mstatus
-  val r2 = Reg(UInt(32.W)) // mepc
-  val r3 = Reg(UInt(4.W))  // mcause
-  val r4 = Reg(UInt(32.W))  // mtvec
-  val waregs = VecInit(
-    r1, r2, r3, r4
-  )
-  when(reset.asBool) {
-    waregs(0) := "h00001800".U // mstatus
-  }
+  val mstatus = RegInit("h00001800".U(32.W))
+  val mepc = Reg(UInt(32.W)) // mepc
+  val mcause = Reg(UInt(4.W))  // mcause
+  val mtvec = Reg(UInt(32.W))  // mtvec
 
-  val walut = Seq(
-    CSRAddr.mstatus -> 0.U,
-    CSRAddr.mepc    -> 1.U,
-    CSRAddr.mcause  -> 2.U,
-    CSRAddr.mtvec   -> 3.U
-  )
-  val widx  = MuxLookup(io.write.addr, 0.U)(walut)
-  val ridx  = MuxLookup(io.read.addr, 0.U)(walut)
+  // when(reset.asBool) {
+  //   waregs(0) := "h00001800".U // mstatus
+  // }
+
+  // val walut = Seq(
+  //   CSRAddr.mstatus -> 0.U,
+  //   CSRAddr.mepc    -> 1.U,
+  //   CSRAddr.mcause  -> 2.U,
+  //   CSRAddr.mtvec   -> 3.U
+  // )
+  // val widx  = MuxLookup(io.write.addr, 0.U)(walut)
+  // val ridx  = MuxLookup(io.read.addr, 0.U)(walut)
 
   when(io.read.en) {
-    io.read.data := MuxLookup(io.read.addr, waregs(ridx))(
+    val otherRd = MuxLookup(io.read.addr, 0.U)(
+      Seq(
+        CSRAddr.mstatus   -> mstatus,
+        CSRAddr.mepc      -> mepc,
+        CSRAddr.mcause    -> mcause,
+        CSRAddr.mtvec     -> mtvec
+      )
+    )
+    io.read.data := MuxLookup(io.read.addr, otherRd)(
       Seq(
         CSRAddr.mcycle    -> mcycle64(31, 0),
         CSRAddr.mcycleh   -> mcycle64(63, 32),
@@ -165,9 +171,16 @@ class ControlStatusRegisterFile extends Module {
   val en_wrtie = (io.write.en) || (io.is_ecall && (io.write.addr === CSRAddr.mepc))
 
   when(en_wrtie) {
-    waregs(widx) := io.write.data
+    // waregs(widx) := io.write.data
+    switch(io.write.addr) {
+      is(CSRAddr.mstatus) { mstatus := io.write.data }
+      is(CSRAddr.mepc)    { mepc    := io.write.data }
+      is(CSRAddr.mcause)  { mcause  := io.write.data }
+      is(CSRAddr.mtvec)   { mtvec   := io.write.data }
+    }
     when(io.is_ecall && (io.write.addr === CSRAddr.mepc)) {
-      waregs(2) := 11.U // mcause = 11 for ecall from M-mode
+      // waregs(2) := 11.U // mcause = 11 for ecall from M-mode
+      mcause := 11.U
     }
   }
 
