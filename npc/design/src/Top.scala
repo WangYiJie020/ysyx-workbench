@@ -257,7 +257,7 @@ class ysyx_25100261 extends Module {
 
 
       val wbuDifftest = Module(new WBUForDifftest)
-      // pipelineConnect(lsuDifftest.io.out, wbuDifftest.io.in)
+      pipelineConnect(lsuDifftest.io.out, wbuDifftest.io.in)
     }
 
     pipelineConnect(ifu.io.out, idu.io.in, idu.io.out)
