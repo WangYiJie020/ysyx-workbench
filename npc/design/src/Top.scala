@@ -248,14 +248,14 @@ class ysyx_25100261 extends Module {
       val lsuDifftest = Module(new LSUForDifftest)
 
       val exuOut = Wire(Flipped(Decoupled(new LSUInput)))
-      // exuOut.valid := exu.io.out.valid
-      // exuOut.bits  := exu.io.out.bits
+      exuOut.valid := exu.io.out.valid
+      exuOut.bits  := exu.io.out.bits
 
       pipelineConnect(exuOut, lsuDifftest.io.in, lsuDifftest.io.out)
       lsuDifftest.io.actualLSU.inReady := lsu.io.in.ready
       lsuDifftest.io.actualLSU.outValid := lsu.io.out.valid
-      val wbuDifftest = Module(new WBUForDifftest)
-      pipelineConnect(lsuDifftest.io.out, wbuDifftest.io.in)
+      // val wbuDifftest = Module(new WBUForDifftest)
+      // pipelineConnect(lsuDifftest.io.out, wbuDifftest.io.in)
     }
 
     pipelineConnect(ifu.io.out, idu.io.in, idu.io.out)
