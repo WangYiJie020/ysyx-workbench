@@ -324,6 +324,7 @@ class EXUForDifftest extends Module {
     val in     = Flipped(Decoupled(new DecodedInst))
     val actual = new Bundle {
       val inReady  = Input(Bool())
+      val pc       = Input(Types.UWord)
       val nxtPC    = Input(Types.UWord)
       val memAddr  = Input(Types.UWord)
       val outValid = Input(Bool())
@@ -336,7 +337,7 @@ class EXUForDifftest extends Module {
   val outInfo = io.out.bits
   outInfo.isLoad   := InstType.hasSame(io.in.bits.info.typ, InstType.load)
   outInfo.isStore  := InstType.hasSame(io.in.bits.info.typ, InstType.store)
-  outInfo.pc       := io.in.bits.pc
+  outInfo.pc       := io.actual.pc
   outInfo.nxtPC    := io.actual.nxtPC
   outInfo.isEBreak := io.in.bits.code === "h00100073".U
   outInfo.destAddr := io.actual.memAddr

@@ -251,6 +251,7 @@ class ysyx_25100261 extends Module {
 
       val exuDifftest = Module(new EXUForDifftest)
       exuDifftest.io.actual.inReady := exu.io.in.ready
+      exuDifftest.io.actual.pc      := exu.io.pc
       exuDifftest.io.actual.nxtPC   := exu.io.nxtPC
       exuDifftest.io.actual.memAddr := exu.io.out.bits.destAddr
       exuDifftest.io.actual.outValid := exu.io.out.valid
