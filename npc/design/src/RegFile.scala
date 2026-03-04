@@ -1,7 +1,7 @@
 package regfile
 
 import chisel3._
-import chisel3.util.{Cat, Counter, MuxLookup}
+import chisel3.util._
 
 import common_def._
 import dpiwrap._
@@ -127,7 +127,12 @@ class ControlStatusRegisterFile extends Module {
   // 0: mstatus
   // val waregs = RegInit(VecInit("h00001800".U(32.W) +: Seq.fill(3)(0.U(32.W))))
 
-  val waregs = Reg(Vec(4, UInt(32.W)))
+  val waregs = Reg(VecInit(Seq(
+    UInt(32.W), // mstatus
+    UInt(32.W), // mepc
+    UInt(4.W),  // mcause
+    UInt(32.W)  // mtvec
+  )))
   when(reset.asBool) {
     waregs(0) := "h00001800".U // mstatus
   }
