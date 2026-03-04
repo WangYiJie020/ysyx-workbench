@@ -12,9 +12,9 @@ namespace DirectSignals {
 inline auto GetCPU() {
   // use vlSymsp to get inner module/signal
 #ifdef SIM_SOC
-  return &get_dut()->ysyxSoCFull->vlSymsp->TOP__ysyxSoCFull__asic__cpu__cpu;
+  return &get_dut()->ysyxSoCFull->vlSymsp->TOP__ysyxSoCFull__asic__cpu__cpu__core;
 #else
-  return &get_dut()->NPCTestSoC->vlSymsp->TOP__NPCTestSoC__cpu;
+  return &get_dut()->NPCTestSoC->vlSymsp->TOP__NPCTestSoC__cpu__core;
 #endif
 }
 
