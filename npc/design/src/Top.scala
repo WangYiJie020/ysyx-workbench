@@ -250,7 +250,7 @@ class ysyx_25100261 extends Module {
       lsuDifftest.io.actualLSU.inReady := lsu.io.in.ready
       lsuDifftest.io.actualLSU.outValid := lsu.io.out.valid
       val wbuDifftest = Module(new WBUForDifftest)
-      pipelineConnect(lsu.io.out, wbuDifftest.io.in)
+      pipelineConnect(lsuDifftest.io.out, wbuDifftest.io.in)
     }
 
     pipelineConnect(ifu.io.out, idu.io.in, idu.io.out)
