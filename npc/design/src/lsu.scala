@@ -309,7 +309,7 @@ class LSU extends Module {
   val needSkipDifftest =
     (isMemOp && (isSerialAddr || isSPIAddr || isClintAddr || isVGAAddr || isPS2Addr)) || (isLoadOp && isCLINTAddr)
 
-  SkipDifftestRef(clock, needSkipDifftest)
+  SkipDifftestRef(clock, RegNext(needSkipDifftest, init = false.B))
 
   outWriteBackInfo.skipDifftest := DontCare
 
