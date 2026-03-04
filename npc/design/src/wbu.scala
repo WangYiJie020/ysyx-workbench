@@ -86,15 +86,15 @@ class WBUForDifftest extends Module {
   val isEBreak = WireDefault(wbinfo.isEBreak && valid)
   dontTouch(isEBreak)
   when(isEBreak) {
-    ClockedCallVoidDPIC("raise_ebreak")(clock, isEBreak)
+    RawClockedVoidFunctionCall("raise_ebreak")(clock, isEBreak)
     stop()
   }
 
   when(valid && wbinfo.needSkipRef) {
-    ClockedCallVoidDPIC("skip_difftest_ref")(clock, valid && wbinfo.needSkipRef, wbinfo.pc, wbinfo.nxtPC)
+    RawClockedVoidFunctionCall("skip_difftest_ref")(clock, valid && wbinfo.needSkipRef, wbinfo.pc, wbinfo.nxtPC)
   }
 
   when(valid && (!isEBreak)) {
-    ClockedCallVoidDPIC("pc_upd")(clock, valid && !isEBreak, wbinfo.pc, wbinfo.nxtPC)
+    RawClockedVoidFunctionCall("pc_upd")(clock, valid && !isEBreak, wbinfo.pc, wbinfo.nxtPC)
   }
 }
