@@ -132,6 +132,8 @@ class ICache extends Module {
         memIORdDataVecReg(memIOCurRdOffset) := io.mem.rdata
         memIOCurRdOffset                    := memIOCurRdOffset + 1.U
       }
+    } else {
+      sys.error("ICache not support sigle-word line now")
     }
   }
 
