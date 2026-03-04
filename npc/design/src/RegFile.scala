@@ -128,9 +128,9 @@ class ControlStatusRegisterFile extends Module {
   // val waregs = RegInit(VecInit("h00001800".U(32.W) +: Seq.fill(3)(0.U(32.W))))
 
 
-  val mstatus = RegInit("h00001800".U(32.W))
+  // val mstatus = RegInit("h00001800".U(32.W))
   val mepc = Reg(UInt(32.W)) // mepc
-  val mcause = Reg(UInt(4.W))  // mcause
+  // val mcause = Reg(UInt(4.W))  // mcause
   val mtvec = Reg(UInt(32.W))  // mtvec
 
   // when(reset.asBool) {
@@ -149,9 +149,9 @@ class ControlStatusRegisterFile extends Module {
   when(io.read.en) {
     val otherRd = MuxLookup(io.read.addr, 0.U)(
       Seq(
-        CSRAddr.mstatus   -> mstatus,
+        CSRAddr.mstatus   -> "h00001800".U, // mstatus
         CSRAddr.mepc      -> mepc,
-        CSRAddr.mcause    -> mcause,
+        CSRAddr.mcause    -> 11.U, // mcause = 11 for ecall from M-mode
         CSRAddr.mtvec     -> mtvec
       )
     )
@@ -174,18 +174,19 @@ class ControlStatusRegisterFile extends Module {
     // waregs(widx) := io.write.data
     switch(io.write.addr) {
       is(CSRAddr.mstatus) { 
-      mstatus := io.write.data 
-      printf(cf"[CSR] mstatus <= 0x${Hexadecimal(io.write.data)}\n")
+      // mstatus := io.write.data 
+      // printf(cf"[CSR] mstatus <= 0x${Hexadecimal(io.write.data)}\n")
       }
       is(CSRAddr.mepc)    { mepc    := io.write.data }
       is(CSRAddr.mcause)  { 
-        printf(cf"[CSR] mcause <= 0x${Hexadecimal(io.write.data)}\n")
-      mcause  := io.write.data }
+        // printf(cf"[CSR] mcause <= 0x${Hexadecimal(io.write.data)}\n")
+      // mcause  := io.write.data 
+      }
       is(CSRAddr.mtvec)   { mtvec   := io.write.data }
     }
     when(io.is_ecall && (io.write.addr === CSRAddr.mepc)) {
       // waregs(2) := 11.U // mcause = 11 for ecall from M-mode
-      mcause := 11.U
+      // mcause := 11.U
     }
   }
 
