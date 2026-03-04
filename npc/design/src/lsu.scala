@@ -82,6 +82,7 @@ class LSU extends Module {
   memRdRawData := io.mem.rdata
 
   val isLoadOp    = in.isLoad && io.in.valid
+  // only compare high 8 bit since clint addr is 0x0200_0048/4c, 0x02 is unique in whole addr space
   val isCLINTAddr = in.destAddr(31, 24) === AddrSpace.CLINT._1(31, 24)
   val isMemLoad   = isLoadOp && (!isCLINTAddr)
   val isStore     = in.isStore && io.in.valid
