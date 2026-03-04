@@ -7,6 +7,7 @@ import busfsm._
 import chisel3.util.circt.dpi._
 import axi4._
 
+import dpiwrap._
 import regfile.GPRegReqIO
 import dpiwrap.ClockedCallVoidDPIC
 
@@ -308,7 +309,9 @@ class LSU extends Module {
   val needSkipDifftest =
     (isMemOp && (isSerialAddr || isSPIAddr || isClintAddr || isVGAAddr || isPS2Addr)) || (isLoadOp && isCLINTAddr)
 
-  outWriteBackInfo.skipDifftest := needSkipDifftest
+  SkipDifftestRef(clock, needSkipDifftest)
+
+  outWriteBackInfo.skipDifftest := DontCare
 
   val isSRAMAddr = AddrSpace.inRng(memAddr, AddrSpace.SRAM)
   when(io.mem.awvalid && io.mem.awready && isSRAMAddr) {
