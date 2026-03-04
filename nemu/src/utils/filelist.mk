@@ -22,3 +22,7 @@ src/utils/disasm.c: $(LIBCAPSTONE)
 $(LIBCAPSTONE):
 	$(MAKE) -C tools/capstone
 endif
+
+GEN_INST = tools/gen-inst/build/out.cc
+src/isa/riscv32/inst.c: $(GEN_INST)
+	$(MAKE) -C tools/gen-inst
