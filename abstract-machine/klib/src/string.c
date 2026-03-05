@@ -57,17 +57,23 @@ int strcmp(const char *s1, const char *s2) {
 }
 
 int strncmp(const char *s1, const char *s2, size_t n) {
-  int tmp;
-  size_t i = 0;
-  while (*s1 && *s2 && i < n) {
-    i++;
-    tmp = (int)*s1 - (int)*s2;
-    if (tmp)
-      return tmp;
-    s1++;
-    s2++;
-  }
-  return (int)*s1 - (int)*s2;
+	if(n==0)return 0;
+	while(n-- > 1 && *s1 && *s2 && *s1 == *s2) {
+		s1++;
+		s2++;
+	}
+	return *(unsigned char *)s1 - *(unsigned char *)s2;
+  // int tmp;
+  // size_t i = 0;
+  // while (*s1 && *s2 && i < n) {
+  //   i++;
+  //   tmp = (int)*s1 - (int)*s2;
+  //   if (tmp)
+  //     return tmp;
+  //   s1++;
+  //   s2++;
+  // }
+  // return (int)*s1 - (int)*s2;
 }
 
 ATTRIBUTE_NO_SANITIZE_ADDRESS
