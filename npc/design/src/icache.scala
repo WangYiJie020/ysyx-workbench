@@ -119,21 +119,14 @@ class ICache extends Module {
   )
   val destAddrAligned = destAddrTag ## destAddrIdx ## 0.U(log2Ceil(ICacheParameters.BLOCK_SIZE).W)
 
-  val hasMultiWordInline = ICacheParameters.BLOCK_SIZE_INWORDS > 1
-
-  val memIOCurRdOffset  =
-    if (hasMultiWordInline) RegInit(0.U(log2Ceil(ICacheParameters.BLOCK_SIZE_INWORDS - 1).W)) else 0.U
+  val memIOCurRdOffset  = RegInit(0.U(log2Ceil(ICacheParameters.BLOCK_SIZE_INWORDS - 1).W))
   val memIORdDataVecReg = Reg(Vec(ICacheParameters.BLOCK_SIZE_INWORDS - 1, Types.UWord))
   when(io.mem.rvalid && io.mem.rready) {
-    if (hasMultiWordInline) {
-      when(memIOMeetLast) {
-        memIOCurRdOffset := 0.U
-      }.otherwise {
-        memIORdDataVecReg(memIOCurRdOffset) := io.mem.rdata
-        memIOCurRdOffset                    := memIOCurRdOffset + 1.U
-      }
-    } else {
-      sys.error("ICache not support sigle-word line now")
+    when(memIOMeetLast) {
+      memIOCurRdOffset := 0.U
+    }.otherwise {
+      memIORdDataVecReg(memIOCurRdOffset) := io.mem.rdata
+      memIOCurRdOffset                    := memIOCurRdOffset + 1.U
     }
   }
 
