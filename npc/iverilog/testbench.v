@@ -24,15 +24,15 @@ wire [31:0] exu_code;
 wire [31:0] gpr_a0;
 
 `ifdef SIM_NETLIST
-	`ifdef IS_CI_ENV
-		assign exu_out_valid = dut.cpu.\core/_exu_io_out_valid ;
-		assign exu_code = dut.cpu.\core/exu/_stageCalc_io_out_bits_dinst_code ;
-		assign gpr_a0 = dut.cpu.\core/gprs/reg_10 ;
-	`else
+	// `ifdef IS_CI_ENV
+	// 	assign exu_out_valid = dut.cpu.\core/_exu_io_out_valid ;
+	// 	assign exu_code = dut.cpu.\core/exu/_stageCalc_io_out_bits_dinst_code ;
+	// 	assign gpr_a0 = dut.cpu.\core/gprs/reg_10 ;
+	// `else
 		assign exu_out_valid = dut.cpu.\core._exu_io_out_valid ;
 		assign exu_code = dut.cpu.\core.exu._stageCalc_io_out_bits_dinst_code ;
 		assign gpr_a0 = dut.cpu.\core.gprs.reg_10 ;
-	`endif
+	// `endif
 `else
 	assign exu_out_valid = dut.cpu.core.exu.io_out_valid;
 	assign exu_code = dut.cpu.core.exu.io_in_bits_code;
