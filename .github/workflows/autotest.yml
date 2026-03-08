@@ -48,8 +48,8 @@ jobs:
           fetch-depth: 0
 
       - name: Show current branch
-          run: |
-            git branch --show-current
+        run: |
+          git branch --show-current
 
       - name: Set YSYX_HOME
         id: set-ysyx-home
