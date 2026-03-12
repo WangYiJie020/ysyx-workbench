@@ -23,6 +23,12 @@ extern "C" void pmem_upd(int addr, int data, int mask) {
 	auto& pmem = *_pmem_ptr;
   // uint32_t psram_addr = addr - pmem.base();
   pmem.write_word(addr, udata, umask);
+  uint32_t newdata;
+	pmem.read_word(addr, newdata);
+
+	spdlog::info("pmem write addr={:08x} data={:08x} (strb {:02x}) newdata={:08x}", addr,
+						 (uint32_t)data, (uint32_t)umask, newdata);
+
   // return psram_write(psram_addr, umask, udata, nullptr);
 }
 
