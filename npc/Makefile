@@ -39,7 +39,7 @@ VERILATOR = verilator
 
 IMG ?= 
 
-SAN_FLAGS?= #-fsanitize=address
+SAN_FLAGS?= -fsanitize=address
 
 
 # Performance counter need VPI to fetch handshake signals
