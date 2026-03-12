@@ -1,13 +1,18 @@
 #include "mem.hpp"
 
-static direct_mapped_mem pmem = {
-    0x80000000u, 0xa0000000u, "pmem", 128 * 1024 * 1024,
-    get_dut()
-        ->NPCTestSoC->vlSymsp->TOP__NPCTestSoC__npcDevices__mem__mem__mem_ext
-        .Memory.data()};
+static std::shared_ptr<direct_mapped_mem> _pmem_ptr;
+
 mem_region_group_t &get_mem_regions_of_npc() {
-	static mem_region_group_t mem_regions = {pmem};
-	return mem_regions;
+  static mem_region_group_t mem_regions;
+  if (mem_regions.empty()) {
+    if (_pmem_ptr) {
+      mem_regions.push_back(*_pmem_ptr);
+    } else {
+      spdlog::warn("try to get mem regions of npc before init, returning empty "
+                   "region list");
+    }
+  }
+  return mem_regions;
 }
 
 // compatible interface for npc core
@@ -15,8 +20,9 @@ extern "C" void pmem_upd(int addr, int data, int mask) {
   uint32_t udata = data;
   uint8_t umask = mask & 0xf;
 
+	auto& pmem = *_pmem_ptr;
   uint32_t psram_addr = addr - pmem.base();
-	pmem.write_word(psram_addr, udata, umask);
+  pmem.write_word(psram_addr, udata, umask);
   // return psram_write(psram_addr, umask, udata, nullptr);
 }
 
@@ -25,7 +31,12 @@ void init_mem_of_npc(void *img, const sim_config &cfg) {
   // g_sim_mem.psram.copy_from(img, img_size);
   spdlog::info("copy img to pmem for cpu core sim read");
 
-	pmem.copy_from(img, cfg.img_size);
+  _pmem_ptr = std::make_shared<direct_mapped_mem>(
+      0x80000000u, 0xa0000000u, "pmem", 128 * 1024 * 1024,
+      get_dut()
+          ->NPCTestSoC->vlSymsp->TOP__NPCTestSoC__npcDevices__mem__mem__mem_ext
+          .Memory.data());
+  _pmem_ptr->copy_from(img, cfg.img_size);
 
   // auto pmemDataPtr = memcpy(pmemDataPtr, img, cfg.img_size);
 
