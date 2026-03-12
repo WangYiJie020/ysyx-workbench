@@ -21,8 +21,8 @@ extern "C" void pmem_upd(int addr, int data, int mask) {
   uint8_t umask = mask & 0xf;
 
 	auto& pmem = *_pmem_ptr;
-  uint32_t psram_addr = addr - pmem.base();
-  pmem.write_word(psram_addr, udata, umask);
+  // uint32_t psram_addr = addr - pmem.base();
+  pmem.write_word(addr, udata, umask);
   // return psram_write(psram_addr, umask, udata, nullptr);
 }
 
