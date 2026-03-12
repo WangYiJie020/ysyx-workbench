@@ -186,14 +186,6 @@ extern "C" void psram_write(int32_t addr, char strb8, int32_t data, int32_t *) {
   DPI_TRACE("W addr={:08x} data={:08x} (strb {:02x}) newdata={:08x}", addr,
             (uint32_t)data, (uint32_t)strb8, newdata);
 }
-// compatible interface for npc core
-extern "C" void pmem_upd(int addr, int data, int mask) {
-  uint32_t udata = data;
-  uint8_t umask = mask & 0xf;
-
-  uint32_t psram_addr = addr - g_mem.psram.base();
-  return psram_write(psram_addr, umask, udata, nullptr);
-}
 
 extern "C" void sdram_read(char block, char bank, short row, short col,
                            short *data) {
