@@ -6,6 +6,7 @@
 #include <memory>
 #include <string_view>
 #include <vector>
+#include <variant>
 
 void init_mem_logger();
 
@@ -173,3 +174,6 @@ struct sdram_mem : public mem_region_traits {
     return true;
   }
 };
+
+using mem_region_t = std::variant<direct_mapped_mem, sdram_mem>;
+using mem_region_group_t = std::vector<mem_region_t>;
