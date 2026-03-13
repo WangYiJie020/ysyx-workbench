@@ -30,7 +30,7 @@ SIM_BIN = $(SIM_BIN_DIR)/$(TOP_NAME)$(SIM_ARCH_SUFFIX)$(VSIM_OPT)
 default: $(SIM_BIN)
 
 ifeq ($(ARCH), riscv32e-ysyxsoc)
-include ./scripts/soc.mk
+include ./scripts/ysyxsoc.mk
 else
 include ./scripts/mytestsoc.mk
 endif
