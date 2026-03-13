@@ -28,7 +28,7 @@ object Elaborate extends App {
   if (preProcCore != 0) sys.exit(preProcCore)
 
   def emitSoC(gen: => chisel3.RawModule, name: String): Unit = {
-    val emitDir = s"build/testsoc-$name"
+    val emitDir = s"build/testsoc/$name"
     circt.stage.ChiselStage.emitSystemVerilogFile(
       gen,
       Array("--target-dir", emitDir),
