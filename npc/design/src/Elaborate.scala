@@ -27,11 +27,11 @@ object Elaborate extends App {
   val preProcCore = s"./scripts/preproc_vsrcs.sh ${args(1)} ${designName}".!
   if (preProcCore != 0) sys.exit(preProcCore)
 
-  def emitTestSoC(socInstance: => TestSoC[_ <: TestSoCDevice]) = {
-    val deviceName = socInstance.devices.getClass.getSimpleName
+  def emitTestSoC(devGen: => TestSoCDevice): Unit = {
+    val deviceName = devGen.getClass.getSimpleName
     val emitDir    = s"build/testsoc-${deviceName}"
     circt.stage.ChiselStage.emitSystemVerilogFile(
-      socInstance,
+      new TestSoC(devGen),
       Array("--target-dir", emitDir),
       firtoolOptions
     )
@@ -41,5 +41,5 @@ object Elaborate extends App {
     if (preProcSoC != 0) sys.exit(preProcSoC)
   }
 
-  emitTestSoC(new TestSoC(new npc.NPCDevices))
+  emitTestSoC(new npc.NPCDevices)
 }
