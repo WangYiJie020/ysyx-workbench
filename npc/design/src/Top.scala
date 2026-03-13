@@ -22,7 +22,6 @@ import branchpredictor._
 
 import config._
 
-import npc_devices._
 import dpiwrap.DifftestLayer
 
 class TopIO extends Bundle {
@@ -45,20 +44,6 @@ class PCProviderAsBlackBox extends BlackBox {
   val io = IO(new Bundle {
     val resetPC = Output(Types.UWord)
   })
-}
-
-class NPCTestSoC extends Module {
-  val cpu        = Module(new CPUCoreAsBlackBox)
-  val npcDevices = Module(new NPCDevices)
-
-  val resetPCProvider = Module(new PCProviderAsBlackBox)
-  assert(resetPCProvider.io.resetPC === "h80000000".U, "Reset PC should be 0x80000000 for npc test SoC")
-
-  npcDevices.io <> cpu.io.io.master
-  cpu.io.clock        := clock
-  cpu.io.reset        := reset
-  cpu.io.io.slave     := DontCare
-  cpu.io.io.interrupt := false.B
 }
 
 class ysyx_25100261 extends Module {
