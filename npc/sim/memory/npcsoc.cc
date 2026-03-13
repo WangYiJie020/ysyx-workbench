@@ -47,7 +47,7 @@ void init_mem_of_npc(void *img, const sim_config &cfg) {
   _pmem_ptr = std::make_shared<direct_mapped_mem>(
       0x80000000u, 0xa0000000u, "pmem", 128 * 1024 * 1024,
       get_dut()
-          ->NPCTestSoC->vlSymsp->TOP__NPCTestSoC__npcDevices__mem__mem__mem_ext
+          ->TestSoC->vlSymsp->TOP__TestSoC__devices__mem__mem__mem_ext
           .Memory.data());
   _pmem_ptr->copy_from(img, cfg.img_size);
 
