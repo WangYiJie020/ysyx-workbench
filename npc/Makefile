@@ -9,11 +9,8 @@ SIM_BIN_DIR = $(BUILD_DIR)/bin
 COMMIT_HASH = $(shell git rev-parse HEAD)
 CXXFLAGS += -DGIT_COMMIT_HASH=$(COMMIT_HASH)
 
-ifeq ($(ARCH), riscv32e-ysyxsoc)
-SIM_ARCH_SUFFIX = _soc
-else
-SIM_ARCH_SUFFIX = _npc
-endif
+ARCH_PLATFORM = $(lastword $(subst -, ,$(ARCH)))
+SIM_ARCH_SUFFIX = _$(ARCH_PLATFORM)
 
 SIM_VSRCS =
 

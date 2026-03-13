@@ -1,8 +1,6 @@
 # testsoc
 
-SOC_PLATFORM = $(lastword $(subst -, ,$(ARCH)))
-
-SOC_HOME = $(BUILD_DIR)/testsoc/$(SOC_PLATFORM)
+SOC_HOME = $(BUILD_DIR)/testsoc/$(ARCH_PLATFORM)
 $(shell mkdir -p $(SOC_HOME))
 $(shell touch $(SOC_HOME)/filelist.f)
 
