@@ -23,19 +23,23 @@ object Elaborate extends App {
   println("Finish emit cpu Verilog.")
 
   println("Preprocessing cpu Verilog...")
-  val designName = "ysyx_25100261"
+  val designName  = "ysyx_25100261"
   val preProcCore = s"./scripts/preproc_vsrcs.sh ${args(1)} ${designName}".!
   if (preProcCore != 0) sys.exit(preProcCore)
 
-  val socEmitDir = "build/testsoc"
+  def emitTestSoC(socInstance: => TestSoC[_ <: TestSoCDevice]) = {
+    val deviceName = socInstance.devices.getClass.getSimpleName
+    val emitDir    = s"build/testsoc-${deviceName}"
+    circt.stage.ChiselStage.emitSystemVerilogFile(
+      socInstance,
+      Array("--target-dir", emitDir),
+      firtoolOptions
+    )
 
-  circt.stage.ChiselStage.emitSystemVerilogFile(
-    new TestSoC(new npc.NPCDevices),
-    Array("--target-dir", socEmitDir),
-    firtoolOptions
-  )
+    println("Preprocessing SoC Verilog...")
+    val preProcSoC = s"./scripts/preproc_vsrcs.sh ${emitDir} ${designName}".!
+    if (preProcSoC != 0) sys.exit(preProcSoC)
+  }
 
-  println("Preprocessing SoC Verilog...")
-  val preProcSoC = s"./scripts/preproc_vsrcs.sh ${socEmitDir} ${designName}".!
-  if (preProcSoC != 0) sys.exit(preProcSoC)
+  emitTestSoC(new TestSoC(new npc.NPCDevices))
 }
