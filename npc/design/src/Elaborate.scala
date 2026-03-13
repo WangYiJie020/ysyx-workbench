@@ -27,13 +27,15 @@ object Elaborate extends App {
   val preProcCore = s"./scripts/preproc_vsrcs.sh ${args(1)} ${designName}".!
   if (preProcCore != 0) sys.exit(preProcCore)
 
+  val socEmitDir = "build/testsoc"
+
   circt.stage.ChiselStage.emitSystemVerilogFile(
     new TestSoC(new npc.NPCDevices),
-    Array("--target-dir", "build/npctestsoc"),
+    Array("--target-dir", socEmitDir),
     firtoolOptions
   )
 
   println("Preprocessing SoC Verilog...")
-  val preProcSoC = s"./scripts/preproc_vsrcs.sh build/npctestsoc ${designName}".!
+  val preProcSoC = s"./scripts/preproc_vsrcs.sh ${socEmitDir} ${designName}".!
   if (preProcSoC != 0) sys.exit(preProcSoC)
 }

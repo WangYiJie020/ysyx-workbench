@@ -23,7 +23,7 @@ VERILATOR_INCDIRS =
 ifeq ($(ARCH), riscv32e-ysyxsoc)
 TOP_NAME = ysyxSoCFull
 else
-TOP_NAME = NPCTestSoC
+TOP_NAME = TestSoC
 endif
 
 SIM_BIN = $(SIM_BIN_DIR)/$(TOP_NAME)$(SIM_ARCH_SUFFIX)$(VSIM_OPT)
