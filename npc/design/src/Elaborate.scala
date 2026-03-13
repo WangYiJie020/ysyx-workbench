@@ -28,7 +28,7 @@ object Elaborate extends App {
   if (preProcCore != 0) sys.exit(preProcCore)
 
   circt.stage.ChiselStage.emitSystemVerilogFile(
-    new TestSoC({new npc.NPCDevices}),
+    new TestSoC(new npc.NPCDevices),
     Array("--target-dir", "build/npctestsoc"),
     firtoolOptions
   )
