@@ -1,5 +1,7 @@
 import scala.sys.process._
 
+import testSoC._
+
 object Elaborate extends App {
   if (args.size != 2) {
     println("Usage: --target-dir <dir>")
@@ -25,7 +27,8 @@ object Elaborate extends App {
   val preProcCore = s"./scripts/preproc_vsrcs.sh ${args(1)} ${designName}".!
   if (preProcCore != 0) sys.exit(preProcCore)
 
-  circt.stage.ChiselStage.emitSystemVerilogFile(new top.NPCTestSoC(),
+  circt.stage.ChiselStage.emitSystemVerilogFile(
+    new TestSoC(new npc.NPCDevices()),
     Array("--target-dir", "build/npctestsoc"),
     firtoolOptions
   )
