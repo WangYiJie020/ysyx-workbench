@@ -20,7 +20,7 @@ class TestSoC[T <: TestSoCDevice](deviceGen: => T, val resetPC: UInt = "h8000000
   val devices = Module(deviceGen)
 
   val resetPCProvider = Module(new PCProviderAsBlackBox)
-  // assert(resetPCProvider.io.resetPC === resetPC, f"Reset PC should be 0x${resetPC.litValue}%x for ${deviceGen.getClass.getSimpleName} SoC")
+  assert(resetPCProvider.io.resetPC === resetPC, f"Reset PC should be 0x${resetPC.litValue}%x for ${devices.getClass.getSimpleName} SoC")
 
   devices.io <> cpu.io.io.master
   cpu.io.clock        := clock
