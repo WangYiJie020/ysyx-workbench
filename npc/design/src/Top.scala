@@ -22,7 +22,6 @@ import branchpredictor._
 
 import config._
 
-import npc_devices._
 import dpiwrap.DifftestLayer
 
 class TopIO extends Bundle {
