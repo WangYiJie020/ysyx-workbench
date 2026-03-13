@@ -129,10 +129,6 @@ class AXI4MemUnit(val sizeInByte: Int,val InitHexFilePath: Option[String] = None
   mem.io := DontCare
 
   when(rState === RState.waitMem) {
-    // rdFIFO.io.enq.bits  := UnclockedCallNonVoidDPIC("pmem_read", UInt(32.W))(
-    //   (!reset.asBool) && enRdDataCall,
-    //   rdAddr
-    // )
     mem.io.write        := false.B
     mem.io.rdAddr       := rdAddr
     rdFIFO.io.enq.bits  := mem.io.dataOut.asUInt
@@ -207,13 +203,6 @@ class AXI4MemUnit(val sizeInByte: Int,val InitHexFilePath: Option[String] = None
     mem.io.wrAddr := wrAddr
     mem.io.mask   := wrMask.asBools
     mem.io.dataIn := wrData.asTypeOf(mem.dataType)
-    ClockedCallVoidDPIC("pmem_upd")(
-      clock,
-      (!reset.asBool),
-      wrAddr,
-      wrData,
-      wrMask.pad(32)
-    )
   }
   // for now mem write always finish in one cycle
   memWriteFinished := RegNext(bState === sBWaitMem)

@@ -32,7 +32,7 @@ default: $(SIM_BIN)
 ifeq ($(ARCH), riscv32e-ysyxsoc)
 include ./scripts/soc.mk
 else
-include ./scripts/npctestsoc.mk
+include ./scripts/mytestsoc.mk
 endif
 
 VERILATOR = verilator

@@ -1,6 +1,6 @@
-# npctestsoc
+# testsoc
 
-SOC_HOME = $(BUILD_DIR)/npctestsoc
+SOC_HOME = $(BUILD_DIR)/testsoc
 $(shell mkdir -p $(SOC_HOME))
 $(shell touch $(SOC_HOME)/filelist.f)
 
