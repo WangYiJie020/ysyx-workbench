@@ -35,10 +35,11 @@ object Elaborate extends App {
       firtoolOptions
     )
 
-    println("Preprocessing SoC Verilog...")
+    println(s"Preprocessing SoC - $name Verilog...")
     val preProcSoC = s"./scripts/preproc_vsrcs.sh ${emitDir} ${designName}".!
     if (preProcSoC != 0) sys.exit(preProcSoC)
   }
 
   emitSoC(new TestSoC(new npc.NPCDevices), "npc")
+  emitSoC(new TestSoC(new jyd.JYDDevices), "jyd")
 }
