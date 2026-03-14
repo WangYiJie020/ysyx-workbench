@@ -88,7 +88,7 @@ extern "C" void jyd_update_led(int leds) {
 														 fg_gray = "\33[1;90m",
 														 ansi_none = "\33[0m";
 
-	for (int i = 0; i < 4; i++) {
+	for (int i = 3; i >= 0; i--) {
 		led_row[i] = (led_data >> (i * 8)) & 0xff;
 		std::cout << "  [ ";
 		for(int j = 0; j < 8; j++) {
