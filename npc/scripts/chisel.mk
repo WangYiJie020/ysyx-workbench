@@ -5,8 +5,8 @@ $(info Detected CI environment, emit mill version file to make CI test mill vers
 $(shell echo '0.12.4' > ../../../.mill-version)
 endif
 
-$(shell mkdir -p $(CHISEL2V_EMIT_DIR))
-CHISEL2V_DEST_ISA_EMIT_DIR := $(CHISEL2V_EMIT_DIR)/$(ARCH_ISA)
+$(shell mkdir -p $(CHISEL2V_EMIT_ROOT))
+CHISEL2V_DEST_ISA_EMIT_DIR := $(CHISEL2V_EMIT_ROOT)/$(ARCH_ISA)
 
 $(shell touch $(CHISEL2V_DEST_ISA_EMIT_DIR)/filelist.f)
 
@@ -65,9 +65,9 @@ ifndef IN_LOCK
 else
 	$(call git_commit, "generate verilog")
 	@echo "# Removing old emitted verilog"
-	@rm -rf $(CHISEL2V_EMIT_DIR)/*
+	@rm -rf $(CHISEL2V_EMIT_ROOT)/*
 	@echo "# Emitting verilog with Mill"
-	$(MILL) -i $(CHISEL_DESIGN).runMain Elaborate --target-dir $(CHISEL2V_DEST_ISA_EMIT_DIR)
+	$(MILL) -i $(CHISEL_DESIGN).runMain Elaborate --target-dir $(CHISEL2V_EMIT_ROOT)
 	@touch $(CHISEL2V_DONE)
 endif
 

@@ -57,7 +57,7 @@ include ./scripts/deplibs.mk
 
 VERILATOR_FLAGS += --trace-fst --trace-structs
 
-CHISEL2V_EMIT_DIR = $(BUILD_DIR)/gened/verilog
+CHISEL2V_EMIT_ROOT = $(BUILD_DIR)/gened/verilog
 
 include ./scripts/chisel.mk
 
