@@ -45,7 +45,7 @@ object ExtractFwdInfoFromLSU {
 //   }
 // }
 
-class LSUIO extends Bundle {
+class LSUIO(implicit p:CPUParameters) extends Bundle {
   val mem = AXI4IO.Master
 
   val mcycle64 = Input(UInt(64.W))
@@ -54,7 +54,7 @@ class LSUIO extends Bundle {
   val out = Decoupled(new WriteBackInfo)
 }
 
-class LSU extends Module {
+class LSU(implicit p:CPUParameters) extends Module {
   val io = IO(new LSUIO)
 
   object State extends ChiselEnum {
