@@ -79,7 +79,7 @@ void init_mem(void *img, const sim_config &cfg) {
 }
 
 extern "C" void jyd_update_led(int leds) {
-	spdlog::info("LEDs updated: 0x{:b}", leds);
+	spdlog::info("LEDs updated: 0b{:b}", leds);
 	uint32_t led_data = (uint32_t)leds;
 	uint8_t led_row[4];
 
@@ -90,7 +90,7 @@ extern "C" void jyd_update_led(int leds) {
 
 	for (int i = 0; i < 4; i++) {
 		led_row[i] = (led_data >> (i * 8)) & 0xff;
-		std::cout << "  ";
+		std::cout << "  [ ";
 		for(int j = 0; j < 8; j++) {
 			if (led_row[i] & (1 << j)) {
 				std::cout << fg_yellow << '*' << ansi_none;
@@ -98,7 +98,7 @@ extern "C" void jyd_update_led(int leds) {
 				std::cout << fg_gray << '.' << ansi_none;
 			}
 		}
-		putchar('\n');
+		std::cout << " ]\n";
 	}
 }
 extern "C" void jyd_update_seg(int segs) {
