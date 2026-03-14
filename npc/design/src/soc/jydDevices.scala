@@ -119,7 +119,7 @@ class JYDDevices extends Module with TestSoCDevice {
       AddrSpace.DRAM              -> dram.io,
       AddrSpace.LED               -> led.io,
       AddrSpace.SEG               -> seg.io,
-      AddrSpace.CNT               -> cnt.io,
+      // AddrSpace.CNT               -> cnt.io,
       AddrSpace.SelfExtSpace.UART -> uart.io
     )
   )
