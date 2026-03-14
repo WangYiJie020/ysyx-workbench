@@ -428,9 +428,10 @@ jobs:
       - name: rt-thread
         run: |
           cd $YSYX_HOME/rt-thread-am/bsp/abstract-machine
-          make ARCH=${{ env.ARCH }} init
+          # 目前只有 ysxysoc 接入了 nvboard 可以进行测试
+          make ARCH=riscv32e-ysyxsoc init
           KEY=$(head -c 5 /dev/urandom | base32)
-          python $MONITOR_PY --good=$KEY make ARCH=${{ env.ARCH }} run
+          python $MONITOR_PY --good=$KEY make ARCH=riscv32e-ysyxsoc run
 
   iverilog-microbench:
     needs: setup
