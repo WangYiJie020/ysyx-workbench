@@ -3,6 +3,8 @@
 #include <dlfcn.h>
 #include <tracers.hpp>
 
+#include "ansi_col.h"
+
 using namespace std;
 using namespace sdb;
 
@@ -105,7 +107,7 @@ void hander_t::handle(_ctx_ref ctx) {
          diff_regs.size());
     _log("{:4} {:10} {:10}\n", "reg", "dut", "ref");
     for (auto i : diff_regs) {
-      _log("{:4} {:10} {:10}\n",
+      _log(ANSI_FG_BLUE"{:4}" ANSI_NONE " {:#x} {:#x}\n",
            i < ctx.reg_names.size() ? ctx.reg_names[i] : "pc", regs[i],
            ref_regs[i]);
     }
