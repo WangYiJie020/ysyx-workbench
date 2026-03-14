@@ -8,7 +8,7 @@ import dpiwrap._
 
 import Types.Ops._
 
-class MetaRegReqIO(addr_width: Int = Types.BitWidth.reg_addr, data_width: Int = Types.BitWidth.word) {
+class MetaRegReqIO(addr_width: Int, data_width: Int = Types.BitWidth.word) {
 
   def _AddrT = UInt(addr_width.W)
   def _DataT = UInt(data_width.W)
@@ -41,7 +41,7 @@ class MetaRegReqIO(addr_width: Int = Types.BitWidth.reg_addr, data_width: Int = 
   }
 }
 
-object GPRegReqIO extends MetaRegReqIO()
+object GPRegReqIO extends MetaRegReqIO(addr_width = Types.BitWidth.reg_addr)
 object CSRegReqIO extends MetaRegReqIO(addr_width = Types.BitWidth.csr_addr)
 
 class GPRIO(N_RD: Int = 2) extends Bundle {
