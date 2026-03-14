@@ -1,6 +1,7 @@
 import scala.sys.process._
 
 import testSoC._
+import common_def.CPUParameters
 
 object Elaborate extends App {
   if (args.size != 2) {
@@ -19,7 +20,7 @@ object Elaborate extends App {
     "-strip-debug-info"
   )
 
-  val designName  = "ysyx_25100261"
+  val designName = "ysyx_25100261"
 
   def emit(gen: => chisel3.RawModule, emitDir: String) = {
     println(s"Emitting Verilog... to $emitDir")
@@ -35,10 +36,14 @@ object Elaborate extends App {
     println(s"Finish emitting and preprocessing Verilog on $emitDir")
   }
 
-  emit(new top.ysyx_25100261(), args(1))
+  emit(new top.ysyx_25100261(CPUParameters()), args(1))
 
-  common_def.Types.BitWidth.reg_addr = 5
-  emit(new top.ysyx_25100261(), s"${args(1)}-rv32i")
+  emit(
+    new top.ysyx_25100261(
+      CPUParameters(gprAddrWidth = 5)
+    ),
+    s"${args(1)}-rv32i"
+  )
 
   emit(new TestSoC(new npc.NPCDevices), "build/testsoc/npc")
   emit(new TestSoC(new jyd.JYDDevices), "build/testsoc/jyd")
