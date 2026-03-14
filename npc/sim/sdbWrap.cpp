@@ -1,5 +1,6 @@
 #include "elf_tool.hpp"
 #include "memory/mem.hpp"
+#include "memory/socmem.hpp"
 #include "sim.hpp"
 #include "spdlog/spdlog.h"
 #include "tracers.hpp"
@@ -8,6 +9,8 @@
 #include "common.hpp"
 
 #include "sprobe.hpp"
+
+#include "sdbWrap.hpp"
 
 SProbe sprobe;
 cycle_end_callback_t _old_cycle_callback = nullptr;
@@ -26,6 +29,11 @@ sdb::difftest_trace_handler_ptr diff_handler;
 void sdb_skip_difftest_ref() {
   if (diff_handler)
     diff_handler->skip_ref();
+}
+
+void sdb_memcpy_to_ref(uint32_t addr, std::span<uint8_t> data) {
+  if (diff_handler)
+    diff_handler->memcpy_to_ref(data, addr);
 }
 
 void sdb_exec(std::string_view cmd, bool *quit) {
@@ -119,7 +127,18 @@ void sdb_init(word_t init_pc, size_t img_size, const char *img_file,
         return;
       }
       dbg->add_trace(diff_handler);
+
+      auto mr = get_mem_regions_need_init_difftest();
+      for (auto &r : mr) {
+        spdlog::info("Initializing difftest ref mem region '{}' at host addr "
+                     "{:08x} with size {} bytes",
+                     r.name, r.host_base, r.size);
+        diff_handler->memcpy_to_ref({(uint8_t *)r.data, r.size}, r.host_base);
+      }
     }
+
+    dbg->add_trace(sdb::make_self_loop_trace_handler(
+        []() { return jyd_is_good_trap() ? 0 : 1; }));
   }
 }
 
@@ -172,5 +191,5 @@ int sdb_mainloop() {
     sdb_exec(cmd, &quit);
   }
 
-  return sim_hit_good_trap() ? 0 : 1;
+  return sdb_is_hitbadtrap() ? 1 : 0;
 }

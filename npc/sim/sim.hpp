@@ -118,6 +118,5 @@ sim_config *sim_get_config();
 sim_cpu_state *sim_get_cpu_state();
 
 bool sim_halted();
-bool sim_hit_good_trap();
 
 void set_logger_pattern_with_simtime(std::shared_ptr<spdlog::logger> logger);

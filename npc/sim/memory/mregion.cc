@@ -26,13 +26,13 @@ void mem_region_traits::assert_in_range(uint32_t addr) const {
 
 void direct_mapped_mem::assert_in_actual_data_range(uint32_t addr) const {
   size_t offset = addr - _Base;
-  if (offset >= _ActualSizeInBytes) {
+  if (offset >= actualSizeInBytes) {
     _GetLoggerForRegion(name)->error(
         "addr {:08x} out of actual data bound for region {} "
         "[0, {:08x})",
-        addr, this->name, _ActualSizeInBytes);
+        addr, this->name, actualSizeInBytes);
   }
-  assert(offset < _ActualSizeInBytes);
+  assert(offset < actualSizeInBytes);
 }
 
 sdram_mem::u32_data_ptr sdram_mem::get_data_at(uint32_t addr) {

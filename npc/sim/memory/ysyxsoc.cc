@@ -13,6 +13,8 @@
 #include <spdlog/spdlog.h>
 #include <variant>
 
+#ifdef SIM_ARCH_YSYXSOC
+
 static std::shared_ptr<spdlog::logger> _dpi_logger;
 
 const char *_get_env_or_default(const char *env_name,
@@ -101,10 +103,14 @@ static struct {
   sdram_mem sdram = {0xa0000000u, 0xb0000000u, "sdram"};
 } g_mem;
 
-mem_region_group_t &get_mem_regions_of_ysyxsoc() {
+mem_region_group_t &get_mem_regions() {
   static mem_region_group_t mem_regions = {g_mem.mrom, g_mem.flash, g_mem.psram,
                                            g_mem.sram, g_mem.sdram};
   return mem_regions;
+}
+
+mem_region_data_span_vec get_mem_regions_need_init_difftest(){
+	return {};
 }
 
 static void _fill_rams_uninit(bool zero_uninit_ram) {
@@ -139,7 +145,8 @@ static void _init_mem_logger() {
   _REG_MEM_REGION_LOGGER(sram);
   _REG_MEM_REGION_LOGGER(sdram);
 }
-void init_mem_of_ysyxsoc(void *img, const sim_config &cfg) {
+
+void init_mem(void *img, const sim_config &cfg) {
   spdlog::info("copy img to ysyxSoC mrom for sim read");
   g_mem.flash.copy_from(img, cfg.img_size);
 	_fill_rams_uninit(cfg.setting.zero_uninit_ram);
@@ -226,3 +233,8 @@ extern "C" void sdram_write(char block, char bank, short row, short col,
 extern "C" void sram_upd(int addr, int data, char mask) {
   g_mem.sram.write_word(addr, data, mask);
 }
+#else
+
+extern "C" void sram_upd(int addr, int data, char mask) {}
+
+#endif

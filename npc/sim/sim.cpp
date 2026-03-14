@@ -153,7 +153,6 @@ void raise_ebreak() {
                ansi_none, a0, cpu.pc, cycle_count);
 }
 bool sim_halted() { return !is_running; }
-bool sim_hit_good_trap() { return is_good_trap; }
 
 // word_t img[60 * 1024 * 1024 / 4] = {};
 std::vector<uint8_t> img;
@@ -320,7 +319,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 
   load_img();
   // should before dbg_init(which may preload data with func call dpis)
-  mem_init(img.data(), sim_cfg);
+  init_mem(img.data(), sim_cfg);
 
   if (setting.en_wave) {
     Verilated::traceEverOn(true);
