@@ -1,5 +1,6 @@
 #include "elf_tool.hpp"
 #include "memory/mem.hpp"
+#include "memory/socmem.hpp"
 #include "sim.hpp"
 #include "spdlog/spdlog.h"
 #include "tracers.hpp"
@@ -134,10 +135,10 @@ void sdb_init(word_t init_pc, size_t img_size, const char *img_file,
                      r.name, r.host_base, r.size);
         diff_handler->memcpy_to_ref({(uint8_t *)r.data, r.size}, r.host_base);
       }
-
     }
 
-		dbg->add_trace(sdb::make_self_loop_trace_handler());
+    dbg->add_trace(sdb::make_self_loop_trace_handler(
+        []() { return jyd_is_good_trap() ? 0 : 1; }));
   }
 }
 

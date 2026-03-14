@@ -78,19 +78,27 @@ void init_mem(void *img, const sim_config &cfg) {
   dram_need_init_size = bytes_read;
 }
 
-constexpr std::string_view fg_red = "\33[1;31m", fg_green = "\33[1;32m",
+static constexpr std::string_view fg_red = "\33[1;31m", fg_green = "\33[1;32m",
                            fg_yellow = "\33[1;33m", fg_gray = "\33[1;90m",
 													 fg_purple = "\33[1;35m", fg_blue = "\33[1;34m",
                            ansi_none = "\33[0m";
 
 static uint32_t last_led = 0, last_segs = 0;
 
+static constexpr uint32_t good_trap_led = 0b00000001001000100001110000001000;
+
+bool jyd_is_good_trap() {
+	// seg high should be 37 meaning all 37 basic inst test passed
+	// led should be good_trap_led meaning the perf test get the right result
+	return last_led == good_trap_led && ((last_segs >> 24) & 0xff) == 0x37;
+}
+
 static void print_board() {
   auto led = last_led;
   auto segs = last_segs;
   uint8_t led_row[4];
 
-	uint32_t test_passed_led = 0b00000001001000100001110000001000;
+	uint32_t test_passed_led = good_trap_led;
 	uint32_t test_failed_led = 0b00100100000110000001100000100100;
 
 	auto led_color = (led == test_passed_led) ? fg_green :
