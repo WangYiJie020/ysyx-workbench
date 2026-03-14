@@ -3,6 +3,8 @@
 #include <filesystem>
 #include <fstream>
 #include <span>
+#include <iostream>
+
 
 #include "../sdbWrap.hpp"
 
@@ -74,6 +76,30 @@ void init_mem(void *img, const sim_config &cfg) {
                dram_path.filename().string());
 
 	dram_need_init_size = bytes_read;
+}
+
+extern "C" void jyd_update_led(int leds) {
+	spdlog::info("LEDs updated: 0x{:08x}", leds);
+	uint32_t led_data = (uint32_t)leds;
+	uint8_t led_row[4];
+
+  constexpr std::string_view fg_red = "\33[1;31m", fg_green = "\33[1;32m",
+                             fg_yellow = "\33[1;33m", ansi_none = "\33[0m";
+
+	for (int i = 0; i < 4; i++) {
+		led_row[i] = (led_data >> (i * 8)) & 0xff;
+		std::cout << "  ";
+		for(int j = 0; j < 8; j++) {
+			if (led_row[i] & (1 << j)) {
+				std::cout << fg_green << '*' << ansi_none;
+			} else {
+				std::cout << '.';
+			}
+		}
+	}
+}
+extern "C" void jyd_update_seg(int segs) {
+	spdlog::info("7-segment displays updated: 0x{:08x}", segs);
 }
 
 mem_region_data_span_vec get_mem_regions_need_init_difftest() {

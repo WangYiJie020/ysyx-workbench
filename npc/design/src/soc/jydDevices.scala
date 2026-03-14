@@ -16,13 +16,14 @@ object AddrSpace {
   val MMIO = ("h80200000".U, "h80200100".U)
 
   val LED = ("h80200040".U, "h80200044".U)
+  val SEG = ("h80200020".U, "h80200024".U)
 
   object SelfExtSpace {
     val UART = ("h10000000".U, "h10001000".U)
   }
 }
 
-class LED extends Module {
+class OneWordRWDevice(updFuncName: String) extends Module {
   val io = IO(AXI4IO.Slave)
   io := DontCare
 
@@ -34,16 +35,16 @@ class LED extends Module {
   sio.bvalid := true.B
   sio.bresp  := AXI4IO.BResp.OKAY
 
-  val ledAs4x8Vec = sio.wdata.asTypeOf(Vec(4, UInt(8.W)))
+  val dataReg = RegEnable(sio.wdata, 0.U, sio.wvalid)
+
+  io.arready := true.B
+  io.rvalid  := io.arvalid
+  io.rdata   := dataReg
+  io.rresp   := AXI4IO.RResp.OKAY
 
   when(sio.wvalid) {
-    printf(cf"LED <- ${sio.wdata}%b\n")
-    printf(cf"LED as 4x8:\n")
-    for (i <- 0 until 4) {
-      printf(cf"  ${ledAs4x8Vec(i)}%b\n")
-    }
+    dpiwrap.ClockedCallVoidDPIC(updFuncName)(clock, sio.wvalid, sio.wdata)
   }
-
 }
 
 class JYDDevices extends Module with TestSoCDevice {
@@ -54,15 +55,15 @@ class JYDDevices extends Module with TestSoCDevice {
   val irom = Module(new AXI4MemUnit(1024 * 16))
   val dram = Module(new AXI4MemUnit(1024 * 256))
 
-  val led = Module(new LED)
+  val led = Module(new OneWordRWDevice("jyd_update_led"))
+  val seg = Module(new OneWordRWDevice("jyd_update_seg"))
 
   io <> AXI4XBar(
     Seq(
-      AddrSpace.IROM -> irom.io,
-      AddrSpace.DRAM -> dram.io,
-
-      AddrSpace.LED -> led.io,
-
+      AddrSpace.IROM              -> irom.io,
+      AddrSpace.DRAM              -> dram.io,
+      AddrSpace.LED               -> led.io,
+      AddrSpace.SEG               -> seg.io,
       AddrSpace.SelfExtSpace.UART -> uart.io
     )
   )
