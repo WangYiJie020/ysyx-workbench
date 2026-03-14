@@ -84,7 +84,9 @@ extern "C" void jyd_update_led(int leds) {
 	uint8_t led_row[4];
 
   constexpr std::string_view fg_red = "\33[1;31m", fg_green = "\33[1;32m",
-                             fg_yellow = "\33[1;33m", ansi_none = "\33[0m";
+                             fg_yellow = "\33[1;33m",
+														 fg_gray = "\33[1;90m",
+														 ansi_none = "\33[0m";
 
 	for (int i = 0; i < 4; i++) {
 		led_row[i] = (led_data >> (i * 8)) & 0xff;
@@ -93,7 +95,7 @@ extern "C" void jyd_update_led(int leds) {
 			if (led_row[i] & (1 << j)) {
 				std::cout << fg_yellow << 'o' << ansi_none;
 			} else {
-				std::cout << '-';
+				std::cout << fg_gray << '.' << ansi_none;
 			}
 		}
 		putchar('\n');
