@@ -37,7 +37,7 @@ class LED extends Module {
 
   when(sio.wvalid) {
     data := sio.wdata
-    printf(cf"LED <- $data%u\n")
+    printf(cf"LED <- $data%b\n")
   }
 
 }
