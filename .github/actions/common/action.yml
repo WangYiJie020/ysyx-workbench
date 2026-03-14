@@ -82,7 +82,7 @@ runs:
         echo "MAKEFLAGS=$MAKEFLAGS" >> $GITHUB_ENV
 
         OSS_CAD_SUITE_BIN_PATH=`pwd`/oss-cad-suite/bin
-        echo "PATH=$PATH:$OSS_CAD_SUITE_BIN_PATH" >> $GITHUB_ENV
+        echo "PATH=$PATH:$OSS_CAD_SUITE_BIN_PATH" >> $GITHUB_PATH
 
         git config --global --add safe.directory '*'
 
