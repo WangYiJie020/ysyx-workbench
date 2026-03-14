@@ -18,6 +18,8 @@ object AddrSpace {
   val LED = ("h80200040".U, "h80200044".U)
   val SEG = ("h80200020".U, "h80200024".U)
 
+  val CNT = ("h80200050".U, "h80200054".U)
+
   object SelfExtSpace {
     val UART = ("h10000000".U, "h10001000".U)
   }
@@ -97,12 +99,15 @@ class JYDDevices extends Module with TestSoCDevice {
   val led = Module(new OneWordRWDevice("jyd_update_led"))
   val seg = Module(new OneWordRWDevice("jyd_update_seg"))
 
+  val cnt = Module(new Timer)
+
   io <> AXI4XBar(
     Seq(
       AddrSpace.IROM              -> irom.io,
       AddrSpace.DRAM              -> dram.io,
       AddrSpace.LED               -> led.io,
       AddrSpace.SEG               -> seg.io,
+      AddrSpace.CNT               -> cnt.io,
       AddrSpace.SelfExtSpace.UART -> uart.io
     )
   )
