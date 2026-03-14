@@ -87,6 +87,7 @@ class Timer extends Module {
   io.bvalid := true.B
   io.bresp := AXI4IO.BResp.OKAY
 
+  io.arready := true.B
   io.rvalid := io.arvalid
   io.rdata := timer
   io.rresp := AXI4IO.RResp.OKAY
