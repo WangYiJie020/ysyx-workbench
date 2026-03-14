@@ -28,7 +28,7 @@ class WriteBackInfo(implicit p:CPUParameters) extends Bundle {
 }
 
 object ExtractFwdInfoFromWrBack {
-  def apply(info: DecoupledIO[WriteBackInfo]): WrBackForwardInfo = {
+  def apply(info: DecoupledIO[WriteBackInfo])(implicit p:CPUParameters): WrBackForwardInfo = {
     val wrBack = info.bits
 
     val out = Wire(new WrBackForwardInfo)
