@@ -85,8 +85,8 @@ constexpr std::string_view fg_red = "\33[1;31m", fg_green = "\33[1;32m",
 static uint32_t last_led = 0, last_segs = 0;
 
 static void print_board() {
-	auto led = last_led;
-	auto segs = last_segs;
+  auto led = last_led;
+  auto segs = last_segs;
   uint8_t led_row[4];
 
   for (int i = 3; i >= 0; i--) {
@@ -100,27 +100,28 @@ static void print_board() {
       }
     }
     std::cout << " ]";
-		if(i==3) {
-			std::cout << "  7-seg:";
-		}
-    if (i == 2) {
-      std::cout << std::format("  [{:02x}][{:02x} {:02x} {:02x}]",
-                               (segs >> 24) & 0xff, (segs >> 16) & 0xff,
-                               (segs >> 8) & 0xff, segs & 0xff);
+    if (i == 3) {
+      std::cout << "  7-seg:";
     }
-		std::cout << '\n';
+    if (i == 2) {
+      std::cout << std::format(
+          "  {}[{}{:02x}{}][{}{:02x} {:02x} {:02x}{}]{}", fg_gray, ansi_none,
+          (segs >> 24) & 0xff, fg_gray, ansi_none, (segs >> 16) & 0xff,
+          (segs >> 8) & 0xff, segs & 0xff, fg_gray, ansi_none);
+    }
+    std::cout << '\n';
   }
 }
 
 extern "C" void jyd_update_led(int leds) {
   spdlog::info("LEDs updated: 0b{:032b}", leds);
-	last_led = leds;
-	print_board();
+  last_led = leds;
+  print_board();
 }
 extern "C" void jyd_update_seg(int segs) {
   spdlog::info("7-segment displays updated: 0x{:08x}", segs);
-	last_segs = segs;
-	print_board();
+  last_segs = segs;
+  print_board();
 }
 
 mem_region_data_span_vec get_mem_regions_need_init_difftest() {
