@@ -102,7 +102,8 @@ extern "C" void jyd_update_led(int leds) {
 }
 extern "C" void jyd_update_seg(int segs) {
   spdlog::info("7-segment displays updated: 0x{:08x}", segs);
-	std::cout<<std::format("  [{:02x}][{:06x}]\n", (segs >> 24) & 0xff, segs & 0xffffff);
+	std::cout<<std::format("  [{:02x}][{:02x} {:02x} {:02x}]\n",
+		(segs>>24)&0xff,(segs>>16)&0xff,(segs>>8)&0xff,segs&0xff);
 }
 
 mem_region_data_span_vec get_mem_regions_need_init_difftest() {
