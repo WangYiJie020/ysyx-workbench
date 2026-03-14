@@ -95,12 +95,12 @@ bool jyd_is_good_trap() {
   uint8_t seg_high = (last_segs >> 24) & 0xff;
 
   if (seg_high == 0x37) {
-    spdlog::warn("7-seg high byte is 0x{:02x}, expected 0x37, not a good trap",
+    spdlog::error("7-seg high byte is 0x{:02x}, expected 0x37, not a good trap",
                  seg_high);
     return false;
   }
 	if (last_led != good_trap_led) {
-		spdlog::warn("LED state is 0b{:032b}, expected 0b{:032b}, not a good trap",
+		spdlog::error("LED state is 0b{:032b}, expected 0b{:032b}, not a good trap",
 								 last_led, good_trap_led);
 		return false;
 	}
@@ -144,12 +144,12 @@ static void print_board() {
 }
 
 extern "C" void jyd_update_led(int leds) {
-  spdlog::error("LEDs updated: 0b{:032b}", leds);
+  spdlog::info("LEDs updated: 0b{:032b}", leds);
   last_led = leds;
   print_board();
 }
 extern "C" void jyd_update_seg(int segs) {
-  spdlog::error("7-segment displays updated: 0x{:08x}", segs);
+  spdlog::info("7-segment displays updated: 0x{:08x}", segs);
   last_segs = segs;
   print_board();
 }
