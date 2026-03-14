@@ -107,7 +107,7 @@ void hander_t::handle(_ctx_ref ctx) {
          diff_regs.size());
     _log("{:4} {:10} {:10}\n", "reg", "dut", "ref");
     for (auto i : diff_regs) {
-      _log(ANSI_FG_BLUE"{:4}" ANSI_NONE " {:10x} {:#x}\n",
+      _log(ANSI_FG_BLUE"{:4}" ANSI_NONE " 0x{:08x} 0x{:08x}\n",
            i < ctx.reg_names.size() ? ctx.reg_names[i] : "pc", regs[i],
            ref_regs[i]);
     }
