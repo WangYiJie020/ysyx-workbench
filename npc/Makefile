@@ -30,6 +30,8 @@ endif
 SIM_BIN = $(SIM_BIN_DIR)/$(TOP_NAME)-$(ARCH_PLATFORM)$(VSIM_OPT)
 default: $(SIM_BIN)
 
+CHISEL2V_EMIT_ROOT = $(BUILD_DIR)/gened/verilog
+
 ifeq ($(ARCH), riscv32e-ysyxsoc)
 include ./scripts/ysyxsoc.mk
 else
@@ -42,7 +44,6 @@ IMG ?=
 
 SAN_FLAGS?= #-fsanitize=address
 
-
 # Performance counter need VPI to fetch handshake signals
 ENABLE_VPI ?= 1
 
@@ -52,12 +53,9 @@ endif
 
 # Dependencies for sim
 include ./scripts/deplibs.mk
+include ./scripts/chisel.mk
 
 VERILATOR_FLAGS += --trace-fst --trace-structs
-
-CHISEL2V_EMIT_ROOT = $(BUILD_DIR)/gened/verilog
-
-include ./scripts/chisel.mk
 
 V2CXX_EMIT_DIR = $(BUILD_DIR)/gened/cxx/$(ARCH_PLATFORM)
 
