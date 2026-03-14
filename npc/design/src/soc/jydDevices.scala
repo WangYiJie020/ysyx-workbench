@@ -25,6 +25,20 @@ object AddrSpace {
   }
 }
 
+object RChanelFSM {
+  def apply(arvalid: Bool, rready: Bool): Bool = {
+    object State extends ChiselEnum {
+      val idle, waitReady = Value
+    }
+    val state = RegInit(State.idle)
+    state := MuxLookup(state, State.idle)(Seq(
+      State.idle -> Mux(arvalid, State.waitReady, State.idle),
+      State.waitReady -> Mux(rready, State.idle, State.waitReady)
+    ))
+    state === State.waitReady
+  }
+}
+
 class OneWordRWDevice(updFuncName: String) extends Module {
   val io = IO(AXI4IO.Slave)
   io := DontCare
@@ -39,16 +53,8 @@ class OneWordRWDevice(updFuncName: String) extends Module {
 
   val dataReg = RegEnable(sio.wdata, 0.U, sio.wvalid)
 
-  object State extends ChiselEnum {
-    val idle, waitRead = Value
-  }
-  val state = RegInit(State.idle)
-  state := MuxLookup(state, State.idle)(Seq(
-    State.idle -> Mux(sio.arvalid, State.waitRead, State.idle),
-    State.waitRead -> Mux(io.rvalid && io.rready, State.idle, State.waitRead)
-  ))
   io.arready := true.B
-  io.rvalid  := (state === State.waitRead)
+  io.rvalid  := RChanelFSM(sio.arvalid, io.rready)
   io.rdata   := dataReg
   io.rresp   := AXI4IO.RResp.OKAY
   io.rlast   := true.B
@@ -88,7 +94,7 @@ class Timer extends Module {
   io.bresp := AXI4IO.BResp.OKAY
 
   io.arready := true.B
-  io.rvalid := io.arvalid
+  io.rvalid := RChanelFSM(io.arvalid, io.rready)
   io.rdata := timer
   io.rresp := AXI4IO.RResp.OKAY
   io.rlast := true.B
