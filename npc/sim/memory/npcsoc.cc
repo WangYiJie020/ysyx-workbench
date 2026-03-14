@@ -42,6 +42,6 @@ void init_mem(void *img, const sim_config &cfg) {
 }
 
 mem_region_data_span_vec get_mem_regions_need_init_difftest(){
-	return {}
+	return {};
 }
 #endif
