@@ -42,6 +42,11 @@ class RegFileIO(AddrWidth: Int, data_width: Int = Types.BitWidth.word) {
 }
 
 // object GPRegReqIO extends MetaRegReqIO(addr_width = Types.BitWidth.reg_addr)
+
+object GPRegReqIO {
+  def WriteTX(implicit p: CPUParameters) = new RegFileIO(p.gprAddrWidth).TX.Write
+}
+
 object CSRegReqIO extends RegFileIO(AddrWidth = Types.BitWidth.csr_addr)
 
 class GPRIO(
