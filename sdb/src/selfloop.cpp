@@ -9,6 +9,9 @@ void sdb::self_loop_trace_handler::handle(_ctx_ref ctx) {
     _log("deadloop (jump to self) detected at pc={:#x}, stop the cpu\n",
          ctx.pc);
     name = "self-loop-detector";
-   _req_halt(get_halt_ret ? get_halt_ret() : 0);
+		word_t halt_ret;
+		if(get_halt_ret) halt_ret=get_halt_ret();
+		else halt_ret=0;
+   _req_halt(halt_ret);
   }
 }

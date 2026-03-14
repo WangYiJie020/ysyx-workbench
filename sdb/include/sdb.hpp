@@ -120,7 +120,7 @@ namespace sdb {
 			halt,
 		};
 		_require_interrupt_type _req_int_t;
-		word_t _req_halt_ret;
+		word_t _req_halt_ret = 0;
 
 		void _req_abort(){_req_int_t=_require_interrupt_type::abort;}
 		void _req_stop(){_req_int_t=_require_interrupt_type::stop;}
