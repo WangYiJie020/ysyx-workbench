@@ -110,11 +110,11 @@ class InstMetaInfo extends Bundle {
   val typ = InstType()
 }
 
-class DecodedInstInfo(cfg: CPUParameters) extends InstMetaInfo with HasRs {
+class DecodedInstInfo(implicit p : CPUParameters) extends InstMetaInfo with HasRs {
   val imm = Types.UWord
-  val rd  = cfg.GPRAddr
-  val rs1 = cfg.GPRAddr
-  val rs2 = cfg.GPRAddr
+  val rd  = p.GPRAddr
+  val rs1 = p.GPRAddr
+  val rs2 = p.GPRAddr
 
   val rdWrEn = Bool()
 
@@ -124,8 +124,8 @@ class DecodedInstInfo(cfg: CPUParameters) extends InstMetaInfo with HasRs {
   val snpc = Types.UWord
 }
 
-class DecodedInst(cfg: CPUParameters) extends Inst {
-  val info = new DecodedInstInfo(cfg)
+class DecodedInst(implicit p : CPUParameters) extends Inst {
+  val info = new DecodedInstInfo
 }
 
 // update reg when enable,
