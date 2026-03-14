@@ -46,8 +46,10 @@ class PCProviderAsBlackBox extends BlackBox {
   })
 }
 
-class ysyx_25100261(implicit p:CPUParameters) extends Module {
+class ysyx_25100261(parm:CPUParameters) extends Module {
   val io = IO(new TopIO)
+  implicit val p: CPUParameters = parm
+
   dontTouch(io)
   println(s"Add module prefix ${getClass.getSimpleName}")
   withModulePrefix(getClass.getSimpleName) {
