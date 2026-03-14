@@ -91,7 +91,7 @@ extern "C" void jyd_update_led(int leds) {
 		std::cout << "  ";
 		for(int j = 0; j < 8; j++) {
 			if (led_row[i] & (1 << j)) {
-				std::cout << fg_green << '*' << ansi_none;
+				std::cout << fg_green << 'o' << ansi_none;
 			} else {
 				std::cout << '-';
 			}
