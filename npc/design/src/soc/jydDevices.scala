@@ -111,7 +111,7 @@ class JYDDevices extends Module with TestSoCDevice {
   val led = Module(new OneWordRWDevice("jyd_update_led"))
   val seg = Module(new OneWordRWDevice("jyd_update_seg"))
 
-  val cnt = Module(new Timer)
+  // val cnt = Module(new Timer)
 
   io <> AXI4XBar(
     Seq(
