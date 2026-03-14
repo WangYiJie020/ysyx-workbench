@@ -87,9 +87,6 @@ static uint32_t last_led = 0, last_segs = 0;
 static void print_board() {
 	auto led = last_led;
 	auto segs = last_segs;
-
-  std::cout << std::format("LEDs: 0b{:032b}\n", led);
-
   uint8_t led_row[4];
 
   for (int i = 3; i >= 0; i--) {
@@ -116,7 +113,7 @@ static void print_board() {
 }
 
 extern "C" void jyd_update_led(int leds) {
-  spdlog::info("LEDs updated");
+  spdlog::info("LEDs updated: 0b{:032b}", leds);
 	last_led = leds;
 	print_board();
 }
