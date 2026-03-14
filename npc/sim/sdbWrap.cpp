@@ -130,8 +130,8 @@ void sdb_init(word_t init_pc, size_t img_size, const char *img_file,
       auto mr = get_mem_regions_need_init_difftest();
       for (auto &r : mr) {
         spdlog::info("Initializing difftest ref mem region '{}' at host addr "
-                     "{:p} with size {} bytes",
-                     r.name, r.data, r.size);
+                     "{:08x} with size {} bytes",
+                     r.name, r.host_base, r.size);
         diff_handler->memcpy_to_ref({(uint8_t *)r.data, r.size}, r.host_base);
       }
 
