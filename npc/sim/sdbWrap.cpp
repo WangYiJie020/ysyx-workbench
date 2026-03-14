@@ -190,5 +190,5 @@ int sdb_mainloop() {
     sdb_exec(cmd, &quit);
   }
 
-  return sim_hit_good_trap() ? 0 : 1;
+  return sdb_is_hitbadtrap() ? 1 : 0;
 }

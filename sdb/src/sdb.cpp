@@ -89,7 +89,6 @@ void debuger::_step(size_t n){
 	for(size_t i=0;i<n&&is_running();i++){
 		//_print("step {} before exec\n", i);
 		ranges::for_each(before_exec,invoke);
-		_print("after before_exec state = {} halt_ret = {}\n", (int)_state.state, _state.halt_ret);
 		if(!is_running())break; // NOTICE!!!!
 														// must check before inst exec
 														// exec impl always try sync 
