@@ -36,14 +36,8 @@ object Elaborate extends App {
     println(s"Finish emitting and preprocessing Verilog on $emitDir")
   }
 
-  emit(new top.ysyx_25100261(CPUParameters()), args(1))
-
-  emit(
-    new top.ysyx_25100261(
-      CPUParameters(gprAddrWidth = 5)
-    ),
-    s"${args(1)}-rv32i"
-  )
+  emit(new top.ysyx_25100261(CPUParameters(gprAddrWidth = 4)), s"${args(1)}/riscv32e")
+  emit(new top.ysyx_25100261(CPUParameters(gprAddrWidth = 5)), s"${args(1)}/riscv32i")
 
   emit(new TestSoC(new npc.NPCDevices), "build/testsoc/npc")
   emit(new TestSoC(new jyd.JYDDevices), "build/testsoc/jyd")
