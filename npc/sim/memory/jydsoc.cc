@@ -80,6 +80,7 @@ void init_mem(void *img, const sim_config &cfg) {
 
 constexpr std::string_view fg_red = "\33[1;31m", fg_green = "\33[1;32m",
                            fg_yellow = "\33[1;33m", fg_gray = "\33[1;90m",
+													 fg_purple = "\33[1;35m",
                            ansi_none = "\33[0m";
 
 static uint32_t last_led = 0, last_segs = 0;
@@ -94,7 +95,7 @@ static void print_board() {
     std::cout << "  [ ";
     for (int j = 7; j >= 0; j--) {
       if (led_row[i] & (1 << j)) {
-        std::cout << fg_yellow << 'x' << ansi_none;
+        std::cout << fg_purple << 'x' << ansi_none;
       } else {
         std::cout << fg_gray << '.' << ansi_none;
       }
