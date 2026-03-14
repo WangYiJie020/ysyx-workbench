@@ -49,6 +49,7 @@ class OneWordRWDevice(updFuncName: String) extends Module {
   io.rvalid  := (state === State.waitRead)
   io.rdata   := dataReg
   io.rresp   := AXI4IO.RResp.OKAY
+  io.rlast   := true.B
 
   when(sio.wvalid) {
     dpiwrap.ClockedCallVoidDPIC(updFuncName)(clock, sio.wvalid, sio.wdata)
