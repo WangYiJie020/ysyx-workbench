@@ -27,6 +27,8 @@ mem_region_group_t &get_mem_regions() {
   return mem_regions;
 }
 
+static size_t dram_need_init_size = 0;
+
 void init_mem(void *img, const sim_config &cfg) {
   fs::path img_path(cfg.img_file_path);
   auto dram_path = img_path;
@@ -70,13 +72,15 @@ void init_mem(void *img, const sim_config &cfg) {
   auto bytes_read = dram_file.gcount();
   spdlog::info("read {} bytes from DRAM data file {}", bytes_read,
                dram_path.filename().string());
+
+	dram_need_init_size = bytes_read;
 }
 
 mem_region_data_span_vec get_mem_regions_need_init_difftest() {
   return {
     mem_region_data_span {
 			.name = dram_ptr->name,
-      .host_base = dram_ptr->base(), .size = dram_ptr->actualSizeInBytes,
+      .host_base = dram_ptr->base(), .size = dram_need_init_size,
       .data = dram_ptr->data,
     }
   };
