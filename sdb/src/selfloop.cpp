@@ -12,6 +12,7 @@ void sdb::self_loop_trace_handler::handle(_ctx_ref ctx) {
 		word_t halt_ret;
 		if(get_halt_ret) halt_ret=get_halt_ret();
 		else halt_ret=0;
+		_log("halt with value {:#x}\n", halt_ret);
    _req_halt(halt_ret);
   }
 }
