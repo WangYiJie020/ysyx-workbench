@@ -137,8 +137,15 @@ void sdb_init(word_t init_pc, size_t img_size, const char *img_file,
       }
     }
 
-    dbg->add_trace(sdb::make_self_loop_trace_handler(
-        []() { return jyd_is_good_trap() ? 0 : 1; }));
+    dbg->add_trace(sdb::make_self_loop_trace_handler([]() {
+      if (jyd_is_good_trap()) {
+        spdlog::info("JYD SoC hit good trap, exiting with 0");
+        return 0;
+      } else {
+        spdlog::info("JYD SoC hit bad trap, exiting with 1");
+        return 1;
+      }
+    }));
   }
 }
 

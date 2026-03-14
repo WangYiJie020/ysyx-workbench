@@ -10,7 +10,7 @@ void sdb::self_loop_trace_handler::handle(_ctx_ref ctx) {
          ctx.pc);
     name = "self-loop-detector";
     word_t halt_ret = get_halt_ret ? get_halt_ret() : 0;
-    _log("halt with value {:#x}\n", halt_ret);
+    _log("halt with value {:#x} (from {})", halt_ret, get_halt_ret ? "get_halt_ret callback" : "default 0");
     _req_halt(halt_ret);
   }
 }
