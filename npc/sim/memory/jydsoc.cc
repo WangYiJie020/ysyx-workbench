@@ -79,7 +79,7 @@ void init_mem(void *img, const sim_config &cfg) {
 }
 
 extern "C" void jyd_update_led(int leds) {
-	spdlog::info("LEDs updated: 0x{:08x}", leds);
+	spdlog::info("LEDs updated: 0x{:b}", leds);
 	uint32_t led_data = (uint32_t)leds;
 	uint8_t led_row[4];
 
