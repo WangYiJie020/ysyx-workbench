@@ -11,7 +11,7 @@
 
 // impl by currently using SoC
 mem_region_group_t& get_mem_regions();
-void mem_init(void* img, const sim_config& cfg);
+void init_mem(void* img, const sim_config& cfg);
 
 uint8_t* mem_guest_to_host(uint32_t addr);
 bool read_guest_mem(uint32_t addr, uint32_t *data);

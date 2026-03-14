@@ -1,9 +1,11 @@
 #include "mem.hpp"
 #include <cstdint>
 
+#ifdef SIM_ARCH_NPC
+
 static std::shared_ptr<direct_mapped_mem> _pmem_ptr;
 
-mem_region_group_t &get_mem_regions_of_npc() {
+mem_region_group_t &get_mem_regions() {
   static mem_region_group_t mem_regions;
   if (mem_regions.empty()) {
     if (_pmem_ptr) {
@@ -16,8 +18,7 @@ mem_region_group_t &get_mem_regions_of_npc() {
   return mem_regions;
 }
 
-#if !SIM_SOC
-void init_mem_of_npc(void *img, const sim_config &cfg) {
+void init_mem(void *img, const sim_config &cfg) {
   spdlog::info("copy img to pmem of npc");
 
   _pmem_ptr = std::make_shared<direct_mapped_mem>(

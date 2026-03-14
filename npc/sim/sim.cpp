@@ -320,7 +320,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 
   load_img();
   // should before dbg_init(which may preload data with func call dpis)
-  mem_init(img.data(), sim_cfg);
+  init_mem(img.data(), sim_cfg);
 
   if (setting.en_wave) {
     Verilated::traceEverOn(true);

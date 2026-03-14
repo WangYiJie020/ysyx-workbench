@@ -55,18 +55,3 @@ bool write_guest_mem(uint32_t addr, uint32_t data) {
                  addr);
   return ok;
 }
-
-mem_region_group_t& get_mem_regions() {
-#if SIM_SOC
-	return get_mem_regions_of_ysyxsoc();
-#else
-	return get_mem_regions_of_npc();
-#endif
-}
-void mem_init(void *img, const sim_config &cfg) {
-#if SIM_SOC
-	init_mem_of_ysyxsoc(img, cfg);
-#else
-	init_mem_of_npc(img, cfg);
-#endif
-}
