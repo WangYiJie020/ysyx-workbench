@@ -64,7 +64,7 @@ ifndef IN_LOCK
 else
 	$(call git_commit, "generate verilog")
 	@echo "# Removing old emitted verilog"
-	@rm -rf $(CHISEL2V_EMIT_ROOT)/*
+	@rm -rf $(CHISEL2V_EMIT_ROOT)
 	@echo "# Emitting verilog with Mill"
 	$(MILL) -i $(CHISEL_DESIGN).runMain Elaborate --target-dir $(CHISEL2V_EMIT_ROOT)
 	@touch $(CHISEL2V_DONE)
