@@ -89,7 +89,6 @@ static void print_board() {
 	auto segs = last_segs;
 
   std::cout << std::format("LEDs: 0b{:032b}\n", led);
-  std::cout << std::format("7-segment displays: 0x{:08x}\n", segs);
 
   uint8_t led_row[4];
 
@@ -104,6 +103,9 @@ static void print_board() {
       }
     }
     std::cout << " ]";
+		if(i==3) {
+			std::cout << "  7-seg:";
+		}
     if (i == 2) {
       std::cout << std::format("  [{:02x}][{:02x} {:02x} {:02x}]",
                                (segs >> 24) & 0xff, (segs >> 16) & 0xff,
