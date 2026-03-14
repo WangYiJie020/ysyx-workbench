@@ -57,6 +57,7 @@ namespace sdb {
 			difftest_trace_handler(std::string_view ref_so_file,int port);
 			virtual void handle(_ctx_ref)override; // step ref
 			virtual void init(_ctx_ref,std::span<uint8_t> img_data, paddr_t img_base_addr)override;
+			void memcpy_to_ref(std::span<uint8_t> data, paddr_t addr);
 			void skip_ref();
 	};
 	using difftest_trace_handler_ptr=std::shared_ptr<difftest_trace_handler>;

@@ -7,6 +7,8 @@ void sdb_dump_recent_info();
 
 void sdb_skip_difftest_ref();
 
+void sdb_memcpy_to_ref(uint32_t addr, std::span<uint8_t> data);
+
 void sdb_exec(std::string_view cmd, bool *quit=nullptr);
 
 int sdb_mainloop();

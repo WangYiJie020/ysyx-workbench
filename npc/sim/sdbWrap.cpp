@@ -9,6 +9,8 @@
 
 #include "sprobe.hpp"
 
+#include "sdbWrap.hpp"
+
 SProbe sprobe;
 cycle_end_callback_t _old_cycle_callback = nullptr;
 
@@ -27,6 +29,12 @@ void sdb_skip_difftest_ref() {
   if (diff_handler)
     diff_handler->skip_ref();
 }
+
+void sdb_memcpy_to_ref(uint32_t addr, std::span<uint8_t> data){
+	if(diff_handler)
+		diff_handler->memcpy_to_ref(data,addr);
+}
+
 
 void sdb_exec(std::string_view cmd, bool *quit) {
   dbg->exec_command(cmd);

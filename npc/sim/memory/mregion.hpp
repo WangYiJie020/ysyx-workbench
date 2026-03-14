@@ -31,7 +31,7 @@ struct mem_region_traits {
 };
 
 struct direct_mapped_mem : public mem_region_traits {
-  const uint32_t _ActualSizeInBytes;
+  const uint32_t actualSizeInBytes;
 
   using _SelfHostedMemContainerType = std::vector<uint32_t>;
   using _ExternalMemContainerType = uint32_t *;
@@ -43,23 +43,23 @@ struct direct_mapped_mem : public mem_region_traits {
   direct_mapped_mem(uint32_t base, uint32_t end, std::string_view name,
                     uint32_t actual_size = 0)
       : mem_region_traits(base, end, name),
-        _ActualSizeInBytes(actual_size ? actual_size : (end - base)) {
-    assert(_ActualSizeInBytes <= (end - base) &&
+        actualSizeInBytes(actual_size ? actual_size : (end - base)) {
+    assert(actualSizeInBytes <= (end - base) &&
            "actual size should not exceed the address range");
-    assert(_ActualSizeInBytes % 4 == 0 && "size should be multiple of 4");
+    assert(actualSizeInBytes % 4 == 0 && "size should be multiple of 4");
 
     mem_container = std::make_shared<_MemContainer>(
         std::in_place_type<_SelfHostedMemContainerType>,
-        _ActualSizeInBytes / 4);
+        actualSizeInBytes / 4);
 		data = std::get<_SelfHostedMemContainerType>(*mem_container).data();
   }
 	direct_mapped_mem(uint32_t base, uint32_t end, std::string_view name,
 										uint32_t actual_size, uint32_t *external_data_ptr)
 			: mem_region_traits(base, end, name),
-				_ActualSizeInBytes(actual_size) {
-		assert(_ActualSizeInBytes <= (end - base) &&
+				actualSizeInBytes(actual_size) {
+		assert(actualSizeInBytes <= (end - base) &&
 					 "actual size should not exceed the address range");
-		assert(_ActualSizeInBytes % 4 == 0 && "size should be multiple of 4");
+		assert(actualSizeInBytes % 4 == 0 && "size should be multiple of 4");
 
 		mem_container = std::make_shared<_MemContainer>(
 				std::in_place_type<_ExternalMemContainerType>, external_data_ptr);
@@ -70,7 +70,7 @@ struct direct_mapped_mem : public mem_region_traits {
 
   inline void copy_from(void *src, size_t siz) { memcpy(data, src, siz); }
   inline void fill(uint8_t val) override {
-    memset(data, val, _ActualSizeInBytes);
+    memset(data, val, actualSizeInBytes);
   }
 
   uint8_t *get_data_ptr_at(uint32_t addr) {

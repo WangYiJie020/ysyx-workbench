@@ -2,6 +2,9 @@
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <span>
+
+#include "../sdbWrap.hpp"
 
 namespace fs = std::filesystem;
 
@@ -53,18 +56,27 @@ void init_mem(void *img, const sim_config &cfg) {
     exit(1);
   }
 
-	dram_file.seekg(0, std::ios::end);
-	size_t dram_file_size = dram_file.tellg();
-	if (dram_file_size > dram_ptr->_ActualSizeInBytes) {
-		spdlog::error("DRAM data file {} size {} exceeds the DRAM capacity {}",
-									dram_path.filename().string(), dram_file_size, dram_ptr->_ActualSizeInBytes);
-		exit(1);
-	}
-	dram_file.seekg(0, std::ios::beg);
+  dram_file.seekg(0, std::ios::end);
+  size_t dram_file_size = dram_file.tellg();
+  if (dram_file_size > dram_ptr->actualSizeInBytes) {
+    spdlog::error("DRAM data file {} size {} exceeds the DRAM capacity {}",
+                  dram_path.filename().string(), dram_file_size,
+                  dram_ptr->actualSizeInBytes);
+    exit(1);
+  }
+  dram_file.seekg(0, std::ios::beg);
 
-  dram_file.read((char *)dram_ptr->data, dram_ptr->_ActualSizeInBytes);
-	auto bytes_read = dram_file.gcount();
-	spdlog::info("read {} bytes from DRAM data file {}", bytes_read, dram_path.filename().string());
+  dram_file.read((char *)dram_ptr->data, dram_ptr->actualSizeInBytes);
+  auto bytes_read = dram_file.gcount();
+  spdlog::info("read {} bytes from DRAM data file {}", bytes_read,
+               dram_path.filename().string());
+
+  if (cfg.setting.difftest) {
+    spdlog::info("copy DRAM data to difftest ref");
+    sdb_memcpy_to_ref(dram_ptr->base(),
+                      std::span<uint8_t>((uint8_t *)dram_ptr->data,
+                                         dram_ptr->actualSizeInBytes));
+  }
 }
 
 #endif
