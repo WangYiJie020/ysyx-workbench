@@ -144,12 +144,12 @@ static void print_board() {
 }
 
 extern "C" void jyd_update_led(int leds) {
-  spdlog::info("LEDs updated: 0b{:032b}", leds);
+  spdlog::error("LEDs updated: 0b{:032b}", leds);
   last_led = leds;
   print_board();
 }
 extern "C" void jyd_update_seg(int segs) {
-  spdlog::info("7-segment displays updated: 0x{:08x}", segs);
+  spdlog::error("7-segment displays updated: 0x{:08x}", segs);
   last_segs = segs;
   print_board();
 }
