@@ -1,6 +1,7 @@
 #include "mem.hpp"
 #include <cstdint>
 #include <filesystem>
+#include <fstream>
 
 namespace fs = std::filesystem;
 
@@ -43,6 +44,27 @@ void init_mem(void *img, const sim_config &cfg) {
       get_dut()
           ->TestSoC->vlSymsp->TOP__TestSoC__devices__dram__mem__mem_ext.Memory
           .data());
+
+  spdlog::info("copy {} to irom of jydsoc", img_path.filename().string());
+  irom_ptr->copy_from(img, cfg.img_size);
+  std::fstream dram_file(dram_path, std::ios::in | std::ios::binary);
+  if (!dram_file) {
+    spdlog::error("failed to open DRAM data file {}", dram_path.string());
+    exit(1);
+  }
+
+	dram_file.seekg(0, std::ios::end);
+	size_t dram_file_size = dram_file.tellg();
+	if (dram_file_size > dram_ptr->_ActualSizeInBytes) {
+		spdlog::error("DRAM data file {} size {} exceeds the DRAM capacity {}",
+									dram_path.filename().string(), dram_file_size, dram_ptr->_ActualSizeInBytes);
+		exit(1);
+	}
+	dram_file.seekg(0, std::ios::beg);
+
+  dram_file.read((char *)dram_ptr->data, dram_ptr->_ActualSizeInBytes);
+	auto bytes_read = dram_file.gcount();
+	spdlog::info("read {} bytes from DRAM data file {}", bytes_read, dram_path.filename().string());
 }
 
 #endif
