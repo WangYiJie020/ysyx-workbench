@@ -8,7 +8,6 @@ import chisel3.util.circt.dpi._
 import axi4._
 
 import dpiwrap._
-import regfile.GPRegReqIO
 import dpiwrap.ClockedCallVoidDPIC
 
 class LSUInput extends Bundle {

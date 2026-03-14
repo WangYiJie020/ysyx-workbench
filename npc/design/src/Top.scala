@@ -51,7 +51,7 @@ class ysyx_25100261 extends Module {
   dontTouch(io)
   println(s"Add module prefix ${getClass.getSimpleName}")
   withModulePrefix(getClass.getSimpleName) {
-    val core = Module(new CPUCore)
+    val core = Module(new CPUCore(p=CPUParameters()))
     core.io <> io
   }
 }
