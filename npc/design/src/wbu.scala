@@ -43,7 +43,7 @@ object ExtractFwdInfoFromWrBack {
 class WBU(implicit p:CPUParameters) extends Module {
   val io = IO(new Bundle {
     val in       = Flipped(Decoupled(new WriteBackInfo))
-    val gpr      = GPRegReqIO.TX.Write
+    val gpr      = RegFileIO(p.gprAddrWidth).TX.Write
     val csr      = CSRegReqIO.TX.Write
     val is_ecall = Output(Bool())
     val done     = Output(Bool())
