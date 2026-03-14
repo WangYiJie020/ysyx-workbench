@@ -44,17 +44,22 @@ object AddrSpace {
   }
 }
 
+case class CPUParameters(
+  gprAddrWidth: Int = 4,
+) {
+  def GPRAddr = UInt(gprAddrWidth.W)
+  def GPRNum  = 1 << gprAddrWidth
+}
+
 object Types {
   object BitWidth {
-    // N_REG = 16
-    var reg_addr = 4
     val csr_addr = 12
     val word     = 32
 
     val inst_id = if (Config.genStageLog) 32 else 0
   }
   def UWord = UInt(BitWidth.word.W)
-  def RegAddr = UInt(BitWidth.reg_addr.W)
+  // def RegAddr = UInt(BitWidth.reg_addr.W)
 
   def InstID = UInt(BitWidth.inst_id.W)
 
@@ -105,11 +110,11 @@ class InstMetaInfo extends Bundle {
   val typ = InstType()
 }
 
-class DecodedInstInfo extends InstMetaInfo with HasRs {
+class DecodedInstInfo(cfg: CPUParameters) extends InstMetaInfo with HasRs {
   val imm = Types.UWord
-  val rd  = Types.RegAddr
-  val rs1 = Types.RegAddr
-  val rs2 = Types.RegAddr
+  val rd  = cfg.GPRAddr
+  val rs1 = cfg.GPRAddr
+  val rs2 = cfg.GPRAddr
 
   val rdWrEn = Bool()
 
@@ -119,8 +124,8 @@ class DecodedInstInfo extends InstMetaInfo with HasRs {
   val snpc = Types.UWord
 }
 
-class DecodedInst extends Inst {
-  val info = new DecodedInstInfo
+class DecodedInst(cfg: CPUParameters) extends Inst {
+  val info = new DecodedInstInfo(cfg)
 }
 
 // update reg when enable,
