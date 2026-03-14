@@ -96,6 +96,7 @@ extern "C" void jyd_update_led(int leds) {
 				std::cout << '.';
 			}
 		}
+		putchar('\n');
 	}
 }
 extern "C" void jyd_update_seg(int segs) {
