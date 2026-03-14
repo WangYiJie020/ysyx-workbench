@@ -56,6 +56,36 @@ class OneWordRWDevice(updFuncName: String) extends Module {
   }
 }
 
+class Timer extends Module {
+  val io = IO(AXI4IO.Slave)
+  io := DontCare
+
+  object State extends ChiselEnum {
+    val idle, ticking, finished = Value
+  }
+  val state = RegInit(State.idle)
+  state := MuxLookup(state, State.idle)(Seq(
+    State.idle -> Mux(io.wvalid && io.wdata === 0.U, State.ticking, State.idle),
+    State.ticking -> Mux(io.wvalid && io.wdata === "hffffffff".U, State.finished, State.ticking),
+    State.finished -> State.finished
+  ))
+  val timer = RegInit(0.U(32.W))
+  timer := Mux(state === State.ticking, timer + 1.U, timer)
+
+  when(io.wvalid) {
+    when(io.wdata === 0.U) {
+      printf("Timer start!\n")
+    }.elsewhen(io.wdata === "hffffffff".U) {
+      printf("Timer stop! Final value: %d\n", timer)
+    }
+  }
+
+  io.rvalid := io.arvalid
+  io.rdata := timer
+  io.rresp := AXI4IO.RResp.OKAY
+  io.rlast := true.B
+}
+
 class JYDDevices extends Module with TestSoCDevice {
   val io = IO(AXI4IO.Slave)
   io := DontCare

@@ -2,9 +2,8 @@
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
-#include <span>
 #include <iostream>
-
+#include <span>
 
 #include "../sdbWrap.hpp"
 
@@ -75,43 +74,41 @@ void init_mem(void *img, const sim_config &cfg) {
   spdlog::info("read {} bytes from DRAM data file {}", bytes_read,
                dram_path.filename().string());
 
-	dram_need_init_size = bytes_read;
+  dram_need_init_size = bytes_read;
 }
 
 extern "C" void jyd_update_led(int leds) {
-	spdlog::info("LEDs updated: 0b{:b}", leds);
-	uint32_t led_data = (uint32_t)leds;
-	uint8_t led_row[4];
+  spdlog::info("LEDs updated: 0b{:b}", leds);
+  uint32_t led_data = (uint32_t)leds;
+  uint8_t led_row[4];
 
   constexpr std::string_view fg_red = "\33[1;31m", fg_green = "\33[1;32m",
-                             fg_yellow = "\33[1;33m",
-														 fg_gray = "\33[1;90m",
-														 ansi_none = "\33[0m";
+                             fg_yellow = "\33[1;33m", fg_gray = "\33[1;90m",
+                             ansi_none = "\33[0m";
 
-	for (int i = 3; i >= 0; i--) {
-		led_row[i] = (led_data >> (i * 8)) & 0xff;
-		std::cout << "  [ ";
-		for(int j = 0; j < 8; j++) {
-			if (led_row[i] & (1 << j)) {
-				std::cout << fg_yellow << '*' << ansi_none;
-			} else {
-				std::cout << fg_gray << '.' << ansi_none;
-			}
-		}
-		std::cout << " ]\n";
-	}
+  for (int i = 3; i >= 0; i--) {
+    led_row[i] = (led_data >> (i * 8)) & 0xff;
+    std::cout << "  [ ";
+    for (int j = 7; j >= 0; j--) {
+      if (led_row[i] & (1 << j)) {
+        std::cout << fg_yellow << '*' << ansi_none;
+      } else {
+        std::cout << fg_gray << '.' << ansi_none;
+      }
+    }
+    std::cout << " ]\n";
+  }
 }
 extern "C" void jyd_update_seg(int segs) {
-	spdlog::info("7-segment displays updated: 0x{:08x}", segs);
+  spdlog::info("7-segment displays updated: 0x{:08x}", segs);
 }
 
 mem_region_data_span_vec get_mem_regions_need_init_difftest() {
-  return {
-    mem_region_data_span {
-			.name = dram_ptr->name,
-      .host_base = dram_ptr->base(), .size = dram_need_init_size,
+  return {mem_region_data_span{
+      .name = dram_ptr->name,
+      .host_base = dram_ptr->base(),
+      .size = dram_need_init_size,
       .data = dram_ptr->data,
-    }
-  };
+  }};
 }
 #endif
