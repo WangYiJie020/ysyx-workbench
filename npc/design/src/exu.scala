@@ -8,7 +8,7 @@ import regfile._
 import cpu.alu._
 import axi4._
 
-class EXUStageCalcOut extends Bundle {
+class EXUStageCalcOut(implicit p:CPUParameters) extends Bundle {
   val aluOut = Types.UWord
 
   val isTypSys = Bool()
