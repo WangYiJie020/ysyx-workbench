@@ -93,13 +93,13 @@ class Timer extends Module {
   val timer = RegInit(0.U(32.W))
   timer := Mux(state === State.ticking, timer + 1.U, timer)
 
-  when(io.wvalid && io.wready) {
-    when(io.wdata === MAGIC_START) {
-      printf("Timer start!\n")
-    }.elsewhen(io.wdata === MAGIC_STOP) {
-      printf("Timer stop! Final value: %d\n", timer)
-    }
-  }
+  // when(io.wvalid && io.wready) {
+  //   when(io.wdata === MAGIC_START) {
+  //     printf("Timer start!\n")
+  //   }.elsewhen(io.wdata === MAGIC_STOP) {
+  //     printf("Timer stop! Final value: %d\n", timer)
+  //   }
+  // }
 
   io.awready := true.B
   io.wready  := true.B
