@@ -18,28 +18,28 @@ object Elaborate extends App {
     "-disable-all-randomization",
     "-strip-debug-info"
   )
-  println("Emitting cpu Verilog...")
-  circt.stage.ChiselStage.emitSystemVerilogFile(new top.ysyx_25100261(), args, firtoolOptions)
-  println("Finish emit cpu Verilog.")
 
-  println("Preprocessing cpu Verilog...")
   val designName  = "ysyx_25100261"
-  val preProcCore = s"./scripts/preproc_vsrcs.sh ${args(1)} ${designName}".!
-  if (preProcCore != 0) sys.exit(preProcCore)
 
-  def emitSoC(gen: => chisel3.RawModule, name: String): Unit = {
-    val emitDir = s"build/testsoc/$name"
+  def emit(gen: => chisel3.RawModule, emitDir: String) = {
+    println(s"Emitting Verilog... to $emitDir")
     circt.stage.ChiselStage.emitSystemVerilogFile(
       gen,
       Array("--target-dir", emitDir),
       firtoolOptions
     )
 
-    println(s"Preprocessing SoC - $name Verilog...")
+    println(s"Preprocessing Verilog... on $emitDir")
     val preProcSoC = s"./scripts/preproc_vsrcs.sh ${emitDir} ${designName}".!
     if (preProcSoC != 0) sys.exit(preProcSoC)
+    println(s"Finish emitting and preprocessing Verilog on $emitDir")
   }
 
-  emitSoC(new TestSoC(new npc.NPCDevices), "npc")
-  emitSoC(new TestSoC(new jyd.JYDDevices), "jyd")
+  emit(new top.ysyx_25100261(), args(1))
+
+  common_def.Types.BitWidth.reg_addr = 5
+  emit(new top.ysyx_25100261(), s"${args(1)}-rv32i")
+
+  emit(new TestSoC(new npc.NPCDevices), "build/testsoc/npc")
+  emit(new TestSoC(new jyd.JYDDevices), "build/testsoc/jyd")
 }

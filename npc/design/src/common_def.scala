@@ -47,7 +47,7 @@ object AddrSpace {
 object Types {
   object BitWidth {
     // N_REG = 16
-    val reg_addr = 4
+    var reg_addr = 4
     val csr_addr = 12
     val word     = 32
 
