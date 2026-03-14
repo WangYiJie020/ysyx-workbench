@@ -95,7 +95,7 @@ static void print_board() {
     std::cout << "  [ ";
     for (int j = 7; j >= 0; j--) {
       if (led_row[i] & (1 << j)) {
-        std::cout << fg_blue << 'x' << ansi_none;
+        std::cout << fg_red << 'x' << ansi_none;
       } else {
         std::cout << fg_gray << '.' << ansi_none;
       }
