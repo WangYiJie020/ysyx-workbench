@@ -1,6 +1,7 @@
 #include "mem.hpp"
 #include <cstdint>
 #include <filesystem>
+#include <format>
 #include <fstream>
 #include <iostream>
 #include <span>
@@ -77,14 +78,14 @@ void init_mem(void *img, const sim_config &cfg) {
   dram_need_init_size = bytes_read;
 }
 
+constexpr std::string_view fg_red = "\33[1;31m", fg_green = "\33[1;32m",
+                           fg_yellow = "\33[1;33m", fg_gray = "\33[1;90m",
+                           ansi_none = "\33[0m";
+
 extern "C" void jyd_update_led(int leds) {
   spdlog::info("LEDs updated: 0b{:b}", leds);
   uint32_t led_data = (uint32_t)leds;
   uint8_t led_row[4];
-
-  constexpr std::string_view fg_red = "\33[1;31m", fg_green = "\33[1;32m",
-                             fg_yellow = "\33[1;33m", fg_gray = "\33[1;90m",
-                             ansi_none = "\33[0m";
 
   for (int i = 3; i >= 0; i--) {
     led_row[i] = (led_data >> (i * 8)) & 0xff;
@@ -101,10 +102,7 @@ extern "C" void jyd_update_led(int leds) {
 }
 extern "C" void jyd_update_seg(int segs) {
   spdlog::info("7-segment displays updated: 0x{:08x}", segs);
-  for (int i = 7; i >= 0; i--) {
-    uint8_t seg_val = (segs >> (i * 4)) & 0xf;
-    std::cout << std::hex << (uint32_t)seg_val;
-  }
+	std::cout<<std::format("  [{:02x}][{:06x}]\n", (segs >> 24) & 0xff, segs & 0xffffff);
 }
 
 mem_region_data_span_vec get_mem_regions_need_init_difftest() {
