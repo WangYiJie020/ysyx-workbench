@@ -26,7 +26,6 @@ class LED extends Module {
   val io = IO(AXI4IO.Slave)
   io := DontCare
 
-  val data = RegInit(0.U(32.W))
   val sio = io
 
   sio.awready := true.B
@@ -35,13 +34,14 @@ class LED extends Module {
   sio.bvalid := true.B
   sio.bresp  := AXI4IO.BResp.OKAY
 
-  val ledAs4x8Vec = data.asTypeOf(Vec(4, UInt(8.W)))
+  val ledAs4x8Vec = sio.wdata.asTypeOf(Vec(4, UInt(8.W)))
 
   when(sio.wvalid) {
-    data := sio.wdata
     printf(cf"LED <- ${sio.wdata}%b\n")
-    printf(cf"LED as 4x8: ${ledAs4x8Vec(3)} ${ledAs4x8Vec(2)} ${ledAs4x8Vec(1)} ${ledAs4x8Vec(0)}\n")
-
+    printf(cf"LED as 4x8:\n")
+    for (i <- 0 until 4) {
+      printf(cf"  ${ledAs4x8Vec(i)}%b\n")
+    }
   }
 
 }
