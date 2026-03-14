@@ -90,12 +90,18 @@ static void print_board() {
   auto segs = last_segs;
   uint8_t led_row[4];
 
+	uint32_t test_passed_led = 0b00000001001000100001110000001000;
+	uint32_t test_failed_led = 0b00100100000110000001100000100100;
+
+	auto led_color = (led == test_passed_led) ? fg_green :
+									 (led == test_failed_led) ? fg_red : fg_yellow;
+
   for (int i = 3; i >= 0; i--) {
     led_row[i] = (led >> (i * 8)) & 0xff;
     std::cout << "  [ ";
     for (int j = 7; j >= 0; j--) {
       if (led_row[i] & (1 << j)) {
-        std::cout << fg_red << 'x' << ansi_none;
+        std::cout << led_color << 'x' << ansi_none;
       } else {
         std::cout << fg_gray << '.' << ansi_none;
       }
