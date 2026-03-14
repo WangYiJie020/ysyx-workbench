@@ -42,10 +42,15 @@ object AddrSpace {
   def inRng(addr: UInt, rng: (UInt, UInt)): Bool = {
     (addr >= rng._1) && (addr < rng._2)
   }
+
+  def needSkipDifftestGroup = Seq(
+    SERIAL,SPI,CLINT,VGA,PS2
+  )
 }
 
 case class CPUParameters(
   gprAddrWidth: Int = 4,
+  skipDifftestAddrs: Seq[(UInt, UInt)] = AddrSpace.needSkipDifftestGroup
 ) {
   def GPRAddr = UInt(gprAddrWidth.W)
   def GPRNum  = 1 << gprAddrWidth

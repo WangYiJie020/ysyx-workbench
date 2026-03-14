@@ -23,6 +23,11 @@ object AddrSpace {
   object SelfExtSpace {
     val UART = ("h10000000".U, "h10001000".U)
   }
+
+  def needSkipDifftestGroup = Seq(
+    MMIO,
+    SelfExtSpace.UART
+  )
 }
 
 object RChanelFSM {
@@ -31,10 +36,12 @@ object RChanelFSM {
       val idle, waitReady = Value
     }
     val state = RegInit(State.idle)
-    state := MuxLookup(state, State.idle)(Seq(
-      State.idle -> Mux(arvalid, State.waitReady, State.idle),
-      State.waitReady -> Mux(rready, State.idle, State.waitReady)
-    ))
+    state := MuxLookup(state, State.idle)(
+      Seq(
+        State.idle      -> Mux(arvalid, State.waitReady, State.idle),
+        State.waitReady -> Mux(rready, State.idle, State.waitReady)
+      )
+    )
     state === State.waitReady
   }
 }
@@ -73,14 +80,16 @@ class Timer extends Module {
   }
 
   val MAGIC_START = "h80000000".U
-  val MAGIC_STOP = "hffffffff".U
+  val MAGIC_STOP  = "hffffffff".U
 
   val state = RegInit(State.idle)
-  state := MuxLookup(state, State.idle)(Seq(
-    State.idle -> Mux(io.wvalid && io.wdata === MAGIC_START, State.ticking, State.idle),
-    State.ticking -> Mux(io.wvalid && io.wdata === MAGIC_STOP, State.finished, State.ticking),
-    State.finished -> State.finished
-  ))
+  state := MuxLookup(state, State.idle)(
+    Seq(
+      State.idle     -> Mux(io.wvalid && io.wdata === MAGIC_START, State.ticking, State.idle),
+      State.ticking  -> Mux(io.wvalid && io.wdata === MAGIC_STOP, State.finished, State.ticking),
+      State.finished -> State.finished
+    )
+  )
   val timer = RegInit(0.U(32.W))
   timer := Mux(state === State.ticking, timer + 1.U, timer)
 
@@ -93,15 +102,15 @@ class Timer extends Module {
   }
 
   io.awready := true.B
-  io.wready := true.B
-  io.bvalid := true.B
-  io.bresp := AXI4IO.BResp.OKAY
+  io.wready  := true.B
+  io.bvalid  := true.B
+  io.bresp   := AXI4IO.BResp.OKAY
 
   io.arready := true.B
-  io.rvalid := RChanelFSM(io.arvalid, io.rready)
-  io.rdata := timer
-  io.rresp := AXI4IO.RResp.OKAY
-  io.rlast := true.B
+  io.rvalid  := RChanelFSM(io.arvalid, io.rready)
+  io.rdata   := timer
+  io.rresp   := AXI4IO.RResp.OKAY
+  io.rlast   := true.B
 }
 
 class JYDDevices extends Module with TestSoCDevice {
