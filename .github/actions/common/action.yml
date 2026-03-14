@@ -8,7 +8,7 @@ runs:
   using: "composite"
   steps:
     - name: Download workbench
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v5
       with:
         name: workbench
         path: /tmp/artifact-download
@@ -21,20 +21,20 @@ runs:
         tar -xzf /tmp/artifact-download/ysyx-workbench.tar.gz
 
     - name: Cache npc deps
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ${{ inputs.YSYX_HOME }}/npc/deps
         key: npc-deps-v1
 
     - name: Cache sdb tools
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ${{ inputs.YSYX_HOME }}/sdb/tools
         key: sdb-tools-v1
 
     - name: Cache oss-cad-suite
       id: oss-cad-suite-cache
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: oss-cad-suite
         key: ${{ runner.os }}-oss-cad-suite-${{ env.OSS_CAD_SUITE_RELEASE_TAG }}
