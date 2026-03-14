@@ -78,6 +78,11 @@ void hander_t::init(_ctx_ref ctx, std::span<uint8_t> img_data,
   auto regs = pack_regs_and_pc(ctx);
   _imp->ref_regcpy(regs.data(), DIFFTEST_TO_REF);
 }
+
+void hander_t::memcpy_to_ref(std::span<uint8_t> data, paddr_t addr){
+	_imp->ref_memcpy(addr, data.data(), data.size(), DIFFTEST_TO_REF);
+}
+
 void hander_t::skip_ref() { _imp->is_skip_ref = true; }
 void hander_t::handle(_ctx_ref ctx) {
   auto &imp = *_imp;
