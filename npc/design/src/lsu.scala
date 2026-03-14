@@ -10,7 +10,7 @@ import axi4._
 import dpiwrap._
 import dpiwrap.ClockedCallVoidDPIC
 
-class LSUInput extends Bundle {
+class LSUInput(implicit p:CPUParameters) extends Bundle {
   val isLoad       = Bool()
   val isStore      = Bool()
   val destAddr     = Types.UWord
@@ -20,7 +20,7 @@ class LSUInput extends Bundle {
 }
 
 object ExtractFwdInfoFromLSU {
-  def apply(info: DecoupledIO[LSUInput]): WrBackForwardInfo = {
+  def apply(info: DecoupledIO[LSUInput])(implicit p:CPUParameters): WrBackForwardInfo = {
     val wrBack = info.bits.exuWriteBack
 
     val out = Wire(new WrBackForwardInfo)

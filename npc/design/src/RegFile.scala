@@ -45,6 +45,7 @@ class RegFileIO(AddrWidth: Int, data_width: Int = Types.BitWidth.word) {
 
 object GPRegReqIO {
   def WriteTX(implicit p: CPUParameters) = new RegFileIO(p.gprAddrWidth).TX.Write
+  def ReadVecTX(N: Int)(implicit p: CPUParameters) = new RegFileIO(p.gprAddrWidth).TX.VecRead(N)
 }
 
 object CSRegReqIO extends RegFileIO(AddrWidth = Types.BitWidth.csr_addr)
