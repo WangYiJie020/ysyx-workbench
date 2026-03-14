@@ -106,7 +106,7 @@ void hander_t::handle(_ctx_ref ctx) {
              : std::format(" (ref pc = {:#x})", ref_regs.back()),
          diff_regs.size());
     for (auto i : diff_regs) {
-      _log(ANSI_FG_BLUE"{:4}" ANSI_FG_RED " 0x{:08x}" ANSI_FG_GREEN " 0x{:08x}\n",
+      _log(ANSI_FG_BLUE"{:4}" ANSI_FG_RED " 0x{:08x}" ANSI_FG_GREEN " 0x{:08x}\n" ANSI_NONE,
            i < ctx.reg_names.size() ? ctx.reg_names[i] : "pc", regs[i],
            ref_regs[i]);
     }
