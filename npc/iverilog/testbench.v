@@ -14,7 +14,7 @@ initial begin
 		rst = 0;
 end
 
-NPCTestSoC dut (
+TestSoC dut (
 		.clock(clk),
 		.reset(rst)
 );
