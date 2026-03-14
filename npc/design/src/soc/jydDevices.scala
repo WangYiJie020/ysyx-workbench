@@ -35,9 +35,13 @@ class LED extends Module {
   sio.bvalid := true.B
   sio.bresp  := AXI4IO.BResp.OKAY
 
+  val ledAs4x8Vec = data.asTypeOf(Vec(4, UInt(8.W)))
+
   when(sio.wvalid) {
     data := sio.wdata
     printf(cf"LED <- ${sio.wdata}%b\n")
+    printf(cf"LED as 4x8: ${ledAs4x8Vec(3)} ${ledAs4x8Vec(2)} ${ledAs4x8Vec(1)} ${ledAs4x8Vec(0)}\n")
+
   }
 
 }
