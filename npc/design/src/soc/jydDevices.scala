@@ -81,7 +81,7 @@ class Timer extends Module {
   timer := Mux(state === State.ticking, timer + 1.U, timer)
 
   when(io.wvalid) {
-    when(io.wdata === 0.U) {
+    when(io.wdata === "h80000000".U) {
       printf("Timer start!\n")
     }.elsewhen(io.wdata === "hffffffff".U) {
       printf("Timer stop! Final value: %d\n", timer)
