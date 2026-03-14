@@ -5,9 +5,8 @@ $(info Detected CI environment, emit mill version file to make CI test mill vers
 $(shell echo '0.12.4' > ../../../.mill-version)
 endif
 
-$(shell mkdir -p $(CHISEL2V_EMIT_ROOT))
 CHISEL2V_DEST_ISA_EMIT_DIR := $(CHISEL2V_EMIT_ROOT)/$(ARCH_ISA)
-
+$(shell mkdir -p $(CHISEL2V_DEST_ISA_EMIT_DIR))
 $(shell touch $(CHISEL2V_DEST_ISA_EMIT_DIR)/filelist.f)
 
 define rd_filelist_indir 
