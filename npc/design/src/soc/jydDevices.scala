@@ -71,19 +71,23 @@ class Timer extends Module {
   object State extends ChiselEnum {
     val idle, ticking, finished = Value
   }
+
+  val MAGIC_START = "h80000000".U
+  val MAGIC_STOP = "hffffffff".U
+
   val state = RegInit(State.idle)
   state := MuxLookup(state, State.idle)(Seq(
-    State.idle -> Mux(io.wvalid && io.wdata === 0.U, State.ticking, State.idle),
-    State.ticking -> Mux(io.wvalid && io.wdata === "hffffffff".U, State.finished, State.ticking),
+    State.idle -> Mux(io.wvalid && io.wdata === MAGIC_START, State.ticking, State.idle),
+    State.ticking -> Mux(io.wvalid && io.wdata === MAGIC_STOP, State.finished, State.ticking),
     State.finished -> State.finished
   ))
   val timer = RegInit(0.U(32.W))
   timer := Mux(state === State.ticking, timer + 1.U, timer)
 
   when(io.wvalid) {
-    when(io.wdata === "h80000000".U) {
+    when(io.wdata === MAGIC_START) {
       printf("Timer start!\n")
-    }.elsewhen(io.wdata === "hffffffff".U) {
+    }.elsewhen(io.wdata === MAGIC_STOP) {
       printf("Timer stop! Final value: %d\n", timer)
     }
   }
