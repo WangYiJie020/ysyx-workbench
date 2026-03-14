@@ -95,6 +95,15 @@ namespace sdb {
 	exception_type default_riscv_exception_recognizer(vlen_inst_view inst);
 	trace_handler_ptr make_etrace_handler(exception_recognizer recog_exc=default_riscv_exception_recognizer);
 
+	// self-loop
+	
+	class self_loop_trace_handler:public trace_handler{
+		virtual void handle(_ctx_ref ctx)override;
+	};
+	inline trace_handler_ptr make_self_loop_trace_handler(){
+		return std::make_shared<self_loop_trace_handler>();
+	}
+
 	// watchpoint
 	
 	class watchpoint_tracer:public trace_handler{

@@ -136,6 +136,8 @@ void sdb_init(word_t init_pc, size_t img_size, const char *img_file,
       }
 
     }
+
+		dbg->add_trace(sdb::make_self_loop_trace_handler());
   }
 }
 
