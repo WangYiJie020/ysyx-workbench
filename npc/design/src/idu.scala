@@ -106,8 +106,8 @@ class ByPassMux(
   implicit p: CPUParameters)
     extends Module {
   val io = IO(new Bundle {
-    val rs1      = p.GPRAddr
-    val rs2      = p.GPRAddr
+    val rs1      = Input(p.GPRAddr)
+    val rs2      = Input(p.GPRAddr)
     val regData1 = Input(Types.UWord)
     val regData2 = Input(Types.UWord)
 
