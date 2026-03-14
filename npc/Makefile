@@ -9,7 +9,7 @@ SIM_BIN_DIR = $(BUILD_DIR)/bin
 COMMIT_HASH = $(shell git rev-parse HEAD)
 CXXFLAGS += -DGIT_COMMIT_HASH=$(COMMIT_HASH)
 
-ARCH ?= riscv32e-ysyxsoc
+ARCH ?= riscv32e-foo
 
 ARCH_PLATFORM = $(lastword $(subst -, ,$(ARCH)))
 ARCH_ISA = $(firstword $(subst -, ,$(ARCH)))
@@ -61,7 +61,7 @@ CHISEL2V_EMIT_ROOT = $(BUILD_DIR)/gened/verilog
 
 include ./scripts/chisel.mk
 
-V2CXX_EMIT_DIR = $(BUILD_DIR)/gened/cxx$(SIM_ARCH_SUFFIX)
+V2CXX_EMIT_DIR = $(BUILD_DIR)/gened/cxx/$(SIM_ARCH_SUFFIX)
 
 CORE_VSRCS = $(CHISEL_EMITED_VSRCS)
 SYNTH_VSRCS = $(CHISEL_EMITED_VSRCS_SYNTH)
