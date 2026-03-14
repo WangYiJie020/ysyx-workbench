@@ -30,7 +30,7 @@ class EXUStageCalcOut(implicit p:CPUParameters) extends Bundle {
   val gprWeEn = Bool()
 }
 
-class EXUStageCalc extends Module {
+class EXUStageCalc(implicit p:CPUParameters) extends Module {
   val io = IO(new Bundle {
     val in       = Flipped(Decoupled(new DecodedInst))
     val csr_rvec = CSRegReqIO.TX.SingleRead

@@ -40,7 +40,7 @@ object ExtractFwdInfoFromWrBack {
   }
 }
 
-class WBU extends Module {
+class WBU(implicit p:CPUParameters) extends Module {
   val io = IO(new Bundle {
     val in       = Flipped(Decoupled(new WriteBackInfo))
     val gpr      = GPRegReqIO.TX.Write
