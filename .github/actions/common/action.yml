@@ -84,6 +84,8 @@ runs:
         OSS_CAD_SUITE_BIN_PATH=`pwd`/oss-cad-suite/bin
         echo "PATH=$PATH:$OSS_CAD_SUITE_BIN_PATH" >> $GITHUB_ENV
 
+        git config --global --add safe.directory '*'
+
     - name: Clone other repos
       shell: bash
       run: |
