@@ -125,6 +125,8 @@ void sdb_init(word_t init_pc, size_t img_size, const char *img_file,
                      e.what());
         return;
       }
+      dbg->add_trace(diff_handler);
+
       auto mr = get_mem_regions_need_init_difftest();
       for (auto &r : mr) {
         spdlog::info("Initializing difftest ref mem region '{}' at host addr "
@@ -133,7 +135,6 @@ void sdb_init(word_t init_pc, size_t img_size, const char *img_file,
         diff_handler->memcpy_to_ref({(uint8_t *)r.data, r.size}, r.host_base);
       }
 
-      dbg->add_trace(diff_handler);
     }
   }
 }
