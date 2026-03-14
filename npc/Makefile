@@ -14,8 +14,6 @@ ARCH ?= riscv32e-foo
 ARCH_PLATFORM = $(lastword $(subst -, ,$(ARCH)))
 ARCH_ISA = $(firstword $(subst -, ,$(ARCH)))
 
-SIM_ARCH_SUFFIX = _$(ARCH_PLATFORM)
-
 CXXFLAGS += -DSIM_ARCH_$(shell echo $(ARCH_PLATFORM) | tr a-z A-Z)
 
 SIM_VSRCS =
@@ -29,7 +27,7 @@ else
 TOP_NAME = TestSoC
 endif
 
-SIM_BIN = $(SIM_BIN_DIR)/$(TOP_NAME)$(SIM_ARCH_SUFFIX)$(VSIM_OPT)
+SIM_BIN = $(SIM_BIN_DIR)/$(TOP_NAME)-$(ARCH_PLATFORM)$(VSIM_OPT)
 default: $(SIM_BIN)
 
 ifeq ($(ARCH), riscv32e-ysyxsoc)
@@ -61,7 +59,7 @@ CHISEL2V_EMIT_ROOT = $(BUILD_DIR)/gened/verilog
 
 include ./scripts/chisel.mk
 
-V2CXX_EMIT_DIR = $(BUILD_DIR)/gened/cxx/$(SIM_ARCH_SUFFIX)
+V2CXX_EMIT_DIR = $(BUILD_DIR)/gened/cxx/$(ARCH_PLATFORM)
 
 CORE_VSRCS = $(CHISEL_EMITED_VSRCS)
 SYNTH_VSRCS = $(CHISEL_EMITED_VSRCS_SYNTH)
