@@ -257,7 +257,7 @@ jobs:
           fi
 
       - name: Upload verilog file
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: verilog
           path: ${{ steps.vfilename.outputs.VFILE }}
@@ -275,7 +275,7 @@ jobs:
             --exclude="$BASENAME/ysyxSoC-verilog" \
             $BASENAME
       - name: Upload workbench
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: workbench
           path: /tmp/artifact-upload/
@@ -526,13 +526,13 @@ jobs:
           echo "AREA=$AREA" >> $GITHUB_ENV
 
       - name: Upload STA result
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: sta-result
           path: yosys-sta/result/ysyx_${{ needs.setup.outputs.STUID }}-500MHz
 
       - name: Upload netlist file
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: netlist
           path: yosys-sta/result/ysyx_${{ needs.setup.outputs.STUID }}-500MHz/ysyx_${{ needs.setup.outputs.STUID }}.netlist.fixed.v
