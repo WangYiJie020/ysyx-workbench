@@ -12,7 +12,7 @@ import testSoC._
 
 object AddrSpace {
   val IROM = ("h80000000".U, "h80004000".U)
-  val DRAM = ("h80100000".U, "h81400000".U)
+  val DRAM = ("h80100000".U, "h80140000".U)
   val MMIO = ("h80200000".U, "h80200100".U)
 
   val LED = ("h80200040".U, "h80200044".U)
