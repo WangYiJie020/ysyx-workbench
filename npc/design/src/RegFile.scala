@@ -50,7 +50,7 @@ class GPRIO(N_RD: Int = 2) extends Bundle {
 }
 
 class RegisterFile(READ_PORTS: Int = 2) extends Module {
-  val N_REG = 1 << Types.BitWidth.reg_addr
+  def N_REG = 1 << Types.BitWidth.reg_addr
 
   val io = IO(new GPRIO(READ_PORTS))
 
