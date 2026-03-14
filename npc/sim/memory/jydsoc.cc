@@ -94,7 +94,7 @@ bool jyd_is_good_trap() {
 
   uint8_t seg_high = (last_segs >> 24) & 0xff;
 
-  if (seg_high == 0x37) {
+  if (seg_high != 0x37) {
     spdlog::error("7-seg high byte is 0x{:02x}, expected 0x37, not a good trap",
                  seg_high);
     return false;
