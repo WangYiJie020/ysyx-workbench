@@ -39,7 +39,7 @@ object Elaborate extends App {
   val emitRootDir = args(1)
 
   emit(new top.ysyx_25100261(CPUParameters(gprAddrWidth = 4)), s"$emitRootDir/riscv32e")
-  emit(new top.ysyx_25100261(CPUParameters(gprAddrWidth = 5)), s"$emitRootDir/riscv32i")
+  emit(new top.ysyx_25100261(CPUParameters(gprAddrWidth = 5)), s"$emitRootDir/riscv32")
 
   emit(new TestSoC(new npc.NPCDevices), s"$emitRootDir/testsoc/npc")
   emit(new TestSoC(new jyd.JYDDevices), s"$emitRootDir/testsoc/jyd")
