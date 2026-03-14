@@ -30,11 +30,10 @@ void sdb_skip_difftest_ref() {
     diff_handler->skip_ref();
 }
 
-void sdb_memcpy_to_ref(uint32_t addr, std::span<uint8_t> data){
-	if(diff_handler)
-		diff_handler->memcpy_to_ref(data,addr);
+void sdb_memcpy_to_ref(uint32_t addr, std::span<uint8_t> data) {
+  if (diff_handler)
+    diff_handler->memcpy_to_ref(data, addr);
 }
-
 
 void sdb_exec(std::string_view cmd, bool *quit) {
   dbg->exec_command(cmd);
@@ -126,6 +125,14 @@ void sdb_init(word_t init_pc, size_t img_size, const char *img_file,
                      e.what());
         return;
       }
+      auto mr = get_mem_regions_need_init_difftest();
+      for (auto &r : mr) {
+        spdlog::info("Initializing difftest ref mem region '{}' at host addr "
+                     "{:p} with size {} bytes",
+                     r.name, r.data, r.size);
+        diff_handler->memcpy_to_ref({(uint8_t *)r.data, r.size}, r.host_base);
+      }
+
       dbg->add_trace(diff_handler);
     }
   }

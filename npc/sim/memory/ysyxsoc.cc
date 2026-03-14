@@ -109,6 +109,10 @@ mem_region_group_t &get_mem_regions() {
   return mem_regions;
 }
 
+mem_region_data_span_vec get_mem_regions_need_init_difftest(){
+	return {}
+}
+
 static void _fill_rams_uninit(bool zero_uninit_ram) {
   if (zero_uninit_ram) {
     g_mem.psram.fill(0);

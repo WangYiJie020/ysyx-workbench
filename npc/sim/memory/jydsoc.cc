@@ -70,13 +70,15 @@ void init_mem(void *img, const sim_config &cfg) {
   auto bytes_read = dram_file.gcount();
   spdlog::info("read {} bytes from DRAM data file {}", bytes_read,
                dram_path.filename().string());
-
-  if (cfg.setting.difftest) {
-    spdlog::info("copy DRAM data to difftest ref");
-    sdb_memcpy_to_ref(dram_ptr->base(),
-                      std::span<uint8_t>((uint8_t *)dram_ptr->data,
-                                         dram_ptr->actualSizeInBytes));
-  }
 }
 
+mem_region_data_span_vec get_mem_regions_need_init_difftest() {
+  return {
+    mem_region_data_span {
+			.name = dram_ptr->name,
+      .host_base = dram_ptr->base(), .size = dram_ptr->actualSizeInBytes,
+      .data = dram_ptr->data,
+    }
+  };
+}
 #endif
