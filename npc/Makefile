@@ -9,6 +9,8 @@ SIM_BIN_DIR = $(BUILD_DIR)/bin
 COMMIT_HASH = $(shell git rev-parse HEAD)
 CXXFLAGS += -DGIT_COMMIT_HASH=$(COMMIT_HASH)
 
+ARCH ?= riscv32e-ysyxsoc
+
 ARCH_PLATFORM = $(lastword $(subst -, ,$(ARCH)))
 ARCH_ISA = $(firstword $(subst -, ,$(ARCH)))
 
