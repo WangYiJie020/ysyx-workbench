@@ -49,8 +49,8 @@ void KonataLogger::_output(const std::string &str) {
   if (_fileStream.tellp() >= static_cast<std::streampos>(_maxLogFileSize)) {
     _fileStream.close();
     spdlog::warn(
-        "Log file size exceeded {} bytes. KonataLogger stopped logging",
-        _maxLogFileSize);
+        "Log file size exceeded {} MB. KonataLogger stopped logging",
+        _maxLogFileSize / (1024 * 1024));
   } else {
     _fileStream << str << std::endl;
   }
