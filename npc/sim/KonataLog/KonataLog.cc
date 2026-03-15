@@ -46,6 +46,7 @@ struct Stage {
 };
 
 void KonataLogger::_output(const std::string &str) {
+	constexpr size_t _maxLogFileSize = 64 * 1024 * 1024;
   if (_fileStream.tellp() >= static_cast<std::streampos>(_maxLogFileSize)) {
     _fileStream.close();
     spdlog::warn(

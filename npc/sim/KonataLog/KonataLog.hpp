@@ -22,8 +22,6 @@ private:
   CycleType _LastOutputCycle = 0;
   std::ofstream _fileStream;
 
-	size_t _maxLogFileSize = 100 * 1024 * 1024; // 100 MB
-
   void _output(const std::string &str);
   void _Log(const std::string &cmd, auto &&...params) {
     std::string res = cmd;
