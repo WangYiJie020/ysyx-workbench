@@ -22,7 +22,7 @@ private:
   CycleType _LastOutputCycle = 0;
   std::ofstream _fileStream;
 
-  void _output(const std::string &str) { _fileStream << str << '\n'; }
+  void _output(const std::string &str);
   void _Log(const std::string &cmd, auto &&...params) {
     std::string res = cmd;
     static_assert(sizeof...(params) > 0, "At least one parameter is required");

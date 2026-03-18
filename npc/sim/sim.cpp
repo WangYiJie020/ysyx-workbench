@@ -170,7 +170,7 @@ const word_t defalut_img[] = {
 extern "C" void uart_putch(char ch) {
   putchar(ch);
   fflush(stdout);
-	skip_difftest_ref();
+  skip_difftest_ref();
 }
 
 extern "C" void gpr_upd(char regno, int data) {
@@ -220,13 +220,18 @@ void sim_step_inst() {
       //   }
       //   continue;
       // } else {
-        spdlog::info("sim exit due to possible deadloop");
-        exit(1);
+      spdlog::info("sim exit due to possible deadloop");
+      exit(1);
       // }
     }
   }
   pc_changed = false;
   inst_count++;
+  if (inst_count % (1024 * 1024 * 8) == 0) {
+    spdlog::info("8M instructions executed (now {}M), pc = 0x{:08x}, cycle = "
+                 "{}, time = {}ps",
+                 inst_count / (1024 * 1024), cpu.pc, cycle_count, sim_time);
+  }
 }
 
 // IMG
@@ -254,7 +259,7 @@ static void load_img() {
   spdlog::info("load image {}, size = {}", sim_cfg.img_file_path,
                sim_cfg.img_size);
 
-	img.resize(sim_cfg.img_size);
+  img.resize(sim_cfg.img_size);
 
   fseek(fp, 0, SEEK_SET);
   int ret = fread(img.data(), sim_cfg.img_size, 1, fp);
@@ -304,10 +309,11 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   if (setting.nvboard) {
     spdlog::info("initializing nvboard");
     nvboard_bind_all_pins(&dut);
-		if(isCIEnv()) {
-			spdlog::info("CI environment detected, disabling UART TX to avoid duplicate output");
+    if (isCIEnv()) {
+      spdlog::info("CI environment detected, disabling UART TX to avoid "
+                   "duplicate output");
       nvboard_bind_pin(nullptr, 1, UART_TX);
-		}
+    }
     nvboard_init();
   }
 #endif
@@ -337,10 +343,10 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   cpu.pc = sim_cfg.init_pc;
   spdlog::info("set initial pc to {:08x}", cpu.pc);
 
-	if(isMakePerf()) {
-		spdlog::info("Make perf mode, disable konata logger");
-		return true;
-	}
+  if (isMakePerf()) {
+    spdlog::info("Make perf mode, disable konata logger");
+    return true;
+  }
 
   konata_logger = std::make_shared<KonataLogger>(genLogFilePath("konata"));
   konata_logger->start(sim_get_cycle());
