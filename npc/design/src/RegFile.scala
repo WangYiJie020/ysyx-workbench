@@ -190,10 +190,10 @@ class ControlStatusRegisterFile extends Module {
   }
 
   val isWrAddr3XX = io.write.addr(11, 10) === 0.U
-  // h305 -> 0011 .... 0101
-  val isWrAddrMEPC = isWrAddr3XX && io.write.addr(0) && io.write.addr(2)
   // h341 -> 0011 .... 0001
-  val isWrAddrMTVEC = isWrAddr3XX && io.write.addr(0) && ~io.write.addr(2)
+  val isWrAddrMEPC = isWrAddr3XX && io.write.addr(0) && ~io.write.addr(2)
+  // h305 -> 0011 .... 0101
+  val isWrAddrMTVEC = isWrAddr3XX && io.write.addr(0) && io.write.addr(2)
 
   val en_wrtie = (io.write.en) || (io.is_ecall && isWrAddrMEPC)
 
