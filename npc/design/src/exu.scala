@@ -243,7 +243,11 @@ class EXUStageChooseNxt(
   io.isJAL     := isTypJAL
   // when fence.i, also treat it as jump
   // to make flush to refetch the inst nxt fence.i
-  io.predWrong := (normalNxtPC =/= dinst.predictedNextPC) || isJmpCsr || isFenceI
+  // io.predWrong := (normalNxtPC =/= dinst.predictedNextPC) || isJmpCsr || isFenceI
+
+  // when not enable branch prediction
+  io.predWrong := (normalNxtPC =/= snpc) || isJmpCsr || isFenceI
+
   io.fencei    := isFenceI && io.in.valid
 
   val r1AddImm = io.in.bits.reg1AddImm

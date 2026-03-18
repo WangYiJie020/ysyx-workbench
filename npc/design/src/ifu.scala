@@ -12,7 +12,7 @@ import chisel3.util._
 class IFU extends Module {
   val io = IO(new Bundle {
     val pc              = Flipped(Decoupled(Types.UWord))
-    val predictedNextPC = Input(Types.UWord)
+    val predictedNextPC = Input(Types.PredictedTarget)
     val mem             = AXI4IO.Master
     val out             = Decoupled(new Inst)
   })

@@ -3,6 +3,7 @@ package config
 import chisel3._
 
 object Config {
-  val genStageLog : Boolean = false
-  val useBTBAndBP : Boolean = false
+  // not affect area, yosys can optimize it away
+  val genStageLog: Boolean = true
+  val useBTBAndBP: Boolean = false
 }
