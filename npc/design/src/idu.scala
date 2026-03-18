@@ -234,8 +234,11 @@ class IDU(
   res.viewAsSupertype(new InstMetaInfo) := iinfo_dec.io.out
 
   res.rd  := inst(11, 7)
-  res.rs1 := inst(19, 15)
-  res.rs2 := inst(24, 20)
+  // res.rs1 := inst(19, 15)
+  // res.rs2 := inst(24, 20)
+
+  val rs1 = inst(19, 15)
+  val rs2 = inst(24, 20)
 
   val isTypStore     = InstType.hasSame(res.typ, InstType.store)
   val isTypBranch    = InstType.hasSame(res.typ, InstType.branch)
@@ -246,8 +249,8 @@ class IDU(
   res.rdWrEn := ~isNoWrBackType
 
   // io.rvec.en      := true.B
-  io.rvec.addr(0) := res.rs1
-  io.rvec.addr(1) := res.rs2
+  io.rvec.addr(0) := rs1
+  io.rvec.addr(1) := rs2
 
   // fetch IMM
   val immI = Cat(Fill(21, inst(31)), inst(30, 20))
@@ -272,8 +275,8 @@ class IDU(
   // res.snpc := io.in.bits.pc + 4.U
 
   val bypassMux = Module(new ByPassMux())
-  bypassMux.io.rs1        := res.rs1
-  bypassMux.io.rs2        := res.rs2
+  bypassMux.io.rs1        := rs1
+  bypassMux.io.rs2        := rs2
   bypassMux.io.regData1   := io.rvec.data(0)
   bypassMux.io.regData2   := io.rvec.data(1)
   bypassMux.io.wrBackInfo := io.wrBackInfo

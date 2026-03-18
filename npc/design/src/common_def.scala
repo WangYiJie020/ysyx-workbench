@@ -18,11 +18,6 @@ object InlinePrintf {
   }
 }
 
-trait HasRs {
-  val rs1: UInt
-  val rs2: UInt
-}
-
 object AddrSpace {
   val CLINT  = ("h02000000".U(32.W), "h0200ffff".U(32.W))
   val SPI    = ("h10001000".U(32.W), "h10002000".U(32.W))
@@ -115,11 +110,9 @@ class InstMetaInfo extends Bundle {
   val typ = InstType()
 }
 
-class DecodedInstInfo(implicit p : CPUParameters) extends InstMetaInfo with HasRs {
+class DecodedInstInfo(implicit p : CPUParameters) extends InstMetaInfo {
   val imm = Types.UWord
   val rd  = p.GPRAddr
-  val rs1 = p.GPRAddr
-  val rs2 = p.GPRAddr
 
   val rdWrEn = Bool()
 
