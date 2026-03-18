@@ -18,7 +18,7 @@ class IFU extends Module {
     val idle, waitAR, waitR, waitOut = Value
   }
 
-  // dontTouch(io)
+  dontTouch(io)
   val memIO = io.mem
   io.mem.dontCareAW()
   io.mem.dontCareW()
