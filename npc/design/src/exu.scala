@@ -206,7 +206,7 @@ class EXUStageChooseNxt(implicit p:CPUParameters) extends Module {
   // need pc+imm:
   // auipc, jal(r), branch
   val pcAddImm = io.in.bits.pcAddImm
-  val snpc     = io.in.bits.dinst.info.snpc
+  val snpc     = io.in.bits.dinst.pc+ 4.U
 
   writeBackInfo.gpr.en   := io.in.bits.gprWeEn
   writeBackInfo.gpr.addr := dinst.info.rd

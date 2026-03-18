@@ -42,12 +42,12 @@ class IFU extends Module {
 
   io.out.bits.iid := Mux(io.pc.fire, instID + 1.U, instID)
 
-  io.pc.ready   := (state === State.idle)// && !RegNext(reset.asBool)
+  io.pc.ready   := (state === State.idle)
   memIO.arvalid := (state === State.waitAR) || (state === State.idle && io.pc.fire)
   memIO.araddr  := pc
 
   val inst = RegEnableReadNew(memIO.rdata, memIO.rvalid)
-  memIO.rready                := true.B // io.out.ready
+  memIO.rready                := true.B 
   io.out.bits.code            := inst
   io.out.bits.pc              := pc
   io.out.bits.predictedNextPC := predNxtPC

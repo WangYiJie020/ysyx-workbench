@@ -250,7 +250,7 @@ class IDU(
     )
   )
 
-  res.snpc := io.in.bits.pc + 4.U
+  // res.snpc := io.in.bits.pc + 4.U
 
   val bypassMux = Module(new ByPassMux())
   bypassMux.io.rs1        := res.rs1
