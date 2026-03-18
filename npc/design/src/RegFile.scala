@@ -207,6 +207,8 @@ class ControlStatusRegisterFile extends Module {
     //   // waregs(2) := 11.U // mcause = 11 for ecall from M-mode
     //   // mcause := 11.U
     // }
+  }.elsewhen(io.is_ecall) {
+    mepc := io.write.data
   }
 
 }
