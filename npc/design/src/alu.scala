@@ -51,25 +51,22 @@ class ALU extends Module {
   val isOpAlt = io.in.bits.func7t(5)
   val isAdd   = ((~isOpAlt) || io.in.bits.is_imm) && (~io.in.bits.func3t(1))
 
-  val results = VecInit(
-    addRes,  // 000: add/sub/addi
-    sllRes,  // 001: sll/slli
-    sltRes,  // 010: slt/slti
-    sltuRes, // 011: sltu/sltiu
-    xorRes,  // 100: xor/xori
-    srlRes,  // 101: srl/srli
-    orRes,   // 110: or/ori
-    andRes,  // 111: and/andi
+  val addSubRes = Mux(isAdd, addRes, subRes)
 
-    subRes,  // 000: sub
-    0.U,
-    0.U,
-    0.U,
-    0.U,
-    sraRes   // 101: sra/srai
+  val rshiftRes = Mux(isOpAlt, sraRes, srlRes)
+
+  val results = VecInit(
+    addSubRes, // 000: add/sub/addi
+    sllRes,    // 001: sll/slli
+    sltRes,    // 010: slt/slti
+    sltuRes,   // 011: sltu/sltiu
+    xorRes,    // 100: xor/xori
+    rshiftRes, // 101: srl/srli/sra/srai
+    orRes,     // 110: or/ori
+    andRes     // 111: and/andi
   )
 
-  val key = isOpAlt ## io.in.bits.func3t
+  val key = io.in.bits.func3t
 
   io.out.bits := results(key)
 
