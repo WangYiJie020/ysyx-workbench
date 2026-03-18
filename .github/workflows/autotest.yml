@@ -14,10 +14,6 @@ on:
         description: '注释 (可为空)'
         required: false
         default: ''
-      ARCH:
-        description: 'ARCH for make (e.g. riscv32e-npc)'
-        required: false
-        default: 'riscv32e-npc'
 
 run-name: >-
   ${{
@@ -32,7 +28,6 @@ permissions:
 
 env:
   OSS_CAD_SUITE_RELEASE_TAG: 2025-11-24
-  ARCH: ${{ inputs.ARCH || 'riscv32e-npc' }}
 
 jobs:
   setup:
@@ -125,9 +120,6 @@ jobs:
 
       - name: Setup tools
         run: |
-          OSS_CAD_SUITE_BIN_PATH=`pwd`/oss-cad-suite/bin
-          echo "PATH=$PATH:$OSS_CAD_SUITE_BIN_PATH" >> $GITHUB_ENV
-
           mkdir -p ~/.local/bin
           MILL_VERSION=0.11.13
           if [[ -e $YSYX_HOME/npc/.mill-version ]]; then
@@ -283,12 +275,7 @@ jobs:
 
   hello:
     needs: setup
-    runs-on: ubuntu-24.04
-    container:
-      image: ${{ vars.DOCKER_IMAGE }}
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v5
         with:
@@ -303,16 +290,11 @@ jobs:
       - name: hello
         run: |
           KEY=$(head -c 5 /dev/urandom | base32)
-          python $MONITOR_PY --middle="Hello, AbstractMachine!" --good=$KEY make ARCH=${{ env.ARCH }} -C $YSYX_HOME/am-kernels/kernels/hello run mainargs=$KEY
+          python $MONITOR_PY --middle="Hello, AbstractMachine!" --good=$KEY make ARCH=riscv32e-ysyxsoc -C $YSYX_HOME/am-kernels/kernels/hello run mainargs=$KEY
 
   cpu-tests:
     needs: setup
-    runs-on: ubuntu-24.04
-    container:
-      image: ${{ vars.DOCKER_IMAGE }}
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v5
         with:
@@ -326,17 +308,12 @@ jobs:
 
       - name: cpu-tests
         run: |
-          make ARCH=${{ env.ARCH }} -C $YSYX_HOME/am-kernels/tests/cpu-tests run ALL=dummy
-          make ARCH=${{ env.ARCH }} -C $YSYX_HOME/am-kernels/tests/cpu-tests run
+          make ARCH=riscv32e-ysyxsoc -C $YSYX_HOME/am-kernels/tests/cpu-tests run ALL=dummy
+          make ARCH=riscv32e-ysyxsoc -C $YSYX_HOME/am-kernels/tests/cpu-tests run
 
   riscv-tests:
     needs: setup
-    runs-on: ubuntu-24.04
-    container:
-      image: ${{ vars.DOCKER_IMAGE }}
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v5
         with:
@@ -351,17 +328,12 @@ jobs:
       - name: riscv-tests
         run: |
           git clone --depth 1 https://github.com/NJU-ProjectN/riscv-tests-am
-          make ARCH=${{ env.ARCH }} -C riscv-tests-am run TEST_ISA=i ALL=auipc
-          make ARCH=${{ env.ARCH }} -C riscv-tests-am run TEST_ISA=i
+          make ARCH=riscv32e-ysyxsoc -C riscv-tests-am run TEST_ISA=i ALL=auipc
+          make ARCH=riscv32e-ysyxsoc -C riscv-tests-am run TEST_ISA=i
 
   riscv-arch-test:
     needs: setup
-    runs-on: ubuntu-24.04
-    container:
-      image: ${{ vars.DOCKER_IMAGE }}
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v5
         with:
@@ -376,17 +348,12 @@ jobs:
       - name: riscv-arch-test
         run: |
           git clone --depth 1 https://github.com/NJU-ProjectN/riscv-arch-test-am
-          make ARCH=${{ env.ARCH }} -C riscv-arch-test-am run TEST_ISA=E ALL=add-01
-          make ARCH=${{ env.ARCH }} -C riscv-arch-test-am run TEST_ISA="E Zifencei"
+          make ARCH=riscv32e-npc -C riscv-arch-test-am run TEST_ISA=E ALL=add-01
+          make ARCH=riscv32e-npc -C riscv-arch-test-am run TEST_ISA="E Zifencei"
 
   microbench:
     needs: setup
-    runs-on: ubuntu-24.04
-    container:
-      image: ${{ vars.DOCKER_IMAGE }}
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v5
         with:
@@ -401,16 +368,11 @@ jobs:
       - name: microbench
         run: |
           KEY=$(head -c 5 /dev/urandom | base32)
-          python $MONITOR_PY --good="$KEY" make ARCH=${{ env.ARCH }} -C $YSYX_HOME/am-kernels/benchmarks/microbench run mainargs=$KEY
+          python $MONITOR_PY --good="$KEY" make ARCH=riscv32e-ysyxsoc -C $YSYX_HOME/am-kernels/benchmarks/microbench run mainargs=$KEY
 
   rt-thread:
     needs: setup
-    runs-on: ubuntu-24.04
-    container:
-      image: ${{ vars.DOCKER_IMAGE }}
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v5
         with:
@@ -428,19 +390,13 @@ jobs:
       - name: rt-thread
         run: |
           cd $YSYX_HOME/rt-thread-am/bsp/abstract-machine
-          # 目前只有 ysxysoc 接入了 nvboard 可以进行测试
           make ARCH=riscv32e-ysyxsoc init
           KEY=$(head -c 5 /dev/urandom | base32)
           python $MONITOR_PY --good=$KEY make ARCH=riscv32e-ysyxsoc run
 
   iverilog-microbench:
     needs: setup
-    runs-on: ubuntu-24.04
-    container:
-      image: ${{ vars.DOCKER_IMAGE }}
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v5
         with:
@@ -466,12 +422,7 @@ jobs:
 
   yosys-sta:
     needs: setup
-    runs-on: ubuntu-24.04
-    container:
-      image: ${{ vars.DOCKER_IMAGE }}
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v5
         with:
@@ -482,6 +433,7 @@ jobs:
         with:
           YSYX_HOME: ${{ needs.setup.outputs.YSYX_HOME }}
           MAKEFLAGS: ${{ needs.setup.outputs.MAKEFLAGS }}
+          install-toolchain: 'false'
 
       - name: Install dependency
         run: |
@@ -540,12 +492,7 @@ jobs:
 
   iverilog-netlist-microbench:
     needs: [setup, yosys-sta]
-    runs-on: ubuntu-24.04
-    container:
-      image: ${{ vars.DOCKER_IMAGE }}
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v5
         with:
@@ -558,7 +505,7 @@ jobs:
           MAKEFLAGS: ${{ needs.setup.outputs.MAKEFLAGS }}
 
       - name: Download verilog file
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: netlist
 

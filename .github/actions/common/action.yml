@@ -4,11 +4,14 @@ inputs:
     required: true
   MAKEFLAGS:
     required: true
+  install-toolchain:
+    required: true
+    default: 'true'
 runs:
   using: "composite"
   steps:
     - name: Download workbench
-      uses: actions/download-artifact@v5
+      uses: actions/download-artifact@v6
       with:
         name: workbench
         path: /tmp/artifact-download
@@ -19,18 +22,6 @@ runs:
         mkdir -p $PARENT
         cd $PARENT
         tar -xzf /tmp/artifact-download/ysyx-workbench.tar.gz
-
-    - name: Cache npc deps
-      uses: actions/cache@v5
-      with:
-        path: ${{ inputs.YSYX_HOME }}/npc/deps
-        key: npc-deps-v1
-
-    - name: Cache sdb tools
-      uses: actions/cache@v5
-      with:
-        path: ${{ inputs.YSYX_HOME }}/sdb/tools
-        key: sdb-tools-v1
 
     - name: Cache oss-cad-suite
       id: oss-cad-suite-cache
@@ -82,9 +73,22 @@ runs:
         echo "MAKEFLAGS=$MAKEFLAGS" >> $GITHUB_ENV
 
         OSS_CAD_SUITE_BIN_PATH=`pwd`/oss-cad-suite/bin
-        echo "PATH=$PATH:$OSS_CAD_SUITE_BIN_PATH" >> $GITHUB_PATH
+        echo "PATH=$PATH:$OSS_CAD_SUITE_BIN_PATH" >> $GITHUB_ENV
 
-        git config --global --add safe.directory '*'
+      # TODO: 优化 apt 安装速度，缓存 /usr/bin 较为麻烦
+      # 考虑安装到 workspace 目录下缓存，或者使用 docker 镜像等
+    - name: Install RISC-V toolchain
+      shell: bash
+      if: inputs.install-toolchain == 'true'
+      run: |
+        sudo apt update
+        sudo apt install -y g++-riscv64-linux-gnu llvm llvm-dev
+        sudo sed -i -e '8d' /usr/riscv64-linux-gnu/include/gnu/stubs.h
+
+    - name: Install dependency for NVBoard
+      shell: bash
+      if: inputs.install-toolchain == 'true'
+      run: sudo apt install -y libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev
 
     - name: Clone other repos
       shell: bash
@@ -98,3 +102,5 @@ runs:
         cd rt-thread-am
         git am $YSYX_HOME/patch/rt-thread-am/*
         cd $YSYX_HOME
+
+
