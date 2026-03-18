@@ -16,67 +16,6 @@ class IFU extends Module {
     val mem             = AXI4IO.Master
     val out             = Decoupled(new Inst)
   })
-  dontTouch(io)
-
-  object State extends ChiselEnum {
-    val idle, waitAR, waitR = Value
-  }
-
-  io.mem.dontCareAW()
-  io.mem.dontCareW()
-  io.mem.dontCareB()
-  io.mem.dontCareNonLiteAR()
-
-  val state = RegInit(State.idle)
-
-  val pcReg     = RegEnable(io.pc.bits, io.pc.fire)
-  val predNxtPC = RegEnable(io.predictedNextPC, io.pc.fire)
-
-  val instID = RegInit(0.U(Types.BitWidth.inst_id.W))
-  when(io.pc.fire) {
-    instID := instID + 1.U
-  }
-  
-  io.pc.ready := (state === State.idle)
-
-  io.mem.arvalid := (state === State.waitAR)
-  io.mem.araddr  := pcReg
-
-  io.mem.rready := (state === State.waitR) && io.out.ready
-
-  io.out.valid                := (state === State.waitR) && io.mem.rvalid
-  io.out.bits.code            := io.mem.rdata
-  io.out.bits.pc              := pcReg
-  io.out.bits.predictedNextPC := predNxtPC
-  io.out.bits.iid             := instID
-
-
-  switch(state) {
-    is(State.idle) {
-      when(io.pc.fire) {
-        state := State.waitAR
-      }
-    }
-    is(State.waitAR) {
-      when(io.mem.arready) {
-        state := State.waitR
-      }
-    }
-    is(State.waitR) {
-      when(io.mem.rvalid && io.out.ready) {
-        state := State.idle
-      }
-    }
-  }
-}
-
-class IFUOld extends Module {
-  val io = IO(new Bundle {
-    val pc              = Flipped(Decoupled(Types.UWord))
-    val predictedNextPC = Input(Types.UWord)
-    val mem             = AXI4IO.Master
-    val out             = Decoupled(new Inst)
-  })
 
   object State extends ChiselEnum {
     val idle, waitAR, waitR, waitOut = Value
