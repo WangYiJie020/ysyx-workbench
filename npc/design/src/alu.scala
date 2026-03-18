@@ -53,12 +53,6 @@ class ALU extends Module {
 
   val add_sub_res = Wire(Types.UWord)
 
-  // this optimize can make alu alone module area bigger
-  // but the whole module area smaller
-  // 23866 -> 23850
-  // ??? I don't understand ???
-  // val op2_inv = Mux(isAdd, src2, ~src2)
-
   val op2_inv = src2 ^ Fill(32, ~isAdd)
 
   val cin = !isAdd
@@ -94,24 +88,6 @@ class ALU extends Module {
   rShiftResult := Mux(isOpAlt, (s_src1 >> shamt).asUInt, src1 >> shamt)
   lShiftResult := src1 << shamt
 
-  // Useless optimize area -200
-  // but freq low
-
-  // // Optimize make L/R shift use same shifter
-  // //
-  // // 23850 -> 23504
-  // val extedSrc1    = Wire(UInt(64.W))
-  // val isRightShift = inbits.func3t(2)
-  // val shiftedSrc1  = Mux(isRightShift, src1, Reverse(src1))
-  // extedSrc1    := Cat(Fill(32, shiftedSrc1(31) & isOpAlt), shiftedSrc1)
-  // rShiftResult := extedSrc1 >> shamt
-  //
-  // lShiftResult := Reverse(rShiftResult)
-
-  // val shiftResult = Mux(isRightShift, rShiftResult, Reverse(rShiftResult))
-
-
-
   val defaultRes = Wire(Types.UWord)
   defaultRes := DontCare
 
@@ -145,16 +121,16 @@ class ALU extends Module {
   //
   // io.out.bits := Mux(func3t(2), func3t2HighResult, func3t2LowResult)
 
-  io.out.bits := MuxLookup(inbits.func3t, defaultRes)(
-    Seq(
-      0.U -> add_sub_res,        // 000: add/sub/addi
-      1.U -> lShiftResult, // 001: sll/slli
-      2.U -> slt_res,            // 010: slt/slti
-      3.U -> sltu_res,           // 011: sltu/sltiu
-      4.U -> logic_xor,          // 100: xor/xori
-      5.U -> rShiftResult,          // 101: srl/srli/sra/srai
-      6.U -> logic_or,           // 110: or/ori
-      7.U -> logic_and           // 111: and/andi
-    )
+  val results = VecInit(
+    add_sub_res,        // 000: add/sub/addi
+    lShiftResult,       // 001: sll/slli
+    slt_res,            // 010: slt/slti
+    sltu_res,           // 011: sltu/sltiu
+    logic_xor,          // 100: xor/xori
+    rShiftResult,       // 101: srl/srli/sra/srai
+    logic_or,           // 110: or/ori
+    logic_and           // 111: and/andi
   )
+
+  io.out.bits := results(func3t)
 }
