@@ -180,10 +180,9 @@ class ControlStatusRegisterFile extends Module {
     io.read.data := DontCare
   }
 
-  // val en_wrtie = (io.write.en) || (io.is_ecall && (io.write.addr === CSRAddr.mepc))
+  val en_wrtie = (io.write.en) || (io.is_ecall && (io.write.addr === CSRAddr.mepc))
 
-  when(io.write.en) {
-
+  when(en_wrtie) {
     when(io.write.addr === CSRAddr.mepc) {
       mepc := io.write.data
     }.elsewhen(io.write.addr === CSRAddr.mtvec) {
@@ -207,8 +206,5 @@ class ControlStatusRegisterFile extends Module {
     //   // waregs(2) := 11.U // mcause = 11 for ecall from M-mode
     //   // mcause := 11.U
     // }
-  }.elsewhen(io.is_ecall) {
-    mepc := io.write.data
   }
-
 }
