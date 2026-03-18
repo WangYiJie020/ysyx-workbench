@@ -328,7 +328,7 @@ class EXU(
 
   stageCalc.io.in <> io.in
   stageCalc.io.csr_rvec <> io.csr_rvec
-  stageCalc.io.flush := io.flush1
+  stageCalc.io.flush := false.B // for one stage EXU, no need to flush stageCalc
 
   stageChooseNxt.io.in <> stageCalc.io.out
   io.jmpHappen := stageChooseNxt.io.jmpHappen
