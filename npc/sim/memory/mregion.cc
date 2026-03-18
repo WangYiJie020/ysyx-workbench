@@ -14,25 +14,6 @@ auto _GetLoggerForRegion(std::string_view region_name) {
   return logger;
 };
 
-void init_mem_logger() {
-  auto lvl = spdlog::level::info;
-
-#define _REG_MEM_REGION_LOGGER(name)                                           \
-  do {                                                                         \
-    spdlog::debug("Registering logger for mem region '{}'", #name);            \
-    auto logger = std::make_shared<spdlog::logger>(                            \
-        #name, std::make_shared<spdlog::sinks::stdout_color_sink_mt>());       \
-    logger->set_level(lvl);                                                    \
-    set_logger_pattern_with_simtime(logger);                                   \
-    spdlog::register_logger(logger);                                           \
-  } while (0)
-  _REG_MEM_REGION_LOGGER(mrom);
-  _REG_MEM_REGION_LOGGER(flash);
-  _REG_MEM_REGION_LOGGER(psram);
-  _REG_MEM_REGION_LOGGER(sram);
-  _REG_MEM_REGION_LOGGER(sdram);
-}
-
 void mem_region_traits::assert_in_range(uint32_t addr) const {
   bool in_range = contains(addr);
   if (!in_range) {
@@ -45,13 +26,13 @@ void mem_region_traits::assert_in_range(uint32_t addr) const {
 
 void direct_mapped_mem::assert_in_actual_data_range(uint32_t addr) const {
   size_t offset = addr - _Base;
-  if (offset >= _ActualSizeInBytes) {
+  if (offset >= actualSizeInBytes) {
     _GetLoggerForRegion(name)->error(
         "addr {:08x} out of actual data bound for region {} "
         "[0, {:08x})",
-        addr, this->name, _ActualSizeInBytes);
+        addr, this->name, actualSizeInBytes);
   }
-  assert(offset < _ActualSizeInBytes);
+  assert(offset < actualSizeInBytes);
 }
 
 sdram_mem::u32_data_ptr sdram_mem::get_data_at(uint32_t addr) {

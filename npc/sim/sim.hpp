@@ -14,7 +14,7 @@ inline auto GetCPU() {
 #ifdef SIM_SOC
   return &get_dut()->ysyxSoCFull->vlSymsp->TOP__ysyxSoCFull__asic__cpu__cpu__core;
 #else
-  return &get_dut()->NPCTestSoC->vlSymsp->TOP__NPCTestSoC__cpu__core;
+  return &get_dut()->TestSoC->vlSymsp->TOP__TestSoC__cpu__core;
 #endif
 }
 
@@ -118,6 +118,5 @@ sim_config *sim_get_config();
 sim_cpu_state *sim_get_cpu_state();
 
 bool sim_halted();
-bool sim_hit_good_trap();
 
 void set_logger_pattern_with_simtime(std::shared_ptr<spdlog::logger> logger);

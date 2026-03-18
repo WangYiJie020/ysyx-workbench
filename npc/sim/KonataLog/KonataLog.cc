@@ -45,12 +45,24 @@ struct Stage {
         out(&stage.io_out_valid, &stage.io_out_ready), name(name), iid(iid) {}
 };
 
+void KonataLogger::_output(const std::string &str) {
+	constexpr size_t _maxLogFileSize = 64 * 1024 * 1024;
+  if (_fileStream.tellp() >= static_cast<std::streampos>(_maxLogFileSize)) {
+    _fileStream.close();
+    spdlog::warn(
+        "Log file size exceeded {} MB. KonataLogger stopped logging",
+        _maxLogFileSize / (1024 * 1024));
+  } else {
+    _fileStream << str << std::endl;
+  }
+}
+
 void KonataLogger::update() {
   static auto &cpu = *GetCPU();
   static auto &ifu = *GetIFU();
   static auto &idu = *GetIDU();
   static auto &exus1 = *GetEXUS1();
-	static auto &exus2 = *GetEXUS2();
+  static auto &exus2 = *GetEXUS2();
   static auto &lsu = *GetLSU();
   static auto &wbu = *GetCPU()->wbu;
   static std::vector<Stage> stages = {
@@ -85,17 +97,17 @@ void KonataLogger::update() {
       stageStart(*stage.iid, stage.name);
   });
 
-	// bool iduStall = cpu.isIDUStall;
-	// bool isIDUStallBegin = iduStall && !lastCycIDUStall;
-	// bool isIDUStallEnd = !iduStall && lastCycIDUStall;
-	// lastCycIDUStall = iduStall;
-	//
-	// if (isIDUStallBegin) {
-	// 	stageStart(*idu_stage.iid, "IDU_STALL");
-	// 	addLabel(*idu_stage.iid, std::format("IDU_STALL beg@{}ps", sim_get_time()), true);
-	// } else if (isIDUStallEnd) {
-	// 	// stageEnd(*idu_stage.iid, "IDU_STALL");
-	// }
+  // bool iduStall = cpu.isIDUStall;
+  // bool isIDUStallBegin = iduStall && !lastCycIDUStall;
+  // bool isIDUStallEnd = !iduStall && lastCycIDUStall;
+  // lastCycIDUStall = iduStall;
+  //
+  // if (isIDUStallBegin) {
+  // 	stageStart(*idu_stage.iid, "IDU_STALL");
+  // 	addLabel(*idu_stage.iid, std::format("IDU_STALL beg@{}ps",
+  // sim_get_time()), true); } else if (isIDUStallEnd) {
+  // 	// stageEnd(*idu_stage.iid, "IDU_STALL");
+  // }
 
   if (wbu_stage.in.fire()) {
     retire(*wbu_stage.iid, _GenNextRetireID());

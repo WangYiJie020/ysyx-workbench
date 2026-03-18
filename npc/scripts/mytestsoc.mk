@@ -1,6 +1,6 @@
-# npctestsoc
+# testsoc
 
-SOC_HOME = $(BUILD_DIR)/npctestsoc
+SOC_HOME = $(CHISEL2V_EMIT_ROOT)/testsoc/$(ARCH_PLATFORM)
 $(shell mkdir -p $(SOC_HOME))
 $(shell touch $(SOC_HOME)/filelist.f)
 

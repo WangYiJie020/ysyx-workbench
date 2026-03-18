@@ -80,6 +80,10 @@ void debuger::_step(size_t n){
 			_print("{} require stop\n", h->name);
 			stop();
 		}
+		if(h->is_require_halt()){
+			_print("{} require halt\n", h->name);
+			_state.halt(h->required_halt_ret());
+		}
 	};
 
 	for(size_t i=0;i<n&&is_running();i++){

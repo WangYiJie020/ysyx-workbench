@@ -117,11 +117,14 @@ namespace sdb {
 			none,
 			stop,
 			abort,
+			halt,
 		};
 		_require_interrupt_type _req_int_t;
+		word_t _req_halt_ret = 0;
 
 		void _req_abort(){_req_int_t=_require_interrupt_type::abort;}
 		void _req_stop(){_req_int_t=_require_interrupt_type::stop;}
+		void _req_halt(word_t ret=0){_req_int_t=_require_interrupt_type::halt; _req_halt_ret=ret;}
 
 		void _log(std::string_view fmt, auto&&... args){
 			using namespace std;
@@ -160,6 +163,12 @@ namespace sdb {
 		}
 		inline bool is_require_stop()const{
 			return _req_int_t==_require_interrupt_type::stop;
+		}
+		inline bool is_require_halt()const{
+			return _req_int_t==_require_interrupt_type::halt;
+		}
+		inline word_t required_halt_ret()const{
+			return _req_halt_ret;
 		}
 
 		virtual void init(_ctx_ref,std::span<uint8_t> init_mem,paddr_t mem_base){

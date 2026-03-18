@@ -66,13 +66,15 @@ int main(int argc, char **argv) {
   initPerfCounters();
   spdlog::info("perf counters initialized");
 
+	int mainloop_ret = 0;
+
   if (setting.gdb_mode) {
     gdb_mainloop();
   } else {
-    sdb_mainloop();
+		mainloop_ret = sdb_mainloop();
   }
 
-  if (sim_hit_good_trap()) {
+  if (mainloop_ret == 0) {
     spdlog::info("sim ended good, dumping statistics...");
     dumpPerfCountersStatistics(std::cout);
     dumpPerfReportOnDir(perfOutDir);
@@ -82,7 +84,7 @@ int main(int argc, char **argv) {
 
   get_dut()->final();
   if (!setting.gdb_mode) {
-    return sim_hit_good_trap() ? 0 : 1;
+    return mainloop_ret;
   }
   return 0;
 }

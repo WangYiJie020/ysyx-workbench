@@ -1,4 +1,4 @@
-package npcMem
+package testSoC
 import chisel3._
 import chisel3.util._
 
@@ -52,7 +52,7 @@ class MaskedRdWrMem(sizeInByte: Int, filePath: Option[String] = None) extends Mo
   }.otherwise { io.dataOut := rdPort }
 }
 
-class AXI4MemUnit(val InitHexFilePath: Option[String]) extends Module {
+class AXI4MemUnit(val sizeInByte: Int,val InitHexFilePath: Option[String] = None) extends Module {
   val io = IO(AXI4IO.Slave)
 
   val sio = io
@@ -125,14 +125,10 @@ class AXI4MemUnit(val InitHexFilePath: Option[String]) extends Module {
   val enRdDataCall = WireDefault((rState === RState.waitMem) || (rState === RState.idle && sio.arvalid))
   dontTouch(enRdDataCall)
 
-  val mem = Module(new MaskedRdWrMem(1024 * 1024 * 128, InitHexFilePath))
+  val mem = Module(new MaskedRdWrMem(sizeInByte, InitHexFilePath))
   mem.io := DontCare
 
   when(rState === RState.waitMem) {
-    // rdFIFO.io.enq.bits  := UnclockedCallNonVoidDPIC("pmem_read", UInt(32.W))(
-    //   (!reset.asBool) && enRdDataCall,
-    //   rdAddr
-    // )
     mem.io.write        := false.B
     mem.io.rdAddr       := rdAddr
     rdFIFO.io.enq.bits  := mem.io.dataOut.asUInt
@@ -207,13 +203,6 @@ class AXI4MemUnit(val InitHexFilePath: Option[String]) extends Module {
     mem.io.wrAddr := wrAddr
     mem.io.mask   := wrMask.asBools
     mem.io.dataIn := wrData.asTypeOf(mem.dataType)
-    ClockedCallVoidDPIC("pmem_upd")(
-      clock,
-      (!reset.asBool),
-      wrAddr,
-      wrData,
-      wrMask.pad(32)
-    )
   }
   // for now mem write always finish in one cycle
   memWriteFinished := RegNext(bState === sBWaitMem)

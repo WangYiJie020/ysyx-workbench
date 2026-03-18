@@ -5,6 +5,7 @@
 #include <cstring>
 #include <memory>
 #include <string_view>
+#include <variant>
 #include <vector>
 
 void init_mem_logger();
@@ -30,28 +31,46 @@ struct mem_region_traits {
 };
 
 struct direct_mapped_mem : public mem_region_traits {
-  const uint32_t _ActualSizeInBytes;
+  const uint32_t actualSizeInBytes;
 
-  using _MemContainerType = std::vector<uint32_t>;
-  std::shared_ptr<_MemContainerType> mem_container;
+  using _SelfHostedMemContainerType = std::vector<uint32_t>;
+  using _ExternalMemContainerType = uint32_t *;
+  using _MemContainer =
+      std::variant<_SelfHostedMemContainerType, _ExternalMemContainerType>;
+  std::shared_ptr<_MemContainer> mem_container;
   uint32_t *data;
 
   direct_mapped_mem(uint32_t base, uint32_t end, std::string_view name,
                     uint32_t actual_size = 0)
       : mem_region_traits(base, end, name),
-        _ActualSizeInBytes(actual_size ? actual_size : (end - base)) {
-    assert(_ActualSizeInBytes <= (end - base) &&
+        actualSizeInBytes(actual_size ? actual_size : (end - base)) {
+    assert(actualSizeInBytes <= (end - base) &&
            "actual size should not exceed the address range");
-    assert(_ActualSizeInBytes % 4 == 0 && "size should be multiple of 4");
-    mem_container = std::make_shared<_MemContainerType>(_ActualSizeInBytes / 4);
-    data = mem_container->data();
+    assert(actualSizeInBytes % 4 == 0 && "size should be multiple of 4");
+
+    mem_container = std::make_shared<_MemContainer>(
+        std::in_place_type<_SelfHostedMemContainerType>,
+        actualSizeInBytes / 4);
+		data = std::get<_SelfHostedMemContainerType>(*mem_container).data();
   }
+	direct_mapped_mem(uint32_t base, uint32_t end, std::string_view name,
+										uint32_t actual_size, uint32_t *external_data_ptr)
+			: mem_region_traits(base, end, name),
+				actualSizeInBytes(actual_size) {
+		assert(actualSizeInBytes <= (end - base) &&
+					 "actual size should not exceed the address range");
+		assert(actualSizeInBytes % 4 == 0 && "size should be multiple of 4");
+
+		mem_container = std::make_shared<_MemContainer>(
+				std::in_place_type<_ExternalMemContainerType>, external_data_ptr);
+		data = external_data_ptr;
+	}
 
   void assert_in_actual_data_range(uint32_t addr) const;
 
   inline void copy_from(void *src, size_t siz) { memcpy(data, src, siz); }
   inline void fill(uint8_t val) override {
-    memset(data, val, _ActualSizeInBytes);
+    memset(data, val, actualSizeInBytes);
   }
 
   uint8_t *get_data_ptr_at(uint32_t addr) {
@@ -75,21 +94,21 @@ struct direct_mapped_mem : public mem_region_traits {
     // TODO: ret false instead of assert
   }
 
-	//
-	// write value to addr with byte enable strb8
-	//
-	// write startes from addr, end below aligned(addr) + 4
-	//
-	// example: `addr=0x1001 value=0x12345678 strb8=0b1101`
-	//
-	// write
-	// - 0x78 to 0x1001
-	// - 0x34 to 0x1003
-	//
-	// not write
-	// - 0x12 to 0x1004 since out of the 4-byte word boundary
-	// - 0x56 to 0x1002 since strb8 bit 2 is 0
-	//
+  //
+  // write value to addr with byte enable strb8
+  //
+  // write startes from addr, end below aligned(addr) + 4
+  //
+  // example: `addr=0x1001 value=0x12345678 strb8=0b1101`
+  //
+  // write
+  // - 0x78 to 0x1001
+  // - 0x34 to 0x1003
+  //
+  // not write
+  // - 0x12 to 0x1004 since out of the 4-byte word boundary
+  // - 0x56 to 0x1002 since strb8 bit 2 is 0
+  //
   void write_word(uint32_t addr, uint32_t value, uint8_t strb8) {
     assert_in_range(addr);
     assert_in_actual_data_range(addr);
@@ -173,3 +192,6 @@ struct sdram_mem : public mem_region_traits {
     return true;
   }
 };
+
+using mem_region_t = std::variant<direct_mapped_mem, sdram_mem>;
+using mem_region_group_t = std::vector<mem_region_t>;

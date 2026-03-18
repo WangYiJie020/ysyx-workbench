@@ -4,6 +4,14 @@ import chisel3.util._
 
 import axi4._
 
+object AXI4XBar {
+  def apply(mappings: Seq[((UInt, UInt), AXI4IO.SlaveT)]): AXI4IO.SlaveT = {
+    val xbar = Module(new AXI4LiteXBar(mappings))
+    xbar.connect()
+    xbar.io.in
+  }
+}
+
 // never map more than 1 range to one slave
 class AXI4LiteXBar(mappings: Seq[((UInt, UInt), AXI4IO.SlaveT)]) extends Module {
 
