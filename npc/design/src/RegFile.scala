@@ -180,9 +180,9 @@ class ControlStatusRegisterFile extends Module {
     io.read.data := DontCare
   }
 
-  val en_wrtie = (io.write.en) || (io.is_ecall && (io.write.addr === CSRAddr.mepc))
+  // val en_wrtie = (io.write.en) || (io.is_ecall && (io.write.addr === CSRAddr.mepc))
 
-  when(en_wrtie) {
+  when(io.write.en) {
 
     when(io.write.addr === CSRAddr.mepc) {
       mepc := io.write.data
