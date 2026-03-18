@@ -4,7 +4,7 @@ $(shell mkdir -p $(STA_OUT_DIR))
 
 STA_VSRCS = $(abspath $(SYNTH_VSRCS))
 
-STA_FREQ_MHZ = 2000
+STA_FREQ_MHZ = 500
 
 STA_DEST ?= 
 ifeq ($(STA_DEST),)
@@ -34,4 +34,4 @@ sta-area: verilog $(STA_VSRCS)
 		RTL_FILES="$(STA_VSRCS)" \
 
 sta-all-area: verilog
-	+./scripts/sta_all.sh $(CHISEL2V_EMIT_DIR)/filelist.f $(STA_OUT_DIR)
+	+./scripts/sta_all.sh $(CHISEL2V_EMIT_ROOT)/riscv32e/filelist.f $(STA_OUT_DIR)
