@@ -135,28 +135,11 @@ class ControlStatusRegisterFile extends Module {
   val mvendor_id = "h79737978".U(32.W) // ysyx
   val march_id   = "d25100261".U(32.W)
 
-  // Writable CSRs
-  // 0: mstatus
-  // val waregs = RegInit(VecInit("h00001800".U(32.W) +: Seq.fill(3)(0.U(32.W))))
-
 
   // val mstatus = RegInit("h00001800".U(32.W))
   val mepc = Reg(UInt(30.W)) // mepc
   // val mcause = Reg(UInt(4.W))  // mcause
   val mtvec = Reg(UInt(30.W))  // mtvec
-
-  // when(reset.asBool) {
-  //   waregs(0) := "h00001800".U // mstatus
-  // }
-
-  // val walut = Seq(
-  //   CSRAddr.mstatus -> 0.U,
-  //   CSRAddr.mepc    -> 1.U,
-  //   CSRAddr.mcause  -> 2.U,
-  //   CSRAddr.mtvec   -> 3.U
-  // )
-  // val widx  = MuxLookup(io.write.addr, 0.U)(walut)
-  // val ridx  = MuxLookup(io.read.addr, 0.U)(walut)
 
   when(io.read.en) {
     val otherRd = MuxLookup(io.read.addr, 0.U)(
