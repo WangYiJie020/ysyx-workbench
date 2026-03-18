@@ -16,6 +16,7 @@ class IFU extends Module {
     val mem             = AXI4IO.Master
     val out             = Decoupled(new Inst)
   })
+  dontTouch(io)
 
   object State extends ChiselEnum {
     val idle, waitAR, waitR = Value
