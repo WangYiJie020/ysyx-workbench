@@ -59,9 +59,10 @@ object Types {
     val inst_id = if (Config.genStageLog) 32 else 0
   }
   def UWord = UInt(BitWidth.word.W)
-  // def RegAddr = UInt(BitWidth.reg_addr.W)
 
   def InstID = UInt(BitWidth.inst_id.W)
+
+  def PredictedTarget = if (Config.useBTBAndBP) UWord else UInt(0.W)
 
   object Ops {
     implicit class StringOps(val s: String) extends AnyVal {
@@ -102,7 +103,7 @@ class Inst extends Bundle {
   val code            = Output(Types.UWord)
   val pc              = Output(Types.UWord)
   val iid             = Output(Types.InstID)
-  val predictedNextPC = Output(Types.UWord)
+  val predictedNextPC = Output(Types.PredictedTarget)
 }
 
 class InstMetaInfo extends Bundle {

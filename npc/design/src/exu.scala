@@ -8,6 +8,8 @@ import regfile._
 import cpu.alu._
 import axi4._
 
+import config._
+
 class EXUStageCalcOut(
   implicit p: CPUParameters)
     extends Bundle {
@@ -243,8 +245,13 @@ class EXUStageChooseNxt(
   io.isJAL     := isTypJAL
   // when fence.i, also treat it as jump
   // to make flush to refetch the inst nxt fence.i
-  io.predWrong := (normalNxtPC =/= dinst.predictedNextPC) || isJmpCsr || isFenceI
-  io.fencei    := isFenceI && io.in.valid
+  if (Config.useBTBAndBP) {
+    io.predWrong := (normalNxtPC =/= dinst.predictedNextPC) || isJmpCsr || isFenceI
+  } else {
+    io.predWrong := (normalNxtPC =/= snpc) || isJmpCsr || isFenceI
+  }
+
+  io.fencei := isFenceI && io.in.valid
 
   val r1AddImm = io.in.bits.reg1AddImm
 
