@@ -183,19 +183,26 @@ class ControlStatusRegisterFile extends Module {
   val en_wrtie = (io.write.en) || (io.is_ecall && (io.write.addr === CSRAddr.mepc))
 
   when(en_wrtie) {
-    // waregs(widx) := io.write.data
-    switch(io.write.addr) {
-      // is(CSRAddr.mstatus) { 
-      // // mstatus := io.write.data 
-      // // printf(cf"[CSR] mstatus <= 0x${Hexadecimal(io.write.data)}\n")
-      // }
-      is(CSRAddr.mepc)    { mepc    := io.write.data }
-      // is(CSRAddr.mcause)  { 
-      //   // printf(cf"[CSR] mcause <= 0x${Hexadecimal(io.write.data)}\n")
-      // // mcause  := io.write.data 
-      // }
-      is(CSRAddr.mtvec)   { mtvec   := io.write.data }
+
+    when(io.write.addr === CSRAddr.mepc) {
+      mepc := io.write.data
+    }.elsewhen(io.write.addr === CSRAddr.mtvec) {
+      mtvec := io.write.data
     }
+
+    // waregs(widx) := io.write.data
+    // switch(io.write.addr) {
+    //   // is(CSRAddr.mstatus) { 
+    //   // // mstatus := io.write.data 
+    //   // // printf(cf"[CSR] mstatus <= 0x${Hexadecimal(io.write.data)}\n")
+    //   // }
+    //   is(CSRAddr.mepc)    { mepc    := io.write.data }
+    //   // is(CSRAddr.mcause)  { 
+    //   //   // printf(cf"[CSR] mcause <= 0x${Hexadecimal(io.write.data)}\n")
+    //   // // mcause  := io.write.data 
+    //   // }
+    //   is(CSRAddr.mtvec)   { mtvec   := io.write.data }
+    // }
     // when(io.is_ecall && (io.write.addr === CSRAddr.mepc)) {
     //   // waregs(2) := 11.U // mcause = 11 for ecall from M-mode
     //   // mcause := 11.U
