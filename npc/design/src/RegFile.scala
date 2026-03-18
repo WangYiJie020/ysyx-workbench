@@ -189,13 +189,24 @@ class ControlStatusRegisterFile extends Module {
     io.read.data := DontCare
   }
 
-  val en_wrtie = (io.write.en) || (io.is_ecall && (io.write.addr === CSRAddr.mepc))
+  val isWrAddr3XX = io.write.addr(11, 10) === 0.U
+  // h305 -> 0011 .... 0101
+  val isWrAddrMEPC = isWrAddr3XX && io.write.addr(0) && io.write.addr(2)
+  // h341 -> 0011 .... 0001
+  val isWrAddrMTVEC = isWrAddr3XX && io.write.addr(0) && ~io.write.addr(2)
+
+  val en_wrtie = (io.write.en) || (io.is_ecall && isWrAddrMEPC)
 
   when(en_wrtie) {
-    when(io.write.addr === CSRAddr.mepc) {
+    when(isWrAddrMEPC) {
       mepc := io.write.data(31, 2)
-    }.elsewhen(io.write.addr === CSRAddr.mtvec) {
+    }.elsewhen(isWrAddrMTVEC) {
       mtvec := io.write.data(31, 2)
     }
+    // when(io.write.addr === CSRAddr.mepc) {
+    //   mepc := io.write.data(31, 2)
+    // }.elsewhen(io.write.addr === CSRAddr.mtvec) {
+    //   mtvec := io.write.data(31, 2)
+    // }
   }
 }
