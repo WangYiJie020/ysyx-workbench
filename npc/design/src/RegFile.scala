@@ -145,7 +145,7 @@ class ControlStatusRegisterFile extends Module {
     val isAddrFXX = addrHi2b === 3.U
 
     val isMStatus = isAddr3XX && addrLo2b === 0.U
-    val isMEPC    = isAddr3XX && addrLo2b === 1.U
+    val isMEPC    = isAddr3XX && (addrLo2b === 1.U) && ~io.read.addr(2)
     val isMCause  = isAddr3XX && addrLo2b === 2.U
     val isMTVEC   = isAddr3XX && (addrLo2b === 1.U) && io.read.addr(2)
 
