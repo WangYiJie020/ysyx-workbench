@@ -145,16 +145,29 @@ class ALU extends Module {
   //
   // io.out.bits := Mux(func3t(2), func3t2HighResult, func3t2LowResult)
 
-  io.out.bits := MuxLookup(inbits.func3t, defaultRes)(
-    Seq(
-      0.U -> add_sub_res,        // 000: add/sub/addi
-      1.U -> lShiftResult, // 001: sll/slli
-      2.U -> slt_res,            // 010: slt/slti
-      3.U -> sltu_res,           // 011: sltu/sltiu
-      4.U -> logic_xor,          // 100: xor/xori
-      5.U -> rShiftResult,          // 101: srl/srli/sra/srai
-      6.U -> logic_or,           // 110: or/ori
-      7.U -> logic_and           // 111: and/andi
-    )
+  val results = VecInit(
+    add_sub_res,        // 000: add/sub/addi
+    lShiftResult,       // 001: sll/slli
+    slt_res,            // 010: slt/slti
+    sltu_res,           // 011: sltu/sltiu
+    logic_xor,          // 100: xor/xori
+    rShiftResult,       // 101: srl/srli/sra/srai
+    logic_or,           // 110: or/ori
+    logic_and           // 111: and/andi
   )
+
+  io.out.bits := results(func3t)
+
+  // io.out.bits := MuxLookup(inbits.func3t, defaultRes)(
+  //   Seq(
+  //     0.U -> add_sub_res,        // 000: add/sub/addi
+  //     1.U -> lShiftResult, // 001: sll/slli
+  //     2.U -> slt_res,            // 010: slt/slti
+  //     3.U -> sltu_res,           // 011: sltu/sltiu
+  //     4.U -> logic_xor,          // 100: xor/xori
+  //     5.U -> rShiftResult,          // 101: srl/srli/sra/srai
+  //     6.U -> logic_or,           // 110: or/ori
+  //     7.U -> logic_and           // 111: and/andi
+  //   )
+  // )
 }
