@@ -18,7 +18,7 @@ class IFU extends Module {
     val idle, waitAR, waitR, waitOut = Value
   }
 
-  dontTouch(io)
+  // dontTouch(io)
   val memIO = io.mem
   io.mem.dontCareAW()
   io.mem.dontCareW()
@@ -28,14 +28,14 @@ class IFU extends Module {
   val pcReg     = RegEnable(io.pc.bits, io.pc.fire)
   val pc        = Mux(io.pc.fire, io.pc.bits, pcReg)
   val predNxtPC = RegEnableReadNew(io.predictedNextPC, io.pc.fire)
-  dontTouch(pc)
+  // dontTouch(pc)
   val state     = RegInit(State.idle)
 
   val instID = RegInit(0.U(Types.BitWidth.inst_id.W))
   when(io.pc.fire) {
     instID := instID + 1.U
   }
-  dontTouch(instID)
+  // dontTouch(instID)
 
   io.out.bits.iid := Mux(io.pc.fire, instID + 1.U, instID)
 
@@ -55,7 +55,7 @@ class IFU extends Module {
   val nxtStateWhenWaitAR  = Mux(memIO.arready, nxtStateWhenWaitR, State.waitAR)
   val nxtStateWhenIdle    = Mux(io.pc.fire, nxtStateWhenWaitAR, State.idle)
 
-  dontTouch(nxtStateWhenIdle)
+  // dontTouch(nxtStateWhenIdle)
 
   state := MuxLookup(state, State.idle)(
     Seq(
@@ -66,34 +66,3 @@ class IFU extends Module {
     )
   )
 }
-
-/*
-
-
-  val state = RegInit(State.idle)
-  state         := MuxLookup(state, State.idle)(
-    Seq(
-      State.idle   -> Mux(io.pc.fire, State.waitAR, State.idle),
-      State.waitAR -> Mux(memIO.arready, Mux(memIO.rvalid,State.idle,State.waitR), State.waitAR),
-      State.waitR  -> Mux(memIO.rvalid, Mux(io.pc.fire, State.waitAR, State.idle), State.waitR)
-    )
-  )
-  val pcReg = Reg(Types.UWord)
-  when(io.pc.fire) {
-    pcReg := io.pc.bits
-  }
-  memIO.arvalid := (state === State.waitAR) || (state === State.idle && io.pc.fire)
-  memIO.araddr  := Mux(io.pc.fire, io.pc.bits, pcReg)
-
-  val instReg = Reg(Types.UWord)
-  when(memIO.rvalid) {
-    instReg := memIO.rdata
-  }
-  memIO.rready := (state === State.waitR) && io.out.ready
-
-  io.out.valid := (state === State.waitR && memIO.rvalid) || (state === State.idle && io.pc.fire && memIO.rvalid)
-  io.pc.ready
-
-  io.out.bits.code := Mux(memIO.rvalid, memIO.rdata, instReg)
-  io.out.bits.pc   := Mux(io.pc.fire, io.pc.bits, pcReg)
- * */
