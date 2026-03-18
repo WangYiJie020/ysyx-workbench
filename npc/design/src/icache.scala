@@ -182,7 +182,9 @@ class ICache extends Module {
   io.cpu.rid     := io.mem.rid
   io.cpu.rlast   := true.B
 
-  io.cpu.rdata   := cacheRAM.io.rdata.data(cpuAddrOffset)
+  // when not hit, since rvaild at the end of waitMem, the data is from mem
+  val bypassData = (state === State.waitMem) && (cpuAddrOffset === memIOCurRdOffset)
+  io.cpu.rdata   := Mux(bypassData, io.mem.rdata, cacheRAM.io.rdata.data(cpuAddrOffset))
 
   io.mem.arvalid := (state === State.sendFetch)
   io.mem.arid    := io.cpu.arid
