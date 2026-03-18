@@ -94,12 +94,12 @@ object InstFmt  extends ChiselEnum {
   }
 }
 object InstType extends ChiselEnum {
-  val branch, arithmetic, load, store, jalr, jal, lui, auipc, system, fencei = Value//(nextValue)
+  val branch, arithmetic, load, store, jalr, jal, lui, auipc, system, fencei = Value(nextValue)
   private def nextValue: UInt = (1 << (all.size)).U
 
   def hasSame(a: InstType.Type, b: InstType.Type): Bool = {
-    // (a.asUInt & b.asUInt).orR
-    a === b
+    (a.asUInt & b.asUInt).orR
+    // a === b
   }
 }
 
