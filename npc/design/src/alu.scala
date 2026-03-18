@@ -13,17 +13,50 @@ class ALUInput extends Bundle {
   val src2   = Types.UWord
 }
 
-class ALU_foo extends Module {
+class ALU_Trival extends Module {
   val io = IO(new Bundle {
     val in  = Flipped(Decoupled(new ALUInput))
     val out = Decoupled(Types.UWord)
   })
 
-  io.out.valid := io.in.valid
-  io.in.ready := io.out.ready
+  val fsm = InnerBusCtrl(io.in, io.out, alwaysComb = true)
 
-  // do some foo op for test
-  io.out.bits := io.in.bits.src1 + io.in.bits.src2 + io.in.bits.func3t
+  val addRes = io.in.bits.src1 + io.in.bits.src2
+  val subRes = io.in.bits.src1 - io.in.bits.src2
+  val andRes = io.in.bits.src1 & io.in.bits.src2
+  val orRes  = io.in.bits.src1 | io.in.bits.src2
+  val xorRes = io.in.bits.src1 ^ io.in.bits.src2
+
+  val shamt  = io.in.bits.src2(4, 0)
+  val srlRes = io.in.bits.src1 >> shamt
+  val sraRes = (io.in.bits.src1.asSInt >> shamt).asUInt
+  val sllRes = (io.in.bits.src1 << shamt)(31, 0)
+
+  val sltRes  = (io.in.bits.src1.asSInt < io.in.bits.src2.asSInt).asUInt
+  val sltuRes = (io.in.bits.src1 < io.in.bits.src2).asUInt
+
+  val isOpAlt = io.in.bits.func7t(5)
+  val isAdd   = ((~isOpAlt) || io.in.bits.is_imm) && (~io.in.bits.func3t(1))
+
+  val addSubRes = Mux(isAdd, addRes, subRes)
+
+  val rshiftRes = Mux(isOpAlt, sraRes, srlRes)
+
+  val results = VecInit(
+    addSubRes, // 000: add/sub/addi
+    sllRes,    // 001: sll/slli
+    sltRes,    // 010: slt/slti
+    sltuRes,   // 011: sltu/sltiu
+    xorRes,    // 100: xor/xori
+    rshiftRes, // 101: srl/srli/sra/srai
+    orRes,     // 110: or/ori
+    andRes     // 111: and/andi
+  )
+
+  val key = io.in.bits.func3t
+
+  io.out.bits := results(key)
+
 }
 
 class ALU extends Module {
@@ -109,7 +142,7 @@ class ALU extends Module {
 
   // val func3t2HighResult = Mux(
   //   func3t(0),
-  //   Mux(func3t(1), rShiftResult, sltu_res),
+//   Mux(func3t(1), rShiftResult, sltu_res),
   //   Mux(func3t(1), logic_or, logic_xor)
   // )
   //

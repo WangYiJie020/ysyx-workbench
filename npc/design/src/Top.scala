@@ -261,11 +261,9 @@ class CPUCore(
   idu.io.rvec <> gprs.io.read
   exu.io.csr_rvec <> csrs.io.read
 
-  // idu.io.exuWrBack   := ExtractGPRInfoFromLSU(exu.io.out)
-  // idu.io.lsuWrBack   := ExtractGPRInfoFromLSU(lsu.io.in)
-  // idu.io.wbuWrBack   := ExtractGPRInfoFromWrBack(wbu.io.in)
-  idu.io.wrBackInfo.exus1 := exu.io.fwd1
-  idu.io.wrBackInfo.exus2 := exu.io.fwd2
+  // idu.io.wrBackInfo.exus1 := exu.io.fwd1
+  // idu.io.wrBackInfo.exus2 := exu.io.fwd2
+  idu.io.wrBackInfo.exu   := exu.io.fwd
   idu.io.wrBackInfo.lsu   := ExtractFwdInfoFromLSU(lsu.io.in)
   idu.io.wrBackInfo.wbu   := ExtractFwdInfoFromWrBack(wbu.io.in)
 

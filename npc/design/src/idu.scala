@@ -96,8 +96,11 @@ object WrBackForwardInfo {
 class WrBackInfoGroup(
   implicit p: CPUParameters)
     extends Bundle {
-  val exus1 = new WrBackForwardInfo
-  val exus2 = new WrBackForwardInfo
+  // val exus1 = new WrBackForwardInfo
+  // val exus2 = new WrBackForwardInfo
+
+  val exu = new WrBackForwardInfo
+
   val lsu   = new WrBackForwardInfo
   val wbu   = new WrBackForwardInfo
 }
@@ -126,6 +129,7 @@ class ByPassMux(
     conflict(io.rs1, wrBack) || conflict(io.rs2, wrBack)
   }
 
+  /*
   val isConflictWithEXUS1 = Wire(Bool())
   // exu stage 1 always prepare the data, no valid bypass data
   // just check conflict
@@ -136,6 +140,23 @@ class ByPassMux(
   val isRs2ConflictEXUS2  = conflict(io.rs2, io.wrBackInfo.exus2)
 
   isConflictWithEXUS2 := (isRs1ConflictEXUS2 || isRs2ConflictEXUS2)
+
+  val isConflictWithEXU = WireDefault(isConflictWithEXUS1 || isConflictWithEXUS2)
+
+  val exus2WrBackDataVaild = io.wrBackInfo.exus2.dataVaild
+  val exus2WrBackData = io.wrBackInfo.exus2.data
+  */
+
+  val isConflictWithEXU = oneConflictWithWrBack(io.wrBackInfo.exu)
+  val isRs1ConflictEXUS2 = conflict(io.rs1, io.wrBackInfo.exu)
+  val isRs2ConflictEXUS2 = conflict(io.rs2, io.wrBackInfo.exu)
+
+  val isConflictWithEXUS1 = false.B
+
+  val exus2WrBackDataVaild = io.wrBackInfo.exu.dataVaild
+  val exus2WrBackData = io.wrBackInfo.exu.data
+
+  // -----------
 
   val isConflictWithLSU = Wire(Bool())
   // lsu may have valid bypass data, but it immediately forward the data
@@ -148,7 +169,6 @@ class ByPassMux(
 
   isConflictWithWBU := (isRs1ConflictWithWBU || isRs2ConflictWithWBU)
 
-  val isConflictWithEXU = WireDefault(isConflictWithEXUS1 || isConflictWithEXUS2)
   dontTouch(isConflictWithEXU)
   dontTouch(isConflictWithLSU)
   dontTouch(isConflictWithWBU)
@@ -157,7 +177,6 @@ class ByPassMux(
   isRdAfterWr := isConflictWithEXU || isConflictWithLSU || isConflictWithWBU
   dontTouch(isRdAfterWr)
 
-  val exus2WrBackDataVaild = io.wrBackInfo.exus2.dataVaild
 
   val canRs1Bypass =
     Mux(isRs1ConflictEXUS2, exus2WrBackDataVaild, isRs1ConflictWithWBU)
@@ -175,8 +194,8 @@ class ByPassMux(
   val r1UseBypass = canRs1Bypass
   val r2UseBypass = canRs2Bypass
 
-  val r1BypassData = Mux(isRs1ConflictEXUS2, io.wrBackInfo.exus2.data, io.wrBackInfo.wbu.data)
-  val r2BypassData = Mux(isRs2ConflictEXUS2, io.wrBackInfo.exus2.data, io.wrBackInfo.wbu.data)
+  val r1BypassData = Mux(isRs1ConflictEXUS2, exus2WrBackData, io.wrBackInfo.wbu.data)
+  val r2BypassData = Mux(isRs2ConflictEXUS2, exus2WrBackData, io.wrBackInfo.wbu.data)
 
   io.outData1 := Mux(r1UseBypass, r1BypassData, io.regData1)
   io.outData2 := Mux(r2UseBypass, r2BypassData, io.regData2)

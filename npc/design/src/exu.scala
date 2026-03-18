@@ -8,7 +8,9 @@ import regfile._
 import cpu.alu._
 import axi4._
 
-class EXUStageCalcOut(implicit p:CPUParameters) extends Bundle {
+class EXUStageCalcOut(
+  implicit p: CPUParameters)
+    extends Bundle {
   val aluOut = Types.UWord
 
   val isTypSys = Bool()
@@ -30,7 +32,9 @@ class EXUStageCalcOut(implicit p:CPUParameters) extends Bundle {
   val gprWeEn = Bool()
 }
 
-class EXUStageCalc(implicit p:CPUParameters) extends Module {
+class EXUStageCalc(
+  implicit p: CPUParameters)
+    extends Module {
   val io = IO(new Bundle {
     val in       = Flipped(Decoupled(new DecodedInst))
     val csr_rvec = CSRegReqIO.TX.SingleRead
@@ -156,7 +160,9 @@ class EXUStageCalc(implicit p:CPUParameters) extends Module {
   io.out.bits.takeBranch := Mux(func3t(0), ~branchCalc, branchCalc)
 }
 
-class EXUStageChooseNxt(implicit p:CPUParameters) extends Module {
+class EXUStageChooseNxt(
+  implicit p: CPUParameters)
+    extends Module {
   val io = IO(new Bundle {
     val in        = Flipped(Decoupled(new EXUStageCalcOut))
     val jmpHappen = Output(Bool())
@@ -206,7 +212,7 @@ class EXUStageChooseNxt(implicit p:CPUParameters) extends Module {
   // need pc+imm:
   // auipc, jal(r), branch
   val pcAddImm = io.in.bits.pcAddImm
-  val snpc     = io.in.bits.dinst.pc+ 4.U
+  val snpc     = io.in.bits.dinst.pc + 4.U
 
   writeBackInfo.gpr.en   := io.in.bits.gprWeEn
   writeBackInfo.gpr.addr := dinst.info.rd
@@ -265,7 +271,9 @@ class EXUStageChooseNxt(implicit p:CPUParameters) extends Module {
   dontTouch(dbgIsCSRJmp)
 }
 
-class EXU(implicit p:CPUParameters) extends Module {
+class EXU(
+  implicit p: CPUParameters)
+    extends Module {
   val io = IO(new Bundle {
     val in        = Flipped(Decoupled(new DecodedInst))
     val csr_rvec  = CSRegReqIO.TX.SingleRead
@@ -280,8 +288,9 @@ class EXU(implicit p:CPUParameters) extends Module {
 
     val fencei = Output(Bool())
 
-    val fwd1 = Output(new WrBackForwardInfo)
-    val fwd2 = Output(new WrBackForwardInfo)
+    val fwd = Output(new WrBackForwardInfo)
+    // val fwd1 = Output(new WrBackForwardInfo)
+    // val fwd2 = Output(new WrBackForwardInfo)
 
     val out = Decoupled(new LSUInput)
   })
@@ -294,18 +303,34 @@ class EXU(implicit p:CPUParameters) extends Module {
   val stageCalc      = Module(new EXUStageCalc)
   val stageChooseNxt = Module(new EXUStageChooseNxt)
 
-  io.fwd1 := stageCalc.io.fwd
-  io.fwd2 := stageChooseNxt.io.fwd
+  // io.fwd1 := stageCalc.io.fwd
+  // io.fwd2 := stageChooseNxt.io.fwd
+  //
+  // dontTouchValidReady(stageCalc.io.in)
+  // dontTouchValidReady(stageCalc.io.out)
+  // dontTouchValidReady(stageChooseNxt.io.in)
+  // dontTouchValidReady(stageChooseNxt.io.out)
+  //
+  // io.in <> stageCalc.io.in
+  // io.out <> stageChooseNxt.io.out
+  //
+  // stageCalc.io.csr_rvec <> io.csr_rvec
+  // io.jmpHappen := stageChooseNxt.io.jmpHappen
+  // io.isJAL     := stageChooseNxt.io.isJAL
+  // io.predWrong := stageChooseNxt.io.predWrong
+  // io.nxtPC     := stageChooseNxt.io.nxtPC
+  // io.pc        := stageChooseNxt.io.pc
+  // io.fencei    := stageChooseNxt.io.fencei
+  //
+  // stageCalc.io.flush := io.flush1
+  //
+  // pipelineConnect(stageCalc.io.out, stageChooseNxt.io.in, stageChooseNxt.io.out)
 
-  dontTouchValidReady(stageCalc.io.in)
-  dontTouchValidReady(stageCalc.io.out)
-  dontTouchValidReady(stageChooseNxt.io.in)
-  dontTouchValidReady(stageChooseNxt.io.out)
-
-  io.in <> stageCalc.io.in
-  io.out <> stageChooseNxt.io.out
-
+  stageCalc.io.in <> io.in
   stageCalc.io.csr_rvec <> io.csr_rvec
+  stageCalc.io.flush := false.B // for one stage EXU, no need to flush stageCalc
+
+  stageChooseNxt.io.in <> stageCalc.io.out
   io.jmpHappen := stageChooseNxt.io.jmpHappen
   io.isJAL     := stageChooseNxt.io.isJAL
   io.predWrong := stageChooseNxt.io.predWrong
@@ -313,13 +338,14 @@ class EXU(implicit p:CPUParameters) extends Module {
   io.pc        := stageChooseNxt.io.pc
   io.fencei    := stageChooseNxt.io.fencei
 
-  stageCalc.io.flush := io.flush1
+  io.fwd := stageChooseNxt.io.fwd
 
-  pipelineConnect(stageCalc.io.out, stageChooseNxt.io.in, stageChooseNxt.io.out)
-
+  io.out <> stageChooseNxt.io.out
 }
 
-class EXUForDifftest(implicit p:CPUParameters) extends Module {
+class EXUForDifftest(
+  implicit p: CPUParameters)
+    extends Module {
   val io = IO(new Bundle {
     val in     = Flipped(Decoupled(new DecodedInst))
     val actual = new Bundle {
