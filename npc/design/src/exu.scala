@@ -456,7 +456,8 @@ class EXU(
     }.otherwise {
       val csrAddr = dinst.code(31, 20)
       io.csr_rvec.addr := csrAddr
-      csrWr.en         := (isCSRRW || (isCSRRS && (reg_v1 =/= 0.U)))
+      // csrWr.en         := (isCSRRW || (isCSRRS && (reg_v1 =/= 0.U)))
+      csrWr.en         := isCSRRW || isCSRRS
       csrWr.addr       := csrAddr
       csrWrData        := Mux(isCSRRW, reg_v1, (csr_rdata | reg_v1))
     }
