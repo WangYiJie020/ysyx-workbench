@@ -207,8 +207,13 @@ class EXUStageChooseNxt(
   lsuInfo.func3t    := io.in.bits.dinst.code(14, 12)
   lsuInfo.storeData := io.in.bits.dinst.info.reg2
   val writeBackInfo = lsuInfo.exuWriteBack
-  writeBackInfo.csr <> io.in.bits.csrWr
+  // writeBackInfo.csr <> io.in.bits.csrWr
   // writeBackInfo.is_ebreak     := io.in.bits.isEBREAK
+
+  writeBackInfo.csr.en   := io.in.bits.csrWr.en
+  writeBackInfo.csr.addr := io.in.bits.csrWr.addr
+  writeBackInfo.csr.data30b := io.in.bits.csrWr.data(31, 2)
+
   writeBackInfo.csr_ecallflag := io.in.bits.isECALL
 
   // No consider exception
