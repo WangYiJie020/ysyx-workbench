@@ -28,7 +28,7 @@ class IFU extends Module {
   io.mem.dontCareB()
   io.mem.dontCareNonLiteAR()
 
-  val pcReg     = RegEnable(io.pc.bits, io.pc.fire)
+  val pcReg     = RegEnable(io.pc.bits(31,2), io.pc.fire)
   val pc        = Mux(io.pc.fire, io.pc.bits, pcReg)
   val predNxtPC = RegEnableReadNew(io.predictedNextPC, io.pc.fire)
   // dontTouch(pc)
@@ -49,7 +49,7 @@ class IFU extends Module {
   val inst = RegEnableReadNew(memIO.rdata(31,2), memIO.rvalid)
   memIO.rready                := true.B
   io.out.bits.code.raw        := inst
-  io.out.bits.pc.pc30b        := pc(31, 2)
+  io.out.bits.pc.pc30b        := pc
   io.out.bits.predictedNextPC := predNxtPC
   io.out.valid                := ((state === State.waitR || state === State.waitAR) && memIO.rvalid) || (state === State.idle && io.pc.fire && memIO.rvalid) || (state === State.waitOut)
 
