@@ -29,6 +29,8 @@ class EXUStageCalcOut(
 
   val pcAddImm = Types.UWord
 
+  val imm = Types.UWord
+
   val takeBranch = Bool()
 
   val gprWeEn = Bool()
@@ -69,6 +71,7 @@ class EXUStageCalc(
   io.out.valid := io.in.valid && !io.flush
 
   val instIMM = dinst.imm
+  io.out.bits.imm      := instIMM
 
   io.out.bits.pcAddImm := dinst.pc.get + instIMM
   io.out.bits.dinst    := dinst
@@ -263,7 +266,7 @@ class EXUStageChooseNxt(
   writeBackInfo.gpr.data := Mux1H(
     Seq(
       isTypArithmetic         -> io.in.bits.aluOut,
-      isTypLUI                -> dinst.imm,
+      isTypLUI                -> io.in.bits.imm,
       isTypAUIPC              -> pcAddImm,
       (isTypJALR || isTypJAL) -> snpc,
       io.in.bits.isTypSys     -> sysInstWrBackData
