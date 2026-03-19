@@ -61,14 +61,16 @@ class ALU_Trival extends Module {
 
 class ALU extends Module {
   val io = IO(new Bundle {
-    val in  = Flipped(Decoupled(new ALUInput))
-    val out = Decoupled(Types.UWord)
+    val in  = Flipped(new ALUInput)
+    val out = Output(Types.UWord)
+    val isBranch = Input(Bool())
+    val addSubRes = Output(Types.UWord)
+    val sltRes = Output(Bool())
+    val sltuRes = Output(Bool())
   })
 
-  val fsm = InnerBusCtrl(io.in, io.out, alwaysComb = true)
-
   // alias
-  val inbits = io.in.bits
+  val inbits = io.in
   val src1   = inbits.src1
   val src2   = inbits.src2
 
@@ -82,9 +84,11 @@ class ALU extends Module {
   val isOpAlt = inbits.func7t(5)
 
   // when func3[1] == 1, less than need sub result
-  val isAdd = ((~isOpAlt) || inbits.is_imm) && (~inbits.func3t(1))
+  // val isAdd = ((~isOpAlt) || inbits.is_imm) && (~inbits.func3t(1))
+  val isAdd = ((~isOpAlt) || inbits.is_imm) && (~io.isBranch) && (~func3t(1))
 
   val add_sub_res = Wire(Types.UWord)
+  io.addSubRes := add_sub_res
 
   val op2_inv = src2 ^ Fill(32, ~isAdd)
 
@@ -114,6 +118,9 @@ class ALU extends Module {
   // when no overflow:
   //   result sign negative -> less than -> slt should be true
   val slt_res = sign_res ^ overflow
+
+  io.sltRes := slt_res
+  io.sltuRes := sltu_res
 
   val rShiftResult = Wire(Types.UWord)
   val lShiftResult = Wire(Types.UWord)
@@ -165,5 +172,5 @@ class ALU extends Module {
     logic_and           // 111: and/andi
   )
 
-  io.out.bits := results(func3t)
+  io.out := results(func3t)
 }
