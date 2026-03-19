@@ -251,7 +251,8 @@ class EXUStageChooseNxt(
   if (Config.useBTBAndBP) {
     io.predWrong := (normalNxtPC =/= dinst.predictedNextPC) || isJmpCsr || isFenceI
   } else {
-    io.predWrong := (normalNxtPC =/= snpc) || isJmpCsr || isFenceI
+    // io.predWrong := (normalNxtPC =/= snpc) || isJmpCsr || isFenceI
+    io.predWrong := isJmpCsr || isFenceI || isTypJALR || isTypJAL || (isFmtB && takeBranch)
   }
 
   io.fencei := isFenceI && io.in.valid
