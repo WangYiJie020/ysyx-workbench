@@ -85,7 +85,7 @@ class ALU extends Module {
 
   // when func3[1] == 1, less than need sub result
   // val isAdd = ((~isOpAlt) || inbits.is_imm) && (~inbits.func3t(1))
-  val isAdd = ((~isOpAlt) || inbits.is_imm) && (~io.isBranch)
+  val isAdd = ((~isOpAlt) || inbits.is_imm) && (~io.isBranch) && (~func3t(1))
 
   val add_sub_res = Wire(Types.UWord)
   io.addSubRes := add_sub_res
