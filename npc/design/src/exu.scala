@@ -402,6 +402,16 @@ class EXU(
   val isTypLUI        = InstType.hasSame(dinst.info.typ, InstType.lui)
   val isFenceI        = InstType.hasSame(dinst.info.typ, InstType.fencei)
 
+
+  val dbgIsBranch = WireDefault(isTypBranch)
+  val dbgIsJALR   = WireDefault(isTypJALR)
+  val dbgIsJAL    = WireDefault(isTypJAL)
+  val dbgIsCSRJmp = WireDefault(isJmpCsr)
+  dontTouch(dbgIsBranch)
+  dontTouch(dbgIsJALR)
+  dontTouch(dbgIsJAL)
+  dontTouch(dbgIsCSRJmp)
+
   val reg_v1 = dinst.info.reg1
   val reg_v2 = dinst.info.reg2
 
@@ -439,6 +449,8 @@ class EXU(
   val csrWr = io.out.bits.exuWriteBack.csr
 
   val csrWrData = Wire(Types.UWord)
+
+  io.out.bits.exuWriteBack.csr_ecallflag := is_ecall
 
   when(isTypSys) {
     when(is_ecall) {
