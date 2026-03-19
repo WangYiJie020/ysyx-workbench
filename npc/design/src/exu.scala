@@ -222,7 +222,7 @@ class EXUStageChooseNxt(
   // need pc+imm:
   // auipc, jal(r), branch
   val pcAddImm = io.in.bits.pcAddImm
-  val snpc     = io.in.bits.dinst.pc.pc30b + 1.U
+  val snpc     = io.in.bits.dinst.pc.get + 4.U
 
   writeBackInfo.gpr.en   := io.in.bits.gprWeEn
   writeBackInfo.gpr.addr := dinst.rd
