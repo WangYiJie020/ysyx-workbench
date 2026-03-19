@@ -116,15 +116,12 @@ class ControlStatusRegisterFile extends Module {
   val io = IO(new CSRIO)
 
   val mcycleHi = Wire(UInt(32.W))
-  val mcycleReg = RegInit(0.U(30.W))
-  val mcycleLo = Cat(0.U(2.W), mcycleReg)
-
+  val mcycleLo = RegInit(0.U(32.W))
   // Discard mcycleHi for smaller area
   // NOTICE:
   // 32 bit mcycle support about 50 days at 1GHz
-  // 30 bit mcycle support about 12 days at 1GHz
   mcycleHi := 0.U
-  mcycleReg := mcycleReg + 1.U
+  mcycleLo := mcycleLo + 1.U
   val mcycle64 = Cat(mcycleHi, mcycleLo)
   io.mcycle64 := mcycle64
 
