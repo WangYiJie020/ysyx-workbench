@@ -154,7 +154,8 @@ class EXUStageCalc(
     csr_wdata := DontCare
   }
 
-  def calcBranch() = {
+  // More Area???
+  def calcBranchBySub() = {
     val W   = reg_v1.getWidth
     val sub = reg_v1 - reg_v2
 
@@ -176,17 +177,15 @@ class EXUStageCalc(
     io.out.bits.takeBranch := Mux(func3t(0), ~branchCalc, branchCalc)
   }
 
-  calcBranch()
-
   // blt/bge 10x
   // bltu/bgeu 11x
   //
   // only when func3t[2] == 0 -> eq/ne
-  // val isLessThanU = reg_v1 < reg_v2
-  // val isLessThanS = (reg_v1.asSInt < reg_v2.asSInt)
-  // val isLessThan  = Mux(func3t(1), isLessThanU, isLessThanS)
-  // val branchCalc  = Mux(func3t(2), isLessThan, (reg_v1 === reg_v2))
-  // io.out.bits.takeBranch := Mux(func3t(0), ~branchCalc, branchCalc)
+  val isLessThanU = reg_v1 < reg_v2
+  val isLessThanS = (reg_v1.asSInt < reg_v2.asSInt)
+  val isLessThan  = Mux(func3t(1), isLessThanU, isLessThanS)
+  val branchCalc  = Mux(func3t(2), isLessThan, (reg_v1 === reg_v2))
+  io.out.bits.takeBranch := Mux(func3t(0), ~branchCalc, branchCalc)
 }
 
 class EXUStageChooseNxt(
