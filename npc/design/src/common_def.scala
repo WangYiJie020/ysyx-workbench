@@ -114,7 +114,6 @@ class InstMetaInfo extends Bundle {
 class DecodedInstInfo(implicit p : CPUParameters) extends InstMetaInfo {
   val imm = Types.UWord
   // val rd  = p.GPRAddr
-  def rd = imm(11, 7)
 
   val rdWrEn = Bool()
 
@@ -126,6 +125,7 @@ class DecodedInstInfo(implicit p : CPUParameters) extends InstMetaInfo {
 
 class DecodedInst(implicit p : CPUParameters) extends Inst {
   val info = new DecodedInstInfo
+  def rd = code(11, 7)
 }
 
 // update reg when enable,

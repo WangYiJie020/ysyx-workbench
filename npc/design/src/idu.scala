@@ -67,7 +67,7 @@ object WrBackForwardInfo {
     implicit p: CPUParameters
   ): WrBackForwardInfo = {
     val res = Wire(new WrBackForwardInfo)
-    res.addr      := dinstInfo.info.rd
+    res.addr      := dinstInfo.rd
     res.enWr      := dinstInfo.info.rdWrEn && infoValid
     res.dataVaild := dataVaild
     res.data      := data
