@@ -48,6 +48,7 @@ object ICacheParameters {
     addr(31, log2Ceil(BLOCK_SIZE)) ## 0.U(log2Ceil(BLOCK_SIZE).W)
   }
 
+  // for old
   def cacheLineVecType = Vec(BLOCK_SIZE_INWORDS, Types.UWord)
 }
 
