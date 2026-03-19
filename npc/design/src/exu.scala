@@ -120,6 +120,10 @@ class EXUStageCalc(
   csrren := isCSRRS || (isCSRRW && (dinst.rd =/= 0.U)) || is_ecall || is_mret
   csrwen := isCSRRW || (isCSRRS && (reg_v1 =/= 0.U))
 
+  // Bigger area??? why???
+  // csrren := isCSRRS || isCSRRW || is_ecall || is_mret
+  // csrwen := isCSRRW || isCSRRS
+
   when(isTypSys) {
     when(is_ecall) {
       // csrren    := true.B
@@ -248,7 +252,8 @@ class EXUStageChooseNxt(
   if (Config.useBTBAndBP) {
     io.predWrong := (normalNxtPC =/= dinst.predictedNextPC) || isJmpCsr || isFenceI
   } else {
-    io.predWrong := (normalNxtPC =/= snpc) || isJmpCsr || isFenceI
+    // io.predWrong := (normalNxtPC =/= snpc) || isJmpCsr || isFenceI
+    io.predWrong := isJmpCsr || isFenceI || isTypJALR || isTypJAL || (isFmtB && takeBranch)
   }
 
   io.fencei := isFenceI && io.in.valid
