@@ -117,7 +117,7 @@ class EXUStageCalc(
   val isCSRRW = (func3t === CSROp.csrrw) && isTypSys
   val isCSRRS = (func3t === CSROp.csrrs) && isTypSys
 
-  csrren := isCSRRS || (isCSRRW && (dinst.info.rd =/= 0.U)) || is_ecall || is_mret
+  csrren := isCSRRS || (isCSRRW && (dinst.rd =/= 0.U)) || is_ecall || is_mret
   csrwen := isCSRRW || (isCSRRS && (reg_v1 =/= 0.U))
 
   when(isTypSys) {
@@ -217,7 +217,7 @@ class EXUStageChooseNxt(
   val snpc     = io.in.bits.dinst.pc + 4.U
 
   writeBackInfo.gpr.en   := io.in.bits.gprWeEn
-  writeBackInfo.gpr.addr := dinst.info.rd
+  writeBackInfo.gpr.addr := dinst.rd
   val sysInstWrBackData = io.in.bits.csrRdata
 
   writeBackInfo.gpr.data := Mux1H(

@@ -67,7 +67,7 @@ object WrBackForwardInfo {
     implicit p: CPUParameters
   ): WrBackForwardInfo = {
     val res = Wire(new WrBackForwardInfo)
-    res.addr      := dinstInfo.info.rd
+    res.addr      := dinstInfo.rd
     res.enWr      := dinstInfo.info.rdWrEn && infoValid
     res.dataVaild := dataVaild
     res.data      := data
@@ -233,7 +233,7 @@ class IDU(
   iinfo_dec.io.opcode                   := inst(6, 0)
   res.viewAsSupertype(new InstMetaInfo) := iinfo_dec.io.out
 
-  res.rd  := inst(11, 7)
+  // res.rd  := inst(11, 7)
   // res.rs1 := inst(19, 15)
   // res.rs2 := inst(24, 20)
 
