@@ -68,7 +68,7 @@ class EXUStageCalc(
   io.in.ready  := io.out.ready || io.flush
   io.out.valid := io.in.valid && !io.flush
 
-  io.out.bits.pcAddImm := dinst.pc + dinst.info.imm
+  io.out.bits.pcAddImm := dinst.pc.get + dinst.info.imm
   io.out.bits.dinst    := dinst
 
   // reg
@@ -117,12 +117,11 @@ class EXUStageCalc(
   val isCSRRW = (func3t === CSROp.csrrw) && isTypSys
   val isCSRRS = (func3t === CSROp.csrrs) && isTypSys
 
-  csrren := isCSRRS || (isCSRRW && (dinst.rd =/= 0.U)) || is_ecall || is_mret
-  csrwen := isCSRRW || (isCSRRS && (reg_v1 =/= 0.U))
+  // csrren := isCSRRS || (isCSRRW && (dinst.rd =/= 0.U)) || is_ecall || is_mret
+  // csrwen := isCSRRW || (isCSRRS && (reg_v1 =/= 0.U))
 
-  // Bigger area??? why???
-  // csrren := isCSRRS || isCSRRW || is_ecall || is_mret
-  // csrwen := isCSRRW || isCSRRS
+  csrren := isCSRRS || isCSRRW || is_ecall || is_mret
+  csrwen := isCSRRW || isCSRRS
 
   when(isTypSys) {
     when(is_ecall) {
@@ -135,7 +134,7 @@ class EXUStageCalc(
       // !!!note:
       // although wen = falase
       // is_ecall flag make csr to write wdata to mepc
-      csr_wdata := dinst.pc
+      csr_wdata := dinst.pc.get
     }.elsewhen(is_mret) {
       csr_raddr := CSRAddr.mepc
       csr_waddr := DontCare
@@ -223,7 +222,7 @@ class EXUStageChooseNxt(
   // need pc+imm:
   // auipc, jal(r), branch
   val pcAddImm = io.in.bits.pcAddImm
-  val snpc     = io.in.bits.dinst.pc + 4.U
+  val snpc     = io.in.bits.dinst.pc.get + 4.U
 
   writeBackInfo.gpr.en   := io.in.bits.gprWeEn
   writeBackInfo.gpr.addr := dinst.rd
@@ -276,7 +275,7 @@ class EXUStageChooseNxt(
   )
   nxtPC       := Mux(isJmpCsr, io.in.bits.csrRdata, normalNxtPC)
   io.nxtPC    := nxtPC
-  io.pc       := io.in.bits.dinst.pc
+  io.pc       := io.in.bits.dinst.pc.get
 
   val dbgIsBranch = WireDefault(isTypBranch)
   val dbgIsJALR   = WireDefault(isTypJALR)
