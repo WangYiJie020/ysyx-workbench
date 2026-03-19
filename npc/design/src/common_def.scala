@@ -67,8 +67,6 @@ object Types {
 
   def PredictedTarget = if (Config.useBTBAndBP) UWord else UInt(0.W)
 
-  def InstCodeNoCExt = new InstCodeNoCExt
-
   object Ops {
     implicit class StringOps(val s: String) extends AnyVal {
       def UWord = s.U(BitWidth.word.W)
