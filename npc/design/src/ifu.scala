@@ -44,7 +44,7 @@ class IFU extends Module {
 
   io.pc.ready   := (state === State.idle)
   memIO.arvalid := (state === State.waitAR) || (state === State.idle && io.pc.fire)
-  memIO.araddr  := pc
+  memIO.araddr  := pc ## 0.U(2.W)
 
   val inst = RegEnableReadNew(memIO.rdata(31,2), memIO.rvalid)
   memIO.rready                := true.B
