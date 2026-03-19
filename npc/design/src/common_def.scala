@@ -122,7 +122,7 @@ class InstMetaInfo extends Bundle {
 class DecodedInstInfo(
   implicit p: CPUParameters)
     extends InstMetaInfo {
-  // val imm = Types.UWord
+  val imm = Types.UWord
   // val rd  = p.GPRAddr
 
   val rdWrEn = Bool()
@@ -138,28 +138,29 @@ class DecodedInst(
     extends Inst {
   val info = new DecodedInstInfo
   def rd   = code(11, 7)
-  def imm  = {
-    val inst = code
-
-    val immI = Cat(Fill(21, inst(31)), inst(30, 20))
-    val immS = Cat(immI(31, 5), inst(11, 8), inst(7))
-    val immB = Cat(immI(31, 12), inst(7), immS(10, 1), 0.U(1.W))
-    val immU = Cat(inst(31, 12), 0.U(12.W))
-    val immJ = Cat(immI(31, 20), inst(19, 12), inst(20), inst(30, 21), 0.U(1.W))
-
-    val dontcareImm = Wire(Types.UWord)
-    dontcareImm := DontCare
-
-    WireDefault(MuxLookup(info.fmt, dontcareImm)(
-      Seq(
-        InstFmt.imm    -> immI,
-        InstFmt.jump   -> immJ,
-        InstFmt.store  -> immS,
-        InstFmt.branch -> immB,
-        InstFmt.upper  -> immU
-      )
-    ))
-  }
+  def imm = info.imm
+  // def imm  = {
+  //   val inst = code
+  //
+  //   val immI = Cat(Fill(21, inst(31)), inst(30, 20))
+  //   val immS = Cat(immI(31, 5), inst(11, 8), inst(7))
+  //   val immB = Cat(immI(31, 12), inst(7), immS(10, 1), 0.U(1.W))
+  //   val immU = Cat(inst(31, 12), 0.U(12.W))
+  //   val immJ = Cat(immI(31, 20), inst(19, 12), inst(20), inst(30, 21), 0.U(1.W))
+  //
+  //   val dontcareImm = Wire(Types.UWord)
+  //   dontcareImm := DontCare
+  //
+  //   WireDefault(MuxLookup(info.fmt, dontcareImm)(
+  //     Seq(
+  //       InstFmt.imm    -> immI,
+  //       InstFmt.jump   -> immJ,
+  //       InstFmt.store  -> immS,
+  //       InstFmt.branch -> immB,
+  //       InstFmt.upper  -> immU
+  //     )
+  //   ))
+  // }
 }
 
 // update reg when enable,
