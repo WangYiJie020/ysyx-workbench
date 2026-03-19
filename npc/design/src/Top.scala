@@ -231,7 +231,7 @@ class CPUCore(
     stop()
   }
 
-  ifu.io.pc.bits  := pcReg.get
+  ifu.io.pc.bits  := pcReg
   ifu.io.pc.valid := true.B
 
   layer.block(DifftestLayer) {
