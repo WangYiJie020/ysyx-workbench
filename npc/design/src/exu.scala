@@ -10,6 +10,7 @@ import axi4._
 
 import config._
 
+/*
 class EXUStageCalcOut(
   implicit p: CPUParameters)
     extends Bundle {
@@ -33,7 +34,7 @@ class EXUStageCalcOut(
 
   val gprWeEn = Bool()
 }
-
+/**/
 class EXUStageCalc(
   implicit p: CPUParameters)
     extends Module {
@@ -68,7 +69,9 @@ class EXUStageCalc(
   io.in.ready  := io.out.ready || io.flush
   io.out.valid := io.in.valid && !io.flush
 
-  io.out.bits.pcAddImm := dinst.pc.get + dinst.info.imm
+  val instIMM = dinst.imm
+
+  io.out.bits.pcAddImm := dinst.pc.get + instIMM
   io.out.bits.dinst    := dinst
 
   // reg
@@ -77,14 +80,14 @@ class EXUStageCalc(
   val reg_v2 = dinst.info.reg2
 
   alu_in.src1 := reg_v1
-  alu_in.src2 := Mux(isFmtI, dinst.info.imm, reg_v2)
+  alu_in.src2 := Mux(isFmtI, instIMM, reg_v2)
 
   alu_in.is_imm := isFmtI
   alu_in.func3t := func3t
   alu_in.func7t := func7t
 
   io.out.bits.aluOut     := alu.io.out.bits
-  io.out.bits.reg1AddImm := reg_v1 + dinst.info.imm
+  io.out.bits.reg1AddImm := reg_v1 + instIMM
 
   // csr
 
@@ -231,7 +234,7 @@ class EXUStageChooseNxt(
   writeBackInfo.gpr.data := Mux1H(
     Seq(
       isTypArithmetic         -> io.in.bits.aluOut,
-      isTypLUI                -> dinst.info.imm,
+      isTypLUI                -> dinst.imm,
       isTypAUIPC              -> pcAddImm,
       (isTypJALR || isTypJAL) -> snpc,
       io.in.bits.isTypSys     -> sysInstWrBackData
@@ -357,6 +360,172 @@ class EXU(
   io.fwd := stageChooseNxt.io.fwd
 
   io.out <> stageChooseNxt.io.out
+}*/
+
+class EXU(
+  implicit p: CPUParameters)
+    extends Module {
+  val io = IO(new Bundle {
+    val in        = Flipped(Decoupled(new DecodedInst))
+    val csr_rvec  = CSRegReqIO.TX.SingleRead
+    val jmpHappen = Output(Bool())
+    val isJAL     = Output(Bool())
+
+    val predWrong = Output(Bool())
+    val pc        = Output(Types.UWord)
+    val nxtPC     = Output(Types.UWord)
+
+    val flush1 = Input(Bool())
+
+    val fencei = Output(Bool())
+    val fwd    = Output(new WrBackForwardInfo)
+    val out    = Decoupled(new LSUInput)
+  })
+
+  val dinst  = io.in.bits
+  val func3t = dinst.code(14, 12)
+  val func7t = dinst.code(31, 25)
+  val imm    = dinst.imm
+  val pc     = dinst.pc.get
+
+  val isFmtI   = InstFmt.hasSame(dinst.info.fmt, InstFmt.imm)
+  val isFmtB   = InstFmt.hasSame(dinst.info.fmt, InstFmt.branch)
+  val isTypSys = InstType.hasSame(dinst.info.typ, InstType.system)
+
+  val isTypLoad       = InstType.hasSame(dinst.info.typ, InstType.load)
+  val isTypStore      = InstType.hasSame(dinst.info.typ, InstType.store)
+  val isTypAUIPC      = InstType.hasSame(dinst.info.typ, InstType.auipc)
+  val isTypJAL        = InstType.hasSame(dinst.info.typ, InstType.jal)
+  val isTypJALR       = InstType.hasSame(dinst.info.typ, InstType.jalr)
+  val isTypBranch     = InstType.hasSame(dinst.info.typ, InstType.branch)
+  val isTypArithmetic = InstType.hasSame(dinst.info.typ, InstType.arithmetic)
+  val isTypLUI        = InstType.hasSame(dinst.info.typ, InstType.lui)
+  val isFenceI        = InstType.hasSame(dinst.info.typ, InstType.fencei)
+
+  val reg_v1 = dinst.info.reg1
+  val reg_v2 = dinst.info.reg2
+
+  val alu = Module(new ALU)
+  alu.io.in.valid  := true.B
+  alu.io.out.ready := true.B
+
+  alu.io.in.bits.src1   := reg_v1
+  alu.io.in.bits.src2   := Mux(isFmtI, imm, reg_v2)
+  alu.io.in.bits.is_imm := isFmtI
+  alu.io.in.bits.func3t := func3t
+  alu.io.in.bits.func7t := func7t
+
+  val aluOut = alu.io.out.bits
+
+  val isLessThanU = reg_v1 < reg_v2
+  val isLessThanS = (reg_v1.asSInt < reg_v2.asSInt)
+  val isLessThan  = Mux(func3t(1), isLessThanU, isLessThanS)
+  val branchCalc  = Mux(func3t(2), isLessThan, (reg_v1 === reg_v2))
+  val takeBranch  = Mux(func3t(0), ~branchCalc, branchCalc)
+
+  val is_mret  = dinst.code === "h30200073".U
+  val is_ecall = dinst.code === "h73".U
+
+  object CSROp {
+    val csrrw = 1.U
+    val csrrs = 2.U
+  }
+  val isCSRRW = (func3t === CSROp.csrrw) && isTypSys
+  val isCSRRS = (func3t === CSROp.csrrs) && isTypSys
+
+  val csr_rdata = io.csr_rvec.data
+  io.csr_rvec.en := true.B // (isCSRRS || isCSRRW || is_ecall || is_mret) && io.in.valid
+
+  val csrWr = io.out.bits.exuWriteBack.csr
+
+  val csrWrData = Wire(Types.UWord)
+
+  when(isTypSys) {
+    when(is_ecall) {
+      io.csr_rvec.addr := CSRAddr.mtvec
+      csrWr.en         := true.B
+      csrWr.addr       := CSRAddr.mepc
+      csrWrData        := dinst.pc.get
+    }.elsewhen(is_mret) {
+      io.csr_rvec.addr := CSRAddr.mepc
+      csrWr.en         := false.B
+      csrWr.addr       := DontCare
+      csrWrData        := DontCare
+    }.otherwise {
+      val csrAddr = dinst.code(31, 20)
+      io.csr_rvec.addr := csrAddr
+      csrWr.en         := (isCSRRW || (isCSRRS && (reg_v1 =/= 0.U)))
+      csrWr.addr       := csrAddr
+      csrWrData        := Mux(isCSRRW, reg_v1, (csr_rdata | reg_v1))
+    }
+  }.otherwise {
+    io.csr_rvec.addr := DontCare
+    csrWr.en         := false.B
+    csrWr.addr       := DontCare
+    csrWrData        := DontCare
+  }
+
+  csrWr.data30b := csrWrData(31, 2)
+
+  val snpc       = pc + 4.U
+  val pcAddImm   = pc + imm
+  val reg1AddImm = reg_v1 + imm
+
+  val normalNxtPC = Mux(
+    isTypJALR,
+    (reg1AddImm(31, 1) ## 0.U(1.W)),
+    Mux(
+      isTypJAL || (isTypBranch && takeBranch),
+      pcAddImm,
+      snpc
+    )
+  )
+
+  val isJmpCsr   = (is_ecall || is_mret) && isTypSys
+  val finalNxtPC = Mux(isJmpCsr, csr_rdata, normalNxtPC)
+
+  val willJmp = ((isTypBranch && takeBranch) || isTypJALR || isTypJAL || isJmpCsr) && io.in.valid
+
+  io.jmpHappen := willJmp
+  io.isJAL     := isTypJAL
+  io.pc        := pc
+  io.nxtPC     := finalNxtPC
+  io.fencei    := isFenceI && io.in.valid
+
+  if (Config.useBTBAndBP) {
+    io.predWrong := (normalNxtPC =/= dinst.predictedNextPC) || isJmpCsr || isFenceI
+  } else {
+    io.predWrong := isJmpCsr || isFenceI || isTypJALR || isTypJAL || (isTypBranch && takeBranch)
+  }
+
+  val gprWrData = Mux1H(
+    Seq(
+      isTypArithmetic         -> aluOut,
+      isTypLUI                -> imm,
+      isTypAUIPC              -> pcAddImm,
+      (isTypJALR || isTypJAL) -> snpc,
+      isTypSys                -> csr_rdata
+    )
+  )
+
+  io.out.valid := io.in.valid && !io.flush1
+  io.in.ready  := io.out.ready || io.flush1
+
+  val lsuInfo = io.out.bits
+  lsuInfo.destAddr  := reg1AddImm
+  lsuInfo.isLoad    := isTypLoad
+  lsuInfo.isStore   := isTypStore
+  lsuInfo.func3t    := func3t
+  lsuInfo.storeData := reg_v2
+
+  val writeBackInfo = lsuInfo.exuWriteBack
+  writeBackInfo.iid           := dinst.iid
+  writeBackInfo.gpr.en        := dinst.info.rdWrEn && io.in.valid
+  writeBackInfo.gpr.addr      := dinst.rd
+  writeBackInfo.gpr.data      := gprWrData
+
+  val isMemOP = isTypLoad || isTypStore
+  io.fwd := WrBackForwardInfo(io.in.valid, dinst, !isMemOP, gprWrData)
 }
 
 class EXUForDifftest(
