@@ -125,7 +125,11 @@ class ALU extends Module {
   val rShiftResult = Wire(Types.UWord)
   val lShiftResult = Wire(Types.UWord)
 
-  rShiftResult := Mux(isOpAlt, (s_src1 >> shamt).asUInt, src1 >> shamt)
+  // rShiftResult := Mux(isOpAlt, (s_src1 >> shamt).asUInt, src1 >> shamt)
+
+  // wired optimize make 64b shift has smaller area than 32b shift + mux
+  // make EXU and ALU smaller, but whole CPU bigger little bit ???
+  rShiftResult := Cat(Fill(32, isOpAlt && sign_src1), src1) >> shamt
   lShiftResult := src1 << shamt
 
   val defaultRes = Wire(Types.UWord)

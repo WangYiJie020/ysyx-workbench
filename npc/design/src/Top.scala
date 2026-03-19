@@ -106,15 +106,17 @@ class CPUCore(
   val resetPCProvider = Module(new ysyx_25100261_ResetPCProvider)
   val INIT_PC         = resetPCProvider.io.resetPC
 
-  val pc             = RegInit(INIT_PC)
+  // val pc             = RegInit(INIT_PC)
+  val pcReg = RegInit(INIT_PC(31,2).asTypeOf(new AlignedPC))
+
   val nxtPredictedPC = Wire(Types.UWord)
   dontTouch(nxtPredictedPC)
 
   if (Config.useBTBAndBP) {
     val btb = Module(new BranchTargetBuffer)
     val bp  = Module(new BranchPredictor)
-    btb.io.query.addr   := pc
-    bp.io.pc            := pc
+    btb.io.query.addr   := pcReg.get
+    bp.io.pc            := pcReg.get
     bp.io.historyHit    := btb.io.query.hit
     bp.io.historyTarget := btb.io.query.target
     bp.io.historyIsJAL  := btb.io.query.isJAL
@@ -126,7 +128,7 @@ class CPUCore(
 
     nxtPredictedPC := bp.io.predictTarget
   } else {
-    nxtPredictedPC := pc + 4.U
+    nxtPredictedPC := pcReg.get + 4.U
     // val isBranch = ifu.io.out.bits.code(6, 0) === "b1100011".U
     // val immSign  = ifu.io.out.bits.code(31)
     // val imm      = Cat(
@@ -182,12 +184,12 @@ class CPUCore(
   needFlushPipeline := (isFlushIDUReg) || isBranchGuessWrong
   dontTouch(needFlushPipeline)
 
-  pc := Mux(
+  pcReg.pc30b := Mux(
     ifu.io.pc.ready,
     // Sometimes although jump,
     // target is near current pc and IFU just meets it
-    Mux(isBranchGuessWrong && (!isIFUAckCorrectTarget), curCorrectJmpTarget, nxtPredictedPC),
-    pc
+    Mux(isBranchGuessWrong && (!isIFUAckCorrectTarget), curCorrectJmpTarget(31,2), nxtPredictedPC(31,2)),
+    pcReg.pc30b
   )
 
   val memArbiter = Module(new EXUIFU_MemVisitArbiter)
@@ -229,7 +231,7 @@ class CPUCore(
     stop()
   }
 
-  ifu.io.pc.bits  := pc
+  ifu.io.pc.bits  := pcReg.get
   ifu.io.pc.valid := true.B
 
   layer.block(DifftestLayer) {
