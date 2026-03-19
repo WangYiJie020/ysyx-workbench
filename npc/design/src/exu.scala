@@ -120,7 +120,6 @@ class EXUStageCalc(
   // csrren := isCSRRS || (isCSRRW && (dinst.rd =/= 0.U)) || is_ecall || is_mret
   // csrwen := isCSRRW || (isCSRRS && (reg_v1 =/= 0.U))
 
-  // Bigger area??? why???
   csrren := isCSRRS || isCSRRW || is_ecall || is_mret
   csrwen := isCSRRW || isCSRRS
 
