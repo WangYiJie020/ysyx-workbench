@@ -287,4 +287,7 @@ class IDU(
 
   io.in.ready  := (io.out.ready && !needStall) || io.flush
   io.out.valid := io.in.valid && !needStall && !io.flush
+
+  val dbgOutInst = WireDefault(io.in.bits.code.get)
+  dontTouch(dbgOutInst)
 }
