@@ -69,8 +69,8 @@ class IFU extends Module {
     )
   )
 
-  // val dbgOutPC = WireDefault(io.out.bits.pc.get)
-  // val dbgOutInst = WireDefault(io.out.bits.code.get)
-  // dontTouch(dbgOutPC)
-  // dontTouch(dbgOutInst)
+  val dbgOutPC = WireDefault(io.out.bits.pc.get)
+  val dbgOutInst = WireDefault(io.out.bits.code.get)
+  dontTouch(dbgOutPC)
+  dontTouch(dbgOutInst)
 }
