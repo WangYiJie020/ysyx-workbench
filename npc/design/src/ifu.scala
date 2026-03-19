@@ -47,8 +47,8 @@ class IFU extends Module {
   memIO.araddr  := pc
 
   val inst = RegEnableReadNew(memIO.rdata, memIO.rvalid)
-  memIO.rready                := true.B 
-  io.out.bits.code            := inst
+  memIO.rready                := true.B
+  io.out.bits.code.raw        := inst(31, 2)
   io.out.bits.pc.pc30b        := pc(31, 2)
   io.out.bits.predictedNextPC := predNxtPC
   io.out.valid                := ((state === State.waitR || state === State.waitAR) && memIO.rvalid) || (state === State.idle && io.pc.fire && memIO.rvalid) || (state === State.waitOut)

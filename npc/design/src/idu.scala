@@ -227,7 +227,7 @@ class IDU(
 
   // alias
   val res  = io.out.bits.info
-  val inst = io.in.bits.code
+  def inst = io.in.bits.code.get
 
   val iinfo_dec = Module(new InstInfoDecoder())
   iinfo_dec.io.opcode                   := inst(6, 0)
