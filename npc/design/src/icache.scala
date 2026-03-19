@@ -55,7 +55,8 @@ object ICacheParameters {
 class ICacheBlock extends Bundle {
   val valid = Bool()
   val tag   = UInt(ICacheParameters.BLOCK_TAG_WIDTH.W)
-  val data  = UInt(ICacheParameters.BLOCK_SIZE_INBITS.W)
+  // val data  = UInt(ICacheParameters.BLOCK_SIZE_INBITS.W)
+  val data  = Vec(ICacheParameters.BLOCK_SIZE_INWORDS, Types.UWord)
   // val data  = Vec(ICacheParameters.BLOCK_SIZE_INWORDS, Types.InstCodeNoCExt)
 
   // Assume index and offset are correct
