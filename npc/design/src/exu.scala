@@ -417,11 +417,30 @@ class EXU(
 
   val aluOut = alu.io.out.bits
 
-  val isLessThanU = reg_v1 < reg_v2
-  val isLessThanS = (reg_v1.asSInt < reg_v2.asSInt)
-  val isLessThan  = Mux(func3t(1), isLessThanU, isLessThanS)
-  val branchCalc  = Mux(func3t(2), isLessThan, (reg_v1 === reg_v2))
-  val takeBranch  = Mux(func3t(0), ~branchCalc, branchCalc)
+  def calcBranchBySub = {
+    val W   = reg_v1.getWidth
+    val sub = reg_v1 - reg_v2
+
+    val isEqual = sub === 0.U
+
+    val v1_msb  = reg_v1(W - 1)
+    val v2_msb  = reg_v2(W - 1)
+    val res_msb = sub(W - 1)
+
+    val lessThan   = Mux(v1_msb === v2_msb, res_msb, Mux(func3t(1), v2_msb, v1_msb))
+    val branchCalc = Mux(func3t(2), lessThan, isEqual)
+    Mux(func3t(0), ~branchCalc, branchCalc)
+  }
+
+  def calcBranchByCompare = {
+    val isLessThanU = reg_v1 < reg_v2
+    val isLessThanS = (reg_v1.asSInt < reg_v2.asSInt)
+    val isLessThan  = Mux(func3t(1), isLessThanU, isLessThanS)
+    val branchCalc  = Mux(func3t(2), isLessThan, (reg_v1 === reg_v2))
+    Mux(func3t(0), ~branchCalc, branchCalc)
+  }
+
+  val takeBranch = calcBranchBySub
 
   val is_mret  = dinst.code === "h30200073".U
   val is_ecall = dinst.code === "h73".U
@@ -511,7 +530,7 @@ class EXU(
     )
   )
 
-  io.out.valid := io.in.valid //&& !io.flush1
+  io.out.valid := io.in.valid  // && !io.flush1
   io.in.ready  := io.out.ready // || io.flush1
 
   val lsuInfo = io.out.bits
@@ -522,10 +541,10 @@ class EXU(
   lsuInfo.storeData := reg_v2
 
   val writeBackInfo = lsuInfo.exuWriteBack
-  writeBackInfo.iid           := dinst.iid
-  writeBackInfo.gpr.en        := dinst.info.rdWrEn && io.in.valid
-  writeBackInfo.gpr.addr      := dinst.rd
-  writeBackInfo.gpr.data      := gprWrData
+  writeBackInfo.iid      := dinst.iid
+  writeBackInfo.gpr.en   := dinst.info.rdWrEn && io.in.valid
+  writeBackInfo.gpr.addr := dinst.rd
+  writeBackInfo.gpr.data := gprWrData
 
   val isMemOP = isTypLoad || isTypStore
   io.fwd := WrBackForwardInfo(io.in.valid, dinst, !isMemOP, gprWrData)
