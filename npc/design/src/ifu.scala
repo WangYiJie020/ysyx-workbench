@@ -29,7 +29,7 @@ class IFU extends Module {
   io.mem.dontCareNonLiteAR()
 
   val pcReg     = RegEnable(io.pc.bits(31,2), io.pc.fire)
-  val pc        = Mux(io.pc.fire, io.pc.bits, pcReg)
+  val pc        = Mux(io.pc.fire, io.pc.bits(31,2), pcReg)
   val predNxtPC = RegEnableReadNew(io.predictedNextPC, io.pc.fire)
   // dontTouch(pc)
   val state     = RegInit(State.idle)
