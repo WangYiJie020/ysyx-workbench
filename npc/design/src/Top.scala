@@ -167,10 +167,10 @@ class CPUCore(
   // just check the valid, sometimes IFU still fetching old wrong
   // target, if think it meets the correct target, then the wrong
   // target will be passed to IDU since that time isWrongPred is unset.
-  isIFUAckCorrectTarget := ifu.io.pc.fire && (ifu.io.pc.bits.eq(curCorrectJmpTarget))
+  isIFUAckCorrectTarget := ifu.io.pc.fire && (ifu.io.pc.bits === curCorrectJmpTarget)
 
   val isIDUMeetCorrectJmpTarget = Wire(Bool())
-  isIDUMeetCorrectJmpTarget := ifu.io.out.valid && (ifu.io.out.bits.pc.eq(curCorrectJmpTarget))
+  isIDUMeetCorrectJmpTarget := ifu.io.out.valid && (ifu.io.out.bits.pc.get === curCorrectJmpTarget)
   dontTouch(isIFUAckCorrectTarget)
   dontTouch(isIDUMeetCorrectJmpTarget)
   dontTouch(curCorrectJmpTarget)
@@ -184,12 +184,12 @@ class CPUCore(
   needFlushPipeline := (isFlushIDUReg) || isBranchGuessWrong
   dontTouch(needFlushPipeline)
 
-  pcReg.bits := Mux(
+  pcReg.pc30b := Mux(
     ifu.io.pc.ready,
     // Sometimes although jump,
     // target is near current pc and IFU just meets it
     Mux(isBranchGuessWrong && (!isIFUAckCorrectTarget), curCorrectJmpTarget(31,2), nxtPredictedPC(31,2)),
-    pcReg.bits
+    pcReg.pc30b
   )
 
   val memArbiter = Module(new EXUIFU_MemVisitArbiter)
@@ -231,7 +231,7 @@ class CPUCore(
     stop()
   }
 
-  ifu.io.pc.bits  := pcReg
+  ifu.io.pc.bits  := pcReg.get
   ifu.io.pc.valid := true.B
 
   layer.block(DifftestLayer) {

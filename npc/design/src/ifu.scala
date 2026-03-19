@@ -11,7 +11,7 @@ import chisel3.util._
 
 class IFU extends Module {
   val io = IO(new Bundle {
-    val pc              = Flipped(Decoupled(new AlignedPC))
+    val pc              = Flipped(Decoupled(Types.UWord))
     val predictedNextPC = Input(Types.PredictedTarget)
     val mem             = AXI4IO.Master
     val out             = Decoupled(new Inst)
@@ -44,12 +44,12 @@ class IFU extends Module {
 
   io.pc.ready   := (state === State.idle)
   memIO.arvalid := (state === State.waitAR) || (state === State.idle && io.pc.fire)
-  memIO.araddr  := pc.get
+  memIO.araddr  := pc
 
   val inst = RegEnableReadNew(memIO.rdata, memIO.rvalid)
-  memIO.rready                := true.B
+  memIO.rready                := true.B 
   io.out.bits.code            := inst
-  io.out.bits.pc.bits         := pc.bits
+  io.out.bits.pc.pc30b        := pc(31, 2)
   io.out.bits.predictedNextPC := predNxtPC
   io.out.valid                := ((state === State.waitR || state === State.waitAR) && memIO.rvalid) || (state === State.idle && io.pc.fire && memIO.rvalid) || (state === State.waitOut)
 

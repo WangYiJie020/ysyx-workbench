@@ -103,9 +103,8 @@ object InstType extends ChiselEnum {
 }
 
 class AlignedPC extends Bundle {
-  val bits = UInt(30.W)
-  def get   = Cat(bits, 0.U(2.W))
-  def eq(v : UInt) = bits === v(31, 2)
+  val pc30b = UInt(30.W)
+  def get   = Cat(pc30b, 0.U(2.W))
 }
 
 class Inst extends Bundle {
