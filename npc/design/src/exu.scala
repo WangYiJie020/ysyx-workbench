@@ -114,14 +114,14 @@ class EXUStageCalc(
     val csrrs = 2.U
   }
 
-  val isCSRRW = (func3t === CSROp.csrrw) && isTypSys
-  val isCSRRS = (func3t === CSROp.csrrs) && isTypSys
+  val isCSRRW = (func3t === CSROp.csrrw) // && isTypSys
+  val isCSRRS = (func3t === CSROp.csrrs) // && isTypSys
 
   // csrren := isCSRRS || (isCSRRW && (dinst.rd =/= 0.U)) || is_ecall || is_mret
   // csrwen := isCSRRW || (isCSRRS && (reg_v1 =/= 0.U))
 
   // csrren := isCSRRS || isCSRRW || is_ecall || is_mret
-  csrwen := isCSRRW || isCSRRS
+  csrwen := (isCSRRW || isCSRRS) && isTypSys
 
   when(isTypSys) {
     when(is_ecall) {
