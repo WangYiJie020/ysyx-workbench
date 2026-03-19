@@ -55,7 +55,7 @@ class ICacheBlock extends Bundle {
   val valid = Bool()
   val tag   = UInt(ICacheParameters.BLOCK_TAG_WIDTH.W)
   // val data  = UInt(ICacheParameters.BLOCK_SIZE_INBITS.W)
-  val data  = Vec(ICacheParameters.BLOCK_SIZE_INWORDS, Types.UWord)
+  val data  = Vec(ICacheParameters.BLOCK_SIZE_INWORDS, Types.InstCodeNoCExt)
 
   // Assume index and offset are correct
   def matchAddr(addr: UInt): Bool = {
@@ -102,7 +102,7 @@ class ICacheSRAM extends Module {
       mem(i).valid := false.B
     }
   }.elsewhen(io.wen) {
-    mem(io.addr).data(io.wordOffset) := io.wdataWord
+    mem(io.addr).data(io.wordOffset).raw := io.wdataWord(31, 2)
     when(io.wlast) {
       mem(io.addr).tag := io.wtag
       mem(io.addr).valid := true.B
@@ -187,7 +187,7 @@ class ICache extends Module {
   // need the rlast data, so bypass it directly instead of reading from cacheRAM
   // which is not updated
   val bypassData = (state === State.waitMem) && (cpuAddrOffset === memIOCurRdOffset)
-  io.cpu.rdata   := Mux(bypassData, io.mem.rdata, cacheRAM.io.rdata.data(cpuAddrOffset))
+  io.cpu.rdata   := Mux(bypassData, io.mem.rdata, cacheRAM.io.rdata.data(cpuAddrOffset).get)
 
   io.mem.arvalid := (state === State.sendFetch)
   io.mem.arid    := io.cpu.arid
