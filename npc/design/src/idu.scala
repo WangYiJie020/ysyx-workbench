@@ -101,8 +101,8 @@ class WrBackInfoGroup(
 
   val exu = new WrBackForwardInfo
 
-  val lsu   = new WrBackForwardInfo
-  val wbu   = new WrBackForwardInfo
+  val lsu = new WrBackForwardInfo
+  val wbu = new WrBackForwardInfo
 }
 
 class ByPassMux(
@@ -145,16 +145,16 @@ class ByPassMux(
 
   val exus2WrBackDataVaild = io.wrBackInfo.exus2.dataVaild
   val exus2WrBackData = io.wrBackInfo.exus2.data
-  */
+   */
 
-  val isConflictWithEXU = oneConflictWithWrBack(io.wrBackInfo.exu)
+  val isConflictWithEXU  = oneConflictWithWrBack(io.wrBackInfo.exu)
   val isRs1ConflictEXUS2 = conflict(io.rs1, io.wrBackInfo.exu)
   val isRs2ConflictEXUS2 = conflict(io.rs2, io.wrBackInfo.exu)
 
   val isConflictWithEXUS1 = false.B
 
   val exus2WrBackDataVaild = io.wrBackInfo.exu.dataVaild
-  val exus2WrBackData = io.wrBackInfo.exu.data
+  val exus2WrBackData      = io.wrBackInfo.exu.data
 
   // -----------
 
@@ -176,7 +176,6 @@ class ByPassMux(
   val isRdAfterWr = Wire(Bool())
   isRdAfterWr := isConflictWithEXU || isConflictWithLSU || isConflictWithWBU
   dontTouch(isRdAfterWr)
-
 
   val canRs1Bypass =
     Mux(isRs1ConflictEXUS2, exus2WrBackDataVaild, isRs1ConflictWithWBU)
@@ -253,6 +252,26 @@ class IDU(
   io.rvec.addr(1) := rs2
 
   // res.snpc := io.in.bits.pc + 4.U
+
+  val immI = Cat(Fill(21, inst(31)), inst(30, 20))
+  val immS = Cat(immI(31, 5), inst(11, 8), inst(7))
+  val immB = Cat(immI(31, 12), inst(7), immS(10, 1), 0.U(1.W))
+  val immU = Cat(inst(31, 12), 0.U(12.W))
+  val immJ = Cat(immI(31, 20), inst(19, 12), inst(20), inst(30, 21), 0.U(1.W))
+
+  val dontcareImm = Wire(Types.UWord)
+  dontcareImm := DontCare
+
+  res.imm :=
+    MuxLookup(res.fmt, dontcareImm)(
+      Seq(
+        InstFmt.imm    -> immI,
+        InstFmt.jump   -> immJ,
+        InstFmt.store  -> immS,
+        InstFmt.branch -> immB,
+        InstFmt.upper  -> immU
+      )
+    )
 
   val bypassMux = Module(new ByPassMux())
   bypassMux.io.rs1        := rs1
