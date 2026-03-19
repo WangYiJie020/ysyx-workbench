@@ -176,6 +176,8 @@ class EXUStageCalc(
     io.out.bits.takeBranch := Mux(func3t(0), ~branchCalc, branchCalc)
   }
 
+  calcBranch()
+
   // blt/bge 10x
   // bltu/bgeu 11x
   //
