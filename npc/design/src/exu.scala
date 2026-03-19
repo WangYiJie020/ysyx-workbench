@@ -68,9 +68,7 @@ class EXUStageCalc(
   io.in.ready  := io.out.ready || io.flush
   io.out.valid := io.in.valid && !io.flush
 
-  val instIMM = dinst.imm
-
-  io.out.bits.pcAddImm := dinst.pc.get + instIMM
+  io.out.bits.pcAddImm := dinst.pc.get + dinst.info.imm
   io.out.bits.dinst    := dinst
 
   // reg
@@ -79,14 +77,14 @@ class EXUStageCalc(
   val reg_v2 = dinst.info.reg2
 
   alu_in.src1 := reg_v1
-  alu_in.src2 := Mux(isFmtI, instIMM, reg_v2)
+  alu_in.src2 := Mux(isFmtI, dinst.info.imm, reg_v2)
 
   alu_in.is_imm := isFmtI
   alu_in.func3t := func3t
   alu_in.func7t := func7t
 
   io.out.bits.aluOut     := alu.io.out.bits
-  io.out.bits.reg1AddImm := reg_v1 + instIMM
+  io.out.bits.reg1AddImm := reg_v1 + dinst.info.imm
 
   // csr
 
@@ -101,7 +99,7 @@ class EXUStageCalc(
   outInfo.isMRET   := is_mret
   // outInfo.isEBREAK := is_ebreak
 
-  // val csrren    = io.csr_rvec.en
+  val csrren    = io.csr_rvec.en
   val csr_raddr = io.csr_rvec.addr
   val csr_rdata = io.csr_rvec.data
 
@@ -122,7 +120,7 @@ class EXUStageCalc(
   // csrren := isCSRRS || (isCSRRW && (dinst.rd =/= 0.U)) || is_ecall || is_mret
   // csrwen := isCSRRW || (isCSRRS && (reg_v1 =/= 0.U))
 
-  // csrren := isCSRRS || isCSRRW || is_ecall || is_mret
+  csrren := isCSRRS || isCSRRW || is_ecall || is_mret
   csrwen := isCSRRW || isCSRRS
 
   when(isTypSys) {
@@ -156,45 +154,15 @@ class EXUStageCalc(
     csr_wdata := DontCare
   }
 
-  // More Area???
+  // blt/bge 10x
+  // bltu/bgeu 11x
   //
-  // EXU Area smaller, but whole module Area bigger
-  def calcBranchBySub() = {
-    val W   = reg_v1.getWidth
-    val sub = reg_v1 - reg_v2
-
-    val isEqual = sub === 0.U
-
-    val v1_msb  = reg_v1(W - 1)
-    val v2_msb  = reg_v2(W - 1)
-    val res_msb = sub(W - 1)
-
-    // func3t[1] == 0 -> signed cmp
-    //
-    // if has same sign, then check the sign of the result
-    // else different sign,
-    //   if signed cmp, then v1 < v2 if v1 is neg and v2 is pos
-    //   if unsigned cmp, then v1 < v2 if v2 msb is 1 (v2 is large since unsigned)
-    val lessThan = Mux(v1_msb === v2_msb, res_msb, Mux(func3t(1), v2_msb, v1_msb))
-
-    val branchCalc = Mux(func3t(2), lessThan, isEqual)
-    io.out.bits.takeBranch := Mux(func3t(0), ~branchCalc, branchCalc)
-  }
-
-  def calcBranchByCompare() = {
-
-    // blt/bge 10x
-    // bltu/bgeu 11x
-    //
-    // only when func3t[2] == 0 -> eq/ne
-    val isLessThanU = reg_v1 < reg_v2
-    val isLessThanS = (reg_v1.asSInt < reg_v2.asSInt)
-    val isLessThan  = Mux(func3t(1), isLessThanU, isLessThanS)
-    val branchCalc  = Mux(func3t(2), isLessThan, (reg_v1 === reg_v2))
-    io.out.bits.takeBranch := Mux(func3t(0), ~branchCalc, branchCalc)
-  }
-
-  calcBranchBySub()
+  // only when func3t[2] == 0 -> eq/ne
+  val isLessThanU = reg_v1 < reg_v2
+  val isLessThanS = (reg_v1.asSInt < reg_v2.asSInt)
+  val isLessThan  = Mux(func3t(1), isLessThanU, isLessThanS)
+  val branchCalc  = Mux(func3t(2), isLessThan, (reg_v1 === reg_v2))
+  io.out.bits.takeBranch := Mux(func3t(0), ~branchCalc, branchCalc)
 }
 
 class EXUStageChooseNxt(
@@ -241,8 +209,8 @@ class EXUStageChooseNxt(
   // writeBackInfo.csr <> io.in.bits.csrWr
   // writeBackInfo.is_ebreak     := io.in.bits.isEBREAK
 
-  writeBackInfo.csr.en      := io.in.bits.csrWr.en
-  writeBackInfo.csr.addr    := io.in.bits.csrWr.addr
+  writeBackInfo.csr.en   := io.in.bits.csrWr.en
+  writeBackInfo.csr.addr := io.in.bits.csrWr.addr
   writeBackInfo.csr.data30b := io.in.bits.csrWr.data(31, 2)
 
   writeBackInfo.csr_ecallflag := io.in.bits.isECALL
@@ -263,7 +231,7 @@ class EXUStageChooseNxt(
   writeBackInfo.gpr.data := Mux1H(
     Seq(
       isTypArithmetic         -> io.in.bits.aluOut,
-      isTypLUI                -> io.in.bits.dinst.imm,
+      isTypLUI                -> dinst.info.imm,
       isTypAUIPC              -> pcAddImm,
       (isTypJALR || isTypJAL) -> snpc,
       io.in.bits.isTypSys     -> sysInstWrBackData

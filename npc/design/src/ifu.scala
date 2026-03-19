@@ -28,8 +28,6 @@ class IFU extends Module {
   io.mem.dontCareB()
   io.mem.dontCareNonLiteAR()
 
-  // I dont know why use 32b PC will have smaller area than 30b PC for
-  // full module area
   val pcReg     = RegEnable(io.pc.bits, io.pc.fire)
   val pc        = Mux(io.pc.fire, io.pc.bits, pcReg)
   val predNxtPC = RegEnableReadNew(io.predictedNextPC, io.pc.fire)

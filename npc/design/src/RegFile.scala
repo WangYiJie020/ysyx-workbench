@@ -19,7 +19,8 @@ class RegFileIO(AddrWidth: Int, data_width: Int = Types.BitWidth.word) {
     val addr = Input(Vec(N, _AddrT))
     val data = Output(Vec(N, _DataT))
   }
-  class SingleReadIO       extends Bundle {
+  class SingleReaIO       extends Bundle {
+    val en   = Input(Bool())
     val addr = Input(_AddrT)
     val data = Output(_DataT)
   }
@@ -30,7 +31,7 @@ class RegFileIO(AddrWidth: Int, data_width: Int = Types.BitWidth.word) {
   }
   object RX {
     def VecRead(N: Int) = new VecReadIO(N)
-    def SingleRead = new SingleReadIO()
+    def SingleRead = new SingleReaIO()
     def Write      = new WriteIO()
   }
   object TX {
@@ -132,8 +133,7 @@ class ControlStatusRegisterFile extends Module {
   // val mcause = Reg(UInt(4.W))  // mcause
   val mtvec = Reg(UInt(30.W))  // mtvec
 
-  // when(io.read.en) 
-  {
+  when(io.read.en) {
     val addrHi2b = io.read.addr(11, 10)
     val addrLo2b = io.read.addr(1, 0)
 
@@ -184,11 +184,10 @@ class ControlStatusRegisterFile extends Module {
     //     CSRAddr.marchid   -> march_id
     //   )
     // )
+  }.otherwise {
+    // Chisel will optimize DontCare to remove check read_en logic
+    io.read.data := DontCare
   }
-  //   .otherwise {
-  //   // Chisel will optimize DontCare to remove check read_en logic
-  //   io.read.data := DontCare
-  // }
 
   val isWrAddr3XX = io.write.addr(11, 10) === 0.U
   // h341 -> 0011 .... 0001

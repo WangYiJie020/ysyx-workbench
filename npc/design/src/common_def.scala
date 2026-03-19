@@ -39,17 +39,14 @@ object AddrSpace {
   }
 
   def needSkipDifftestGroup = Seq(
-    SERIAL,
-    SPI,
-    CLINT,
-    VGA,
-    PS2
+    SERIAL,SPI,CLINT,VGA,PS2
   )
 }
 
 case class CPUParameters(
   gprAddrWidth: Int = 4,
-  skipDifftestAddrs: Seq[(UInt, UInt)] = AddrSpace.needSkipDifftestGroup) {
+  skipDifftestAddrs: Seq[(UInt, UInt)] = AddrSpace.needSkipDifftestGroup
+) {
   def GPRAddr = UInt(gprAddrWidth.W)
   def GPRNum  = 1 << gprAddrWidth
 }
@@ -102,9 +99,9 @@ object InstType extends ChiselEnum {
   }
 }
 
-class AlignedPC extends Bundle {
+class AlignedPC extends Bundle{
   val pc30b = UInt(30.W)
-  def get   = Cat(pc30b, 0.U(2.W))
+  def get = Cat(pc30b, 0.U(2.W))
 }
 
 class Inst extends Bundle {
@@ -119,9 +116,7 @@ class InstMetaInfo extends Bundle {
   val typ = InstType()
 }
 
-class DecodedInstInfo(
-  implicit p: CPUParameters)
-    extends InstMetaInfo {
+class DecodedInstInfo(implicit p : CPUParameters) extends InstMetaInfo {
   val imm = Types.UWord
   // val rd  = p.GPRAddr
 
@@ -133,12 +128,9 @@ class DecodedInstInfo(
   // val snpc = Types.UWord
 }
 
-class DecodedInst(
-  implicit p: CPUParameters)
-    extends Inst {
+class DecodedInst(implicit p : CPUParameters) extends Inst {
   val info = new DecodedInstInfo
-  def rd   = code(11, 7)
-  def imm = info.imm
+  def rd = code(11, 7)
 }
 
 // update reg when enable,
