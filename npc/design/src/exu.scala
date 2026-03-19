@@ -99,7 +99,7 @@ class EXUStageCalc(
   outInfo.isMRET   := is_mret
   // outInfo.isEBREAK := is_ebreak
 
-  val csrren    = io.csr_rvec.en
+  // val csrren    = io.csr_rvec.en
   val csr_raddr = io.csr_rvec.addr
   val csr_rdata = io.csr_rvec.data
 
@@ -120,7 +120,7 @@ class EXUStageCalc(
   // csrren := isCSRRS || (isCSRRW && (dinst.rd =/= 0.U)) || is_ecall || is_mret
   // csrwen := isCSRRW || (isCSRRS && (reg_v1 =/= 0.U))
 
-  csrren := isCSRRS || isCSRRW || is_ecall || is_mret
+  // csrren := isCSRRS || isCSRRW || is_ecall || is_mret
   csrwen := isCSRRW || isCSRRS
 
   when(isTypSys) {
@@ -222,7 +222,7 @@ class EXUStageChooseNxt(
   // need pc+imm:
   // auipc, jal(r), branch
   val pcAddImm = io.in.bits.pcAddImm
-  val snpc     = (io.in.bits.dinst.pc.pc30b + 1.U) ## 0.U(2.W)
+  val snpc     = io.in.bits.dinst.pc.pc30b + 1.U
 
   writeBackInfo.gpr.en   := io.in.bits.gprWeEn
   writeBackInfo.gpr.addr := dinst.rd
