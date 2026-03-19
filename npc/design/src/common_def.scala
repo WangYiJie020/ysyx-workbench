@@ -113,7 +113,8 @@ class InstMetaInfo extends Bundle {
 
 class DecodedInstInfo(implicit p : CPUParameters) extends InstMetaInfo {
   val imm = Types.UWord
-  val rd  = p.GPRAddr
+  // val rd  = p.GPRAddr
+  def rd = imm(11, 7)
 
   val rdWrEn = Bool()
 
