@@ -13,7 +13,7 @@ class ALUInput extends Bundle {
   val src2   = Types.UWord
 }
 
-class ALU_Trival extends Module {
+class ALU extends Module {
   val io = IO(new Bundle {
     val in  = Flipped(Decoupled(new ALUInput))
     val out = Decoupled(Types.UWord)
@@ -59,7 +59,7 @@ class ALU_Trival extends Module {
 
 }
 
-class ALU extends Module {
+class ALU_try_area extends Module {
   val io = IO(new Bundle {
     val in  = Flipped(Decoupled(new ALUInput))
     val out = Decoupled(Types.UWord)
