@@ -184,12 +184,12 @@ class CPUCore(
   needFlushPipeline := (isFlushIDUReg) || isBranchGuessWrong
   dontTouch(needFlushPipeline)
 
-  pcReg := Mux(
+  pcReg.pc30b := Mux(
     ifu.io.pc.ready,
     // Sometimes although jump,
     // target is near current pc and IFU just meets it
     Mux(isBranchGuessWrong && (!isIFUAckCorrectTarget), curCorrectJmpTarget(31,2), nxtPredictedPC(31,2)),
-    pcReg
+    pcReg.pc30b
   )
 
   val memArbiter = Module(new EXUIFU_MemVisitArbiter)
