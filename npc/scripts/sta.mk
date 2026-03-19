@@ -4,7 +4,7 @@ $(shell mkdir -p $(STA_OUT_DIR))
 
 STA_VSRCS = $(abspath $(SYNTH_VSRCS))
 
-STA_FREQ_MHZ = 500
+STA_FREQ_MHZ ?= 500
 
 STA_DEST ?= 
 ifeq ($(STA_DEST),)
