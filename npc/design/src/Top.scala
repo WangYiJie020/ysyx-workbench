@@ -168,7 +168,7 @@ class CPUCore(
   isIFUAckCorrectTarget := ifu.io.pc.fire && (ifu.io.pc.bits === curCorrectJmpTarget)
 
   val isIDUMeetCorrectJmpTarget = Wire(Bool())
-  isIDUMeetCorrectJmpTarget := ifu.io.out.valid && (ifu.io.out.bits.pc === curCorrectJmpTarget)
+  isIDUMeetCorrectJmpTarget := ifu.io.out.valid && (ifu.io.out.bits.pc.get === curCorrectJmpTarget)
   dontTouch(isIFUAckCorrectTarget)
   dontTouch(isIDUMeetCorrectJmpTarget)
   dontTouch(curCorrectJmpTarget)

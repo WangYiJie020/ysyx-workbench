@@ -99,9 +99,14 @@ object InstType extends ChiselEnum {
   }
 }
 
+class AlignedPC extends Bundle{
+  val pc30b = UInt(30.W)
+  def get = Cat(pc30b, 0.U(2.W))
+}
+
 class Inst extends Bundle {
   val code            = Output(Types.UWord)
-  val pc              = Output(Types.UWord)
+  val pc              = Output(new AlignedPC())
   val iid             = Output(Types.InstID)
   val predictedNextPC = Output(Types.PredictedTarget)
 }
