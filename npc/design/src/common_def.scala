@@ -102,13 +102,24 @@ object InstType extends ChiselEnum {
   }
 }
 
+class InstCodeNoCExt extends Bundle {
+  // no support for compressed instruction,
+  // the 2 least significant bits of instruction code are always 11b
+  val raw = UInt(30.W)
+  def get  = Cat(raw, "b11".U(2.W))
+  def eq(that: UInt) = this.get === that
+
+  def func3t = this.get(14, 12)
+  def func7t = this.get(31, 25)
+}
+
 class AlignedPC extends Bundle {
   val pc30b = UInt(30.W)
   def get   = Cat(pc30b, 0.U(2.W))
 }
 
 class Inst extends Bundle {
-  val code            = Output(Types.UWord)
+  val code            = Output(new InstCodeNoCExt())
   val pc              = Output(new AlignedPC())
   val iid             = Output(Types.InstID)
   val predictedNextPC = Output(Types.PredictedTarget)
@@ -137,7 +148,7 @@ class DecodedInst(
   implicit p: CPUParameters)
     extends Inst {
   val info = new DecodedInstInfo
-  def rd   = code(11, 7)
+  def rd   = code.get(11, 7)
   def imm = info.imm
   // def imm  = {
   //   val inst = code

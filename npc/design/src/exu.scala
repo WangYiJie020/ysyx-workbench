@@ -383,8 +383,8 @@ class EXU(
   })
 
   val dinst  = io.in.bits
-  val func3t = dinst.code(14, 12)
-  val func7t = dinst.code(31, 25)
+  val func3t = dinst.code.func3t
+  val func7t = dinst.code.func7t
   val imm    = dinst.imm
   val pc     = dinst.pc.get
 
@@ -450,8 +450,8 @@ class EXU(
 
   val takeBranch = calcBranchByCompare
 
-  val is_mret  = dinst.code === "h30200073".U
-  val is_ecall = dinst.code === "h73".U
+  val is_mret  = dinst.code.eq("h30200073".U)
+  val is_ecall = dinst.code.eq("h73".U)
 
   object CSROp {
     val csrrw = 1.U
@@ -481,7 +481,7 @@ class EXU(
       csrWr.addr       := DontCare
       csrWrData        := DontCare
     }.otherwise {
-      val csrAddr = dinst.code(31, 20)
+      val csrAddr = dinst.code.get(31, 20)
       io.csr_rvec.addr := csrAddr
       // csrWr.en         := (isCSRRW || (isCSRRS && (reg_v1 =/= 0.U)))
       csrWr.en         := isCSRRW || isCSRRS
@@ -589,6 +589,6 @@ class EXUForDifftest(
   outInfo.isStore  := InstType.hasSame(io.in.bits.info.typ, InstType.store)
   outInfo.pc       := io.actual.pc
   outInfo.nxtPC    := io.actual.nxtPC
-  outInfo.isEBreak := io.in.bits.code === "h00100073".U
+  outInfo.isEBreak := io.in.bits.code.eq("h00100073".U)
   outInfo.destAddr := io.actual.memAddr
 }
