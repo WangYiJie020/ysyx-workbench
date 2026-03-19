@@ -406,16 +406,24 @@ class EXU(
   val reg_v2 = dinst.info.reg2
 
   val alu = Module(new ALU)
-  alu.io.in.valid  := true.B
-  alu.io.out.ready := true.B
 
-  alu.io.in.bits.src1   := reg_v1
-  alu.io.in.bits.src2   := Mux(isFmtI, imm, reg_v2)
-  alu.io.in.bits.is_imm := isFmtI
-  alu.io.in.bits.func3t := func3t
-  alu.io.in.bits.func7t := func7t
+  alu.io.in.src1   := reg_v1
+  alu.io.in.src2   := Mux(isFmtI, imm, reg_v2)
+  alu.io.in.is_imm := isFmtI
+  alu.io.in.func3t := func3t
+  alu.io.in.func7t := func7t
 
-  val aluOut = alu.io.out.bits
+  val aluOut = alu.io.out
+
+  alu.io.isBranch := isTypBranch
+
+  def calcBranchByALU = {
+    val isLessThanU = alu.io.sltuRes
+    val isLessThanS = alu.io.sltRes
+    val isLessThan  = Mux(func3t(1), isLessThanU, isLessThanS)
+    val branchCalc  = Mux(func3t(2), isLessThan, (reg_v1 === reg_v2))
+    Mux(func3t(0), ~branchCalc, branchCalc)
+  }
 
   def calcBranchBySub = {
     val W   = reg_v1.getWidth
@@ -440,7 +448,7 @@ class EXU(
     Mux(func3t(0), ~branchCalc, branchCalc)
   }
 
-  val takeBranch = calcBranchBySub
+  val takeBranch = calcBranchByCompare
 
   val is_mret  = dinst.code === "h30200073".U
   val is_ecall = dinst.code === "h73".U
