@@ -510,8 +510,8 @@ class EXU(
     )
   )
 
-  io.out.valid := io.in.valid && !io.flush1
-  io.in.ready  := io.out.ready || io.flush1
+  io.out.valid := io.in.valid //&& !io.flush1
+  io.in.ready  := io.out.ready // || io.flush1
 
   val lsuInfo = io.out.bits
   lsuInfo.destAddr  := reg1AddImm
@@ -528,8 +528,6 @@ class EXU(
 
   val isMemOP = isTypLoad || isTypStore
   io.fwd := WrBackForwardInfo(io.in.valid, dinst, !isMemOP, gprWrData)
-
-
 
   val dbgIsBranch = WireDefault(isTypBranch)
   val dbgIsJALR   = WireDefault(isTypJALR)
