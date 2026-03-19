@@ -68,7 +68,9 @@ class EXUStageCalc(
   io.in.ready  := io.out.ready || io.flush
   io.out.valid := io.in.valid && !io.flush
 
-  io.out.bits.pcAddImm := dinst.pc.get + dinst.info.imm
+  val instIMM = dinst.imm
+
+  io.out.bits.pcAddImm := dinst.pc.get + instIMM
   io.out.bits.dinst    := dinst
 
   // reg
@@ -77,14 +79,14 @@ class EXUStageCalc(
   val reg_v2 = dinst.info.reg2
 
   alu_in.src1 := reg_v1
-  alu_in.src2 := Mux(isFmtI, dinst.info.imm, reg_v2)
+  alu_in.src2 := Mux(isFmtI, instIMM, reg_v2)
 
   alu_in.is_imm := isFmtI
   alu_in.func3t := func3t
   alu_in.func7t := func7t
 
   io.out.bits.aluOut     := alu.io.out.bits
-  io.out.bits.reg1AddImm := reg_v1 + dinst.info.imm
+  io.out.bits.reg1AddImm := reg_v1 + instIMM
 
   // csr
 
@@ -155,6 +157,8 @@ class EXUStageCalc(
   }
 
   // More Area???
+  //
+  // EXU Area smaller, but whole module Area bigger
   def calcBranchBySub() = {
     val W   = reg_v1.getWidth
     val sub = reg_v1 - reg_v2
@@ -177,15 +181,20 @@ class EXUStageCalc(
     io.out.bits.takeBranch := Mux(func3t(0), ~branchCalc, branchCalc)
   }
 
-  // blt/bge 10x
-  // bltu/bgeu 11x
-  //
-  // only when func3t[2] == 0 -> eq/ne
-  val isLessThanU = reg_v1 < reg_v2
-  val isLessThanS = (reg_v1.asSInt < reg_v2.asSInt)
-  val isLessThan  = Mux(func3t(1), isLessThanU, isLessThanS)
-  val branchCalc  = Mux(func3t(2), isLessThan, (reg_v1 === reg_v2))
-  io.out.bits.takeBranch := Mux(func3t(0), ~branchCalc, branchCalc)
+  def calcBranchByCompare() = {
+
+    // blt/bge 10x
+    // bltu/bgeu 11x
+    //
+    // only when func3t[2] == 0 -> eq/ne
+    val isLessThanU = reg_v1 < reg_v2
+    val isLessThanS = (reg_v1.asSInt < reg_v2.asSInt)
+    val isLessThan  = Mux(func3t(1), isLessThanU, isLessThanS)
+    val branchCalc  = Mux(func3t(2), isLessThan, (reg_v1 === reg_v2))
+    io.out.bits.takeBranch := Mux(func3t(0), ~branchCalc, branchCalc)
+  }
+
+  calcBranchBySub()
 }
 
 class EXUStageChooseNxt(
@@ -254,7 +263,7 @@ class EXUStageChooseNxt(
   writeBackInfo.gpr.data := Mux1H(
     Seq(
       isTypArithmetic         -> io.in.bits.aluOut,
-      isTypLUI                -> dinst.info.imm,
+      isTypLUI                -> dinst.imm,
       isTypAUIPC              -> pcAddImm,
       (isTypJALR || isTypJAL) -> snpc,
       io.in.bits.isTypSys     -> sysInstWrBackData
