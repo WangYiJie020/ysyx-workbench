@@ -421,7 +421,7 @@ class EXU(
     val isLessThanU = alu.io.sltuRes
     val isLessThanS = alu.io.sltRes
     val isLessThan  = Mux(func3t(1), isLessThanU, isLessThanS)
-    val branchCalc  = Mux(func3t(2), isLessThan, (reg_v1 === reg_v2))
+    val branchCalc  = Mux(func3t(2), isLessThan, alu.io.addSubRes === 0.U)
     Mux(func3t(0), ~branchCalc, branchCalc)
   }
 
