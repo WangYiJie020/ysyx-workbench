@@ -22,7 +22,11 @@ class BTBEntry extends Bundle {
   val valid  = Bool()
   val isJAL  = Bool()
   val tag    = UInt(BTBParameters.TAG_WIDTH.W)
-  val target = Types.UWord
+  // val target = Types.UWord
+
+  // 12bit target offset, since the target is always 4-byte aligned, 
+  // the lowest 2 bits are always 0
+  val targetOffset = UInt(10.W)
 }
 
 class BranchTargetBuffer extends Module {
@@ -49,7 +53,7 @@ class BranchTargetBuffer extends Module {
   val queryEntry = entries(queryIndex)
 
   io.query.hit    := queryEntry.valid && (queryEntry.tag === queryTag)
-  io.query.target := queryEntry.target
+  io.query.target := io.query.addr + (queryEntry.targetOffset ## 0.U(2.W)).asSInt.pad(32).asUInt
   io.query.isJAL  := queryEntry.isJAL
 
   // Update logic
@@ -57,9 +61,11 @@ class BranchTargetBuffer extends Module {
     val updateTag   = BTBParameters.extractTag(io.update.addr)
     val updateIndex = BTBParameters.extractIndex(io.update.addr)
 
+    val b12Offset = (io.update.target - io.update.addr)
+
     entries(updateIndex).valid  := true.B
     entries(updateIndex).tag    := updateTag
-    entries(updateIndex).target := io.update.target
+    entries(updateIndex).targetOffset := b12Offset(11, 2)
     entries(updateIndex).isJAL  := io.update.isJAL
   }
 }
