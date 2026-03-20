@@ -53,7 +53,7 @@ class BranchTargetBuffer extends Module {
   val queryEntry = entries(queryIndex)
 
   io.query.hit    := queryEntry.valid && (queryEntry.tag === queryTag)
-  io.query.target := io.query.addr + (queryEntry.targetOffset ## 0.U(2.W)).pad(32).asUInt
+  io.query.target := io.query.addr + (queryEntry.targetOffset ## 0.U(2.W)).asSInt.pad(32).asUInt
   io.query.isJAL  := queryEntry.isJAL
 
   // Update logic
