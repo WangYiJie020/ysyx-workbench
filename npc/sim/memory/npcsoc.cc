@@ -63,11 +63,14 @@ void init_mem(void *img, const sim_config &cfg) {
 }
 
 mem_region_data_span_vec get_mem_regions_need_init_difftest(){
+	// since init pc is set to 0x30000000, sdb_init only init difftest with
+	// the dummy flash region, so the pmem region need to be inited by
+	// tell sdb need to init by this callback explicitly
 	return {mem_region_data_span{
-		.name = _dummy_flash_ptr->name,
-		.host_base = _dummy_flash_ptr->base(),
-		.size = _dummy_flash_ptr->actualSizeInBytes,
-		.data = _dummy_flash_ptr->data,
+		.name = _pmem_ptr->name,
+		.host_base = _pmem_ptr->base(),
+		.size = _pmem_ptr->actualSizeInBytes,
+		.data = _pmem_ptr->data,
 	}};
 }
 #endif
