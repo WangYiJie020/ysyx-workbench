@@ -150,6 +150,8 @@ void *kmemcpy(void *out, const void *in, size_t n) {
 	char* bout = (char *)out;
 	const char* bin = (const char *)in;
 
+	assert(0);
+
 	uint32_t outHeadUnalignedBytes = (uintptr_t)out & 0x3;
 	uint32_t inHeadUnalignedBytes = (uintptr_t)in & 0x3;
 	if (outHeadUnalignedBytes == inHeadUnalignedBytes) {
