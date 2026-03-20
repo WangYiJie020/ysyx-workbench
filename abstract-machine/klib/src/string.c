@@ -113,7 +113,16 @@ void *memmove(void *dst, const void *src, size_t n) {
   return dst;
 }
 
-void *kmemcpy(void *out, const void *in, size_t n) {
+static inline void aligned_memcpy(uint32_t *dst, const uint32_t *src, size_t nWord) {
+	uint32_t* end = &dst[nWord];
+	while (dst != end) {
+		*dst = *src;
+		dst++;
+		src++;
+	}
+}
+
+static void byte_memcpy(char *out, const char *in, size_t n) {
   const char *ibeg = in;
   char *obeg = out;
   const char *iend = ibeg + n;
@@ -123,6 +132,40 @@ void *kmemcpy(void *out, const void *in, size_t n) {
     ibeg++;
     obeg++;
   }
+}
+
+void *kmemcpy(void *out, const void *in, size_t n) {
+	if(n == 0) return out;
+	if (n <= 4) {
+		char *ob = (char *)out;
+		const char *ib = (const char *)in;
+		while (n--) {
+			*ob = *ib;
+			ob++;
+			ib++;
+		}
+		return out;
+	}
+	uint32_t nWord = n >> 2;
+	char* bout = (char *)out;
+	const char* bin = (const char *)in;
+
+	uint32_t outHeadUnalignedBytes = (uintptr_t)out & 0x3;
+	uint32_t inHeadUnalignedBytes = (uintptr_t)in & 0x3;
+	if (outHeadUnalignedBytes == inHeadUnalignedBytes) {
+		if (outHeadUnalignedBytes) {
+			byte_memcpy(bout, bin, outHeadUnalignedBytes);
+			bout += outHeadUnalignedBytes;
+			bin += outHeadUnalignedBytes;
+		}
+		aligned_memcpy((uint32_t *)bout, (const uint32_t *)bin, nWord);
+		bout += nWord;
+		bin += nWord;
+		uint32_t tailBytes = n & 0x3;
+		byte_memcpy(bout, bin, tailBytes);
+	} else {
+		byte_memcpy(bout, bin, n);
+	}
   return out;
 }
 
