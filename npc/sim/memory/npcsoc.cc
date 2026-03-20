@@ -1,15 +1,19 @@
 #include "mem.hpp"
 #include <cstdint>
+#include <fstream>
 
 #ifdef SIM_ARCH_NPC
 
 static std::shared_ptr<direct_mapped_mem> _pmem_ptr;
+// only jmp to pmem instructions
+static std::shared_ptr<direct_mapped_mem> _dummy_flash_ptr;
 
 mem_region_group_t &get_mem_regions() {
   static mem_region_group_t mem_regions;
   if (mem_regions.empty()) {
-    if (_pmem_ptr) {
+    if (_pmem_ptr && _dummy_flash_ptr) {
       mem_regions.push_back(*_pmem_ptr);
+			mem_regions.push_back(*_dummy_flash_ptr);
     } else {
       spdlog::warn("try to get mem regions of npc before init, returning empty "
                    "region list");
@@ -28,6 +32,23 @@ void init_mem(void *img, const sim_config &cfg) {
           .Memory.data());
   _pmem_ptr->copy_from(img, cfg.img_size);
 
+	_dummy_flash_ptr = std::make_shared<direct_mapped_mem>(
+			0x30000000u, 0x40000000u, "dummy_flash", 1024,
+			get_dut()
+					->TestSoC->vlSymsp->TOP__TestSoC__devices__startupROM__mem__mem_ext
+					.Memory.data());
+
+	std::fstream dummy_flash_file("jmpROM/build/jmp.bin", std::ios::in | std::ios::binary);
+	if (!dummy_flash_file.is_open()) {
+		spdlog::error("failed to open dummy flash file jmpROM/build/jmp.bin");
+	} else {
+		dummy_flash_file.read((char *)_dummy_flash_ptr->data, 1024);
+		size_t bytes_read = dummy_flash_file.gcount();
+		spdlog::info("read {} bytes from dummy flash file", bytes_read);
+		dummy_flash_file.close();
+	}
+
+
   // auto pmemDataPtr = memcpy(pmemDataPtr, img, cfg.img_size);
 
   //   // memset the ASAN shadow memory to zero
@@ -42,6 +63,11 @@ void init_mem(void *img, const sim_config &cfg) {
 }
 
 mem_region_data_span_vec get_mem_regions_need_init_difftest(){
-	return {};
+	return {mem_region_data_span{
+		.name = _dummy_flash_ptr->name,
+		.host_base = _dummy_flash_ptr->base(),
+		.size = _dummy_flash_ptr->actualSizeInBytes,
+		.data = _dummy_flash_ptr->data,
+	}};
 }
 #endif
