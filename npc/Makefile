@@ -120,6 +120,11 @@ ifneq ($(MOLD_EXISTS),)
   LDFLAGS += -fuse-ld=mold
 endif
 
+NPC_STARTUP_BIN = ./jmpROM/build/jmp.bin
+$(NPC_STARTUP_BIN):
+	@echo "# Build NPC startup binary"
+	@$(MAKE) -C ./jmpROM
+
 $(SIM_BIN): $(SIM_DEP_LIBS_BUILD_DONE) $(CHISEL2V_DONE) $(SIM_VSRCS) $(SIM_CSRCS) $(ARCHIVES) $(SIM_HEADERS) $(VERILATOR_CONTROL_FILE)
 ifndef IN_LOCK
 	@+flock $(SIM_BIN).lock $(MAKE) $@ IN_LOCK=1
@@ -177,7 +182,7 @@ clean-bin:
 .PHONY: test help reformat checkformat clean
 
 ARGS?=
-sim: $(SIM_BIN) 
+sim: $(SIM_BIN) $(NPC_STARTUP_BIN)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	@echo "=== ENV ==="
 	@echo "VSIM_OPT=$(VSIM_OPT)"
@@ -197,7 +202,7 @@ $(IVERILOG_SIM_FILE): verilog $(IVERILOG_SIM_VSRCS)
 	@echo "# Process verilog files with iverilog"
 	$(IVERILOG) -o $(IVERILOG_SIM_FILE) $(IVERILOG_SIM_VSRCS)
 
-sim-iverilog-img-hex: $(IMG)
+sim-iverilog-img-hex: $(IMG) $(NPC_STARTUP_BIN)
 	@echo "# Generate verilog hex file for iverilog sim"
 	@echo "IMG = $(IMG)"
 	objcopy -O verilog --verilog-data-width=4 -I binary --reverse-bytes=4 $(IMG) $(BUILD_DIR)/npcmem_init.hex

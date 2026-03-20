@@ -52,11 +52,6 @@ object Elaborate extends App {
     s"$emitRootDir/riscv32"
   )
 
-  println("Generating NPC startup ROM hex file...")
-  val genNPCStartupROMHex = "make -C jmpROM".!
-  if (genNPCStartupROMHex != 0) sys.exit(genNPCStartupROMHex)
-  println("Finish generating NPC startup ROM hex file.")
-
   emit(new TestSoC(new npc.NPCDevices), s"$emitRootDir/testsoc/npc")
   emit(new TestSoC(new jyd.JYDDevices), s"$emitRootDir/testsoc/jyd")
 }
