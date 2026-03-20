@@ -103,8 +103,9 @@ class CPUCore(
 
   lsu.io.mcycle64 := csrs.io.mcycle64
 
-  val resetPCProvider = Module(new ysyx_25100261_ResetPCProvider)
-  val INIT_PC         = resetPCProvider.io.resetPC
+  // val resetPCProvider = Module(new ysyx_25100261_ResetPCProvider)
+  // val INIT_PC         = resetPCProvider.io.resetPC
+  val INIT_PC = p.resetVector
 
   // val pc             = RegInit(INIT_PC)
   val pcReg = RegInit(INIT_PC(31,2).asTypeOf(new AlignedPC))

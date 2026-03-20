@@ -32,6 +32,8 @@ object AddrSpace {
 
   val SOC = ("h0f000000".U(32.W), "hffffffff".U(32.W))
 
+  val FLASH = ("h30000000".U(32.W), "h3fffffff".U(32.W))
+
   val NPCMEM = ("h80000000".U(32.W), "h8fffffff".U(32.W))
 
   def inRng(addr: UInt, rng: (UInt, UInt)): Bool = {
@@ -48,8 +50,9 @@ object AddrSpace {
 }
 
 case class CPUParameters(
-  gprAddrWidth: Int = 4,
-  skipDifftestAddrs: Seq[(UInt, UInt)] = AddrSpace.needSkipDifftestGroup) {
+  gprAddrWidth:      Int = 4,
+  skipDifftestAddrs: Seq[(UInt, UInt)] = AddrSpace.needSkipDifftestGroup,
+  resetVector: UInt = "h30000000".U(32.W)) {
   def GPRAddr = UInt(gprAddrWidth.W)
   def GPRNum  = 1 << gprAddrWidth
 }
@@ -108,7 +111,7 @@ class InstCodeNoCExt extends Bundle {
   // no support for compressed instruction,
   // the 2 least significant bits of instruction code are always 11b
   val raw = UInt(30.W)
-  def get  = Cat(raw, "b11".U(2.W))
+  def get = Cat(raw, "b11".U(2.W))
   def eq(that: UInt) = this.get === that
 
   def func3t = this.get(14, 12)
@@ -151,7 +154,7 @@ class DecodedInst(
     extends Inst {
   val info = new DecodedInstInfo
   def rd   = code.get(11, 7)
-  def imm = info.imm
+  def imm  = info.imm
   // def imm  = {
   //   val inst = code
   //
