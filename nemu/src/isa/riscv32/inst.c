@@ -126,7 +126,7 @@ static int decode_exec(Decode *s) {
 
   R(0) = 0; // reset $zero to 0
 
-	printf("pc = %08x -> %08x\n", s->pc, s->dnpc);
+	printf("pc = %08x -> %08x\n by inst = %08x\n", s->pc, s->dnpc, s->isa.inst);
 
   return 0;
 }
