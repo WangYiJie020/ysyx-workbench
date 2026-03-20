@@ -14,6 +14,11 @@ void putch(char ch) {
   outb(SERIAL_PORT, ch);
 }
 
+// not supported yet
+char try_getch() {
+	return 0xff;
+}
+
 void halt(int code) {
   nemu_trap(code);
 

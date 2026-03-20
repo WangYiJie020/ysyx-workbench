@@ -68,7 +68,7 @@ object Types {
 
   def InstID = UInt(BitWidth.inst_id.W)
 
-  def PredictedTarget = if (Config.useBTBAndBP) new AlignedPC else UInt(0.W)
+  def PredictedTarget = if (Config.useBTBAndBP) UWord else UInt(0.W)
 
   def InstCodeNoCExt = new InstCodeNoCExt
 
