@@ -24,9 +24,9 @@ class BTBEntry extends Bundle {
   val tag    = UInt(BTBParameters.TAG_WIDTH.W)
   // val target = Types.UWord
 
-  // 12bit target offset, since the target is always 4-byte aligned, 
+  // 20bit target offset, since the target is always 4-byte aligned, 
   // the lowest 2 bits are always 0
-  val targetOffset = UInt(10.W)
+  val targetOffset = UInt(18.W)
 }
 
 class BranchTargetBuffer extends Module {
@@ -65,7 +65,7 @@ class BranchTargetBuffer extends Module {
 
     entries(updateIndex).valid  := true.B
     entries(updateIndex).tag    := updateTag
-    entries(updateIndex).targetOffset := b12Offset(11, 2)
+    entries(updateIndex).targetOffset := b12Offset(19, 2)
     entries(updateIndex).isJAL  := io.update.isJAL
   }
 }
