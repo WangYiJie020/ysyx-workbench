@@ -53,7 +53,7 @@ object Elaborate extends App {
   )
 
   println("Generating NPC startup ROM hex file...")
-  val genNPCStartupROMHex = "make -C npc/jmpROM".!
+  val genNPCStartupROMHex = "make -C jmpROM".!
   if (genNPCStartupROMHex != 0) sys.exit(genNPCStartupROMHex)
   println("Finish generating NPC startup ROM hex file.")
 
