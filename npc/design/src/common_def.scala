@@ -124,7 +124,11 @@ class InstCodeNoCExt extends Bundle {
 
 class AlignedPC extends Bundle {
   val pc30b = UInt(30.W)
-  def get   = Cat(pc30b, 0.U(2.W))
+  def get   = {
+    val dbgRaw = Cat(pc30b, 0.U(2.W))
+    dontTouch(dbgRaw)
+    dbgRaw
+  }
 }
 
 class Inst extends Bundle {
