@@ -111,7 +111,11 @@ class InstCodeNoCExt extends Bundle {
   // no support for compressed instruction,
   // the 2 least significant bits of instruction code are always 11b
   val raw = UInt(30.W)
-  def get = Cat(raw, "b11".U(2.W))
+  def get = {
+    val dbgRaw = Cat(raw, "b11".U(2.W))
+    dontTouch(dbgRaw)
+    dbgRaw
+  }
   def eq(that: UInt) = this.get === that
 
   def func3t = this.get(14, 12)
