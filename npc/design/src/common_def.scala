@@ -112,7 +112,7 @@ class InstCodeNoCExt extends Bundle {
   // the 2 least significant bits of instruction code are always 11b
   val raw = UInt(30.W)
   def get = {
-    val dbgRaw = Cat(raw, "b11".U(2.W))
+    val dbgRaw = WireDefault(Cat(raw, "b11".U(2.W)))
     dontTouch(dbgRaw)
     dbgRaw
   }
