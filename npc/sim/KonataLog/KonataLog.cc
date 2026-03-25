@@ -46,11 +46,12 @@ struct Stage {
 };
 
 void KonataLogger::_output(const std::string &str) {
-  constexpr size_t _maxLogFileSize = 64 * 1024 * 1024;
+	constexpr size_t _maxLogFileSize = 64 * 1024 * 1024;
   if (_fileStream.tellp() >= static_cast<std::streampos>(_maxLogFileSize)) {
     _fileStream.close();
-    spdlog::warn("Log file size exceeded {} MB. KonataLogger stopped logging",
-                 _maxLogFileSize / (1024 * 1024));
+    spdlog::warn(
+        "Log file size exceeded {} MB. KonataLogger stopped logging",
+        _maxLogFileSize / (1024 * 1024));
   } else {
     _fileStream << str << std::endl;
   }
@@ -60,16 +61,15 @@ void KonataLogger::update() {
   static auto &cpu = *GetCPU();
   static auto &ifu = *GetIFU();
   static auto &idu = *GetIDU();
-  // static auto &exus1 = *GetEXUS1();
-  // static auto &exus2 = *GetEXUS2();
-  static auto &exu = *GetEXU();
+  static auto &exus1 = *GetEXUS1();
+  static auto &exus2 = *GetEXUS2();
   static auto &lsu = *GetLSU();
   static auto &wbu = *GetCPU()->wbu;
   static std::vector<Stage> stages = {
       Stage({&ifu.io_pc_valid, &ifu.io_pc_ready},
             {&ifu.io_out_valid, &ifu.io_out_ready}, "IF", &ifu.io_out_bits_iid),
       Stage(idu, "DE", &idu.io_out_bits_iid),
-      Stage(exu, "EX", &exu.io_out_bits_exuWriteBack_iid),
+      Stage(exus2, "EX2", &exus2.io_out_bits_exuWriteBack_iid),
       Stage(lsu, "LS", &lsu.io_out_bits_iid),
       Stage({&wbu.io_in_valid, &wbu.io_in_ready}, {nullptr, nullptr}, "WB",
             &wbu.io_in_bits_iid),

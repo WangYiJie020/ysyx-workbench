@@ -17,11 +17,8 @@ class NPCDevices extends Module with TestSoCDevice {
   val uart = Module(new UARTUnit)
   val mem  = Module(new AXI4MemUnit(1024 * 1024 * 128, Some("build/npcmem_init.hex")))
 
-  val startupROM = Module(new AXI4MemUnit(1024, Some("jmpROM/build/jmp.hex")))
-
   io <> AXI4XBar(
     Seq(
-      AddrSpace.FLASH -> startupROM.io,
       AddrSpace.NPCMEM -> mem.io,
       AddrSpace.SERIAL -> uart.io
     )

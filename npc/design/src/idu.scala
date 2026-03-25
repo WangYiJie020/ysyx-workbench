@@ -67,7 +67,7 @@ object WrBackForwardInfo {
     implicit p: CPUParameters
   ): WrBackForwardInfo = {
     val res = Wire(new WrBackForwardInfo)
-    res.addr      := dinstInfo.rd
+    res.addr      := dinstInfo.info.rd
     res.enWr      := dinstInfo.info.rdWrEn && infoValid
     res.dataVaild := dataVaild
     res.data      := data
@@ -96,11 +96,8 @@ object WrBackForwardInfo {
 class WrBackInfoGroup(
   implicit p: CPUParameters)
     extends Bundle {
-  // val exus1 = new WrBackForwardInfo
-  // val exus2 = new WrBackForwardInfo
-
-  val exu = new WrBackForwardInfo
-
+  val exus1 = new WrBackForwardInfo
+  val exus2 = new WrBackForwardInfo
   val lsu   = new WrBackForwardInfo
   val wbu   = new WrBackForwardInfo
 }
@@ -129,7 +126,6 @@ class ByPassMux(
     conflict(io.rs1, wrBack) || conflict(io.rs2, wrBack)
   }
 
-  /*
   val isConflictWithEXUS1 = Wire(Bool())
   // exu stage 1 always prepare the data, no valid bypass data
   // just check conflict
@@ -140,23 +136,6 @@ class ByPassMux(
   val isRs2ConflictEXUS2  = conflict(io.rs2, io.wrBackInfo.exus2)
 
   isConflictWithEXUS2 := (isRs1ConflictEXUS2 || isRs2ConflictEXUS2)
-
-  val isConflictWithEXU = WireDefault(isConflictWithEXUS1 || isConflictWithEXUS2)
-
-  val exus2WrBackDataVaild = io.wrBackInfo.exus2.dataVaild
-  val exus2WrBackData = io.wrBackInfo.exus2.data
-  */
-
-  val isConflictWithEXU = oneConflictWithWrBack(io.wrBackInfo.exu)
-  val isRs1ConflictEXUS2 = conflict(io.rs1, io.wrBackInfo.exu)
-  val isRs2ConflictEXUS2 = conflict(io.rs2, io.wrBackInfo.exu)
-
-  val isConflictWithEXUS1 = false.B
-
-  val exus2WrBackDataVaild = io.wrBackInfo.exu.dataVaild
-  val exus2WrBackData = io.wrBackInfo.exu.data
-
-  // -----------
 
   val isConflictWithLSU = Wire(Bool())
   // lsu may have valid bypass data, but it immediately forward the data
@@ -169,6 +148,7 @@ class ByPassMux(
 
   isConflictWithWBU := (isRs1ConflictWithWBU || isRs2ConflictWithWBU)
 
+  val isConflictWithEXU = WireDefault(isConflictWithEXUS1 || isConflictWithEXUS2)
   dontTouch(isConflictWithEXU)
   dontTouch(isConflictWithLSU)
   dontTouch(isConflictWithWBU)
@@ -177,6 +157,7 @@ class ByPassMux(
   isRdAfterWr := isConflictWithEXU || isConflictWithLSU || isConflictWithWBU
   dontTouch(isRdAfterWr)
 
+  val exus2WrBackDataVaild = io.wrBackInfo.exus2.dataVaild
 
   val canRs1Bypass =
     Mux(isRs1ConflictEXUS2, exus2WrBackDataVaild, isRs1ConflictWithWBU)
@@ -194,8 +175,8 @@ class ByPassMux(
   val r1UseBypass = canRs1Bypass
   val r2UseBypass = canRs2Bypass
 
-  val r1BypassData = Mux(isRs1ConflictEXUS2, exus2WrBackData, io.wrBackInfo.wbu.data)
-  val r2BypassData = Mux(isRs2ConflictEXUS2, exus2WrBackData, io.wrBackInfo.wbu.data)
+  val r1BypassData = Mux(isRs1ConflictEXUS2, io.wrBackInfo.exus2.data, io.wrBackInfo.wbu.data)
+  val r2BypassData = Mux(isRs2ConflictEXUS2, io.wrBackInfo.exus2.data, io.wrBackInfo.wbu.data)
 
   io.outData1 := Mux(r1UseBypass, r1BypassData, io.regData1)
   io.outData2 := Mux(r2UseBypass, r2BypassData, io.regData2)
@@ -227,18 +208,15 @@ class IDU(
 
   // alias
   val res  = io.out.bits.info
-  val inst = io.in.bits.code.get
+  val inst = io.in.bits.code
 
   val iinfo_dec = Module(new InstInfoDecoder())
   iinfo_dec.io.opcode                   := inst(6, 0)
   res.viewAsSupertype(new InstMetaInfo) := iinfo_dec.io.out
 
-  // res.rd  := inst(11, 7)
-  // res.rs1 := inst(19, 15)
-  // res.rs2 := inst(24, 20)
-
-  val rs1 = inst(19, 15)
-  val rs2 = inst(24, 20)
+  res.rd  := inst(11, 7)
+  res.rs1 := inst(19, 15)
+  res.rs2 := inst(24, 20)
 
   val isTypStore     = InstType.hasSame(res.typ, InstType.store)
   val isTypBranch    = InstType.hasSame(res.typ, InstType.branch)
@@ -249,8 +227,8 @@ class IDU(
   res.rdWrEn := ~isNoWrBackType
 
   // io.rvec.en      := true.B
-  io.rvec.addr(0) := rs1
-  io.rvec.addr(1) := rs2
+  io.rvec.addr(0) := res.rs1
+  io.rvec.addr(1) := res.rs2
 
   // fetch IMM
   val immI = Cat(Fill(21, inst(31)), inst(30, 20))
@@ -272,11 +250,11 @@ class IDU(
     )
   )
 
-  // res.snpc := io.in.bits.pc + 4.U
+  res.snpc := io.in.bits.pc + 4.U
 
   val bypassMux = Module(new ByPassMux())
-  bypassMux.io.rs1        := rs1
-  bypassMux.io.rs2        := rs2
+  bypassMux.io.rs1        := res.rs1
+  bypassMux.io.rs2        := res.rs2
   bypassMux.io.regData1   := io.rvec.data(0)
   bypassMux.io.regData2   := io.rvec.data(1)
   bypassMux.io.wrBackInfo := io.wrBackInfo
@@ -287,7 +265,4 @@ class IDU(
 
   io.in.ready  := (io.out.ready && !needStall) || io.flush
   io.out.valid := io.in.valid && !needStall && !io.flush
-
-  // val dbgOutInst = WireDefault(io.in.bits.code.get)
-  // dontTouch(dbgOutInst)
 }

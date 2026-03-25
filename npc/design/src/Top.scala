@@ -103,21 +103,18 @@ class CPUCore(
 
   lsu.io.mcycle64 := csrs.io.mcycle64
 
-  // val resetPCProvider = Module(new ysyx_25100261_ResetPCProvider)
-  // val INIT_PC         = resetPCProvider.io.resetPC
-  val INIT_PC = p.resetVector
+  val resetPCProvider = Module(new ysyx_25100261_ResetPCProvider)
+  val INIT_PC         = resetPCProvider.io.resetPC
 
-  // val pc             = RegInit(INIT_PC)
-  val pcReg = RegInit(INIT_PC(31,2).asTypeOf(new AlignedPC))
-
+  val pc             = RegInit(INIT_PC)
   val nxtPredictedPC = Wire(Types.UWord)
   dontTouch(nxtPredictedPC)
 
   if (Config.useBTBAndBP) {
     val btb = Module(new BranchTargetBuffer)
     val bp  = Module(new BranchPredictor)
-    btb.io.query.addr   := pcReg.get
-    bp.io.pc            := pcReg.get
+    btb.io.query.addr   := pc
+    bp.io.pc            := pc
     bp.io.historyHit    := btb.io.query.hit
     bp.io.historyTarget := btb.io.query.target
     bp.io.historyIsJAL  := btb.io.query.isJAL
@@ -129,7 +126,7 @@ class CPUCore(
 
     nxtPredictedPC := bp.io.predictTarget
   } else {
-    nxtPredictedPC := pcReg.get + 4.U
+    nxtPredictedPC := pc + 4.U
     // val isBranch = ifu.io.out.bits.code(6, 0) === "b1100011".U
     // val immSign  = ifu.io.out.bits.code(31)
     // val imm      = Cat(
@@ -171,7 +168,7 @@ class CPUCore(
   isIFUAckCorrectTarget := ifu.io.pc.fire && (ifu.io.pc.bits === curCorrectJmpTarget)
 
   val isIDUMeetCorrectJmpTarget = Wire(Bool())
-  isIDUMeetCorrectJmpTarget := ifu.io.out.valid && (ifu.io.out.bits.pc.get === curCorrectJmpTarget)
+  isIDUMeetCorrectJmpTarget := ifu.io.out.valid && (ifu.io.out.bits.pc === curCorrectJmpTarget)
   dontTouch(isIFUAckCorrectTarget)
   dontTouch(isIDUMeetCorrectJmpTarget)
   dontTouch(curCorrectJmpTarget)
@@ -185,12 +182,12 @@ class CPUCore(
   needFlushPipeline := (isFlushIDUReg) || isBranchGuessWrong
   dontTouch(needFlushPipeline)
 
-  pcReg.pc30b := Mux(
+  pc := Mux(
     ifu.io.pc.ready,
     // Sometimes although jump,
     // target is near current pc and IFU just meets it
-    Mux(isBranchGuessWrong && (!isIFUAckCorrectTarget), curCorrectJmpTarget(31,2), nxtPredictedPC(31,2)),
-    pcReg.pc30b
+    Mux(isBranchGuessWrong && (!isIFUAckCorrectTarget), curCorrectJmpTarget, nxtPredictedPC),
+    pc
   )
 
   val memArbiter = Module(new EXUIFU_MemVisitArbiter)
@@ -232,7 +229,7 @@ class CPUCore(
     stop()
   }
 
-  ifu.io.pc.bits  := pcReg.get
+  ifu.io.pc.bits  := pc
   ifu.io.pc.valid := true.B
 
   layer.block(DifftestLayer) {
@@ -264,9 +261,11 @@ class CPUCore(
   idu.io.rvec <> gprs.io.read
   exu.io.csr_rvec <> csrs.io.read
 
-  // idu.io.wrBackInfo.exus1 := exu.io.fwd1
-  // idu.io.wrBackInfo.exus2 := exu.io.fwd2
-  idu.io.wrBackInfo.exu   := exu.io.fwd
+  // idu.io.exuWrBack   := ExtractGPRInfoFromLSU(exu.io.out)
+  // idu.io.lsuWrBack   := ExtractGPRInfoFromLSU(lsu.io.in)
+  // idu.io.wbuWrBack   := ExtractGPRInfoFromWrBack(wbu.io.in)
+  idu.io.wrBackInfo.exus1 := exu.io.fwd1
+  idu.io.wrBackInfo.exus2 := exu.io.fwd2
   idu.io.wrBackInfo.lsu   := ExtractFwdInfoFromLSU(lsu.io.in)
   idu.io.wrBackInfo.wbu   := ExtractFwdInfoFromWrBack(wbu.io.in)
 

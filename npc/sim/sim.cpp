@@ -227,11 +227,11 @@ void sim_step_inst() {
   }
   pc_changed = false;
   inst_count++;
-  // if (inst_count % (1024 * 1024 * 8) == 0) {
-  //   spdlog::info("8M instructions executed (now {}M), pc = 0x{:08x}, cycle = "
-  //                "{}, time = {}ps",
-  //                inst_count / (1024 * 1024), cpu.pc, cycle_count, sim_time);
-  // }
+  if (inst_count % (1024 * 1024 * 8) == 0) {
+    spdlog::info("8M instructions executed (now {}M), pc = 0x{:08x}, cycle = "
+                 "{}, time = {}ps",
+                 inst_count / (1024 * 1024), cpu.pc, cycle_count, sim_time);
+  }
 }
 
 // IMG

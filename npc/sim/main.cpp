@@ -33,21 +33,16 @@ int main(int argc, char **argv) {
   // loggers
   spdlog::set_pattern("[%H:%M:%S.%e][%^%-5l%$][%n] %v");
 
-  sim_get_config()->init_pc =
-#ifdef SIM_ARCH_JYD
-      0x80000000;
-#else
-      0x30000000;
-#endif
-
   if (is_soc()) {
     spdlog::info("Simulating SoC design");
+    sim_get_config()->init_pc = 0x30000000;
     if (isCIEnv()) {
       spdlog::info("CI environment detected, enabling nvboard");
       sim_get_config()->setting.nvboard = true;
     }
   } else {
     spdlog::info("Simulating CPU core design");
+    sim_get_config()->init_pc = 0x80000000;
   }
   std::string_view git_commit_hash = _STR(GIT_COMMIT_HASH);
   spdlog::info("Git commit hash: {}", git_commit_hash);
@@ -71,12 +66,12 @@ int main(int argc, char **argv) {
   initPerfCounters();
   spdlog::info("perf counters initialized");
 
-  int mainloop_ret = 0;
+	int mainloop_ret = 0;
 
   if (setting.gdb_mode) {
     gdb_mainloop();
   } else {
-    mainloop_ret = sdb_mainloop();
+		mainloop_ret = sdb_mainloop();
   }
 
   if (mainloop_ret == 0) {

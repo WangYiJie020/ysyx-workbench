@@ -11,11 +11,11 @@ MEMORY {
 	/* flash */
 	/* load_region : ORIGIN = 0x30000000, LENGTH = 1M */
 
-	/* /* sdram */ */
-	/* runtime : ORIGIN = 0xa0000000, LENGTH = 32M */
+	/* sdram */
+	runtime : ORIGIN = 0xa0000000, LENGTH = 32M
 
-	psram
-	runtime : ORIGIN = 0x80000000, LENGTH = 4M
+	/* psram */
+	/* runtime : ORIGIN = 0x80000000, LENGTH = 4M */
 }
 
 SECTIONS {

@@ -13,7 +13,20 @@ class ALUInput extends Bundle {
   val src2   = Types.UWord
 }
 
-class ALU_Trival extends Module {
+class ALU_foo extends Module {
+  val io = IO(new Bundle {
+    val in  = Flipped(Decoupled(new ALUInput))
+    val out = Decoupled(Types.UWord)
+  })
+
+  io.out.valid := io.in.valid
+  io.in.ready := io.out.ready
+
+  // do some foo op for test
+  io.out.bits := io.in.bits.src1 + io.in.bits.src2 + io.in.bits.func3t
+}
+
+class ALU extends Module {
   val io = IO(new Bundle {
     val in  = Flipped(Decoupled(new ALUInput))
     val out = Decoupled(Types.UWord)
@@ -21,56 +34,8 @@ class ALU_Trival extends Module {
 
   val fsm = InnerBusCtrl(io.in, io.out, alwaysComb = true)
 
-  val addRes = io.in.bits.src1 + io.in.bits.src2
-  val subRes = io.in.bits.src1 - io.in.bits.src2
-  val andRes = io.in.bits.src1 & io.in.bits.src2
-  val orRes  = io.in.bits.src1 | io.in.bits.src2
-  val xorRes = io.in.bits.src1 ^ io.in.bits.src2
-
-  val shamt  = io.in.bits.src2(4, 0)
-  val srlRes = io.in.bits.src1 >> shamt
-  val sraRes = (io.in.bits.src1.asSInt >> shamt).asUInt
-  val sllRes = (io.in.bits.src1 << shamt)(31, 0)
-
-  val sltRes  = (io.in.bits.src1.asSInt < io.in.bits.src2.asSInt).asUInt
-  val sltuRes = (io.in.bits.src1 < io.in.bits.src2).asUInt
-
-  val isOpAlt = io.in.bits.func7t(5)
-  val isAdd   = ((~isOpAlt) || io.in.bits.is_imm) && (~io.in.bits.func3t(1))
-
-  val addSubRes = Mux(isAdd, addRes, subRes)
-
-  val rshiftRes = Mux(isOpAlt, sraRes, srlRes)
-
-  val results = VecInit(
-    addSubRes, // 000: add/sub/addi
-    sllRes,    // 001: sll/slli
-    sltRes,    // 010: slt/slti
-    sltuRes,   // 011: sltu/sltiu
-    xorRes,    // 100: xor/xori
-    rshiftRes, // 101: srl/srli/sra/srai
-    orRes,     // 110: or/ori
-    andRes     // 111: and/andi
-  )
-
-  val key = io.in.bits.func3t
-
-  io.out.bits := results(key)
-
-}
-
-class ALU extends Module {
-  val io = IO(new Bundle {
-    val in  = Flipped(new ALUInput)
-    val out = Output(Types.UWord)
-    val isBranch = Input(Bool())
-    val addSubRes = Output(Types.UWord)
-    val sltRes = Output(Bool())
-    val sltuRes = Output(Bool())
-  })
-
   // alias
-  val inbits = io.in
+  val inbits = io.in.bits
   val src1   = inbits.src1
   val src2   = inbits.src2
 
@@ -84,11 +49,15 @@ class ALU extends Module {
   val isOpAlt = inbits.func7t(5)
 
   // when func3[1] == 1, less than need sub result
-  // val isAdd = ((~isOpAlt) || inbits.is_imm) && (~inbits.func3t(1))
-  val isAdd = ((~isOpAlt) || inbits.is_imm) && (~io.isBranch) && (~func3t(1))
+  val isAdd = ((~isOpAlt) || inbits.is_imm) && (~inbits.func3t(1))
 
   val add_sub_res = Wire(Types.UWord)
-  io.addSubRes := add_sub_res
+
+  // this optimize can make alu alone module area bigger
+  // but the whole module area smaller
+  // 23866 -> 23850
+  // ??? I don't understand ???
+  // val op2_inv = Mux(isAdd, src2, ~src2)
 
   val op2_inv = src2 ^ Fill(32, ~isAdd)
 
@@ -119,18 +88,29 @@ class ALU extends Module {
   //   result sign negative -> less than -> slt should be true
   val slt_res = sign_res ^ overflow
 
-  io.sltRes := slt_res
-  io.sltuRes := sltu_res
-
   val rShiftResult = Wire(Types.UWord)
   val lShiftResult = Wire(Types.UWord)
 
-  // rShiftResult := Mux(isOpAlt, (s_src1 >> shamt).asUInt, src1 >> shamt)
-
-  // wired optimize make 64b shift has smaller area than 32b shift + mux
-  // make EXU and ALU smaller, but whole CPU bigger little bit ???
-  rShiftResult := Cat(Fill(32, isOpAlt && sign_src1), src1) >> shamt
+  rShiftResult := Mux(isOpAlt, (s_src1 >> shamt).asUInt, src1 >> shamt)
   lShiftResult := src1 << shamt
+
+  // Useless optimize area -200
+  // but freq low
+
+  // // Optimize make L/R shift use same shifter
+  // //
+  // // 23850 -> 23504
+  // val extedSrc1    = Wire(UInt(64.W))
+  // val isRightShift = inbits.func3t(2)
+  // val shiftedSrc1  = Mux(isRightShift, src1, Reverse(src1))
+  // extedSrc1    := Cat(Fill(32, shiftedSrc1(31) & isOpAlt), shiftedSrc1)
+  // rShiftResult := extedSrc1 >> shamt
+  //
+  // lShiftResult := Reverse(rShiftResult)
+
+  // val shiftResult = Mux(isRightShift, rShiftResult, Reverse(rShiftResult))
+
+
 
   val defaultRes = Wire(Types.UWord)
   defaultRes := DontCare
@@ -153,7 +133,7 @@ class ALU extends Module {
 
   // val func3t2HighResult = Mux(
   //   func3t(0),
-//   Mux(func3t(1), rShiftResult, sltu_res),
+  //   Mux(func3t(1), rShiftResult, sltu_res),
   //   Mux(func3t(1), logic_or, logic_xor)
   // )
   //
@@ -165,16 +145,16 @@ class ALU extends Module {
   //
   // io.out.bits := Mux(func3t(2), func3t2HighResult, func3t2LowResult)
 
-  val results = VecInit(
-    add_sub_res,        // 000: add/sub/addi
-    lShiftResult,       // 001: sll/slli
-    slt_res,            // 010: slt/slti
-    sltu_res,           // 011: sltu/sltiu
-    logic_xor,          // 100: xor/xori
-    rShiftResult,       // 101: srl/srli/sra/srai
-    logic_or,           // 110: or/ori
-    logic_and           // 111: and/andi
+  io.out.bits := MuxLookup(inbits.func3t, defaultRes)(
+    Seq(
+      0.U -> add_sub_res,        // 000: add/sub/addi
+      1.U -> lShiftResult, // 001: sll/slli
+      2.U -> slt_res,            // 010: slt/slti
+      3.U -> sltu_res,           // 011: sltu/sltiu
+      4.U -> logic_xor,          // 100: xor/xori
+      5.U -> rShiftResult,          // 101: srl/srli/sra/srai
+      6.U -> logic_or,           // 110: or/ori
+      7.U -> logic_and           // 111: and/andi
+    )
   )
-
-  io.out := results(func3t)
 }

@@ -15,15 +15,7 @@ import chisel3.util.circt.dpi._
 class WriteBackInfo(implicit p:CPUParameters) extends Bundle {
   val gpr = GPRegReqIO.WriteTX
 
-  // val csr           = CSRegReqIO.TX.Write
-
-  val csr = new Bundle {
-    val en   = Bool()
-    val addr = UInt(Types.BitWidth.csr_addr.W)
-    val data30b = UInt(30.W) // mtvec and mepc only need 30 bits
-    def data = Cat(data30b, 0.U(2.W))
-  }
-
+  val csr           = CSRegReqIO.TX.Write
   val csr_ecallflag = Bool()
 
   // val is_ebreak = Bool()
