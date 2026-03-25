@@ -111,7 +111,11 @@ class InstCodeNoCExt extends Bundle {
   // no support for compressed instruction,
   // the 2 least significant bits of instruction code are always 11b
   val raw = UInt(30.W)
-  def get = Cat(raw, "b11".U(2.W))
+  def get = {
+    val dbgRaw = WireDefault(Cat(raw, "b11".U(2.W)))
+    dontTouch(dbgRaw)
+    dbgRaw
+  }
   def eq(that: UInt) = this.get === that
 
   def func3t = this.get(14, 12)
@@ -120,7 +124,11 @@ class InstCodeNoCExt extends Bundle {
 
 class AlignedPC extends Bundle {
   val pc30b = UInt(30.W)
-  def get   = Cat(pc30b, 0.U(2.W))
+  def get   = {
+    val dbgRaw = WireDefault(Cat(pc30b, 0.U(2.W)))
+    dontTouch(dbgRaw)
+    dbgRaw
+  }
 }
 
 class Inst extends Bundle {
