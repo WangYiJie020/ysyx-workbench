@@ -18,11 +18,6 @@ object InlinePrintf {
   }
 }
 
-trait HasRs {
-  val rs1: UInt
-  val rs2: UInt
-}
-
 object AddrSpace {
   val CLINT  = ("h02000000".U(32.W), "h0200ffff".U(32.W))
   val SPI    = ("h10001000".U(32.W), "h10002000".U(32.W))
@@ -37,6 +32,8 @@ object AddrSpace {
 
   val SOC = ("h0f000000".U(32.W), "hffffffff".U(32.W))
 
+  val FLASH = ("h30000000".U(32.W), "h3fffffff".U(32.W))
+
   val NPCMEM = ("h80000000".U(32.W), "h8fffffff".U(32.W))
 
   def inRng(addr: UInt, rng: (UInt, UInt)): Bool = {
@@ -44,14 +41,18 @@ object AddrSpace {
   }
 
   def needSkipDifftestGroup = Seq(
-    SERIAL,SPI,CLINT,VGA,PS2
+    SERIAL,
+    SPI,
+    CLINT,
+    VGA,
+    PS2
   )
 }
 
 case class CPUParameters(
-  gprAddrWidth: Int = 4,
-  skipDifftestAddrs: Seq[(UInt, UInt)] = AddrSpace.needSkipDifftestGroup
-) {
+  gprAddrWidth:      Int = 4,
+  skipDifftestAddrs: Seq[(UInt, UInt)] = AddrSpace.needSkipDifftestGroup,
+  resetVector: UInt = "h30000000".U(32.W)) {
   def GPRAddr = UInt(gprAddrWidth.W)
   def GPRNum  = 1 << gprAddrWidth
 }
@@ -64,9 +65,12 @@ object Types {
     val inst_id = if (Config.genStageLog) 32 else 0
   }
   def UWord = UInt(BitWidth.word.W)
-  // def RegAddr = UInt(BitWidth.reg_addr.W)
 
   def InstID = UInt(BitWidth.inst_id.W)
+
+  def PredictedTarget = if (Config.useBTBAndBP) UWord else UInt(0.W)
+
+  def InstCodeNoCExt = new InstCodeNoCExt
 
   object Ops {
     implicit class StringOps(val s: String) extends AnyVal {
@@ -103,11 +107,35 @@ object InstType extends ChiselEnum {
   }
 }
 
+class InstCodeNoCExt extends Bundle {
+  // no support for compressed instruction,
+  // the 2 least significant bits of instruction code are always 11b
+  val raw = UInt(30.W)
+  def get = {
+    val dbgRaw = WireDefault(Cat(raw, "b11".U(2.W)))
+    dontTouch(dbgRaw)
+    dbgRaw
+  }
+  def eq(that: UInt) = this.get === that
+
+  def func3t = this.get(14, 12)
+  def func7t = this.get(31, 25)
+}
+
+class AlignedPC extends Bundle {
+  val pc30b = UInt(30.W)
+  def get   = {
+    val dbgRaw = WireDefault(Cat(pc30b, 0.U(2.W)))
+    dontTouch(dbgRaw)
+    dbgRaw
+  }
+}
+
 class Inst extends Bundle {
-  val code            = Output(Types.UWord)
-  val pc              = Output(Types.UWord)
+  val code            = Output(new InstCodeNoCExt())
+  val pc              = Output(new AlignedPC())
   val iid             = Output(Types.InstID)
-  val predictedNextPC = Output(Types.UWord)
+  val predictedNextPC = Output(Types.PredictedTarget)
 }
 
 class InstMetaInfo extends Bundle {
@@ -115,22 +143,48 @@ class InstMetaInfo extends Bundle {
   val typ = InstType()
 }
 
-class DecodedInstInfo(implicit p : CPUParameters) extends InstMetaInfo with HasRs {
+class DecodedInstInfo(
+  implicit p: CPUParameters)
+    extends InstMetaInfo {
   val imm = Types.UWord
-  val rd  = p.GPRAddr
-  val rs1 = p.GPRAddr
-  val rs2 = p.GPRAddr
+  // val rd  = p.GPRAddr
 
   val rdWrEn = Bool()
 
   val reg1 = Types.UWord
   val reg2 = Types.UWord
 
-  val snpc = Types.UWord
+  // val snpc = Types.UWord
 }
 
-class DecodedInst(implicit p : CPUParameters) extends Inst {
+class DecodedInst(
+  implicit p: CPUParameters)
+    extends Inst {
   val info = new DecodedInstInfo
+  def rd   = code.get(11, 7)
+  def imm  = info.imm
+  // def imm  = {
+  //   val inst = code
+  //
+  //   val immI = Cat(Fill(21, inst(31)), inst(30, 20))
+  //   val immS = Cat(immI(31, 5), inst(11, 8), inst(7))
+  //   val immB = Cat(immI(31, 12), inst(7), immS(10, 1), 0.U(1.W))
+  //   val immU = Cat(inst(31, 12), 0.U(12.W))
+  //   val immJ = Cat(immI(31, 20), inst(19, 12), inst(20), inst(30, 21), 0.U(1.W))
+  //
+  //   val dontcareImm = Wire(Types.UWord)
+  //   dontcareImm := DontCare
+  //
+  //   WireDefault(MuxLookup(info.fmt, dontcareImm)(
+  //     Seq(
+  //       InstFmt.imm    -> immI,
+  //       InstFmt.jump   -> immJ,
+  //       InstFmt.store  -> immS,
+  //       InstFmt.branch -> immB,
+  //       InstFmt.upper  -> immU
+  //     )
+  //   ))
+  // }
 }
 
 // update reg when enable,

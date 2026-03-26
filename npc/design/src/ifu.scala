@@ -6,10 +6,13 @@ import busfsm._
 
 import axi4._
 
+import chisel3._
+import chisel3.util._
+
 class IFU extends Module {
   val io = IO(new Bundle {
     val pc              = Flipped(Decoupled(Types.UWord))
-    val predictedNextPC = Input(Types.UWord)
+    val predictedNextPC = Input(Types.PredictedTarget)
     val mem             = AXI4IO.Master
     val out             = Decoupled(new Inst)
   })
@@ -25,28 +28,28 @@ class IFU extends Module {
   io.mem.dontCareB()
   io.mem.dontCareNonLiteAR()
 
-  val pcReg     = RegEnable(io.pc.bits, io.pc.fire)
-  val pc        = Mux(io.pc.fire, io.pc.bits, pcReg)
+  val pcReg     = RegEnable(io.pc.bits(31,2), io.pc.fire)
+  val pc        = Mux(io.pc.fire, io.pc.bits(31,2), pcReg)
   val predNxtPC = RegEnableReadNew(io.predictedNextPC, io.pc.fire)
-  dontTouch(pc)
+  // dontTouch(pc)
   val state     = RegInit(State.idle)
 
   val instID = RegInit(0.U(Types.BitWidth.inst_id.W))
   when(io.pc.fire) {
     instID := instID + 1.U
   }
-  dontTouch(instID)
+  // dontTouch(instID)
 
   io.out.bits.iid := Mux(io.pc.fire, instID + 1.U, instID)
 
-  io.pc.ready   := (state === State.idle)// && !RegNext(reset.asBool)
+  io.pc.ready   := (state === State.idle)
   memIO.arvalid := (state === State.waitAR) || (state === State.idle && io.pc.fire)
-  memIO.araddr  := pc
+  memIO.araddr  := pc ## 0.U(2.W)
 
-  val inst = RegEnableReadNew(memIO.rdata, memIO.rvalid)
-  memIO.rready                := true.B // io.out.ready
-  io.out.bits.code            := inst
-  io.out.bits.pc              := pc
+  val inst = RegEnableReadNew(memIO.rdata(31,2), memIO.rvalid)
+  memIO.rready                := true.B
+  io.out.bits.code.raw        := inst
+  io.out.bits.pc.pc30b        := pc
   io.out.bits.predictedNextPC := predNxtPC
   io.out.valid                := ((state === State.waitR || state === State.waitAR) && memIO.rvalid) || (state === State.idle && io.pc.fire && memIO.rvalid) || (state === State.waitOut)
 
@@ -55,7 +58,7 @@ class IFU extends Module {
   val nxtStateWhenWaitAR  = Mux(memIO.arready, nxtStateWhenWaitR, State.waitAR)
   val nxtStateWhenIdle    = Mux(io.pc.fire, nxtStateWhenWaitAR, State.idle)
 
-  dontTouch(nxtStateWhenIdle)
+  // dontTouch(nxtStateWhenIdle)
 
   state := MuxLookup(state, State.idle)(
     Seq(
@@ -65,35 +68,9 @@ class IFU extends Module {
       State.waitOut -> nxtStateWhenWaitOut
     )
   )
+
+  val dbgOutPC = WireDefault(io.out.bits.pc.get)
+  val dbgOutInst = WireDefault(io.out.bits.code.get)
+  // dontTouch(dbgOutPC)
+  // dontTouch(dbgOutInst)
 }
-
-/*
-
-
-  val state = RegInit(State.idle)
-  state         := MuxLookup(state, State.idle)(
-    Seq(
-      State.idle   -> Mux(io.pc.fire, State.waitAR, State.idle),
-      State.waitAR -> Mux(memIO.arready, Mux(memIO.rvalid,State.idle,State.waitR), State.waitAR),
-      State.waitR  -> Mux(memIO.rvalid, Mux(io.pc.fire, State.waitAR, State.idle), State.waitR)
-    )
-  )
-  val pcReg = Reg(Types.UWord)
-  when(io.pc.fire) {
-    pcReg := io.pc.bits
-  }
-  memIO.arvalid := (state === State.waitAR) || (state === State.idle && io.pc.fire)
-  memIO.araddr  := Mux(io.pc.fire, io.pc.bits, pcReg)
-
-  val instReg = Reg(Types.UWord)
-  when(memIO.rvalid) {
-    instReg := memIO.rdata
-  }
-  memIO.rready := (state === State.waitR) && io.out.ready
-
-  io.out.valid := (state === State.waitR && memIO.rvalid) || (state === State.idle && io.pc.fire && memIO.rvalid)
-  io.pc.ready
-
-  io.out.bits.code := Mux(memIO.rvalid, memIO.rdata, instReg)
-  io.out.bits.pc   := Mux(io.pc.fire, io.pc.bits, pcReg)
- * */

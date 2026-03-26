@@ -20,4 +20,6 @@ results=$(echo "$list" | while read -r file; do
 			print name, area
 	}' 
 done)
-echo "$results" | sort -k2 -nr | column -t
+uniq_result=$(echo "$results" | sort -k2 -nr | column -t | uniq)
+echo "$uniq_result"
+echo "$uniq_result" | awk '{print $1 "," $2}' > "$2/all_area.csv"

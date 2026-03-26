@@ -3,6 +3,8 @@ import scala.sys.process._
 import testSoC._
 import common_def.CPUParameters
 
+import chisel3._
+
 object Elaborate extends App {
   if (args.size != 2) {
     println("Usage: --target-dir <dir>")
@@ -39,7 +41,16 @@ object Elaborate extends App {
   val emitRootDir = args(1)
 
   emit(new top.ysyx_25100261(CPUParameters(gprAddrWidth = 4)), s"$emitRootDir/riscv32e")
-  emit(new top.ysyx_25100261(CPUParameters(gprAddrWidth = 5, skipDifftestAddrs = jyd.AddrSpace.needSkipDifftestGroup)), s"$emitRootDir/riscv32")
+  emit(
+    new top.ysyx_25100261(
+      CPUParameters(
+        gprAddrWidth = 5,
+        skipDifftestAddrs = jyd.AddrSpace.needSkipDifftestGroup,
+        resetVector = "h80000000".U(32.W)
+      )
+    ),
+    s"$emitRootDir/riscv32"
+  )
 
   emit(new TestSoC(new npc.NPCDevices), s"$emitRootDir/testsoc/npc")
   emit(new TestSoC(new jyd.JYDDevices), s"$emitRootDir/testsoc/jyd")

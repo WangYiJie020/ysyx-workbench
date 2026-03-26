@@ -48,13 +48,15 @@ object ICacheParameters {
     addr(31, log2Ceil(BLOCK_SIZE)) ## 0.U(log2Ceil(BLOCK_SIZE).W)
   }
 
+  // for old
   def cacheLineVecType = Vec(BLOCK_SIZE_INWORDS, Types.UWord)
 }
 
 class ICacheBlock extends Bundle {
   val valid = Bool()
   val tag   = UInt(ICacheParameters.BLOCK_TAG_WIDTH.W)
-  val data  = UInt(ICacheParameters.BLOCK_SIZE_INBITS.W)
+  // val data  = UInt(ICacheParameters.BLOCK_SIZE_INBITS.W)
+  val data  = Vec(ICacheParameters.BLOCK_SIZE_INWORDS, Types.InstCodeNoCExt)
 
   // Assume index and offset are correct
   def matchAddr(addr: UInt): Bool = {
@@ -62,7 +64,7 @@ class ICacheBlock extends Bundle {
   }
 }
 
-class ICacheSRAM extends Module {
+class ICacheSRAMDirectlyWrBlock extends Module {
   val io  = IO(new Bundle {
     val addr  = Input(UInt(ICacheParameters.BLOCK_INDEX_WIDTH.W))
     val wen   = Input(Bool())
@@ -82,6 +84,36 @@ class ICacheSRAM extends Module {
   io.rdata := RegNext(mem(io.addr))
 }
 
+class ICacheSRAM extends Module {
+  val io = IO(new Bundle {
+    val addr       = Input(UInt(ICacheParameters.BLOCK_INDEX_WIDTH.W))
+    val wen        = Input(Bool())
+    val wordOffset = Input(UInt(log2Ceil(ICacheParameters.BLOCK_SIZE_INWORDS).W))
+    val wdataWord  = Input(Types.UWord)
+    val wlast      = Input(Bool())
+    val wtag       = Input(UInt(ICacheParameters.BLOCK_TAG_WIDTH.W))
+    val rdata      = Output(new ICacheBlock)
+    val flush      = Input(Bool())
+  })
+  
+  val mem = RegInit(VecInit(Seq.fill(ICacheParameters.BLOCK_NUM)(0.U.asTypeOf(new ICacheBlock))))
+
+  when(io.flush) {
+    for (i <- 0 until ICacheParameters.BLOCK_NUM) {
+      mem(i).valid := false.B
+    }
+  }.elsewhen(io.wen) {
+    mem(io.addr).data(io.wordOffset).raw := io.wdataWord(31, 2)
+    when(io.wlast) {
+      mem(io.addr).tag := io.wtag
+      mem(io.addr).valid := true.B
+    }
+  }
+
+  val raddr = RegNext(io.addr)
+  io.rdata := mem(raddr)
+}
+
 class ICache extends Module {
   val io = IO(new ICacheIO)
 
@@ -93,68 +125,70 @@ class ICache extends Module {
   io.mem.dontCareW()
   io.mem.dontCareB()
 
-  val memIOMeetLast = io.mem.rvalid && io.mem.rlast
 
-  val cacheRAM       = Module(new ICacheSRAM)
-  val cacheRdData    = cacheRAM.io.rdata
-  val cacheHit       = cacheRdData.matchAddr(io.cpu.araddr)
-  val cacheRdDataVec = cacheRdData.data.asTypeOf(ICacheParameters.cacheLineVecType)
+  val cacheRAM = Module(new ICacheSRAM)
 
   object State extends ChiselEnum {
     val idle, checkHit, sendFetch, waitMem = Value
   }
   val state = RegInit(State.idle)
 
-  val destAddrIdx     = RegEnableReadNew(
-    ICacheParameters.extractIndex(io.cpu.araddr),
-    io.cpu.arvalid && io.cpu.arready
-  )
-  val destAddrOffset  = RegEnable(
-    ICacheParameters.extractWordOffset(io.cpu.araddr),
-    io.cpu.arvalid && io.cpu.arready
-  )
-  val destAddrTag     = RegEnable(
-    ICacheParameters.extractTag(io.cpu.araddr),
-    io.cpu.arvalid && io.cpu.arready
-  )
-  val destAddrAligned = destAddrTag ## destAddrIdx ## 0.U(log2Ceil(ICacheParameters.BLOCK_SIZE).W)
+  val cpuAddrIdx    = ICacheParameters.extractIndex(io.cpu.araddr)
+  val cpuAddrTag    = ICacheParameters.extractTag(io.cpu.araddr)
+  val cpuAddrOffset = ICacheParameters.extractWordOffset(io.cpu.araddr)
+  val destAddrAligned = ICacheParameters.alignToBlock(io.cpu.araddr)
 
-  val memIOCurRdOffset  = RegInit(0.U(log2Ceil(ICacheParameters.BLOCK_SIZE_INWORDS - 1).W))
-  val memIORdDataVecReg = Reg(Vec(ICacheParameters.BLOCK_SIZE_INWORDS - 1, Types.UWord))
+  val hasMultiWordInline = ICacheParameters.BLOCK_SIZE_INWORDS > 1
+
+  val memIOCurRdOffset = if (hasMultiWordInline) RegInit(0.U(log2Ceil(ICacheParameters.BLOCK_SIZE_INWORDS).W)) else 0.U
   when(io.mem.rvalid && io.mem.rready) {
-    when(memIOMeetLast) {
-      memIOCurRdOffset := 0.U
-    }.otherwise {
-      memIORdDataVecReg(memIOCurRdOffset) := io.mem.rdata
-      memIOCurRdOffset                    := memIOCurRdOffset + 1.U
+    if (hasMultiWordInline) {
+      when(io.mem.rlast) {
+        memIOCurRdOffset := 0.U
+      }.otherwise {
+        memIOCurRdOffset := memIOCurRdOffset + 1.U
+      }
+    } else {
+      sys.error("ICache not support single-word line now")
     }
   }
 
-  // newest (rlast) data is direct from mem
-  val memIORdDataVec = (io.mem.rdata ## memIORdDataVecReg.asUInt).asTypeOf(ICacheParameters.cacheLineVecType)
+  cacheRAM.io.flush      := io.flush
+  cacheRAM.io.addr       := cpuAddrIdx
 
-  cacheRAM.io.flush       := io.flush
-  cacheRAM.io.addr        := destAddrIdx
-  cacheRAM.io.wen         := (state === State.waitMem) && memIOMeetLast
-  cacheRAM.io.wdata.valid := true.B
-  cacheRAM.io.wdata.tag   := destAddrTag
-  cacheRAM.io.wdata.data  := memIORdDataVec.asUInt
+  cacheRAM.io.wen        := (state === State.waitMem) && io.mem.rvalid
+  cacheRAM.io.wordOffset := memIOCurRdOffset
+  cacheRAM.io.wdataWord  := io.mem.rdata
+  cacheRAM.io.wlast      := io.mem.rlast
+  cacheRAM.io.wtag       := cpuAddrTag
+
+  val cacheHit = cacheRAM.io.rdata.matchAddr(io.cpu.araddr)
+
+  val memIOMeetLast = io.mem.rvalid && io.mem.rlast
 
   state := MuxLookup(state, State.idle)(
     Seq(
-      State.idle      -> Mux(io.cpu.arvalid && io.cpu.arready, State.checkHit, State.idle),
+      State.idle      -> Mux(io.cpu.arvalid, State.checkHit, State.idle),
       State.checkHit  -> Mux(cacheHit, State.idle, State.sendFetch),
       State.sendFetch -> Mux(io.mem.arready, State.waitMem, State.sendFetch),
       State.waitMem   -> Mux(memIOMeetLast, State.idle, State.waitMem)
     )
   )
 
-  io.cpu.arready := (state === State.idle)
-  io.cpu.rvalid  := (state === State.waitMem && memIOMeetLast) || (state === State.checkHit && cacheHit)
+  val txnDone = (state === State.waitMem && memIOMeetLast) || (state === State.checkHit && cacheHit)
+  
+  io.cpu.arready := txnDone
+  io.cpu.rvalid  := txnDone
   io.cpu.rresp   := AXI4IO.RResp.OKAY
   io.cpu.rid     := io.mem.rid
   io.cpu.rlast   := true.B
-  io.cpu.rdata   := Mux(state === State.waitMem, memIORdDataVec(destAddrOffset), cacheRdDataVec(destAddrOffset))
+
+  // rvalid when mem read last beat or cache hit, in rlast case, data not stored
+  // in cacheRAM yet, when cpuAddrOffset is same as memIOCurRdOffset, means cpu
+  // need the rlast data, so bypass it directly instead of reading from cacheRAM
+  // which is not updated
+  val bypassData = (state === State.waitMem) && (cpuAddrOffset === memIOCurRdOffset)
+  io.cpu.rdata   := Mux(bypassData, io.mem.rdata, cacheRAM.io.rdata.data(cpuAddrOffset).get)
 
   io.mem.arvalid := (state === State.sendFetch)
   io.mem.arid    := io.cpu.arid
@@ -162,138 +196,6 @@ class ICache extends Module {
   io.mem.arlen   := ICacheParameters.ARLEN.U
   io.mem.arsize  := AXI4IO.SizeType.WORD
   io.mem.arburst := AXI4IO.BurstType.INCR
-
-  io.mem.rready := (state === State.waitMem)
-
+  io.mem.rready  := (state === State.waitMem)
 }
 
-class ICacheRegMem extends Module {
-  val io = IO(new ICacheIO)
-
-  io.cpu.dontCareAW()
-  io.cpu.dontCareW()
-  io.cpu.dontCareB()
-
-  io.mem.dontCareAW()
-  io.mem.dontCareW()
-  io.mem.dontCareB()
-
-  val blocks = RegInit(VecInit(Seq.fill(ICacheParameters.BLOCK_NUM)(0.U.asTypeOf(new ICacheBlock))))
-
-  object State extends ChiselEnum {
-    val idle, sendFetch, waitMem = Value
-  }
-  val state = RegInit(State.idle)
-
-  val rdAddrReg = Reg(Types.UWord)
-
-  when(io.cpu.arvalid && io.cpu.arready) {
-    rdAddrReg := io.cpu.araddr
-  }
-  val rdAddr = Mux(io.cpu.arvalid && io.cpu.arready, io.cpu.araddr, rdAddrReg)
-
-  val rdIdx        = ICacheParameters.extractIndex(rdAddr)
-  val rdCacheBlock = blocks(rdIdx)
-  val cacheHit     = rdCacheBlock.matchAddr(rdAddr)
-
-  val dbgRdCacheBlock = WireDefault(rdCacheBlock)
-  dontTouch(dbgRdCacheBlock)
-  dontTouch(rdIdx)
-  dontTouch(cacheHit)
-
-  io.cpu.arready := (state === State.idle) && (!reset.asBool)
-  io.mem.arvalid := (state === State.sendFetch)
-  // AXI4IO.noShakeConnectAR(io.cpu, io.mem)
-
-  io.mem.arid    := io.cpu.arid
-  io.mem.araddr  := ICacheParameters.alignToBlock(rdAddr)
-  io.mem.arlen   := ICacheParameters.ARLEN.U
-  io.mem.arsize  := AXI4IO.SizeType.WORD
-  io.mem.arburst := AXI4IO.BurstType.INCR
-
-  io.mem.rready := (state === State.waitMem)
-
-  val nxtCacheData = Wire(UInt(ICacheParameters.BLOCK_SIZE_INBITS.W))
-  dontTouch(nxtCacheData)
-
-  nxtCacheData := {
-    if (ICacheParameters.BLOCK_SIZE_INBITS > 32)
-      Cat(io.mem.rdata, rdCacheBlock.data(ICacheParameters.BLOCK_SIZE_INBITS - 1, 32))
-    else
-      io.mem.rdata
-  }
-
-  when(state === State.waitMem && io.mem.rvalid) {
-    // fill cache
-    rdCacheBlock.valid := true.B
-    rdCacheBlock.tag   := ICacheParameters.extractTag(rdAddr)
-    rdCacheBlock.data  := nxtCacheData
-  }
-  when(io.flush) {
-    for (i <- 0 until ICacheParameters.BLOCK_NUM) {
-      blocks(i).valid := false.B
-    }
-  }
-
-  val rdCnt = RegInit(0.U(log2Ceil(ICacheParameters.BLOCK_SIZE_INWORDS).W))
-  when(state === State.waitMem && io.mem.rvalid) {
-    rdCnt := rdCnt + 1.U
-  }.otherwise {
-    rdCnt := 0.U
-  }
-
-  io.cpu.rvalid := (state === State.waitMem && io.mem.rlast && io.mem.rvalid) || (state === State.idle && cacheHit && io.cpu.arvalid && io.cpu.arready)
-  val wordOffset = ICacheParameters.extractWordOffset(rdAddr)
-
-  io.cpu.rresp := AXI4IO.RResp.OKAY
-  // TODO: support burst read
-  io.cpu.rid   := io.mem.rid
-  io.cpu.rlast := true.B
-
-  // when not hit, since rvaild at the end of waitMem, the data is from nxtCacheData
-  val rdData = Mux(io.mem.rvalid || (!cacheHit), nxtCacheData, rdCacheBlock.data)
-  dontTouch(rdData)
-
-  val rdDataAsVec = rdData.asTypeOf(Vec(ICacheParameters.BLOCK_SIZE_INWORDS, Types.UWord))
-  val destData    = Wire(UInt(32.W))
-  dontTouch(destData)
-  destData     := rdDataAsVec(wordOffset)
-  io.cpu.rdata := destData
-
-  state := MuxLookup(state, State.idle)(
-    Seq(
-      State.idle      -> Mux(io.cpu.arvalid && io.cpu.arready && (!cacheHit), State.sendFetch, State.idle),
-      State.sendFetch -> Mux(io.mem.arready, State.waitMem, State.sendFetch),
-      State.waitMem   -> Mux(io.mem.rvalid && io.mem.rlast, State.idle, State.waitMem)
-    )
-  )
-
-}
-
-class ICacheWithDirectVisit extends Module {
-  val io = IO(new ICacheIO)
-
-  val cache = Module(new ICache)
-  cache.io.flush := io.flush
-
-  val directWire = Wire(AXI4IO.Slave)
-
-  val xbar = Module(
-    new AXI4LiteXBar(
-      Seq(
-        AddrSpace.SRAM           -> directWire,
-        AddrSpace.SOC_ExceptSRAM -> cache.io.cpu
-      )
-    )
-  )
-
-  xbar.io.in <> io.cpu
-  xbar.connect()
-
-  val memArbiter = Module(new EXUIFU_MemVisitArbiter)
-  memArbiter.io.ifu <> directWire
-  memArbiter.io.exu <> cache.io.mem
-
-  io.mem <> memArbiter.io.out
-
-}
