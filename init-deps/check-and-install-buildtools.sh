@@ -88,6 +88,19 @@ do_install_gpp() {
 	fi
 }
 
+do_install_cmake() {
+	if ! command -v cmake &> /dev/null; then
+		echo "cmake is not installed. Installing cmake..."
+		sudo apt-get install -y cmake > /dev/null
+		if [ $? -ne 0 ]; then
+			echo "Error: Failed to install cmake"
+			exit 1
+		fi
+	else
+		echo "cmake is already installed."
+	fi
+}
+
 exec 200>"$LOCKFILE"
 echo "Waiting for file lock on $LOCKFILE..."
 flock -x 200
@@ -95,23 +108,6 @@ flock -x 200
 # 获得锁后执行逻辑
 do_install_clang
 do_install_gpp
-#
-# echo "check ccache installation..."
-# if ! command -v ccache &> /dev/null; then
-# 	echo "ccache is not installed. Installing ccache..."
-# 	sudo apt-get install -y ccache > /dev/null
-# 	if [ $? -ne 0 ]; then
-# 		echo "Error: Failed to install ccache"
-# 		exit 1
-# 	fi
-# 	if [ ! -d "/usr/lib/ccache" ]; then
-# 		echo "Error: ccache installation did not create /usr/lib/ccache"
-# 		exit 1
-# 	fi
-# 	echo "ccache installed successfully. Adding /usr/lib/ccache to PATH."
-# 	export PATH=/usr/lib/ccache:$PATH
-# else
-# 	echo "ccache is already installed."
-# fi
+do_install_cmake
 
 touch "$DONEFILE"
