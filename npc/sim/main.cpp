@@ -6,6 +6,7 @@
 #include <verilated_vpi.h>
 
 #include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/dup_filter_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
@@ -20,11 +21,20 @@
 int gdb_mainloop();
 
 int main(int argc, char **argv) {
+
+	auto con_lvl_str = getenv("SIM_CON_LVL");
+	auto con_lvl = con_lvl_str ? spdlog::level::from_str(con_lvl_str) : spdlog::level::info;
+
   auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-  console_sink->set_level(spdlog::level::info);
+  console_sink->set_level(con_lvl);
   auto file_sink = newFileLoggerSink("sim");
   file_sink->set_level(spdlog::level::debug);
-  auto sinks = spdlog::sinks_init_list{console_sink, file_sink};
+
+  auto dup_filter = std::make_shared<spdlog::sinks::dup_filter_sink_mt>(
+      std::chrono::seconds(5));
+	dup_filter->add_sink(console_sink);
+
+  auto sinks = spdlog::sinks_init_list{dup_filter, file_sink};
   auto logger = std::make_shared<spdlog::logger>("sim", sinks);
   logger->set_level(spdlog::level::debug);
 

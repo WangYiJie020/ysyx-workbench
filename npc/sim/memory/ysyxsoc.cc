@@ -13,6 +13,8 @@
 #include <spdlog/spdlog.h>
 #include <variant>
 
+#include "../sdbWrap.hpp"
+
 #ifdef SIM_ARCH_YSYXSOC
 
 static std::shared_ptr<spdlog::logger> _dpi_logger;
@@ -109,9 +111,7 @@ mem_region_group_t &get_mem_regions() {
   return mem_regions;
 }
 
-mem_region_data_span_vec get_mem_regions_need_init_difftest(){
-	return {};
-}
+mem_region_data_span_vec get_mem_regions_need_init_difftest() { return {}; }
 
 static void _fill_rams_uninit(bool zero_uninit_ram) {
   if (zero_uninit_ram) {
@@ -126,6 +126,99 @@ static void _fill_rams_uninit(bool zero_uninit_ram) {
   spdlog::info("RAMs uninitialized area filled with {}",
                zero_uninit_ram ? "zeros" : "non-zero patterns");
 }
+
+std::string runCommand(const std::string &cmd) {
+  spdlog::debug("Running command: {}", cmd);
+  std::array<char, 2048> buffer{};
+  std::string result;
+
+  FILE *pipe = popen(cmd.c_str(), "r");
+  assert(pipe && "popen failed");
+
+  while (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
+    result += buffer.data();
+  }
+
+  int ret = pclose(pipe);
+  assert(ret != -1 && "pclose failed");
+
+  return result;
+}
+
+static uint32_t _readElfSymValue(const std::string &elf,
+                                 const std::string &sym) {
+  std::string output = runCommand(
+      std::format("readelf -s {} | awk '/{}/{{print $2}}'", elf, sym));
+  uint32_t value = 0;
+  try {
+    value = std::stoul(output, nullptr, 16);
+  } catch (const std::exception &e) {
+    spdlog::error(
+        "Failed to parse symbol '{}' value from ELF '{}': {}, output was '{}'",
+        sym, elf, e.what(), output);
+  }
+  return value;
+}
+
+struct post_triger {
+  std::function<void()> func;
+  void trigger() {
+    if (func)
+      func();
+  }
+};
+
+static post_triger _fsbl_post_triger;
+
+static void _do_fsbl() { // first stage bootloader
+  if (!sim_get_config()->setting.skip_soc_fsbl)
+    return;
+  auto elf = sim_get_config()->elf_file_path;
+  spdlog::debug("fsbl by sim: reading ssbl sym from elf '{}'", elf);
+  if (elf.empty()) {
+    spdlog::warn("elf file path is empty, cannot read ssbl sym");
+    return;
+  }
+
+  auto ssblLoadBeg = _readElfSymValue(elf, "__ssbl_load_start__");
+  auto ssblSize = _readElfSymValue(elf, "__ssbl_size__");
+
+  auto ssblDestBeg = _readElfSymValue(elf, "_ssbl_start");
+
+  spdlog::info("fsbl copying ssbl from {:08x} size {} to sram {:08x}",
+               ssblLoadBeg, ssblSize, ssblDestBeg);
+  auto ssblDataPtr = g_mem.flash.get_data_ptr_at(ssblLoadBeg);
+
+  g_mem.sram.memcpy_at(ssblDestBeg, ssblDataPtr, ssblSize);
+
+  auto &dutSRAM_Memory = get_dut()
+                             ->ysyxSoCFull->vlSymsp
+                             ->TOP__ysyxSoCFull__asic__axi4ram__mem_ext.Memory;
+
+  spdlog::debug("copying ssbl to dut sram for sim read, dut sram offset {:08x}",
+                ssblDestBeg - g_mem.sram.base());
+
+  memcpy(((uint8_t *)dutSRAM_Memory.data()) + ssblDestBeg - g_mem.sram.base(),
+         ssblDataPtr, ssblSize);
+  _fsbl_post_triger.func = [ssblDestBeg, ssblSize, ssblDataPtr]() {
+    spdlog::debug("copy ssbl to difftest ref {:08x} size {}", ssblDestBeg,
+                  ssblSize);
+    sdb_memcpy_to_ref(ssblDestBeg, {ssblDataPtr, ssblSize});
+  };
+
+  spdlog::info("fsbl by sim work done");
+}
+
+static void _do_bootloader() {
+  // to fasten the simulation, we skip the bootloader, do the
+  // copy of the bootloader's work here
+  spdlog::debug("bootloader by sim: skip_soc_fsbl={}, skip_soc_ssbl={}",
+                sim_get_config()->setting.skip_soc_fsbl,
+                sim_get_config()->setting.skip_soc_ssbl);
+  _do_fsbl();
+}
+
+void sdb_post_init_mem() { _fsbl_post_triger.trigger(); }
 
 static void _init_mem_logger() {
   auto lvl = spdlog::level::info;
@@ -148,10 +241,12 @@ static void _init_mem_logger() {
 
 void init_mem(void *img, const sim_config &cfg) {
   spdlog::info("copy img to ysyxSoC mrom for sim read");
-  g_mem.flash.copy_from(img, cfg.img_size);
-	_fill_rams_uninit(cfg.setting.zero_uninit_ram);
-	_init_mem_logger();
+  g_mem.flash.init_from(img, cfg.img_size);
+  _fill_rams_uninit(cfg.setting.zero_uninit_ram);
+  _init_mem_logger();
   _init_dpi_logger(cfg.setting);
+
+  _do_bootloader();
 }
 
 EXTERN_C void mrom_read(int32_t addr, int32_t *data) {

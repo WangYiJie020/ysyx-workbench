@@ -8,8 +8,8 @@ extern "C" {
 #include "common.hpp"
 #include <spdlog/sinks/stdout_color_sinks.h>
 
-#include "sim.hpp"
 #include "memory/mem.hpp"
+#include "sim.hpp"
 
 #define N_GPR 16
 
@@ -59,66 +59,65 @@ static int _op_read_mem(void *args, size_t addr, size_t len, void *val) {
   if (len == 0)
     return 0;
 
-	_logger->trace("read mem addr {:08x} len {}", addr, len);
+  _logger->trace("read mem addr {:08x} len {}", addr, len);
 
-	if(len==1){
-		uint32_t word;
-		if(!read_guest_mem(addr & ~0x3, &word)){
-			*(uint8_t*)val = 0;
-			return (int)std::errc::address_family_not_supported;
-		}
-		*(uint8_t *)val = *((uint8_t *)(&word) + (addr & 0x3));
-		_logger->warn("use unverified impl read byte at addr {:08x}", addr);
-		_logger->trace("read mem addr {:08x} byte {:02x}", addr, *(uint8_t *)val);
-		return 0;
-	}
+  if (len == 1) {
+    uint32_t word;
+    if (!read_guest_mem(addr & ~0x3, &word)) {
+      *(uint8_t *)val = 0;
+      return (int)std::errc::address_family_not_supported;
+    }
+    *(uint8_t *)val = *((uint8_t *)(&word) + (addr & 0x3));
+    _logger->warn("use unverified impl read byte at addr {:08x}", addr);
+    _logger->trace("read mem addr {:08x} byte {:02x}", addr, *(uint8_t *)val);
+    return 0;
+  }
 
-	if((addr & 0x1)==0 && len == 2){
-		uint32_t word;
-		if(!read_guest_mem(addr & ~0x3, &word)){
-			*(uint16_t*)val = 0;
-			return (int)std::errc::address_family_not_supported;
-		}
-		uint16_t half;
+  if ((addr & 0x1) == 0 && len == 2) {
+    uint32_t word;
+    if (!read_guest_mem(addr & ~0x3, &word)) {
+      *(uint16_t *)val = 0;
+      return (int)std::errc::address_family_not_supported;
+    }
+    uint16_t half;
 
-		*(uint16_t *)val = *((uint16_t *)(&word) + ((addr & 0x2) >> 1));
-		_logger->warn("use unverified impl read halfword at addr {:08x}", addr);
-		_logger->trace("read mem addr {:08x} half {:04x}", addr, half);
-		return 0;
-	}
-	if(addr & 0x3){
-		_logger->error("read unaligned addr not supported addr {:08x}", addr);
-		return (int)std::errc::not_supported;
-	}
+    *(uint16_t *)val = *((uint16_t *)(&word) + ((addr & 0x2) >> 1));
+    _logger->warn("use unverified impl read halfword at addr {:08x}", addr);
+    _logger->trace("read mem addr {:08x} half {:04x}", addr, half);
+    return 0;
+  }
+  if (addr & 0x3) {
+    _logger->error("read unaligned addr not supported addr {:08x}", addr);
+    return (int)std::errc::not_supported;
+  }
 
-	if(len == 4){
-		uint32_t word;
-		if(!read_guest_mem(addr, &word)){
-			*(uint32_t*)val = 0;
-			return (int)std::errc::address_family_not_supported;
-		}
-		*(uint32_t *)val = word;
-		_logger->trace("read mem addr {:08x} word {:08x}", addr, word);
-		return 0;
-	}
-	if((len & 0x3) == 0){
-		size_t words = len / 4;
-		uint32_t *dest = (uint32_t *)val;
-		for(size_t i=0;i<words;i++){
-			uint32_t word;
-			if(!read_guest_mem(addr + i*4, &word)){
-				dest[i] = 0;
-				return (int)std::errc::address_family_not_supported;
-			}
-			dest[i] = word;
-			// _logger->trace("read mem addr {:08x} word {:08x}", addr + i*4, word);
-		}
-		_logger->trace("read mem addr {:08x} len {} words {}", addr, len, words);
-		return 0;
-	}
+  if (len == 4) {
+    uint32_t word;
+    if (!read_guest_mem(addr, &word)) {
+      *(uint32_t *)val = 0;
+      return (int)std::errc::address_family_not_supported;
+    }
+    *(uint32_t *)val = word;
+    _logger->trace("read mem addr {:08x} word {:08x}", addr, word);
+    return 0;
+  }
+  if ((len & 0x3) == 0) {
+    size_t words = len / 4;
+    uint32_t *dest = (uint32_t *)val;
+    for (size_t i = 0; i < words; i++) {
+      uint32_t word;
+      if (!read_guest_mem(addr + i * 4, &word)) {
+        dest[i] = 0;
+        return (int)std::errc::address_family_not_supported;
+      }
+      dest[i] = word;
+      // _logger->trace("read mem addr {:08x} word {:08x}", addr + i*4, word);
+    }
+    _logger->trace("read mem addr {:08x} len {} words {}", addr, len, words);
+    return 0;
+  }
 
-
-	_logger->error("read len not supported addr {:08x} len {}", addr, len);
+  _logger->error("read len not supported addr {:08x} len {}", addr, len);
 
   return (int)std::errc::not_supported;
 }
@@ -146,14 +145,14 @@ static bool _op_del_bp(void *args, size_t addr, bp_type_t type) {
 static bool _request_interrupt = false;
 static volatile bool _request_int_ack = false;
 static void _op_on_interrupt(void *args) {
-	_request_interrupt = true;
-	_request_int_ack = false;
-	_logger->info("gdbstub on_interrupt called, interrupt requested");
-	while(!_request_int_ack){
-	}
-	_request_interrupt = false;
-	_logger->info("gdbstub on_interrupt acknowledged");
-	// _logger->warn("gdbstub on_interrupt called, but not implemented");
+  _request_interrupt = true;
+  _request_int_ack = false;
+  _logger->info("gdbstub on_interrupt called, interrupt requested");
+  while (!_request_int_ack) {
+  }
+  _request_interrupt = false;
+  _logger->info("gdbstub on_interrupt acknowledged");
+  // _logger->warn("gdbstub on_interrupt called, but not implemented");
 }
 
 static void _op_set_cpu(void *args, int cpuid) {}
@@ -177,11 +176,12 @@ static gdb_action_t _op_cont(void *args) {
       return ACT_SHUTDOWN;
       break;
     }
-		if(_request_interrupt){
-			_logger->info("interrupt requested, stopping execution at pc {:08x}", sim_get_cpu_state()->pc);
-			_request_int_ack = true;
-			break;
-		}
+    if (_request_interrupt) {
+      _logger->info("interrupt requested, stopping execution at pc {:08x}",
+                    sim_get_cpu_state()->pc);
+      _request_int_ack = true;
+      break;
+    }
   }
   return ACT_RESUME;
 }
@@ -226,13 +226,13 @@ int gdb_mainloop() {
   auto &cfg = *sim_get_config();
   cfg.raise_halt_cb = _cb_on_halt;
 
-	_logger->set_level(spdlog::level::info);
-	
+  _logger->set_level(spdlog::level::info);
 
   constexpr std::string_view gdb_socket = "127.0.0.1:1235";
   _logger->info("initializing gdbstub at {}", gdb_socket);
   _logger->info("this step will stuck until gdb connects");
-  _logger->info("try use 'target remote {}' in gdb", gdb_socket);
+  _logger->info("try type in gdb\n\tfile {}\n\ttarget remote {}",
+                sim_get_config()->elf_file_path, gdb_socket);
 
   bool res = gdbop_init(gdb_socket.data());
   if (!res) {

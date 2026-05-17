@@ -40,7 +40,8 @@ bool read_guest_mem(uint32_t addr, uint32_t *data) {
         v);
   });
   if (!ok)
-    spdlog::warn("sim_read_vmem addr={:08x} no mapping region or read failed",
+    spdlog::warn("@{:08x} sim_read_vmem addr={:08x} no mapping region or read failed",
+								 sim_get_cpu_state()->pc,
                  addr);
   return ok;
 }

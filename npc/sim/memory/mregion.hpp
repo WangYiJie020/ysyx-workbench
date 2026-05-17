@@ -68,7 +68,13 @@ struct direct_mapped_mem : public mem_region_traits {
 
   void assert_in_actual_data_range(uint32_t addr) const;
 
-  inline void copy_from(void *src, size_t siz) { memcpy(data, src, siz); }
+  inline void init_from(void *src, size_t siz) { memcpy(data, src, siz); }
+	inline void memcpy_at(uint32_t addr, void *src, size_t siz) {
+		assert_in_range(addr);
+		assert_in_actual_data_range(addr);
+		memcpy(get_data_ptr_at(addr), src, siz);
+	}
+
   inline void fill(uint8_t val) override {
     memset(data, val, actualSizeInBytes);
   }

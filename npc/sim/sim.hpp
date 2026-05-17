@@ -52,7 +52,9 @@ struct sim_setting {
 
   bool nvboard = false;
 
-  bool zero_uninit_ram = false;
+  bool zero_uninit_ram = true;
+	bool skip_soc_fsbl = false;
+	bool skip_soc_ssbl = true;
 
   bool trace_difftest_skip = false;
 
@@ -87,6 +89,7 @@ struct sim_config {
   uint32_t init_pc;
   size_t img_size;
   const char *img_file_path;
+	std::string elf_file_path;
 
   bool hope_batch_mode;
 

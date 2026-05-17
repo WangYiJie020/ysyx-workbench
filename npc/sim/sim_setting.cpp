@@ -48,6 +48,8 @@ void load_sim_setting_from_env(sim_setting &setting) {
   GET(difftest);
   GET(nvboard);
   GET(zero_uninit_ram);
+	GET(skip_soc_fsbl);
+	GET(skip_soc_ssbl);
   GET(trace_difftest_skip);
   GET(trace_pmem_readcall);
   GET(trace_pmem_writecall);

@@ -13,6 +13,8 @@
 
 #include "sdbWrap.hpp"
 
+#include "sim.hpp"
+
 SProbe sprobe;
 cycle_end_callback_t _old_cycle_callback = nullptr;
 
@@ -35,6 +37,10 @@ void sdb_skip_difftest_ref() {
 void sdb_memcpy_to_ref(uint32_t addr, std::span<uint8_t> data) {
   if (diff_handler)
     diff_handler->memcpy_to_ref(data, addr);
+  else if(sim_get_config()->setting.difftest)
+    spdlog::warn("Attempted to memcpy to difftest ref at {:08x} with size {}, "
+                 "difftest enabled but handler is not initialized",
+                 addr, data.size());
 }
 
 void sdb_exec(std::string_view cmd, bool *quit) {
@@ -108,8 +114,7 @@ void sdb_init(word_t init_pc, word_t img_base, size_t img_size,
     }
 
     if (img_file && setting.ftrace) {
-      auto elf_file = try_find_elf_file_of(img_file);
-
+      auto &elf_file = sim_get_config()->elf_file_path;
       if (!elf_file.empty()) {
         // printf("Found ELF file: %s\n", elf_file.c_str());
         spdlog::info("Found ELF file {}", elf_file);
@@ -152,6 +157,9 @@ int sdb_mainloop() {
 
   sdb_init(cfg.init_pc, is_soc() ? 0x30000000 : 0x80000000, cfg.img_size,
            cfg.img_file_path, cfg.setting);
+
+	sdb_post_init_mem();
+
   spdlog::info("sdb entering {} mode",
                cfg.is_batch_mode() ? "batch" : "interactive");
 

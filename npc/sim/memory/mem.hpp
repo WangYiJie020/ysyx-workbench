@@ -24,6 +24,8 @@ mem_region_data_span_vec get_mem_regions_need_init_difftest();
 
 void init_mem(void* img, const sim_config& cfg);
 
+void sdb_post_init_mem();
+
 uint8_t* mem_guest_to_host(uint32_t addr);
 bool read_guest_mem(uint32_t addr, uint32_t *data);
 bool write_guest_mem(uint32_t addr, uint32_t data);

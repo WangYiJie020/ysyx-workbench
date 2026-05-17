@@ -1,4 +1,4 @@
-AM_SRCS := riscv/ysyxsoc/start.S \
+AM_SRCS := riscv/npc/start.S \
 					 riscv/ysyxsoc/trm.c \
            riscv/ysyxsoc/ioe.c \
            riscv/ysyxsoc/gpu.c \
@@ -11,6 +11,10 @@ AM_SRCS := riscv/ysyxsoc/start.S \
 
 ifeq ($(VSIM_zero_uninit_ram), 1)
 CFLAGS += -DSKIP_BSS_CLEAR
+endif
+
+ifeq ($(VSIM_skip_soc_fsbl), 1)
+CFLAGS += -DSKIP_FSBL
 endif
 
 CFLAGS += -g

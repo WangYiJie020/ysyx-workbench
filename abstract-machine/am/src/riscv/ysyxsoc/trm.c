@@ -254,8 +254,12 @@ FSBL_TEXT void _trm_init() {
 #define putch fsbl_putch
   boot_log("serial initialized.\n");
 
+#ifndef SKIP_FSBL
   boot_memcpy(_ssbl_start, __ssbl_load_start__, (size_t)__ssbl_size__);
   boot_log("SSBL copied.\n");
+#else
+	boot_log("skip copy SSBL.\n");
+#endif
 
   _second_boot();
 }

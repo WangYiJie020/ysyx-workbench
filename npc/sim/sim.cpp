@@ -1,5 +1,6 @@
 #include "sim.hpp"
 #include "sdbWrap.hpp"
+#include "elf_tool.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -324,6 +325,9 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   using namespace std::ranges;
 
   load_img();
+	sim_get_config()->elf_file_path = try_find_elf_file_of(sim_cfg.img_file_path);
+
+
   // should before dbg_init(which may preload data with func call dpis)
   init_mem(img.data(), sim_cfg);
 
