@@ -9,6 +9,7 @@
 #include "common.hpp"
 
 #include "sprobe.hpp"
+#include "vsrc.hpp"
 
 #include "sdbWrap.hpp"
 
@@ -83,10 +84,10 @@ std::array<std::string_view, 32> reg_names = {
 //     printf("%s: %08x\n", reg_names[i].data(), gpr_snap[i]);
 //   }
 // }
-void sdb_init(word_t init_pc, size_t img_size, const char *img_file,
-              sim_setting setting) {
+void sdb_init(word_t init_pc, word_t img_base, size_t img_size,
+              const char *img_file, sim_setting setting) {
   dbg = std::make_shared<sdb::debuger>(
-      init_pc, init_pc, img_size, sdbwrap::cpu_exec, sdbwrap::loadmem,
+      init_pc, img_base, img_size, sdbwrap::cpu_exec, sdbwrap::loadmem,
       sdbwrap::shot_regsnap,
       std::vector<std::string_view>(reg_names.begin(), reg_names.end()),
       sdbwrap::inst_fetcher);
@@ -149,7 +150,8 @@ int sdb_mainloop() {
   cfg.raise_halt_cb = sdb_set_halt;
   spdlog::trace("setting raise_halt_cb to sdb_set_halt");
 
-  sdb_init(cfg.init_pc, cfg.img_size, cfg.img_file_path, cfg.setting);
+  sdb_init(cfg.init_pc, is_soc() ? 0x30000000 : 0x80000000, cfg.img_size,
+           cfg.img_file_path, cfg.setting);
   spdlog::info("sdb entering {} mode",
                cfg.is_batch_mode() ? "batch" : "interactive");
 
