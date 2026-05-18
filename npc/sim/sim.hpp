@@ -91,6 +91,8 @@ struct sim_config {
   const char *img_file_path;
 	std::string elf_file_path;
 
+	uint32_t hypercall_addr = 0;
+
   bool hope_batch_mode;
 
   sim_setting setting;
@@ -104,6 +106,8 @@ struct sim_config {
 struct sim_cpu_state {
   uint32_t pc;
   uint32_t gpr[32];
+
+	void force_set_gpr(int regno, uint32_t data);
 };
 
 // unchange item if not set in env

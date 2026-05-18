@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
 
   auto sinks = spdlog::sinks_init_list{dup_filter, file_sink};
   auto logger = std::make_shared<spdlog::logger>("sim", sinks);
-  logger->set_level(spdlog::level::debug);
+  logger->set_level(std::min(con_lvl, spdlog::level::debug));
 
   spdlog::set_default_logger(logger);
   // spdlog::set_level(spdlog::level::debug); // will modify all registered

@@ -21,3 +21,9 @@ inline auto newFileLoggerSink(const std::string &name) {
 
 inline bool isMakePerf() { return getenv("MAKE_PERF") != nullptr; }
 bool isCIEnv();
+
+
+std::string runCommand(const std::string &cmd);
+
+uint32_t _readElfSymValue(const std::string &elf,
+                                 const std::string &sym);

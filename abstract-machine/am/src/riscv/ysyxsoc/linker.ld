@@ -28,6 +28,10 @@ SECTIONS {
 		_boot_end = .;
 	} > flash AT> flash
 
+	.hypercall : {
+		*(.hypercall.*)
+	} > flash AT> flash
+
 	.secondary_boot : {
 		_ssbl_start = .;
 		*(.ssbl_text)

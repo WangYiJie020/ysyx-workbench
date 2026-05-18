@@ -127,39 +127,6 @@ static void _fill_rams_uninit(bool zero_uninit_ram) {
                zero_uninit_ram ? "zeros" : "non-zero patterns");
 }
 
-std::string runCommand(const std::string &cmd) {
-  spdlog::debug("Running command: {}", cmd);
-  std::array<char, 2048> buffer{};
-  std::string result;
-
-  FILE *pipe = popen(cmd.c_str(), "r");
-  assert(pipe && "popen failed");
-
-  while (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
-    result += buffer.data();
-  }
-
-  int ret = pclose(pipe);
-  assert(ret != -1 && "pclose failed");
-
-  return result;
-}
-
-static uint32_t _readElfSymValue(const std::string &elf,
-                                 const std::string &sym) {
-  std::string output = runCommand(
-      std::format("readelf -s {} | awk '/{}/{{print $2}}'", elf, sym));
-  uint32_t value = 0;
-  try {
-    value = std::stoul(output, nullptr, 16);
-  } catch (const std::exception &e) {
-    spdlog::error(
-        "Failed to parse symbol '{}' value from ELF '{}': {}, output was '{}'",
-        sym, elf, e.what(), output);
-  }
-  return value;
-}
-
 struct post_triger {
   std::function<void()> func;
   void trigger() {
@@ -191,15 +158,6 @@ static void _do_fsbl() { // first stage bootloader
 
   g_mem.sram.memcpy_at(ssblDestBeg, ssblDataPtr, ssblSize);
 
-  auto &dutSRAM_Memory = get_dut()
-                             ->ysyxSoCFull->vlSymsp
-                             ->TOP__ysyxSoCFull__asic__axi4ram__mem_ext.Memory;
-
-  spdlog::debug("copying ssbl to dut sram for sim read, dut sram offset {:08x}",
-                ssblDestBeg - g_mem.sram.base());
-
-  memcpy(((uint8_t *)dutSRAM_Memory.data()) + ssblDestBeg - g_mem.sram.base(),
-         ssblDataPtr, ssblSize);
   _fsbl_post_triger.func = [ssblDestBeg, ssblSize, ssblDataPtr]() {
     spdlog::debug("copy ssbl to difftest ref {:08x} size {}", ssblDestBeg,
                   ssblSize);
@@ -245,6 +203,13 @@ void init_mem(void *img, const sim_config &cfg) {
   _fill_rams_uninit(cfg.setting.zero_uninit_ram);
   _init_mem_logger();
   _init_dpi_logger(cfg.setting);
+
+  spdlog::debug("init_mem: set sram mem_container to point to dut sram memory");
+
+  g_mem.sram.change_to_external_data_ptr(
+      (uint32_t *)get_dut()
+          ->ysyxSoCFull->vlSymsp->TOP__ysyxSoCFull__asic__axi4ram__mem_ext
+          .Memory.data());
 
   _do_bootloader();
 }
@@ -326,7 +291,20 @@ extern "C" void sdram_write(char block, char bank, short row, short col,
 }
 
 extern "C" void sram_upd(int addr, int data, char mask) {
+	// if(addr>=0x0f001f60 && addr<0x0f001f70){
+	// 	spdlog::info("[DPI] sram_upd called for addr {:08x} data {:08x} mask {:02x}\n", addr, data, (uint32_t)mask);
+	// }
   g_mem.sram.write_word(addr, data, mask);
+}
+
+void check_foo(){
+	static uint32_t last = 0;
+	auto newdata = g_mem.sram.get_data_ptr_at(0x0f001f6e)[0];
+	if(newdata != last){
+		spdlog::info("[DPI] sram[0x1f6e] updated to {:08x}\n", newdata);
+		spdlog::info("At pc {:08x}\n", sim_get_cpu_state()->pc);
+		last = newdata;
+	}
 }
 #else
 

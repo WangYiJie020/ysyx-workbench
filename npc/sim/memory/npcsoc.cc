@@ -22,6 +22,8 @@ mem_region_group_t &get_mem_regions() {
   return mem_regions;
 }
 
+void sdb_post_init_mem() {}
+
 void init_mem(void *img, const sim_config &cfg) {
   spdlog::info("copy img to pmem of npc");
 
@@ -30,7 +32,7 @@ void init_mem(void *img, const sim_config &cfg) {
       get_dut()
           ->TestSoC->vlSymsp->TOP__TestSoC__devices__mem__mem__mem_ext
           .Memory.data());
-  _pmem_ptr->copy_from(img, cfg.img_size);
+  _pmem_ptr->init_from(img, cfg.img_size);
 
 	_dummy_flash_ptr = std::make_shared<direct_mapped_mem>(
 			0x30000000u, 0x40000000u, "dummy_flash", 1024,

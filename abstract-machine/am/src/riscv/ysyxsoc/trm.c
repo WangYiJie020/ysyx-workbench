@@ -6,6 +6,8 @@
 #include <my_putnum.h>
 #include <my_utils.h>
 
+#include <hypercall.h>
+
 #include "soc_devreg.h"
 
 int main(const char *args);
@@ -159,8 +161,8 @@ typedef int (*entry_func_t)(const char *args);
 FSBL_TEXT static inline const char *_rodata_loadpos(const char *ptr) {
   return ptr - (uintptr_t)_rodata_start + (uintptr_t)__rodata_load_start__;
 }
-#define ssbl_putstr(s) putstr(_rodata_loadpos(s))
-#define boot_log(s) ssbl_putstr("[BOOT] " s)
+#define putstr_from_loadpos(s) putstr(_rodata_loadpos(s))
+#define boot_log(s) putstr_from_loadpos("[BOOT] " s)
 
 #define _TOSTR(x) #x
 #define TOSTR(x) _TOSTR(x)
@@ -184,6 +186,9 @@ SSBL_TEXT void _ssbl_clear_word_aligned(void *dst, size_t n) {
 }
 
 SSBL_TEXT void _ssbl_clear(void *dst, size_t n) {
+  if (__HyperCall(__HCmd_memset, dst, 0, (void*)n, 0, 0) == __HyperCallSuccess) {
+    return;
+  }
   if (n == 0)
     return;
   uintptr_t dptr = (uintptr_t)dst;
@@ -201,6 +206,10 @@ SSBL_TEXT void _ssbl_clear(void *dst, size_t n) {
 }
 
 SSBL_TEXT void _ssbl_memcpy(void *dst, const void *src, size_t n) {
+  if (__HyperCall(__HCmd_memcpy, dst, src, (void *)n, 0, 0) ==
+      __HyperCallSuccess) {
+    return;
+  }
   BOOT_ASSERT(n != 0);
   BOOT_ASSERT(IS_4BYTE_ALIGNED(dst));
   BOOT_ASSERT(IS_4BYTE_ALIGNED(src));
@@ -214,17 +223,22 @@ SSBL_TEXT void _ssbl_memcpy(void *dst, const void *src, size_t n) {
     d[2] = s[2];
     d[3] = s[3];
   }
-	// remain words
+  // remain words
   for (; i < nWords; i++) {
     ((uint32_t *)dst)[i] = ((const uint32_t *)src)[i];
   }
-	// remain bytes
+  // remain bytes
   for (i = nWords * 4; i < n; i++) {
     ((uint8_t *)dst)[i] = ((const uint8_t *)src)[i];
   }
 }
 
 FSBL_TEXT void boot_memcpy(void *dst, const void *src, size_t n) {
+  if (__HyperCall(__HCmd_memcpy, dst, src, (void *)n, 0, 0) ==
+      __HyperCallSuccess) {
+    return;
+  }
+
   BOOT_ASSERT(n != 0);
   BOOT_ASSERT(IS_4BYTE_ALIGNED(dst));
   BOOT_ASSERT(IS_4BYTE_ALIGNED(src));
@@ -238,11 +252,11 @@ FSBL_TEXT void boot_memcpy(void *dst, const void *src, size_t n) {
     d[2] = s[2];
     d[3] = s[3];
   }
-	// remain words
+  // remain words
   for (; i < nWords; i++) {
     ((uint32_t *)dst)[i] = ((const uint32_t *)src)[i];
   }
-	// remain bytes
+  // remain bytes
   for (i = nWords * 4; i < n; i++) {
     ((uint8_t *)dst)[i] = ((const uint8_t *)src)[i];
   }
@@ -253,13 +267,8 @@ FSBL_TEXT void _trm_init() {
   init_serial();
 #define putch fsbl_putch
   boot_log("serial initialized.\n");
-
-#ifndef SKIP_FSBL
   boot_memcpy(_ssbl_start, __ssbl_load_start__, (size_t)__ssbl_size__);
   boot_log("SSBL copied.\n");
-#else
-	boot_log("skip copy SSBL.\n");
-#endif
 
   _second_boot();
 }
@@ -283,15 +292,16 @@ SSBL_TEXT void _ssbl_puthex(uint32_t x) {
 }
 
 SSBL_TEXT void _second_boot() {
-  ssbl_putstr("rodata load start = ");
+  putstr_from_loadpos("rodata load start = ");
   _ssbl_puthex((uintptr_t)__rodata_load_start__);
-  ssbl_putstr("\nrodata start = ");
+  putstr_from_loadpos("\nrodata start = ");
   _ssbl_puthex((uintptr_t)_rodata_start);
-  ssbl_putstr("\nrodata size = ");
+  putstr_from_loadpos("\nrodata size = ");
   _ssbl_puthex((uintptr_t)__rodata_size__);
   putch('\n');
 
   _ssbl_memcpy(_rodata_start, __rodata_load_start__, (size_t)__rodata_size__);
+
   // after copy .rodata, we can directly use strings ptr in .rodata
 #undef putch
 #define putch ssbl_putch
@@ -313,16 +323,11 @@ SSBL_TEXT void _second_boot() {
   LOG_STEP("copy .data", _ssbl_memcpy(_data_start, __data_load_start__,
                                       (size_t)__data_size__));
 
-#ifndef SKIP_BSS_CLEAR
   _ssbl_clear(_bss_start, (size_t)__bss_size__);
   boot_log(".bss cleared.\n");
   if (BSS_EXTRA_SIZE != 0) {
     LOG_STEP("clear .bss.extra", _ssbl_clear(_bss_extra_start, BSS_EXTRA_SIZE));
   }
-#else
-  boot_log("skip clear .bss\n");
-  boot_log("skip clear .bss.extra\n");
-#endif
 
   if (DATA_EXTRA_SIZE != 0) {
     putstr(".data.extra size = ");

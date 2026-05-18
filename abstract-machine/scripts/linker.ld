@@ -18,7 +18,8 @@ SECTIONS {
     __global_ctors_start = .;
     KEEP(*(.init_array*))
     __global_ctors_end = .;
- }
+	}
+
   .data : {
     *(.data*)
   } : data

@@ -30,3 +30,6 @@ uint8_t* mem_guest_to_host(uint32_t addr);
 bool read_guest_mem(uint32_t addr, uint32_t *data);
 bool write_guest_mem(uint32_t addr, uint32_t data);
 
+bool read_guest_mem(uint32_t addr, size_t n,std::vector<uint8_t>& data);
+bool write_guest_mem(uint32_t addr, const std::vector<uint8_t>& data);
+

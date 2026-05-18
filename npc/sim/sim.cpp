@@ -1,6 +1,6 @@
 #include "sim.hpp"
-#include "sdbWrap.hpp"
 #include "elf_tool.hpp"
+#include "sdbWrap.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -194,6 +194,8 @@ extern "C" void skip_difftest_ref() {
   sdb_skip_difftest_ref();
 }
 
+void check_do_hypercall();
+
 void sim_step_inst() {
   size_t cnt = 0;
   // SPI flash may need many cycles to respond
@@ -228,8 +230,11 @@ void sim_step_inst() {
   }
   pc_changed = false;
   inst_count++;
+  check_do_hypercall();
+
   // if (inst_count % (1024 * 1024 * 8) == 0) {
-  //   spdlog::info("8M instructions executed (now {}M), pc = 0x{:08x}, cycle = "
+  //   spdlog::info("8M instructions executed (now {}M), pc = 0x{:08x}, cycle =
+  //   "
   //                "{}, time = {}ps",
   //                inst_count / (1024 * 1024), cpu.pc, cycle_count, sim_time);
   // }
@@ -325,8 +330,16 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   using namespace std::ranges;
 
   load_img();
-	sim_get_config()->elf_file_path = try_find_elf_file_of(sim_cfg.img_file_path);
+  auto &cfg = *sim_get_config();
+  cfg.elf_file_path = try_find_elf_file_of(sim_cfg.img_file_path);
+  cfg.hypercall_addr = _readElfSymValue(cfg.elf_file_path, "__HyperCall__");
 
+  if (cfg.hypercall_addr) {
+    spdlog::info("HyperCall address found in @ 0x{:08x}", cfg.hypercall_addr);
+  } else {
+    spdlog::info(
+        "HyperCall address not found, hypercall support will be disabled");
+  }
 
   // should before dbg_init(which may preload data with func call dpis)
   init_mem(img.data(), sim_cfg);
@@ -358,4 +371,35 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
                sim_get_cycle(), sim_get_time());
 
   return true;
+}
+
+void sim_cpu_state::force_set_gpr(int regno, uint32_t data) {
+  if (regno == 0)
+    return;
+  gpr[regno] = data;
+
+#define _CASE(x)                                                               \
+  case x:                                                                      \
+    DirectSignals::GetCPU()->gprs->reg_##x = data;                             \
+    break;
+  switch (regno) {
+    _CASE(1);
+    _CASE(2);
+    _CASE(3);
+    _CASE(4);
+    _CASE(5);
+    _CASE(6);
+    _CASE(7);
+    _CASE(8);
+    _CASE(9);
+    _CASE(10);
+    _CASE(11);
+    _CASE(12);
+    _CASE(13);
+    _CASE(14);
+    _CASE(15);
+  default:
+    assert(false && "invalid regno");
+    break;
+  }
 }
