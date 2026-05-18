@@ -40,6 +40,13 @@ struct direct_mapped_mem : public mem_region_traits {
   std::shared_ptr<_MemContainer> mem_container;
   uint32_t *data;
 
+	void change_to_external_data_ptr(uint32_t *external_data_ptr) {
+		assert(external_data_ptr != nullptr && "external data pointer should not be null");
+		assert(mem_container != nullptr && "mem_container should be initialized");
+		*mem_container = external_data_ptr;
+		data = external_data_ptr;
+	}
+
   direct_mapped_mem(uint32_t base, uint32_t end, std::string_view name,
                     uint32_t actual_size = 0)
       : mem_region_traits(base, end, name),
@@ -118,7 +125,7 @@ struct direct_mapped_mem : public mem_region_traits {
   void write_word(uint32_t addr, uint32_t value, uint8_t strb8) {
     assert_in_range(addr);
     assert_in_actual_data_range(addr);
-    uint8_t shift = (addr & 0x3) * 8;
+    uint8_t shift = 0;
     uint32_t strb32 = 0;
     if (strb8 & 0x1)
       strb32 |= 0x000000ff;
