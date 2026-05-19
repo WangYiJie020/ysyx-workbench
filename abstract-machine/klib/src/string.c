@@ -3,6 +3,8 @@
 #include <klib.h>
 #include <stdint.h>
 
+#include <hypercall.h>
+
 #define ATTRIBUTE_NO_SANITIZE_ADDRESS __attribute__((no_sanitize_address))
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
@@ -57,12 +59,13 @@ int strcmp(const char *s1, const char *s2) {
 }
 
 int strncmp(const char *s1, const char *s2, size_t n) {
-	if(n==0)return 0;
-	while(n-- > 1 && *s1 && *s2 && *s1 == *s2) {
-		s1++;
-		s2++;
-	}
-	return *(unsigned char *)s1 - *(unsigned char *)s2;
+  if (n == 0)
+    return 0;
+  while (n-- > 1 && *s1 && *s2 && *s1 == *s2) {
+    s1++;
+    s2++;
+  }
+  return *(unsigned char *)s1 - *(unsigned char *)s2;
   // int tmp;
   // size_t i = 0;
   // while (*s1 && *s2 && i < n) {
@@ -79,13 +82,13 @@ int strncmp(const char *s1, const char *s2, size_t n) {
 ATTRIBUTE_NO_SANITIZE_ADDRESS
 void *_no_asan_kmemzero(void *s, size_t n) {
   if (n % 4 == 0) {
-		uint32_t *bs = (uint32_t *)s;
-		uint32_t *es = bs + n / 4;
-		while (bs != es) {
-			*bs = 0;
-			bs++;
-		}
-		return s;
+    uint32_t *bs = (uint32_t *)s;
+    uint32_t *es = bs + n / 4;
+    while (bs != es) {
+      *bs = 0;
+      bs++;
+    }
+    return s;
   }
   char *bs = (char *)s;
   char *es = bs + n;
@@ -97,6 +100,9 @@ void *_no_asan_kmemzero(void *s, size_t n) {
 }
 
 void *kmemset(void *s, int c, size_t n) {
+  if (__HyperMemset(s, c, n)) {
+    return s;
+  }
   char *bs = (char *)s;
   char *es = bs + n;
   while (bs != es) {
@@ -114,6 +120,9 @@ void *memmove(void *dst, const void *src, size_t n) {
 }
 
 void *kmemcpy(void *out, const void *in, size_t n) {
+  if (__HyperMemcpy(out, in, n)) {
+    return out;
+  }
   const char *ibeg = in;
   char *obeg = out;
   const char *iend = ibeg + n;
@@ -128,12 +137,10 @@ void *kmemcpy(void *out, const void *in, size_t n) {
 
 #ifndef KASAN_ENABLED
 #undef memset
-void* memset(void *s, int c, size_t n) {
-	return kmemset(s, c, n);
-}
+void *memset(void *s, int c, size_t n) { return kmemset(s, c, n); }
 #undef memcpy
-void* memcpy(void *out, const void *in, size_t n) {
-	return kmemcpy(out, in, n);
+void *memcpy(void *out, const void *in, size_t n) {
+  return kmemcpy(out, in, n);
 }
 #endif
 

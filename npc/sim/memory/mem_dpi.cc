@@ -79,7 +79,7 @@ bool read_guest_mem(uint32_t addr, size_t n, std::vector<uint8_t> &data) {
 
     uint32_t word;
     uint8_t *byte_ptr = (uint8_t *)&word;
-    for (size_t i = 0; i < n / 4; i++) {
+    for (size_t i = 0; i < n; i+=4) {
       p->read_word(addr + i, word);
       data.insert(data.end(), byte_ptr, byte_ptr + 4);
     }

@@ -186,7 +186,7 @@ SSBL_TEXT void _ssbl_clear_word_aligned(void *dst, size_t n) {
 }
 
 SSBL_TEXT void _ssbl_clear(void *dst, size_t n) {
-  if (__HyperCall(__HCmd_memset, dst, 0, (void*)n, 0, 0) == __HyperCallSuccess) {
+  if (__HyperMemset(dst, 0, n)) {
     return;
   }
   if (n == 0)
@@ -206,8 +206,7 @@ SSBL_TEXT void _ssbl_clear(void *dst, size_t n) {
 }
 
 SSBL_TEXT void _ssbl_memcpy(void *dst, const void *src, size_t n) {
-  if (__HyperCall(__HCmd_memcpy, dst, src, (void *)n, 0, 0) ==
-      __HyperCallSuccess) {
+  if (__HyperMemcpy(dst, src, n)) {
     return;
   }
   BOOT_ASSERT(n != 0);
@@ -234,8 +233,7 @@ SSBL_TEXT void _ssbl_memcpy(void *dst, const void *src, size_t n) {
 }
 
 FSBL_TEXT void boot_memcpy(void *dst, const void *src, size_t n) {
-  if (__HyperCall(__HCmd_memcpy, dst, src, (void *)n, 0, 0) ==
-      __HyperCallSuccess) {
+  if (__HyperMemcpy(dst, src, n)) {
     return;
   }
 

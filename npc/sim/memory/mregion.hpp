@@ -125,7 +125,10 @@ struct direct_mapped_mem : public mem_region_traits {
   void write_word(uint32_t addr, uint32_t value, uint8_t strb8) {
     assert_in_range(addr);
     assert_in_actual_data_range(addr);
-    uint8_t shift = 0;
+    uint8_t shift = (addr & 0x3) * 8;
+		if(addr >= 0x0f000000 && addr < 0x0f000000 + 1024*1024){
+			shift=0;
+		}
     uint32_t strb32 = 0;
     if (strb8 & 0x1)
       strb32 |= 0x000000ff;

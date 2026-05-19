@@ -69,7 +69,7 @@ void check_do_hypercall() {
   if (cpu.pc != cfg.hypercall_addr)
     return;
 
-  spdlog::debug("HyperCall invoked at pc = 0x{:08x}", cpu.pc);
+  spdlog::trace("HyperCall invoked at pc = 0x{:08x}", cpu.pc);
   __HyperCmd cmd = (__HyperCmd)cpu.gpr[10];
   uint32_t ret = (uint32_t)do_hyperproc(cmd, cpu.gpr[11], cpu.gpr[12],
                                         cpu.gpr[13], cpu.gpr[14], cpu.gpr[15]);
