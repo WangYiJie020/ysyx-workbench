@@ -1,7 +1,7 @@
 From cc6c04e5a7928d38ad1ae482b90c6e342cfc60f5 Mon Sep 17 00:00:00 2001
 From: Wang Yi Jie <miwyj@mail.scut.edu.cn>
 Date: Mon, 2 Mar 2026 22:27:02 +0800
-Subject: [PATCH 28/28] set default delay to 1
+Subject: [PATCH 28/29] set default delay to 1
 
 ---
  src/Top.scala | 2 +-
