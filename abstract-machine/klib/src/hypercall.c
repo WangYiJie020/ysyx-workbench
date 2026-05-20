@@ -6,7 +6,7 @@
 #define _HyperSection __attribute__((section(".hypercall.text")))
 
 __attribute__((noinline,noipa,optimize("O2")))
-_HyperSection intptr_t __HyperCall__(__HyperCmd cmd, uintptr_t arg1, uintptr_t arg2, uintptr_t arg3,
+_HyperSection intptr_t __HyperCall__(uintptr_t cmd, uintptr_t arg1, uintptr_t arg2, uintptr_t arg3,
 		uintptr_t arg4, uintptr_t arg5){
   register uint32_t a0 asm("a0") = cmd;
   register uint32_t a1 asm("a1") = arg1;

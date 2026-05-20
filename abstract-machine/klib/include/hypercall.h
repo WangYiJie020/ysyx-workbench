@@ -8,18 +8,18 @@
 #define __HyperMagicInst 0x07200013
 #define __HyperCallSuccess 0
 
-typedef enum : uint32_t {
+typedef enum {
   // (dst, src, n)
   __HCmd_memcpy = 0x100,
   // (dst, c, n)
   __HCmd_memset,
 } __HyperCmd;
 
-intptr_t __HyperCall__(__HyperCmd cmd, uintptr_t a1, uintptr_t a2, uintptr_t a3,
+intptr_t __HyperCall__(uintptr_t cmd, uintptr_t a1, uintptr_t a2, uintptr_t a3,
                        uintptr_t a4, uintptr_t a5);
 
 #define __HyperCall(cmd, a1, a2, a3, a4, a5)                                   \
-  __HyperCall__(cmd, (uintptr_t)(a1), (uintptr_t)(a2), (uintptr_t)(a3),        \
+  __HyperCall__((uintptr_t)cmd, (uintptr_t)(a1), (uintptr_t)(a2), (uintptr_t)(a3),        \
                 (uintptr_t)(a4), (uintptr_t)(a5))
 
 #define __HyperMemcpy(dst, src, n)                                             \
