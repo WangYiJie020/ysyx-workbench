@@ -68,6 +68,8 @@ void check_do_hypercall() {
   auto &cpu = *sim_get_cpu_state();
   if (cpu.pc != cfg.hypercall_addr)
     return;
+  if (!cfg.setting.hypercall)
+    return;
 
   spdlog::trace("HyperCall invoked at pc = 0x{:08x}", cpu.pc);
   __HyperCmd cmd = (__HyperCmd)cpu.gpr[10];

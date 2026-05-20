@@ -335,7 +335,10 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   cfg.hypercall_addr = _readElfSymValue(cfg.elf_file_path, "__HyperCall__");
 
   if (cfg.hypercall_addr) {
-    spdlog::info("HyperCall address found in @ 0x{:08x}", cfg.hypercall_addr);
+    spdlog::info("HyperCall address found @ 0x{:08x}", cfg.hypercall_addr);
+		if(!cfg.setting.hypercall){
+			spdlog::info("HyperCall support is disabled by sim_setting, set VSIM_hypercall=1 to enable");
+		}
   } else {
     spdlog::info(
         "HyperCall address not found, hypercall support will be disabled");
