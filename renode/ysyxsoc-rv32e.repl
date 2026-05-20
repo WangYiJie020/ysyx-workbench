@@ -1,0 +1,31 @@
+mrom: Memory.MappedMemory @ sysbus 0x20000000
+    size: 0x00001000
+
+sram: Memory.MappedMemory @ sysbus 0x0f000000
+    size: 0x00002000
+
+flash: Memory.MappedMemory @ sysbus 0x30000000
+    size: 0x01000000
+
+psram: Memory.MappedMemory @ sysbus 0x80000000
+    size: 0x00400000
+
+sdram: Memory.MappedMemory @ sysbus 0xa0000000
+    size: 0x02000000
+
+uart0: Python.PythonPeripheral @ sysbus 0x10000000
+    size: 0x100
+    initable: true
+    filename: "/home/wuser/ysyx-workbench/renode/ysyxsoc-uart.py"
+
+clint: IRQControllers.CoreLevelInterruptor @ sysbus 0x02000000
+    [0,1] -> cpu@[3,7]
+    frequency: 10000000
+
+cpu: CPU.RiscV32 @ sysbus
+    cpuType: "rv32e_zicsr_zifencei"
+    privilegedArchitecture: PrivilegedArchitecture.Priv1_10
+    timeProvider: clint
+    hartId: 0
+    reset:
+        PC 0x30000000

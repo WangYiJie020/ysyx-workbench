@@ -1,0 +1,27 @@
+if request.IsInit:
+    lcr = 0
+    line = ""
+else:
+    offset = request.Offset
+    operation = str(request.Type)
+
+    if operation == "READ":
+        if offset == 0x0:
+            request.Value = 0
+        elif offset == 0x1:
+            request.Value = 0
+        elif offset == 0x2:
+            request.Value = 0
+        elif offset == 0x3:
+            request.Value = lcr
+        elif offset == 0x5:
+            request.Value = 0x60
+        else:
+            request.Value = 0
+    elif operation == "WRITE":
+        value = request.Value & 0xff
+        if offset == 0x0:
+            sys.stdout.write(chr(value))
+            sys.stdout.flush()
+        elif offset == 0x3:
+            lcr = value
