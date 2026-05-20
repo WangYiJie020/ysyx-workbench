@@ -309,16 +309,16 @@ class LSU(
   // outWriteBackInfo.nxt_pc        := inExuWriteBackInfo.nxt_pc
   outWriteBackInfo.iid           := inExuWriteBackInfo.iid
 
-  val isSRAMAddr = AddrSpace.inRng(memAddr, AddrSpace.SRAM)
-  when(io.mem.awvalid && io.mem.awready && isSRAMAddr) {
-    ClockedCallVoidDPIC("sram_upd", Some(Seq("addr", "data", "mask")))(
-      clock,
-      isSRAMAddr,
-      memWAddr,
-      memWData,
-      memWMask.pad(8)
-    )
-  }
+  // val isSRAMAddr = AddrSpace.inRng(memAddr, AddrSpace.SRAM)
+  // when(io.mem.awvalid && io.mem.awready && isSRAMAddr) {
+  //   ClockedCallVoidDPIC("sram_upd", Some(Seq("addr", "data", "mask")))(
+  //     clock,
+  //     isSRAMAddr,
+  //     memWAddr,
+  //     memWData,
+  //     memWMask.pad(8)
+  //   )
+  // }
 }
 
 class LSUInputForDifftest extends Bundle {

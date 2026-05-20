@@ -53,8 +53,9 @@ struct sim_setting {
   bool nvboard = false;
 
   bool zero_uninit_ram = true;
+	bool hypercall = false;
+
 	bool skip_soc_fsbl = false;
-	bool skip_soc_ssbl = true;
 
   bool trace_difftest_skip = false;
 

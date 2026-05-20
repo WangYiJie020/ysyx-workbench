@@ -137,9 +137,8 @@ struct post_triger {
 
 static post_triger _fsbl_post_triger;
 
-static void _do_fsbl() { // first stage bootloader
-  if (!sim_get_config()->setting.skip_soc_fsbl)
-    return;
+static void _do_fsbl(bool do_) { // first stage bootloader
+  if (!do_) return;
   auto elf = sim_get_config()->elf_file_path;
   spdlog::debug("fsbl by sim: reading ssbl sym from elf '{}'", elf);
   if (elf.empty()) {
@@ -170,10 +169,10 @@ static void _do_fsbl() { // first stage bootloader
 static void _do_bootloader() {
   // to fasten the simulation, we skip the bootloader, do the
   // copy of the bootloader's work here
-  spdlog::debug("bootloader by sim: skip_soc_fsbl={}, skip_soc_ssbl={}",
-                sim_get_config()->setting.skip_soc_fsbl,
-                sim_get_config()->setting.skip_soc_ssbl);
-  _do_fsbl();
+  spdlog::debug("bootloader by sim: skip_soc_fsbl={}",
+                sim_get_config()->setting.skip_soc_fsbl);
+
+  _do_fsbl(sim_get_config()->setting.skip_soc_fsbl);
 }
 
 void sdb_post_init_mem() { _fsbl_post_triger.trigger(); }
@@ -290,12 +289,12 @@ extern "C" void sdram_write(char block, char bank, short row, short col,
             human_friendly_mask, new_data);
 }
 
-extern "C" void sram_upd(int addr, int data, char mask) {
-	// if(addr>=0x0f001f60 && addr<0x0f001f70){
-	// 	spdlog::info("[DPI] sram_upd called for addr {:08x} data {:08x} mask {:02x}\n", addr, data, (uint32_t)mask);
-	// }
-  g_mem.sram.write_word(addr, data, mask);
-}
+// extern "C" void sram_upd(int addr, int data, char mask) {
+// 	// if(addr>=0x0f001f60 && addr<0x0f001f70){
+// 	// 	spdlog::info("[DPI] sram_upd called for addr {:08x} data {:08x} mask {:02x}\n", addr, data, (uint32_t)mask);
+// 	// }
+//   g_mem.sram.write_word(addr, data, mask);
+// }
 
 void check_foo(){
 	static uint32_t last = 0;
@@ -308,6 +307,6 @@ void check_foo(){
 }
 #else
 
-extern "C" void sram_upd(int addr, int data, char mask) {}
+// extern "C" void sram_upd(int addr, int data, char mask) {}
 
 #endif
