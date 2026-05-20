@@ -86,10 +86,13 @@ char getch() {
   return *UART_RX;
 }
 
-void halt(int code) {
-  asm volatile("mv a0, %0; ebreak" : : "r"(code));
-  while (1) {
-  } // make sure no return
+// force no need sp
+// which maybe destroyed by riscv-arch-test which use sp as a temp reg in some
+// cases
+__attribute__((naked, noreturn, noinline)) void halt(int code) {
+  __asm__ volatile("mv a0, a0\n"
+                   "ebreak\n"
+                   "1: j 1b\n");
 }
 
 void print_csr() {
