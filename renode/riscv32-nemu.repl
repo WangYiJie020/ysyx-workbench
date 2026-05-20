@@ -1,0 +1,10 @@
+pmem: Memory.MappedMemory @ sysbus 0x80000000
+    size: 0x08000000
+
+cpu: CPU.RiscV32 @ sysbus
+    cpuType: "rv32_zicsr_zifencei"
+    privilegedArchitecture: PrivilegedArchitecture.Priv1_10
+    timeProvider: empty
+    hartId: 0
+    reset:
+        PC 0x80000000

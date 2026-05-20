@@ -1,0 +1,33 @@
+using sysbus
+
+$gdb_port?=3333
+
+mach create "riscv32e-npc"
+machine LoadPlatformDescription @riscv32-nemu.repl
+machine LoadPlatformDescription @uart-nemu.repl
+
+macro reload
+"""
+    sysbus LoadBinary $image 0x80000000
+    cpu PC 0x80000000
+"""
+
+macro restart_gdb
+"""
+    pause
+    machine StopGdbServer
+    cpu Reset
+    cpu PC 0x80000000
+    machine StartGdbServer $gdb_port
+"""
+
+macro reload_gdb
+"""
+    pause
+    machine StopGdbServer
+    runMacro $reload
+    machine StartGdbServer $gdb_port
+"""
+
+runMacro $reload
+machine StartGdbServer $gdb_port

@@ -15,5 +15,5 @@ gdb-server: insert-arg
 	@echo "CFLAGS: $(CFLAGS)"
 	@cd $(YSYX_HOME)/renode && ./run-gdb.sh server $(IMAGE).elf
 
-gdb:
+gdb-client:
 	@cd $(YSYX_HOME)/renode && ./run-gdb.sh gdb $(IMAGE).elf

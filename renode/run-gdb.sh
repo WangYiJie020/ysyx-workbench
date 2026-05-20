@@ -34,6 +34,9 @@ require_arch() {
     riscv32e-ysyxsoc)
       platform_arch="riscv32e-ysyxsoc"
       ;;
+		riscv32-nemu)
+			platform_arch="riscv32-nemu"
+			;;
     "")
       printf 'error: ARCH is required; expected riscv32e-npc or riscv32e-ysyxsoc\n' >&2
       exit 2
