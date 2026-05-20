@@ -36,11 +36,17 @@ void load_sim_setting_from_env(sim_setting &setting) {
 
 	spdlog::info("loading sim_setting from env");
 
+	// GET(gdb_mode); // will discard gdb in npc in future
+	// not show 
+	_Get(setting.gdb_mode, getenv("VSIM_gdb_mode"));
+	if(setting.gdb_mode){
+		spdlog::warn("gdb_mode will be discarded in future, use renode");
+	}
+	
   GET(en_wave);
   GET(en_inst_trace);
   GET(showdisasm);
   GET(always_showdisasm);
-	GET(gdb_mode);
   GET(no_batch);
   GET(ftrace);
   GET(iringbuf);
