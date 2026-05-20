@@ -1,0 +1,20 @@
+clint: Python.PythonPeripheral @ sysbus 0x02000000
+    size: 0x100
+    initable: true
+    script: '''
+if request.IsInit:
+    import time
+    start_time = time.time()
+    frequency = 10000000
+else:
+    if request.IsRead:
+        ticks = int((time.time() - start_time) * frequency) & 0xffffffffffffffff
+        if request.Offset == 0x48:
+            request.Value = ticks & 0xffffffff
+        elif request.Offset == 0x4c:
+            request.Value = (ticks >> 32) & 0xffffffff
+        else:
+            request.Value = 0
+    elif request.IsWrite:
+        pass
+'''

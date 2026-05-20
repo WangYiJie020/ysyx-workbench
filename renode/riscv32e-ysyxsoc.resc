@@ -2,24 +2,20 @@ using sysbus
 
 $gdb_port?=3333
 
-mach create "ysyxsoc"
-machine LoadPlatformDescription @ysyxsoc-rv32e.repl
+mach create "riscv32e-ysyxsoc"
+machine LoadPlatformDescription @riscv32e-ysyxsoc.repl
+machine LoadPlatformDescription @uart.repl
+machine LoadPlatformDescription @clint.repl
 
 # Load the raw flash image at the ysyxSoC flash base. The bootloader copies
 # runtime sections to their VMA locations, so do not pre-load .text/.data into
 # SDRAM here.
 macro reload
 """
-    sysbus LoadBinary $flash_image 0x30000000
+    sysbus LoadBinary $image 0x30000000
     cpu PC 0x30000000
 """
 
-# Fast path: use this from the Renode monitor after the CPU faults and the GDB
-# server exits. This does not reload the ELF, so it avoids the slow LoadELF
-# path for large images.
-#
-#   runMacro $restart_gdb
-#
 macro restart_gdb
 """
     pause
@@ -29,8 +25,6 @@ macro restart_gdb
     machine StartGdbServer $gdb_port
 """
 
-# Full path: reload the flash image too if memory contents must be restored.
-#
 macro reload_gdb
 """
     pause

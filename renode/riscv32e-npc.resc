@@ -1,0 +1,34 @@
+using sysbus
+
+$gdb_port?=3333
+
+mach create "riscv32e-npc"
+machine LoadPlatformDescription @riscv32e-npc.repl
+machine LoadPlatformDescription @uart.repl
+machine LoadPlatformDescription @clint.repl
+
+macro reload
+"""
+    sysbus LoadBinary $image 0x80000000
+    cpu PC 0x80000000
+"""
+
+macro restart_gdb
+"""
+    pause
+    machine StopGdbServer
+    cpu Reset
+    cpu PC 0x80000000
+    machine StartGdbServer $gdb_port
+"""
+
+macro reload_gdb
+"""
+    pause
+    machine StopGdbServer
+    runMacro $reload
+    machine StartGdbServer $gdb_port
+"""
+
+runMacro $reload
+machine StartGdbServer $gdb_port
