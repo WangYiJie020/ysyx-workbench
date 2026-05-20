@@ -18,19 +18,15 @@ typedef enum : uint32_t {
 intptr_t __HyperCall__(__HyperCmd cmd, uintptr_t a1, uintptr_t a2, uintptr_t a3,
                        uintptr_t a4, uintptr_t a5);
 
-inline intptr_t __HyperCall(__HyperCmd cmd, const void *a1, const void *a2,
-                            const void *a3, const void *a4, const void *a5) {
-  return __HyperCall__(cmd, (uintptr_t)a1, (uintptr_t)a2, (uintptr_t)a3,
-                       (uintptr_t)a4, (uintptr_t)a5);
-}
+#define __HyperCall(cmd, a1, a2, a3, a4, a5)                                   \
+  __HyperCall__(cmd, (uintptr_t)(a1), (uintptr_t)(a2), (uintptr_t)(a3),        \
+                (uintptr_t)(a4), (uintptr_t)(a5))
 
-inline bool __HyperMemcpy(void *dst, const void *src, uintptr_t n) {
-  return __HyperCall(__HCmd_memcpy, dst, src, (void *)n, 0, 0) ==
-         __HyperCallSuccess;
-}
-inline bool __HyperMemset(void *dst, int c, uintptr_t n) {
-  return __HyperCall(__HCmd_memset, dst, (void *)(uintptr_t)c, (void *)n, 0,
-                     0) == __HyperCallSuccess;
-}
+#define __HyperMemcpy(dst, src, n)                                             \
+  (__HyperCall(__HCmd_memcpy, dst, src, (void *)n, 0, 0) == __HyperCallSuccess)
+
+#define __HyperMemset(dst, c, n)                                               \
+  (__HyperCall(__HCmd_memset, dst, (void *)(uintptr_t)c, (void *)n, 0, 0) ==   \
+   __HyperCallSuccess)
 
 #endif
