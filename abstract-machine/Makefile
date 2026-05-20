@@ -111,6 +111,9 @@ CFLAGS   += -MMD -Wall -Werror $(INCFLAGS) \
 CXXFLAGS +=  $(CFLAGS) -ffreestanding -fno-rtti -fno-exceptions
 
 CFLAGS += -Wno-error=array-bounds
+
+CFLAGS += -Wno-error=stringop-overflow
+
 #
 # CXXFLAGS += -Wno-error=non-c-typedef-for-linkage
 # CXXFLAGS += -Wno-error=tautological-constant-out-of-range-compare
