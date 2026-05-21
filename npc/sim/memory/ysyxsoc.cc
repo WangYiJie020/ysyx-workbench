@@ -307,6 +307,8 @@ void check_foo(){
 }
 #else
 
-// extern "C" void sram_upd(int addr, int data, char mask) {}
 
 #endif
+
+
+extern "C" void sram_upd(int addr, int data, char mask) {}
