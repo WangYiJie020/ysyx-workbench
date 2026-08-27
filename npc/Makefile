@@ -107,12 +107,21 @@ VERILATOR_CONTROL_FILE = verilator.vlt
 
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME=V$(TOP_NAME) -DENABLE_VPI=$(ENABLE_VPI)
-CXXFLAGS += $(SAN_FLAGS) -std=c++20 -g # -fno-inline
+# Verilator's generated makefile contains a few GCC-only warnings (for
+# example -Wlogical-op).  Clang treats unknown warnings and several legacy
+# diagnostics as errors, so explicitly relax them for the simulator build.
+CXXFLAGS += $(SAN_FLAGS) -std=c++20 -g \
+	-Wno-unknown-warning-option -Wno-error \
+	-Wno-delete-non-abstract-non-virtual-dtor -Wno-reorder-ctor \
+	-Wno-unused-private-field # -fno-inline
 
 # when use perf tool, frame pointer is needed
 # CXXFLAGS += -fno-omit-frame-pointer
 
 # LDFLAGS += -fuse-ld=mold
+# Some bundled static libraries are built without PIE relocation support.
+# Disable the toolchain's distro-default PIE mode for the simulator binary.
+LDFLAGS += -no-pie
 
 MOLD_EXISTS := $(shell command -v mold 2> /dev/null)
 ifneq ($(MOLD_EXISTS),)
