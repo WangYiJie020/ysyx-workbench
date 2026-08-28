@@ -171,7 +171,8 @@ else
 # $(1): library name
 define LIB_TEMPLATE =
 $$(AM_HOME)/$(1)/build/$(1)-$$(ARCH).a: force
-	@$$(MAKE) -s -C $$(AM_HOME)/$(1) archive
+	@mkdir -p $$(@D)
+	@flock $$@.lock $$(MAKE) -s -C $$(AM_HOME)/$(1) archive
 LINKAGE += $$(AM_HOME)/$(1)/build/$(1)-$$(ARCH).a
 endef
 
