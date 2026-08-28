@@ -13,7 +13,7 @@ class RegisterFileIO extends Bundle {
   val writeData = Input(UInt(32.W))
 }
 
-class RegisterFile extends Module {
+class RegisterFile(enableDpi: Boolean = true) extends Module {
   val io = IO(new RegisterFileIO)
 
   private val regs = RegInit(VecInit(Seq.fill(16)(0.U(32.W))))
@@ -23,6 +23,8 @@ class RegisterFile extends Module {
 
   when(io.writeEn && io.writeAddr =/= 0.U) {
     regs(io.writeAddr) := io.writeData
-    RawClockedVoidFunctionCall("gpr_upd")(clock, true.B, io.writeAddr.pad(8), io.writeData)
+    if (enableDpi) {
+      RawClockedVoidFunctionCall("gpr_upd")(clock, true.B, io.writeAddr.pad(8), io.writeData)
+    }
   }
 }

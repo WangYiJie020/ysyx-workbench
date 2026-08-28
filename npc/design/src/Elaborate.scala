@@ -21,8 +21,8 @@ object Elaborate extends App {
 
   val options = parse(args.toList)
   require(options.targetDir.nonEmpty, "--target-dir is required")
-  require(Set("npc", "ysyxsoc").contains(options.platform), s"unsupported platform: ${options.platform}")
-  val cpuConfig = CpuConfig(CpuIsa.parse(options.isa), options.resetPc)
+  require(Set("npc", "ysyxsoc", "core").contains(options.platform), s"unsupported platform: ${options.platform}")
+  val cpuConfig = CpuConfig(CpuIsa.parse(options.isa), options.resetPc, enableDpi = options.platform != "core")
 
   val firtoolOptions = Array(
     "--lowering-options=disallowLocalVariables,disallowPackedArrays,locationInfoStyle=wrapInAtSquareBracket",
@@ -31,7 +31,7 @@ object Elaborate extends App {
   )
 
   val emitDir = s"${options.targetDir}/${options.isa}"
-  val generator = if (options.platform == "ysyxsoc") {
+  val generator = if (options.platform == "ysyxsoc" || options.platform == "core") {
     () => new top.ysyx_25100261(cpuConfig)
   } else {
     () => new standalone.TestSoC(cpuConfig)

@@ -29,3 +29,13 @@ To generate Verilog:
 ```bash
 make verilog
 ```
+
+To synthesize both CPU-only ISA variants with ECC and ICsprout55 at 400 MHz:
+```bash
+make ecc-all
+```
+
+The first run downloads ECC, OSS CAD Suite, and the required ICsprout55 Liberty
+files into `build/tools`; it does not install them globally. Use `ecc-minirv` or
+`ecc-riscv32e` for one variant. `ECC_FREQ_MHZ` and `ECC_SYNTH_STRATEGY` override
+the default frequency and Yosys strategy.

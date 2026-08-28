@@ -31,7 +31,7 @@ class ysyx_25100261(config: CpuConfig) extends Module {
   }
   private val state = RegInit(State.fetchReq)
 
-  private val regFile = Module(new RegisterFile)
+  private val regFile = Module(new RegisterFile(config.enableDpi))
   regFile.io.rs1Addr := inst(19, 15)(3, 0)
   regFile.io.rs2Addr := inst(24, 20)(3, 0)
   regFile.io.writeEn := state === State.commit && wbEn
@@ -123,13 +123,15 @@ class ysyx_25100261(config: CpuConfig) extends Module {
     }
   }
 
-  when(state === State.commit && decoder.io.isEbreak) {
-    RawClockedVoidFunctionCall("raise_ebreak")(clock, true.B)
-  }
-  when(state === State.commit && !decoder.io.isEbreak) {
-    RawClockedVoidFunctionCall("pc_upd")(clock, true.B, pc, nextPc)
-  }
-  when(state === State.commit && decoder.io.isSystem && !decoder.io.isEbreak) {
-    RawClockedVoidFunctionCall("skip_difftest_ref")(clock, true.B)
+  if (config.enableDpi) {
+    when(state === State.commit && decoder.io.isEbreak) {
+      RawClockedVoidFunctionCall("raise_ebreak")(clock, true.B)
+    }
+    when(state === State.commit && !decoder.io.isEbreak) {
+      RawClockedVoidFunctionCall("pc_upd")(clock, true.B, pc, nextPc)
+    }
+    when(state === State.commit && decoder.io.isSystem && !decoder.io.isEbreak) {
+      RawClockedVoidFunctionCall("skip_difftest_ref")(clock, true.B)
+    }
   }
 }
