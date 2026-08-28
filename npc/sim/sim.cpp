@@ -33,11 +33,7 @@
 #include <unistd.h>
 #include <vector>
 
-#include "PerfCounter.hpp"
-
 #include "memory/mem.hpp"
-
-#include "KonataLog/KonataLog.hpp"
 
 TOP_NAME dut;
 sim_config sim_cfg;
@@ -79,7 +75,6 @@ public:
   }
 };
 
-std::shared_ptr<KonataLogger> konata_logger;
 
 static void _sim_eval() {
   dut.eval();
@@ -94,10 +89,19 @@ void sim_step_cycle() {
     printf("[Clock Cycle Begin]\n");
   }
 
-  dut.clock = 1;
-  _sim_eval();
-
+#ifdef SIM_SOC
   dut.clock = 0;
+  dut.cpuClock = 0;
+#else
+  dut.clock = 0;
+#endif
+  _sim_eval();
+#ifdef SIM_SOC
+  dut.clock = 1;
+  dut.cpuClock = 1;
+#else
+  dut.clock = 1;
+#endif
   _sim_eval();
 
   cycle_count++;
@@ -116,15 +120,16 @@ void sim_step_cycle() {
     sim_settings.cycle_finish_cb();
   }
 
-  if (dut.reset == 0) {
-    updatePerfCounters();
-    if (konata_logger) {
-      konata_logger->update();
-    }
-  }
 }
 static void reset(int n) {
   dut.reset = 1;
+#ifdef SIM_SOC
+  dut.clock = 0;
+  dut.cpuClock = 0;
+#else
+  dut.clock = 0;
+#endif
+  _sim_eval();
   while (n-- > 0) {
     sim_step_cycle();
   }
@@ -170,7 +175,7 @@ const word_t defalut_img[] = {
 extern "C" void uart_putch(char ch) {
   putchar(ch);
   fflush(stdout);
-  skip_difftest_ref();
+  sdb_skip_difftest_ref();
 }
 
 extern "C" void gpr_upd(char regno, int data) {
@@ -183,7 +188,9 @@ bool pc_changed = false;
 extern "C" void pc_upd(int pc, int npc) {
   pc_changed = true;
   cpu.pc = npc;
-  // printf("[DPI] pc_upd called, pc=0x%08x npc=0x%08x\n", pc, npc);
+  if (sim_settings.trace_inst_fetchcall) {
+    fprintf(stderr, "[DPI] pc_upd pc=0x%08x npc=0x%08x\n", pc, npc);
+  }
 }
 
 extern "C" void skip_difftest_ref() {
@@ -196,7 +203,13 @@ extern "C" void skip_difftest_ref() {
 void sim_step_inst() {
   size_t cnt = 0;
   // SPI flash may need many cycles to respond
+#ifdef SIM_SOC
+  // Flash/PSRAM controllers may legitimately hold one request for many
+  // cycles.  The standalone NPC guard is far too small for the SoC path.
+  constexpr size_t MAYBE_DEADLOOP_THRESHOLD = 1u << 24;
+#else
   constexpr size_t MAYBE_DEADLOOP_THRESHOLD = 8192 * 2;
+#endif
   while (!pc_changed) {
     sim_step_cycle();
     if (sim_halted()) {
@@ -305,6 +318,14 @@ void set_logger_pattern_with_simtime(std::shared_ptr<spdlog::logger> logger) {
 bool sim_init(int argc, char **argv, sim_setting setting) {
   Verilated::commandArgs(argc, argv);
   sim_settings = setting;
+#ifdef SIM_SOC
+  // SoC execution includes UART/Flash/PSRAM MMIO outside NEMU's standalone
+  // physical-memory window; the legacy instruction difftest cannot model it.
+  sim_settings.difftest = false;
+  // The legacy disassembler fetches through NEMU's memory map and cannot
+  // inspect Flash/SoC addresses.  SoC runs do not need that trace path.
+  sim_settings.en_inst_trace = false;
+#endif
 #if ENABLE_NVBOARD
   if (setting.nvboard) {
     spdlog::info("initializing nvboard");
@@ -327,6 +348,12 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
   // should before dbg_init(which may preload data with func call dpis)
   init_mem(img.data(), sim_cfg);
 
+#ifdef SIM_SOC
+  dut.coreSel = 0;
+  dut.externalPins_mygpio_in = 0;
+  dut.externalPins_uart0_rx = 0;
+#endif
+
   if (setting.en_wave) {
     Verilated::traceEverOn(true);
     tfp = std::shared_ptr<VerilatedFstC>(new VerilatedFstC,
@@ -336,22 +363,12 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
     spdlog::info("wave enabled, output file: {}", setting.wave_fst_file);
   }
 
-  constexpr int reset_cycles = 30;
+  constexpr int reset_cycles = 100;
   reset(reset_cycles);
   spdlog::info("sim reset done ({} cycles)", reset_cycles);
 
   cpu.pc = sim_cfg.init_pc;
   spdlog::info("set initial pc to {:08x}", cpu.pc);
-
-  if (isMakePerf()) {
-    spdlog::info("Make perf mode, disable konata logger");
-    return true;
-  }
-
-  konata_logger = std::make_shared<KonataLogger>(genLogFilePath("konata"));
-  konata_logger->start(sim_get_cycle());
-  spdlog::info("KonataLogger initialized, start at cycle {}, sim time {}ps",
-               sim_get_cycle(), sim_get_time());
 
   return true;
 }

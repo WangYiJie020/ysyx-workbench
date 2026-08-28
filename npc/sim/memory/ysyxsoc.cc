@@ -94,8 +94,8 @@ void _init_dpi_logger(sim_setting sim_settings) {
 
 static struct {
   direct_mapped_mem mrom = {0x20000000u, 0x20010000u, "mrom"};
-  direct_mapped_mem flash = {0x30000000u, 0x40000000u, "flash",
-                             64 * 1024 * 1024};
+  direct_mapped_mem flash = {0x30000000u, 0x31000000u, "flash",
+                             16 * 1024 * 1024};
   direct_mapped_mem psram = {0x80000000u, 0xa0000000u, "psram",
                              128 * 1024 * 1024};
   direct_mapped_mem sram = {0x0f000000u, 0x10000000u, "sram", 8 * 1024};
@@ -147,7 +147,9 @@ static void _init_mem_logger() {
 }
 
 void init_mem(void *img, const sim_config &cfg) {
-  spdlog::info("copy img to ysyxSoC mrom for sim read");
+  assert(cfg.img_size <= g_mem.flash.actualSizeInBytes &&
+         "image does not fit in the 16 MiB Flash model");
+  spdlog::info("copy img to ysyxSoC flash for sim read");
   g_mem.flash.copy_from(img, cfg.img_size);
 	_fill_rams_uninit(cfg.setting.zero_uninit_ram);
 	_init_mem_logger();

@@ -5,7 +5,8 @@ $(info Detected CI environment, emit mill version file to make CI test mill vers
 $(shell echo '0.12.4' > ../../../.mill-version)
 endif
 
-CHISEL2V_DEST_ISA_EMIT_DIR := $(CHISEL2V_EMIT_ROOT)/$(ARCH_ISA)
+CHISEL2V_ARCH_EMIT_ROOT := $(CHISEL2V_EMIT_ROOT)/$(ARCH)
+CHISEL2V_DEST_ISA_EMIT_DIR := $(CHISEL2V_ARCH_EMIT_ROOT)/$(ARCH_ISA)
 $(shell mkdir -p $(CHISEL2V_DEST_ISA_EMIT_DIR))
 $(shell touch $(CHISEL2V_DEST_ISA_EMIT_DIR)/filelist.f)
 
@@ -36,7 +37,7 @@ else
   $(info Using specified Mill: $(MILL))
 endif
 
-CHISEL2V_DONE = $(BUILD_DIR)/verilog.done
+CHISEL2V_DONE = $(BUILD_DIR)/verilog-$(ARCH).done
 
 CHISEL_DESIGN = design
 CHISEL_SRCS = $(shell find $(abspath $(CHISEL_DESIGN)) -name "*.scala")
@@ -64,9 +65,11 @@ ifndef IN_LOCK
 else
 	$(call git_commit, "generate verilog")
 	@echo "# Removing old emitted verilog"
-	@rm -rf $(CHISEL2V_EMIT_ROOT)
+	@rm -rf $(CHISEL2V_ARCH_EMIT_ROOT)
 	@echo "# Emitting verilog with Mill"
-	$(MILL) -i $(CHISEL_DESIGN).runMain Elaborate --target-dir $(CHISEL2V_EMIT_ROOT)
+	$(MILL) -i $(CHISEL_DESIGN).runMain Elaborate \
+		--target-dir $(CHISEL2V_ARCH_EMIT_ROOT) \
+		--isa $(ARCH_ISA) --platform $(ARCH_PLATFORM) --reset-pc 0x$(RESET_PC)
 	@touch $(CHISEL2V_DONE)
 endif
 
@@ -99,4 +102,3 @@ endif
 # 	$(info # Renaming unstandard layer$$ style macro)
 # 	@$(foreach src,$(MY_SIM_VSRCS), sed -i 's/layer\$$\(\w\+\)/$(CPU_DESIGN_NAME)_\1/g' $(src);)
 # 	@touch $@
-

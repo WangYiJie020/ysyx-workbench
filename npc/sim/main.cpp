@@ -12,7 +12,6 @@
 #include "sdbWrap.hpp"
 #include "sim.hpp"
 
-#include "PerfCounter.hpp"
 #include "spdlog/common.h"
 
 #include "common.hpp"
@@ -47,10 +46,14 @@ int main(int argc, char **argv) {
   std::string_view git_commit_hash = _STR(GIT_COMMIT_HASH);
   spdlog::info("Git commit hash: {}", git_commit_hash);
 
+#ifndef SIM_SOC
   std::string perfOutRootDir = isMakePerf() ? "history_perf" : "build/perf";
   std::string perfOutDir = getOutputDir(perfOutRootDir);
+#endif
 
+#ifndef SIM_SOC
   spdlog::info("perf report output dir: {}", perfOutDir);
+#endif
 
   spdlog::info("Sim init pc set to 0x{:08x}", sim_get_config()->init_pc);
 
@@ -63,8 +66,6 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  initPerfCounters();
-  spdlog::info("perf counters initialized");
 
 	int mainloop_ret = 0;
 
@@ -76,8 +77,6 @@ int main(int argc, char **argv) {
 
   if (mainloop_ret == 0) {
     spdlog::info("sim ended good, dumping statistics...");
-    dumpPerfCountersStatistics(std::cout);
-    dumpPerfReportOnDir(perfOutDir);
   } else {
     spdlog::error("sim ended with bad status");
   }

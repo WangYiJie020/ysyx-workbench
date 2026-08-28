@@ -1,46 +1,49 @@
+import config.{CpuConfig, CpuIsa}
 import scala.sys.process._
 
-import testSoC._
-import common_def.CPUParameters
-
 object Elaborate extends App {
-  if (args.size != 2) {
-    println("Usage: --target-dir <dir>")
-    sys.exit(1)
+  final case class Options(
+      targetDir: String = "",
+      isa: String = "",
+      platform: String = "",
+      resetPc: BigInt = 0
+  )
+
+  def parse(rest: List[String], options: Options = Options()): Options = rest match {
+    case "--target-dir" :: value :: tail => parse(tail, options.copy(targetDir = value))
+    case "--isa" :: value :: tail        => parse(tail, options.copy(isa = value))
+    case "--platform" :: value :: tail   => parse(tail, options.copy(platform = value))
+    case "--reset-pc" :: value :: tail =>
+      parse(tail, options.copy(resetPc = BigInt(value.stripPrefix("0x"), 16)))
+    case Nil   => options
+    case other => throw new IllegalArgumentException(s"invalid arguments: ${other.mkString(" ")}")
   }
+
+  val options = parse(args.toList)
+  require(options.targetDir.nonEmpty, "--target-dir is required")
+  require(Set("npc", "ysyxsoc").contains(options.platform), s"unsupported platform: ${options.platform}")
+  val cpuConfig = CpuConfig(CpuIsa.parse(options.isa), options.resetPc)
+
   val firtoolOptions = Array(
-    "--lowering-options=" + List(
-      // make yosys happy
-      // see https://github.com/llvm/circt/blob/main/docs/VerilogGeneration.md
-      "disallowLocalVariables",
-      "disallowPackedArrays",
-      "locationInfoStyle=wrapInAtSquareBracket"
-    ).reduce(_ + "," + _),
+    "--lowering-options=disallowLocalVariables,disallowPackedArrays,locationInfoStyle=wrapInAtSquareBracket",
     "-disable-all-randomization",
     "-strip-debug-info"
   )
 
-  val designName = "ysyx_25100261"
-
-  def emit(gen: => chisel3.RawModule, emitDir: String) = {
-    println(s"Emitting Verilog... to $emitDir")
-    circt.stage.ChiselStage.emitSystemVerilogFile(
-      gen,
-      Array("--target-dir", emitDir),
-      firtoolOptions
-    )
-
-    println(s"Preprocessing Verilog... on $emitDir")
-    val preProcSoC = s"./scripts/preproc_vsrcs.sh ${emitDir} ${designName}".!
-    if (preProcSoC != 0) sys.exit(preProcSoC)
-    println(s"Finish emitting and preprocessing Verilog on $emitDir")
+  val emitDir = s"${options.targetDir}/${options.isa}"
+  val generator = if (options.platform == "ysyxsoc") {
+    () => new top.ysyx_25100261(cpuConfig)
+  } else {
+    () => new standalone.TestSoC(cpuConfig)
   }
 
-  val emitRootDir = args(1)
+  println(f"Emitting ${options.isa}/${options.platform}, reset PC 0x${options.resetPc}%08x to $emitDir")
+  circt.stage.ChiselStage.emitSystemVerilogFile(
+    generator(),
+    Array("--target-dir", emitDir),
+    firtoolOptions
+  )
 
-  emit(new top.ysyx_25100261(CPUParameters(gprAddrWidth = 4)), s"$emitRootDir/riscv32e")
-  emit(new top.ysyx_25100261(CPUParameters(gprAddrWidth = 5, skipDifftestAddrs = jyd.AddrSpace.needSkipDifftestGroup)), s"$emitRootDir/riscv32")
-
-  emit(new TestSoC(new npc.NPCDevices), s"$emitRootDir/testsoc/npc")
-  emit(new TestSoC(new jyd.JYDDevices), s"$emitRootDir/testsoc/jyd")
+  val preProc = s"./scripts/preproc_vsrcs.sh $emitDir ysyx_25100261".!
+  if (preProc != 0) sys.exit(preProc)
 }

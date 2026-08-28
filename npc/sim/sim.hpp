@@ -8,25 +8,6 @@
 #include <spdlog/spdlog.h>
 TOP_NAME *get_dut();
 
-namespace DirectSignals {
-inline auto GetCPU() {
-  // use vlSymsp to get inner module/signal
-#ifdef SIM_SOC
-  return &get_dut()->ysyxSoCFull->vlSymsp->TOP__ysyxSoCFull__asic__cpu__cpu__core;
-#else
-  return &get_dut()->TestSoC->vlSymsp->TOP__TestSoC__cpu__core;
-#endif
-}
-
-inline auto GetIFU() { return GetCPU()->ifu; }
-inline auto GetEXUS1() { return GetCPU()->exu->stageCalc; }
-inline auto GetEXUS2() { return GetCPU()->exu->stageChooseNxt; }
-inline auto GetLSU() { return GetCPU()->lsu; }
-inline auto GetALU() { return GetEXUS1()->alu; }
-inline auto GetIDU() { return GetCPU()->idu; }
-inline auto GetICache() { return GetCPU()->icache; }
-} // namespace DirectSignals
-
 typedef void (*cycle_end_callback_t)();
 
 using sim_time_t = uint64_t;
