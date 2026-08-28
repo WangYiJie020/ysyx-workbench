@@ -25,7 +25,7 @@
 !.gitignore
 !init.sh
 /fceux-am
-/nvboard
 /rt-thread-am
 /am-kernels
 /ysyxSoC
+/nvboard
