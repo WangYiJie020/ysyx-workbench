@@ -1,5 +1,5 @@
 AM_SRCS := riscv/ysyxsoc/start.S \
-					 riscv/ysyxsoc/trm.c \
+						 riscv/ysyxsoc/trm.c \
            riscv/ysyxsoc/ioe.c \
            riscv/ysyxsoc/gpu.c \
            riscv/ysyxsoc/input.c \
@@ -16,9 +16,8 @@ endif
 CFLAGS += -g
 
 CFLAGS    += -fdata-sections -ffunction-sections
-LDSCRIPTS += $(AM_HOME)/am/src/riscv/ysyxsoc/linker.ld
-LDFLAGS	  += --defsym=_pmem_start=0x20000000
-LDFLAGS   += --defsym=_stack_size=0x200
+LDSCRIPTS += $(AM_HOME)/scripts/linker.ld
+LDFLAGS   += --defsym=_pmem_start=0x80000000 --defsym=_entry_offset=0x0
 LDFLAGS   += --gc-sections -e _start
 
 MAINARGS_MAX_LEN = 64
@@ -32,6 +31,7 @@ image: image-dep
 	@$(OBJDUMP) -d $(IMAGE).elf > $(IMAGE).txt
 	@echo + OBJCOPY "->" $(IMAGE_REL).bin
 	@$(OBJCOPY) -S --set-section-flags .bss=alloc,contents -O binary $(IMAGE).elf $(IMAGE).bin
+	@cd $(AM_HOME)/../ysyxSoC/ready-to-run/minirv && bash gen.sh $(IMAGE).elf $(IMAGE).bin
 
 run: insert-arg
-	@$(MAKE) -C $(NPC_HOME) sim IMG=$(IMAGE).bin ARGS='-b'
+	@$(MAKE) -C $(NPC_HOME) sim ARCH=$(ARCH) IMG=$(IMAGE).bin ARGS=-b

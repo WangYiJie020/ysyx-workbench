@@ -59,7 +59,7 @@ ARCHIVE   = $(WORK_DIR)/build/$(NAME)-$(ARCH).a
 OBJS      = $(addprefix $(DST_DIR)/, $(addsuffix .o, $(basename $(SRCS))))
 LIBS     := $(sort $(LIBS) am klib) # lazy evaluation ("=") causes infinite recursions
 
-ifneq ($(ARCH),riscv32e-ysyxsoc)
+ifneq ($(PLATFORM),ysyxsoc)
 LIBS += kasan
 endif
 

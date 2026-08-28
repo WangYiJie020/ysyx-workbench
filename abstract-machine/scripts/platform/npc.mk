@@ -1,5 +1,11 @@
+ifeq ($(ISA),minirv)
+NPC_TRM = riscv/npc/minirv-trm.c
+else
+NPC_TRM = riscv/npc/trm.c
+endif
+
 AM_SRCS := riscv/npc/start.S \
-           riscv/npc/trm.c \
+           $(NPC_TRM) \
            riscv/npc/ioe.c \
            riscv/npc/timer.c \
            riscv/npc/input.c \
@@ -37,6 +43,6 @@ else
 endif
 
 run: insert-arg
-	@$(MAKE) -C $(NPC_HOME) $(SIM_TARGET) IMG=$(IMAGE).bin
+	@$(MAKE) -C $(NPC_HOME) $(SIM_TARGET) ARCH=$(ARCH) IMG=$(IMAGE).bin
 
 .PHONY: insert-arg
