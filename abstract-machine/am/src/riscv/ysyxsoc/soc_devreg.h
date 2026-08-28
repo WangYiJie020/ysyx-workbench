@@ -3,33 +3,39 @@
 
 #include <stdint.h>
 
-typedef volatile uint8_t*  volatile_u8ptr;
-typedef volatile uint16_t* volatile_u16ptr;
-typedef volatile uint32_t* volatile_u32ptr;
+typedef volatile uint8_t *volatile_u8ptr;
+typedef volatile uint16_t *volatile_u16ptr;
+typedef volatile uint32_t *volatile_u32ptr;
 
 typedef volatile_u8ptr dev_reg8_ptr;
 typedef volatile_u16ptr dev_reg16_ptr;
 typedef volatile_u32ptr dev_reg32_ptr;
 
-#define DEV_REG8(addr)  ((dev_reg8_ptr)(addr))
+#define DEV_REG8(addr) ((dev_reg8_ptr)(addr))
 #define DEV_REG16(addr) ((dev_reg16_ptr)(addr))
 #define DEV_REG32(addr) ((dev_reg32_ptr)(addr))
 
 #define UART_BASE 0x10000000u
-#define _UART_R(x)    (DEV_REG8(UART_BASE + (x)))
-#define UART_LCR       _UART_R(0x03)
-#define UART_DL_LSB    _UART_R(0x00)
-#define UART_DL_MSB    _UART_R(0x01)
+#define _UART_R(x) (DEV_REG8(UART_BASE + (x)))
+#define UART_LCR _UART_R(0x03)
+#define UART_DL_LSB _UART_R(0x00)
+#define UART_DL_MSB _UART_R(0x01)
 #define UART_FIFO_CTRL _UART_R(0x02)
-#define UART_IER       _UART_R(0x01)
-#define UART_LSR       _UART_R(0x05)
+#define UART_IER _UART_R(0x01)
+#define UART_LSR _UART_R(0x05)
 
-#define UART_TX 			 _UART_R(0x00)
-#define UART_RX 			 _UART_R(0x00)
+#define UART_TX _UART_R(0x00)
+#define UART_RX _UART_R(0x00)
 
-#define IS_UART_TRANSMIT_EMPTY()  ((*UART_LSR)&0b00100000)
-#define IS_UART_RECEIVE_READY()   ((*UART_LSR)&0b00000001)
-
+#define UART_LCR_8N1 0x03u
+#define UART_LCR_DLAB 0x80u
+#define UART_FIFO_CLEAR_RX 0x02u
+#define UART_FIFO_CLEAR_TX 0x04u
+#define UART_FIFO_TRIGGER_14 0xc0u
+#define UART_LSR_DATA_READY 0x01u
+#define UART_LSR_THRE 0x20u
+#define IS_UART_TRANSMIT_EMPTY() ((*UART_LSR & UART_LSR_THRE) != 0u)
+#define IS_UART_RECEIVE_READY() ((*UART_LSR & UART_LSR_DATA_READY) != 0u)
 
 #define SPI_BASE 0x10001000u
 #define _SPI_R(x)    (DEV_REG32(SPI_BASE + (x)*4))
