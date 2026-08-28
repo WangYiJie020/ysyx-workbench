@@ -6,8 +6,7 @@
 
 #define UART_CLOCK_HZ 25000000u
 #define UART_BAUD_RATE 115200u
-#define UART_DIVISOR                                                          \
-  ((UART_CLOCK_HZ + UART_BAUD_RATE * 8u) / (UART_BAUD_RATE * 16u))
+#define UART_DIVISOR (UART_CLOCK_HZ / (UART_BAUD_RATE * 16u))
 
 extern char __heap_start;
 extern char __heap_end;

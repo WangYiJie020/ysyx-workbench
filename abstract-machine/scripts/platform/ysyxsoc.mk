@@ -22,6 +22,7 @@ LDFLAGS   += --gc-sections -e _start
 
 MAINARGS_MAX_LEN = 64
 MAINARGS_PLACEHOLDER = the_insert-arg_rule_in_Makefile_will_insert_mainargs_here
+NVBOARD ?= 0
 CFLAGS += -DMAINARGS_MAX_LEN=$(MAINARGS_MAX_LEN) -DMAINARGS_PLACEHOLDER=$(MAINARGS_PLACEHOLDER)
 
 insert-arg: image
@@ -34,4 +35,4 @@ image: image-dep
 	@cd $(AM_HOME)/../ysyxSoC/ready-to-run/minirv && bash gen.sh $(IMAGE).elf $(IMAGE).bin
 
 run: insert-arg
-	@$(MAKE) -C $(NPC_HOME) sim ARCH=$(ARCH) IMG=$(IMAGE).bin ARGS=-b
+	@VSIM_nvboard=$(NVBOARD) $(MAKE) -C $(NPC_HOME) sim ARCH=$(ARCH) IMG=$(IMAGE).bin ARGS=-b
