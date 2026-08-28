@@ -29,4 +29,20 @@ VERILATOR_FLAGS += -Wno-SYMRSVDWORD # make uart verilog happy
 VERILATOR_FLAGS += -Wno-WIDTHEXPAND # make chiplink happy
 # VERILATOR_FLAGS += -Wno-UNOPTFLAT
 
-# The E7 SimpleBus regression does not require NVBoard pin bindings.
+ENABLE_NVBOARD ?= 1
+CXXFLAGS += -DENABLE_NVBOARD=$(ENABLE_NVBOARD)
+
+ifeq ($(ENABLE_NVBOARD),1)
+NVBOARD_HOME ?= $(abspath ../nvboard)
+export NVBOARD_HOME
+NVBOARD_NXDC = $(abspath ./nvboard.nxdc)
+NVBOARD_AUTO_BIND = $(abspath $(BUILD_DIR)/nvboard/auto_bind.cpp)
+
+$(NVBOARD_AUTO_BIND): $(NVBOARD_NXDC)
+	@mkdir -p $(dir $@)
+	@NVBOARD_HOME=$(NVBOARD_HOME) python3 \
+		$(NVBOARD_HOME)/scripts/auto_pin_bind.py $< $@
+
+SIM_CSRCS += $(NVBOARD_AUTO_BIND)
+include $(NVBOARD_HOME)/scripts/nvboard.mk
+endif

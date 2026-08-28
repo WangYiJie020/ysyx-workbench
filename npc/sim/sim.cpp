@@ -351,7 +351,7 @@ bool sim_init(int argc, char **argv, sim_setting setting) {
 #ifdef SIM_SOC
   dut.coreSel = 0;
   dut.externalPins_mygpio_in = 0;
-  dut.externalPins_uart0_rx = 0;
+  dut.externalPins_uart0_rx = 1;
 #endif
 
   if (setting.en_wave) {

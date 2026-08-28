@@ -16,6 +16,10 @@
 
 #include "common.hpp"
 
+#if ENABLE_NVBOARD
+#include <nvboard.h>
+#endif
+
 int gdb_mainloop();
 
 int main(int argc, char **argv) {
@@ -81,6 +85,11 @@ int main(int argc, char **argv) {
     spdlog::error("sim ended with bad status");
   }
 
+#if ENABLE_NVBOARD
+  if (setting.nvboard) {
+    nvboard_quit();
+  }
+#endif
   get_dut()->final();
   if (!setting.gdb_mode) {
     return mainloop_ret;
