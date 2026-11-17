@@ -13,4 +13,10 @@ object CpuIsa {
   }
 }
 
-final case class CpuConfig(isa: CpuIsa, resetPc: BigInt, enableDpi: Boolean = true)
+final case class CpuConfig(
+    isa: CpuIsa,
+    resetPc: BigInt,
+    enableDpi: Boolean = true,
+    enableIcarus: Boolean = false,
+    enableNpcTrap: Boolean = false
+)

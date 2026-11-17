@@ -33,7 +33,11 @@ TOP_NAME = TestSoC
 endif
 
 SIM_BIN = $(SIM_BIN_DIR)/$(TOP_NAME)-$(ARCH)$(VSIM_OPT)
+ifeq ($(VSIM_iverilog),1)
+default: iverilog-build
+else
 default: $(SIM_BIN)
+endif
 
 CHISEL2V_EMIT_ROOT = $(BUILD_DIR)/gened/verilog
 
@@ -159,10 +163,22 @@ all: default
 test:
 	$(MILL) -i $(CHISEL_DESIGN).test
 
-SYNTH_VSRCS_ALLINONE = $(BUILD_DIR)/$(CPU_DESIGN_NAME).v
-$(SYNTH_VSRCS_ALLINONE): $(CHISEL2V_DONE)
-	@echo "# Merge verilog files into one file $(SYNTH_VSRCS_ALLINONE)"
-	@cat $(SYNTH_VSRCS) > $(SYNTH_VSRCS_ALLINONE)
+SYNTH_V_DIR = $(BUILD_DIR)/synth-v
+SYNTH_VSRCS_ALLINONE = $(SYNTH_V_DIR)/minirv.v $(SYNTH_V_DIR)/riscv32e.v
+
+define emit_synth_v
+	@mkdir -p $(SYNTH_V_DIR)
+	@rm -rf $(BUILD_DIR)/gened/verilog/$(1)
+	@echo "# Emit synthesizable $(1) Verilog"
+	@$(MILL) -i $(CHISEL_DESIGN).runMain Elaborate --target-dir $(BUILD_DIR)/gened/verilog/$(1) --isa $(1) --platform core --reset-pc 0x30000000
+	@echo "# Merge synthesizable $(1) Verilog"
+	@cat $(BUILD_DIR)/gened/verilog/$(1)/$(1)/filelist.f | grep -vE 'DPICLayer|DifftestLayer|verification' | sed "s#^#$(BUILD_DIR)/gened/verilog/$(1)/$(1)/#" | xargs cat > $(SYNTH_V_DIR)/$(1).v
+endef
+
+$(SYNTH_V_DIR)/minirv.v:
+	$(call emit_synth_v,minirv)
+$(SYNTH_V_DIR)/riscv32e.v:
+	$(call emit_synth_v,riscv32e)
 
 verilog: $(SYNTH_VSRCS_ALLINONE)
 
@@ -199,5 +215,8 @@ sim: $(SIM_BIN)
 	@LSAN_OPTIONS=suppressions=asan_suppress.txt $^ $(ARGS) $(IMG)
 
 include ./scripts/ecc.mk
+include ./scripts/iverilog.mk
+include ./scripts/netlist-sim.mk
+include ./scripts/de.mk
 
 -include ../Makefile

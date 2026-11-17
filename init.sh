@@ -74,6 +74,9 @@ case $1 in
   ysyxSoC)
     init OSCPU/ysyxSoC 2607 ysyxSoC false
     ;;
+  mpsoc-osoc-de)
+    init openecos-projects/mpsoc-osoc-de user-kit mpsoc-osoc-de false
+    ;;
   riscv-tests)
     init NJU-ProjectN/riscv-tests-am master riscv-tests false
     ;;

@@ -32,8 +32,10 @@ class StandaloneMemory extends BlackBox with HasBlackBoxInline {
       |  input [31:0] lsuWdata, input [3:0] lsuWmask,
       |  output reg lsuRespValid, output reg [31:0] lsuRdata
       |);
+      |`ifndef __ICARUS__
       |  import "DPI-C" function int pmem_read(input int addr);
       |  import "DPI-C" function void pmem_write(input int addr, input int data, input byte mask);
+      |`endif
       |  always @(posedge clock) begin
       |    if (reset) begin
       |      ifuRespValid <= 1'b0;
@@ -41,9 +43,15 @@ class StandaloneMemory extends BlackBox with HasBlackBoxInline {
       |    end else begin
       |      ifuRespValid <= ifuReqValid;
       |      lsuRespValid <= lsuReqValid;
+      |`ifdef __ICARUS__
+      |      if (ifuReqValid) $pmem_read(ifuAddr, ifuRdata);
+      |      if (lsuReqValid && lsuWen) $pmem_write(lsuAddr, lsuWdata, {4'b0, lsuWmask});
+      |      if (lsuReqValid && !lsuWen) $pmem_read(lsuAddr, lsuRdata);
+      |`else
       |      if (ifuReqValid) ifuRdata <= pmem_read(ifuAddr);
       |      if (lsuReqValid && lsuWen) pmem_write(lsuAddr, lsuWdata, {4'b0, lsuWmask});
       |      if (lsuReqValid && !lsuWen) lsuRdata <= pmem_read(lsuAddr);
+      |`endif
       |    end
       |  end
       |endmodule
